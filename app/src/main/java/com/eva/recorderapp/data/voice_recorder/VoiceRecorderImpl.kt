@@ -10,10 +10,29 @@ import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import androidx.core.net.toFile
+import com.eva.recorderapp.data.voice_recorder.util.flowToFixedSizeCollection
+import com.eva.recorderapp.data.voice_recorder.util.toNormalizedValues
 import com.eva.recorderapp.domain.voice_recorder.RecorderFileProvider
 import com.eva.recorderapp.domain.voice_recorder.VoiceRecorder
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val LOGGER_TAG = "RECORDER_TAG"
 
@@ -32,6 +51,46 @@ class VoiceRecorderImpl(
 		get() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
 				PermissionChecker.PERMISSION_GRANTED
 
+	private var _isRecording: MutableStateFlow<Boolean> = MutableStateFlow(false)
+	override val isRecorderRunning: StateFlow<Boolean>
+		get() = _isRecording.asStateFlow()
+
+	private val isAudioSourceConfigured: Boolean?
+		get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+			// not null ensures its set
+			_recorder?.activeRecordingConfiguration?.audioSource != null
+		} else null
+
+	@OptIn(ExperimentalCoroutinesApi::class)
+	override val maxAmplitudes: Flow<FloatArray>
+		get() = _isRecording.flatMapLatest(::readSampledAmplitude)
+			.flowToFixedSizeCollection(80)
+			.toNormalizedValues()
+			.map { values -> values.reversed().toFloatArray() }
+
+	private suspend fun readSampledAmplitude(isRecordingRunning: Boolean): Flow<Int> {
+		return flow {
+			try {
+				while (_recorder != null && isRecordingRunning) {
+					// check if audio source set
+					if (isAudioSourceConfigured == false) break
+					// record the max amplitude of the sample
+					val amplitude = _recorder?.maxAmplitude ?: continue
+					emit(amplitude)
+					delay(50.milliseconds)
+				}
+			} catch (e: CancellationException) {
+				// if the child flow is canceled while suspending in delay method
+				// throw cancelation exception
+				throw e
+			} catch (e: IllegalStateException) {
+				Log.wtf(LOGGER_TAG, "AUDIO SOURCE NOT SET", e)
+			} catch (e: Exception) {
+				e.printStackTrace()
+			}
+		}.flowOn(Dispatchers.Default)
+	}
+
 
 	@Suppress("DEPRECATION")
 	private fun createRecorder() {
@@ -46,8 +105,7 @@ class VoiceRecorderImpl(
 			return
 		}
 		// set recorder
-		_recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-			MediaRecorder(context)
+		_recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(context)
 		else MediaRecorder()
 
 		Log.d(LOGGER_TAG, "CREATED RECORDER SUCCESSFULLY")
@@ -103,6 +161,9 @@ class VoiceRecorderImpl(
 			//start the recorder
 			_recorder?.start()
 			Log.d(LOGGER_TAG, "RECORDER PREPARED AND STARTED")
+			//set is recording to true
+			_isRecording.update { true }
+			Log.d(LOGGER_TAG, "IS RECORDING TO TRUE")
 		} catch (e: IOException) {
 			e.printStackTrace()
 		}
@@ -110,6 +171,10 @@ class VoiceRecorderImpl(
 
 	override suspend fun stopRecording() {
 		try {
+			//set is recording to false
+			_isRecording.update { false }
+			Log.d(LOGGER_TAG, "SETTING IS RECORDING TO FALSE")
+			//stop the ongoing recording
 			_recorder?.stop()
 			Log.d(LOGGER_TAG, "RECORDER STOPPED")
 			// update the file
@@ -147,5 +212,8 @@ class VoiceRecorderImpl(
 		// clear the recorder resources
 		_recorder?.release()
 		_recorder == null
+		// set is recording to false
+		Log.d(LOGGER_TAG, "IS RECORDING TO FALSE")
+		_isRecording.update { false }
 	}
 }

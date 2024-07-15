@@ -1,6 +1,14 @@
 package com.eva.recorderapp.domain.voice_recorder
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+
 interface VoiceRecorder {
+
+
+	val isRecorderRunning: StateFlow<Boolean>
+
+	val maxAmplitudes: Flow<FloatArray>
 
 	/**
 	 * Start recording
