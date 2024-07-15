@@ -1,4 +1,4 @@
-package com.eva.recorderapp.data.voice_recorder
+package com.eva.recorderapp.voice_recorder.data.recorder
 
 import android.content.ContentUris
 import android.content.ContentValues
@@ -10,18 +10,22 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.database.getIntOrNull
 import androidx.media3.common.MimeTypes
-import com.eva.recorderapp.domain.models.RecordedVoiceModel
-import kotlinx.datetime.Clock
-import java.io.File
-import com.eva.recorderapp.domain.voice_recorder.RecorderFileProvider
+import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.toLocalDateTime
+import java.io.File
 import java.io.IOException
 
-private const val LOGGER_TAG = "RECORDER_FILE_LOGGER"
+private const val LOGGER_TAG = "RECORDER_FILE_PROVIDE"
 
 class RecorderFileProviderImpl(
 	private val context: Context
@@ -39,6 +43,9 @@ class RecorderFileProviderImpl(
 		get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
 			MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
 		else MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+
+	private val localDateTimeFormat: DateTimeFormat<LocalDateTime>
+		get() = LocalDateTime.Formats.ISO
 
 
 	override suspend fun getAppVoiceRecordings(): List<RecordedVoiceModel> {
@@ -108,7 +115,8 @@ class RecorderFileProviderImpl(
 
 	override suspend fun createFileForRecording(): Uri? {
 		// TODO: Allow user to change the audio file name and also format
-		val time = Clock.System.now()
+		val time = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+			.format(localDateTimeFormat)
 		val fileName = "AUD_REC_$time.3gpp"
 
 		val metaData = ContentValues().apply {
@@ -184,6 +192,6 @@ class RecorderFileProviderImpl(
 	}
 }
 
-private fun Long.toDateTime() = Instant
-	.fromEpochMilliseconds(this)
-	.toLocalDateTime(TimeZone.currentSystemDefault())
+private fun Long.toDateTime() =
+	Instant.fromEpochMilliseconds(this)
+		.toLocalDateTime(TimeZone.currentSystemDefault())

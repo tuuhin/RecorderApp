@@ -1,4 +1,4 @@
-package com.eva.recorderapp.data.voice_recorder.util
+package com.eva.recorderapp.voice_recorder.data.util
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

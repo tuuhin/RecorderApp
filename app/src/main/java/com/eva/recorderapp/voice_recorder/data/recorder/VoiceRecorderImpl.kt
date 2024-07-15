@@ -1,4 +1,4 @@
-package com.eva.recorderapp.data.voice_recorder
+package com.eva.recorderapp.voice_recorder.data.recorder
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -10,31 +10,26 @@ import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import com.eva.recorderapp.data.voice_recorder.util.flowToFixedSizeCollection
-import com.eva.recorderapp.data.voice_recorder.util.toNormalizedValues
-import com.eva.recorderapp.domain.voice_recorder.RecorderFileProvider
-import com.eva.recorderapp.domain.voice_recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.data.util.flowToFixedSizeCollection
+import com.eva.recorderapp.voice_recorder.data.util.toNormalizedValues
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
+import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import java.io.IOException
 import kotlin.time.Duration.Companion.milliseconds
 
-private const val LOGGER_TAG = "RECORDER_TAG"
+private const val LOGGER_TAG = "VOICE_RECORDER"
 
 class VoiceRecorderImpl(
 	private val context: Context,
@@ -77,14 +72,18 @@ class VoiceRecorderImpl(
 					// record the max amplitude of the sample
 					val amplitude = _recorder?.maxAmplitude ?: continue
 					emit(amplitude)
-					delay(50.milliseconds)
+					kotlinx.coroutines.delay(50.milliseconds)
 				}
 			} catch (e: CancellationException) {
 				// if the child flow is canceled while suspending in delay method
 				// throw cancelation exception
 				throw e
 			} catch (e: IllegalStateException) {
-				Log.wtf(LOGGER_TAG, "AUDIO SOURCE NOT SET", e)
+				Log.wtf(
+					LOGGER_TAG,
+					"AUDIO SOURCE NOT SET",
+					e
+				)
 			} catch (e: Exception) {
 				e.printStackTrace()
 			}
@@ -123,8 +122,8 @@ class VoiceRecorderImpl(
 
 		Log.d(LOGGER_TAG, "NEW_FILE_URI_CREATED")
 
-		// it will be closed when stoped 
-		// TODO: Check it later if this is being closed properly?? 
+		// it will be closed when stoped
+		// TODO: Check it later if this is being closed properly??
 		val fd = contentResolver.openFileDescriptor(_recordingUri!!, "w") ?: return
 
 		_recorder?.apply {

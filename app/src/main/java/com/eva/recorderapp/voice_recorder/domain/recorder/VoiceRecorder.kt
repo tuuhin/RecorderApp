@@ -1,4 +1,4 @@
-package com.eva.recorderapp.domain.voice_recorder
+package com.eva.recorderapp.voice_recorder.domain.recorder
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow

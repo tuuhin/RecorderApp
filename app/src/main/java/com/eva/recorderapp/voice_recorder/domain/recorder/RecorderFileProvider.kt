@@ -1,7 +1,7 @@
-package com.eva.recorderapp.domain.voice_recorder
+package com.eva.recorderapp.voice_recorder.domain.recorder
 
 import android.net.Uri
-import com.eva.recorderapp.domain.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
 
 interface RecorderFileProvider {
 
