@@ -12,11 +12,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.eva.recorderapp.voice_recorder.data.util.flowToFixedSizeCollection
 import com.eva.recorderapp.voice_recorder.data.util.toNormalizedValues
+import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +28,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalTime
 import java.io.IOException
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -46,53 +51,71 @@ class VoiceRecorderImpl(
 		get() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
 				PermissionChecker.PERMISSION_GRANTED
 
-	private var _isRecording: MutableStateFlow<Boolean> = MutableStateFlow(false)
-	override val isRecorderRunning: StateFlow<Boolean>
-		get() = _isRecording.asStateFlow()
-
-	private val isAudioSourceConfigured: Boolean?
+	private val _isAudioSourceConfigured: Boolean?
 		get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			// not null ensures its set
 			_recorder?.activeRecordingConfiguration?.audioSource != null
 		} else null
 
+	private var _recorderState = MutableStateFlow(RecorderState.IDLE)
+	private var _elapsedTime = MutableStateFlow(0L)
+
+	override val recorderState: StateFlow<RecorderState>
+		get() = _recorderState.asStateFlow()
+
+	@OptIn(ExperimentalCoroutinesApi::class)
+	override val recorderTimer: Flow<LocalTime>
+		get() = _recorderState.flatMapLatest(::runStopWatch)
+			.map { diff ->
+				val nanos = _elapsedTime.updateAndGet { now -> now + diff }
+				LocalTime.fromNanosecondOfDay(nanos)
+			}
+
 	@OptIn(ExperimentalCoroutinesApi::class)
 	override val maxAmplitudes: Flow<FloatArray>
-		get() = _isRecording.flatMapLatest(::readSampledAmplitude)
+		get() = _recorderState.flatMapLatest(::readSampledAmplitude)
 			.flowToFixedSizeCollection(80)
 			.toNormalizedValues()
 			.map { values -> values.reversed().toFloatArray() }
 
-	private suspend fun readSampledAmplitude(isRecordingRunning: Boolean): Flow<Int> {
+
+	private fun readSampledAmplitude(state: RecorderState): Flow<Int> {
 		return flow {
 			try {
-				while (_recorder != null && isRecordingRunning) {
+				while (_recorder != null && state == RecorderState.RECORDING) {
 					// check if audio source set
-					if (isAudioSourceConfigured == false) break
+					if (_isAudioSourceConfigured == false) break
 					// record the max amplitude of the sample
 					val amplitude = _recorder?.maxAmplitude ?: continue
 					emit(amplitude)
-					kotlinx.coroutines.delay(50.milliseconds)
+					delay(20.milliseconds)
 				}
 			} catch (e: CancellationException) {
 				// if the child flow is canceled while suspending in delay method
 				// throw cancelation exception
 				throw e
 			} catch (e: IllegalStateException) {
-				Log.wtf(
-					LOGGER_TAG,
-					"AUDIO SOURCE NOT SET",
-					e
-				)
+				Log.wtf(LOGGER_TAG, "AUDIO SOURCE NOT SET", e)
 			} catch (e: Exception) {
 				e.printStackTrace()
 			}
 		}.flowOn(Dispatchers.Default)
 	}
 
+	private fun runStopWatch(state: RecorderState): Flow<Int> {
+		return flow {
+			while (state == RecorderState.RECORDING) {
+				val previous = Clock.System.now().nanosecondsOfSecond
+				delay(100.milliseconds)
+				val now = Clock.System.now().nanosecondsOfSecond
+				val diff = if (now > previous) now - previous else 0
+				emit(diff)
+			}
+		}.flowOn(Dispatchers.Default)
+	}
 
 	@Suppress("DEPRECATION")
-	private fun createRecorder() {
+	override fun createRecorder() {
 		// no perms granted
 		if (!_hasRecordPremission) {
 			Log.d(LOGGER_TAG, "NO RECORD PERMISSION FOUND")
@@ -161,7 +184,7 @@ class VoiceRecorderImpl(
 			_recorder?.start()
 			Log.d(LOGGER_TAG, "RECORDER PREPARED AND STARTED")
 			//set is recording to true
-			_isRecording.update { true }
+			_recorderState.update { RecorderState.RECORDING }
 			Log.d(LOGGER_TAG, "IS RECORDING TO TRUE")
 		} catch (e: IOException) {
 			e.printStackTrace()
@@ -170,8 +193,11 @@ class VoiceRecorderImpl(
 
 	override suspend fun stopRecording() {
 		try {
-			//set is recording to false
-			_isRecording.update { false }
+			// reset the timer
+			Log.d(LOGGER_TAG, "RESET THE STOPWATCH")
+			_elapsedTime.update { 0 }
+			//set is recording to completed
+			_recorderState.update { RecorderState.COMPLETED }
 			Log.d(LOGGER_TAG, "SETTING IS RECORDING TO FALSE")
 			//stop the ongoing recording
 			_recorder?.stop()
@@ -185,6 +211,7 @@ class VoiceRecorderImpl(
 
 	override fun pauseRecording() {
 		try {
+			_recorderState.update { RecorderState.PAUSED }
 			_recorder?.pause()
 			Log.d(LOGGER_TAG, "RECORDER PAUSED")
 		} catch (e: IOException) {
@@ -194,6 +221,7 @@ class VoiceRecorderImpl(
 
 	override fun resumeRecording() {
 		try {
+			_recorderState.update { RecorderState.RECORDING }
 			_recorder?.resume()
 			Log.d(LOGGER_TAG, "RECORDER RESUMED")
 		} catch (e: IOException) {
@@ -212,7 +240,10 @@ class VoiceRecorderImpl(
 		_recorder?.release()
 		_recorder == null
 		// set is recording to false
-		Log.d(LOGGER_TAG, "IS RECORDING TO FALSE")
-		_isRecording.update { false }
+		Log.d(LOGGER_TAG, "RECORDER STATE TO IDLE")
+		_recorderState.update { RecorderState.IDLE }
+		// reset the timer
+		Log.d(LOGGER_TAG, "RESET THE STOPWATCH")
+		_elapsedTime.update { 0 }
 	}
 }

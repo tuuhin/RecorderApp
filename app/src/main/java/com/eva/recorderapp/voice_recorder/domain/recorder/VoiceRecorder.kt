@@ -1,14 +1,33 @@
 package com.eva.recorderapp.voice_recorder.domain.recorder
 
+import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.datetime.LocalTime
 
 interface VoiceRecorder {
 
+	/**
+	 * Current state of the recorder, determines if the recorder is playing,
+	 * paused or others
+	 * @see RecorderState
+	 */
+	val recorderState: StateFlow<RecorderState>
 
-	val isRecorderRunning: StateFlow<Boolean>
-
+	/**
+	 * A series of amplitudes of the current sampled audio record
+	 */
 	val maxAmplitudes: Flow<FloatArray>
+
+	/**
+	 * A flow determining how long the recording has been started
+	 */
+	val recorderTimer: Flow<LocalTime>
+
+	/**
+	 * Initiates the recorder to be used
+	 */
+	fun createRecorder()
 
 	/**
 	 * Start recording
