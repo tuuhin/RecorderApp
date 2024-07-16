@@ -1,3 +1,8 @@
 <resources>
   <string name="app_name">RecorderApp</string>
+  <string name="recorder_action_pause">Pause</string>
+  <string name="recorder_action_resume">Resume</string>
+  <string name="recorder_action_stop">Stop</string>
+  <string name="recorder_notification_text_running">Recorder is running</string>
+  <string name="recorder_notification_text_paused">Recorder Paused</string>
 </resources>
