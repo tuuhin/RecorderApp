@@ -1,35 +1,32 @@
 package com.eva.recorderapp.voice_recorder.data.recorder
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.content.ContentResolver
 import android.content.Context
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import com.eva.recorderapp.voice_recorder.data.util.flowToFixedSizeCollection
-import com.eva.recorderapp.voice_recorder.data.util.toNormalizedValues
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.util.flowToFixedSizeCollection
+import com.eva.recorderapp.voice_recorder.domain.util.toNormalizedValues
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.updateAndGet
-import kotlinx.datetime.Clock
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalTime
 import java.io.IOException
 import kotlin.time.Duration.Companion.milliseconds
@@ -39,13 +36,12 @@ private const val LOGGER_TAG = "VOICE_RECORDER"
 class VoiceRecorderImpl(
 	private val context: Context,
 	private val fileProvider: RecorderFileProvider,
+	private val stopWatch: RecorderStopWatch,
 ) : VoiceRecorder {
-
-	private val contentResolver: ContentResolver
-		get() = context.contentResolver
 
 	private var _recorder: MediaRecorder? = null
 	private var _recordingUri: Uri? = null
+	private var _fd: ParcelFileDescriptor? = null
 
 	val _hasRecordPremission: Boolean
 		get() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
@@ -57,105 +53,88 @@ class VoiceRecorderImpl(
 			_recorder?.activeRecordingConfiguration?.audioSource != null
 		} else null
 
-	private var _recorderState = MutableStateFlow(RecorderState.IDLE)
-	private var _elapsedTime = MutableStateFlow(0L)
-
 	override val recorderState: StateFlow<RecorderState>
-		get() = _recorderState.asStateFlow()
+		get() = stopWatch.recorderState
 
-	@OptIn(ExperimentalCoroutinesApi::class)
-	override val recorderTimer: Flow<LocalTime>
-		get() = _recorderState.flatMapLatest(::runStopWatch)
-			.map { diff ->
-				val nanos = _elapsedTime.updateAndGet { now -> now + diff }
-				LocalTime.fromNanosecondOfDay(nanos)
-			}
+	override val recorderTimer: StateFlow<LocalTime>
+		get() = stopWatch.elapsedTime
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	override val maxAmplitudes: Flow<FloatArray>
-		get() = _recorderState.flatMapLatest(::readSampledAmplitude)
-			.flowToFixedSizeCollection(80)
+		get() = recorderState
+			.flatMapLatest(::readSampleAmplitude)
+			.flowToFixedSizeCollection(100)
 			.toNormalizedValues()
-			.map { values -> values.reversed().toFloatArray() }
 
-
-	private fun readSampledAmplitude(state: RecorderState): Flow<Int> {
-		return flow {
-			try {
-				while (_recorder != null && state == RecorderState.RECORDING) {
-					// check if audio source set
-					if (_isAudioSourceConfigured == false) break
-					// record the max amplitude of the sample
-					val amplitude = _recorder?.maxAmplitude ?: continue
-					emit(amplitude)
-					delay(20.milliseconds)
+	private fun readSampleAmplitude(state: RecorderState): Flow<Int> = flow {
+		try {
+			while (_recorder != null && state == RecorderState.RECORDING) {
+				// check if audio source set
+				if (_isAudioSourceConfigured == false) {
+					Log.i(LOGGER_TAG, "AUDIO SOURCE NOT CONFIGURED")
+					break
 				}
-			} catch (e: CancellationException) {
-				// if the child flow is canceled while suspending in delay method
-				// throw cancelation exception
-				throw e
-			} catch (e: IllegalStateException) {
-				Log.wtf(LOGGER_TAG, "AUDIO SOURCE NOT SET", e)
-			} catch (e: Exception) {
-				e.printStackTrace()
+				delay(20.milliseconds)
+				// record the max amplitude of the sample
+				val amplitude = _recorder?.maxAmplitude ?: 0
+				emit(amplitude)
 			}
-		}.flowOn(Dispatchers.Default)
-	}
+		} catch (e: CancellationException) {
+			// if the child flow is canceled while suspending in delay method
+			// throw cancelation exception
+			throw e
+		} catch (e: IllegalStateException) {
+			Log.wtf(LOGGER_TAG, "AUDIO SOURCE NOT SET", e)
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+	}.flowOn(Dispatchers.IO)
 
-	private fun runStopWatch(state: RecorderState): Flow<Int> {
-		return flow {
-			while (state == RecorderState.RECORDING) {
-				val previous = Clock.System.now().nanosecondsOfSecond
-				delay(100.milliseconds)
-				val now = Clock.System.now().nanosecondsOfSecond
-				val diff = if (now > previous) now - previous else 0
-				emit(diff)
-			}
-		}.flowOn(Dispatchers.Default)
-	}
 
 	@Suppress("DEPRECATION")
 	override fun createRecorder() {
 		// no perms granted
 		if (!_hasRecordPremission) {
-			Log.d(LOGGER_TAG, "NO RECORD PERMISSION FOUND")
+			Log.i(LOGGER_TAG, "NO RECORD PERMISSION FOUND")
 			return
 		}
 		// recorder already set
 		if (_recorder != null) {
-			Log.d(LOGGER_TAG, "RECORDER ALREADY INITIATED")
+			Log.i(LOGGER_TAG, "RECORDER ALREADY INITIATED")
 			return
 		}
 		// set recorder
-		_recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(context)
+		_recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+			MediaRecorder(context)
 		else MediaRecorder()
 
 		Log.d(LOGGER_TAG, "CREATED RECORDER SUCCESSFULLY")
 	}
 
 	/**
-	 * Re-Initiate the recorder params
-	 * Once stop or reset this method to be called to reset the params
+	 * Creates the file uri in which the audio to be recorded and initiate
+	 * the recorder parameters
 	 */
-	@SuppressLint("Recycle")
-	private suspend fun initiateRecorderParams() {
+	private suspend fun initiateRecorderParams() = coroutineScope {
 		if (_recorder == null) createRecorder()
 
-		_recordingUri = fileProvider.createFileForRecording() ?: return
+		val file = async(Dispatchers.IO) { fileProvider.createFileForRecording() }
+		// ensures the file is being created in a differnt coroutine
+		_recordingUri = file.await()
 
 		Log.d(LOGGER_TAG, "NEW_FILE_URI_CREATED")
 
-		// it will be closed when stoped
-		// TODO: Check it later if this is being closed properly??
-		val fd = contentResolver.openFileDescriptor(_recordingUri!!, "w") ?: return
+		_fd = context.contentResolver.openFileDescriptor(_recordingUri!!, "w")
+		Log.d(LOGGER_TAG, "FILE DESCRIPTOR SET")
+
+		val fileDescriptor = _fd?.fileDescriptor ?: return@coroutineScope
 
 		_recorder?.apply {
 			setAudioSource(MediaRecorder.AudioSource.MIC)
-			setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-			setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT)
-			setOutputFile(fd.fileDescriptor)
+			setOutputFormat(MediaRecorder.OutputFormat.AMR_NB)
+			setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+			setOutputFile(fileDescriptor)
 		}
-
 		Log.d(LOGGER_TAG, "RECORDER CONFIGURED")
 	}
 
@@ -163,12 +142,17 @@ class VoiceRecorderImpl(
 	 * Method to be called when recording has been finished and you update the file
 	 * metadata
 	 */
-	private suspend fun updateRecorderParams() {
+	private suspend fun stopAndUpdateFileMetaData() {
+		// close the descriptor
+		_fd?.close()
+		_fd = null
+		Log.d(LOGGER_TAG, "FILE DESCRIPTOR CLOSED")
+		// update the file
 		_recordingUri?.let { uri ->
 			fileProvider.updateFileAfterRecording(uri)
 			Log.d(LOGGER_TAG, "RECORDER FILE UPDATED")
 		}
-		// new file required
+		// set recording uri to null and close the socket
 		_recordingUri = null
 		// resets the recorder for  next recording
 		Log.d(LOGGER_TAG, "RESETING THE RECORDER")
@@ -183,8 +167,8 @@ class VoiceRecorderImpl(
 			//start the recorder
 			_recorder?.start()
 			Log.d(LOGGER_TAG, "RECORDER PREPARED AND STARTED")
-			//set is recording to true
-			_recorderState.update { RecorderState.RECORDING }
+			// set is recording to true
+			stopWatch.startOrResume()
 			Log.d(LOGGER_TAG, "IS RECORDING TO TRUE")
 		} catch (e: IOException) {
 			e.printStackTrace()
@@ -194,16 +178,13 @@ class VoiceRecorderImpl(
 	override suspend fun stopRecording() {
 		try {
 			// reset the timer
-			Log.d(LOGGER_TAG, "RESET THE STOPWATCH")
-			_elapsedTime.update { 0 }
-			//set is recording to completed
-			_recorderState.update { RecorderState.COMPLETED }
-			Log.d(LOGGER_TAG, "SETTING IS RECORDING TO FALSE")
+			Log.d(LOGGER_TAG, "STOPWATCH STOPPED")
+			stopWatch.stop()
 			//stop the ongoing recording
 			_recorder?.stop()
 			Log.d(LOGGER_TAG, "RECORDER STOPPED")
 			// update the file
-			updateRecorderParams()
+			stopAndUpdateFileMetaData()
 		} catch (e: IOException) {
 			e.printStackTrace()
 		}
@@ -211,7 +192,10 @@ class VoiceRecorderImpl(
 
 	override fun pauseRecording() {
 		try {
-			_recorderState.update { RecorderState.PAUSED }
+			//pause recorder
+			Log.d(LOGGER_TAG, "STOPWATCH PAUSED")
+			stopWatch.pause()
+			//pause recorder
 			_recorder?.pause()
 			Log.d(LOGGER_TAG, "RECORDER PAUSED")
 		} catch (e: IOException) {
@@ -221,7 +205,10 @@ class VoiceRecorderImpl(
 
 	override fun resumeRecording() {
 		try {
-			_recorderState.update { RecorderState.RECORDING }
+			//resume stopwatch
+			Log.d(LOGGER_TAG, "STOPWATCH RESUMED")
+			stopWatch.startOrResume()
+			//resume recorder
 			_recorder?.resume()
 			Log.d(LOGGER_TAG, "RECORDER RESUMED")
 		} catch (e: IOException) {
@@ -229,21 +216,28 @@ class VoiceRecorderImpl(
 		}
 	}
 
-	override suspend fun releaseResources() {
-		_recordingUri?.let {
+	override fun releaseResources() {
+		// closing the descriptor
+		Log.d(LOGGER_TAG, "CLOSING THE FILE DESCRIPTOR")
+		_fd?.close()
+		_fd = null
+		// deleting the file
+		_recordingUri?.let { uri ->
 			// clear the file if not save correctlty
-			Log.d(LOGGER_TAG, "CLEARING THE FILE AS RECORDER CLEAR METHOD IS CALLED")
-			fileProvider.cancelFileCreation(it)
+			runBlocking(Dispatchers.IO) {
+				Log.d(LOGGER_TAG, "CLEARING THE FILE AS RECORDER CLEAR METHOD IS CALLED")
+				fileProvider.cancelFileCreation(uri)
+			}
 		}
-		Log.d(LOGGER_TAG, "RELEASE RECORDER")
+		//set recorder null
+		_recordingUri == null
 		// clear the recorder resources
+		Log.d(LOGGER_TAG, "RELEASE RECORDER")
 		_recorder?.release()
 		_recorder == null
-		// set is recording to false
-		Log.d(LOGGER_TAG, "RECORDER STATE TO IDLE")
-		_recorderState.update { RecorderState.IDLE }
-		// reset the timer
-		Log.d(LOGGER_TAG, "RESET THE STOPWATCH")
-		_elapsedTime.update { 0 }
+		// resetting the stopwatch
+		Log.d(LOGGER_TAG, "RESETTING STOPWATCH")
+		stopWatch.reset()
+
 	}
 }

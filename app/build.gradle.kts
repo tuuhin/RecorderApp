@@ -4,6 +4,7 @@ plugins {
 	alias(libs.plugins.compose.compiler)
 	alias(libs.plugins.ksp)
 	alias(libs.plugins.hilt)
+	alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -25,7 +26,10 @@ android {
 
 	buildTypes {
 		release {
-			isMinifyEnabled = false
+			isMinifyEnabled = true
+			applicationIdSuffix = ".release"
+			isShrinkResources = true
+			multiDexEnabled = true
 			proguardFiles(
 				getDefaultProguardFile("proguard-android-optimize.txt"),
 				"proguard-rules.pro"
@@ -67,10 +71,20 @@ dependencies {
 	implementation(libs.androidx.ui.graphics)
 	implementation(libs.androidx.ui.tooling.preview)
 	implementation(libs.androidx.material3)
-	//lifecycle compose
+	//icons
+	implementation(libs.material.icons.extended)
+	//navigation
+	implementation(libs.androidx.navigation.compose)
+	implementation(libs.androidx.hilt.navigation.compose)
+	//kotlinx serialization
+	implementation(libs.kotlinx.serialization.json)
+	//lifecycle
 	implementation(libs.androidx.lifecycle.runtime.compose)
+	implementation(libs.androidx.lifecycle.service)
 	//kotlinx-datetime
 	implementation(libs.kotlinx.datetime)
+	//kotlinx-immutable
+	implementation(libs.kotlinx.collections.immutable)
 	//hilt
 	ksp(libs.hilt.android.compiler)
 	implementation(libs.hilt.android)
@@ -80,6 +94,10 @@ dependencies {
 	implementation(libs.androidx.core.splashscreen)
 	// tests
 	testImplementation(libs.junit)
+	testImplementation(libs.turbine)
+	implementation(libs.kotlin.test)
+	testImplementation(libs.kotlinx.coroutines.test)
+	testImplementation(libs.assertk)
 	//android tests
 	androidTestImplementation(libs.androidx.junit)
 	androidTestImplementation(libs.androidx.espresso.core)

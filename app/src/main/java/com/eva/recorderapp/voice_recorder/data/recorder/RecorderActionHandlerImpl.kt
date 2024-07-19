@@ -2,9 +2,12 @@ package com.eva.recorderapp.voice_recorder.data.recorder
 
 import android.content.Context
 import android.content.Intent
-import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderActionHandler
+import android.util.Log
+import com.eva.recorderapp.voice_recorder.data.service.VoiceRecorderService
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
-import com.eva.recorderapp.voice_recorder.services.VoiceRecorderService
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderActionHandler
+
+const private val LOGGER_TAG = "RECORDER_ACTION_HANDLER"
 
 class RecorderActionHandlerImpl(
 	private val context: Context
@@ -42,11 +45,19 @@ class RecorderActionHandlerImpl(
 	}
 
 	override fun onRecorderAction(action: RecorderAction) {
-		when (action) {
-			RecorderAction.START_RECORDER -> startRecorder()
-			RecorderAction.RESUME_RECORDER -> resumeRecorder()
-			RecorderAction.PAUSE_RECORDER -> pauseRecorder()
-			RecorderAction.STOP_RECORDER -> stopRecorder()
+		try {
+			when (action) {
+				RecorderAction.START_RECORDER -> startRecorder()
+				RecorderAction.RESUME_RECORDER -> resumeRecorder()
+				RecorderAction.PAUSE_RECORDER -> pauseRecorder()
+				RecorderAction.STOP_RECORDER -> stopRecorder()
+			}
+		} catch (e: SecurityException) {
+			Log.d(LOGGER_TAG, "SECURITY EXCEPTION", e)
+		} catch (e: IllegalStateException) {
+			Log.d(LOGGER_TAG, "SERVICE CANNOT BE STARTED", e)
+		} catch (e: Exception) {
+			e.printStackTrace()
 		}
 	}
 }

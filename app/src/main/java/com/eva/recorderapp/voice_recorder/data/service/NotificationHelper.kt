@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.services
+package com.eva.recorderapp.voice_recorder.data.service
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -94,7 +94,17 @@ class NotificationHelper(private val context: Context) {
 			.setOngoing(true)
 			.setContentIntent(contentActivityIntent)
 
-	val notification: Notification
+	val recordingCompletedNotification: Notification
+		get() = NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
+			.setSmallIcon(R.drawable.ic_launcher_foreground)
+			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+			.setPriority(NotificationCompat.PRIORITY_HIGH)
+			.setContentTitle(context.getString(R.string.recorder_recording_completed))
+			.setOnlyAlertOnce(true)
+			.setContentIntent(contentActivityIntent)
+			.build()
+
+	val timerNotification: Notification
 		get() = _recorderNotifcation.build()
 
 	@SuppressLint("RestrictedApi")

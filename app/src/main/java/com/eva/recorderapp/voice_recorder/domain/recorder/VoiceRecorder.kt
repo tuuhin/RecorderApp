@@ -22,7 +22,7 @@ interface VoiceRecorder {
 	/**
 	 * A flow determining how long the recording has been started
 	 */
-	val recorderTimer: Flow<LocalTime>
+	val recorderTimer: StateFlow<LocalTime>
 
 	/**
 	 * Initiates the recorder to be used
@@ -52,5 +52,5 @@ interface VoiceRecorder {
 	/**
 	 * Clean up funtion to clean all the allocated resources with the recorder
 	 */
-	suspend fun releaseResources()
+	fun releaseResources()
 }

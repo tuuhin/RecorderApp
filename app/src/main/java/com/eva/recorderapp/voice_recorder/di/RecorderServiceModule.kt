@@ -2,9 +2,10 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import com.eva.recorderapp.voice_recorder.data.recorder.VoiceRecorderImpl
+import com.eva.recorderapp.voice_recorder.data.service.NotificationHelper
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
-import com.eva.recorderapp.voice_recorder.services.NotificationHelper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,10 +19,16 @@ object RecorderServiceModule {
 
 	@Provides
 	@ServiceScoped
+	fun providesStopWatch(): RecorderStopWatch = RecorderStopWatch()
+
+	@Provides
+	@ServiceScoped
 	fun providesVoiceRecorder(
 		@ApplicationContext context: Context,
-		fileProvider: RecorderFileProvider
-	): VoiceRecorder = VoiceRecorderImpl(context = context, fileProvider = fileProvider)
+		fileProvider: RecorderFileProvider,
+		stopWatch: RecorderStopWatch
+	): VoiceRecorder =
+		VoiceRecorderImpl(context = context, fileProvider = fileProvider, stopWatch = stopWatch)
 
 	@Provides
 	@ServiceScoped
