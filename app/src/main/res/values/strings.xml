@@ -5,4 +5,16 @@
   <string name="recorder_action_stop">Stop</string>
   <string name="recorder_notification_text_running">Recorder is running</string>
   <string name="recorder_notification_text_paused">Recorder Paused</string>
+  <string name="back_arrow">Back Arrow</string>
+  <string name="action_pasued">recoder action pause</string>
+  <string name="action_stop">recorder action stop</string>
+  <string name="allow_permissions">Allow permission</string>
+  <string name="recorder_permission_not_found">Recorder Permission not found</string>
+  <string name="recorder_permission_not_found_desc">Its a recorder app you need to allow audio recording in order to work</string>
+  <string name="menu_option_settings">Settings</string>
+  <string name="menu_option_recycle_bin">Recycle Bin</string>
+  <string name="menu_more_option">More Options</string>
+  <string name="recorder_topbar_title">Voice Recorder</string>
+  <string name="recorder_recording_completed">Recording finished</string>
+  <string name="recording_action_delete">Delete</string>
 </resources>
