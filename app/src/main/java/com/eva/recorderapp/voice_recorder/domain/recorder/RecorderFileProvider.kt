@@ -1,15 +1,16 @@
 package com.eva.recorderapp.voice_recorder.domain.recorder
 
 import android.net.Uri
-import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
+import com.eva.recorderapp.common.Resource
+
 
 interface RecorderFileProvider {
 
-	suspend fun getAppVoiceRecordings(): List<RecordedVoiceModel>
+	suspend fun createUriForRecording(): Uri?
 
-	suspend fun createFileForRecording(): Uri?
+	suspend fun updateUriAfterRecording(file: Uri): Resource<Unit, Exception>
 
-	suspend fun updateFileAfterRecording(file: Uri): Boolean
+	suspend fun deleteUriIfNotPending(uri: Uri)
 
-	suspend fun cancelFileCreation(file: Uri): Boolean
+
 }

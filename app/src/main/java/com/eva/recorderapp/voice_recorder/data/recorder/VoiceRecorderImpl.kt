@@ -118,7 +118,7 @@ class VoiceRecorderImpl(
 	private suspend fun initiateRecorderParams() = coroutineScope {
 		if (_recorder == null) createRecorder()
 
-		val file = async(Dispatchers.IO) { fileProvider.createFileForRecording() }
+		val file = async(Dispatchers.IO) { fileProvider.createUriForRecording() }
 		// ensures the file is being created in a differnt coroutine
 		_recordingUri = file.await()
 
@@ -149,7 +149,7 @@ class VoiceRecorderImpl(
 		Log.d(LOGGER_TAG, "FILE DESCRIPTOR CLOSED")
 		// update the file
 		_recordingUri?.let { uri ->
-			fileProvider.updateFileAfterRecording(uri)
+			fileProvider.updateUriAfterRecording(uri)
 			Log.d(LOGGER_TAG, "RECORDER FILE UPDATED")
 		}
 		// set recording uri to null and close the socket
@@ -226,7 +226,7 @@ class VoiceRecorderImpl(
 			// clear the file if not save correctlty
 			runBlocking(Dispatchers.IO) {
 				Log.d(LOGGER_TAG, "CLEARING THE FILE AS RECORDER CLEAR METHOD IS CALLED")
-				fileProvider.cancelFileCreation(uri)
+				fileProvider.deleteUriIfNotPending(uri)
 			}
 		}
 		//set recorder null
