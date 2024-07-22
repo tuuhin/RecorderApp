@@ -27,4 +27,10 @@ object PreviewFakes {
 	val FAKE_VOICE_RECORDING_MODELS = List(10) { FAKE_VOICE_RECORDING_MODEL }
 		.toSelectableRecordings()
 		.toImmutableList()
+
+	val FAKE_VOICE_RECORDINGS_SELECTED = List(10) { FAKE_VOICE_RECORDING_MODEL }
+		.toSelectableRecordings()
+		.mapIndexed { idx, record -> record.copy(isSelected = if (idx % 2 == 0) true else false) }
+		.toImmutableList()
+
 }

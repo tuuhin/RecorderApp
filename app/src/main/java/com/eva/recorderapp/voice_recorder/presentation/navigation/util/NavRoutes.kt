@@ -9,4 +9,7 @@ sealed interface NavRoutes {
 
 	@Serializable
 	data object VoiceRecordings : NavRoutes
+
+	@Serializable
+	data object TrashRecordings : NavRoutes
 }

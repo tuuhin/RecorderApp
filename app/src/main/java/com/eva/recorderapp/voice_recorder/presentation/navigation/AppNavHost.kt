@@ -9,6 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recorderRoute
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingsroute
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.trashRecordingsRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 
@@ -27,7 +29,11 @@ fun AppNavHost(
 			startDestination = NavRoutes.VoiceRecorder,
 			modifier = modifier
 		) {
-			this.recorderRoute(navController = navController)
+			recorderRoute(navController = navController)
+			recordingsroute(controller = navController)
+			trashRecordingsRoute(controller = navController)
 		}
 	}
 }
+
+

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +39,7 @@ import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.Recor
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderAmplitudeGraph
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTimerText
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTopBar
+import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.datetime.LocalTime
@@ -57,6 +59,7 @@ fun VoiceRecroderScreen(
 ) {
 
 	val context = LocalContext.current
+	val snackBarHostState = LocalSnackBarProvider.current
 
 	var hasRecordPermission by remember {
 		mutableStateOf(
@@ -74,6 +77,7 @@ fun VoiceRecroderScreen(
 				navigation = navigation
 			)
 		},
+		snackbarHost = { SnackbarHost(snackBarHostState) },
 		modifier = modifier,
 	) { scPadding ->
 		Crossfade(

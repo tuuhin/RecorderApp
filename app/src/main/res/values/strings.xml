@@ -17,4 +17,14 @@
   <string name="recorder_topbar_title">Voice Recorder</string>
   <string name="recorder_recording_completed">Recording finished</string>
   <string name="recording_action_delete">Delete</string>
+  <string name="selected_recording_count">%d selected</string>
+  <string name="cancel_selection">Close Action</string>
+  <string name="select_all_action">Select All</string>
+  <string name="recording_top_bar_title">Recordings</string>
+  <string name="recording_trash_request_success">Recordings Trashed</string>
+  <string name="recording_trash_request_falied">Cannot move recordings to trash</string>
+  <string name="recording_action_trash">Remove</string>
+  <string name="no_recodings">No recording to display</string>
+  <string name="recording_bin_top_bar_title">Bin</string>
+  <string name="recording_info_expires_at">Expires At: %s</string>
 </resources>

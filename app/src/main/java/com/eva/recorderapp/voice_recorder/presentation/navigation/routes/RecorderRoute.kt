@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -43,10 +44,12 @@ fun NavGraphBuilder.recorderRoute(
 					recorderState = recorderstate,
 					recorderAmps = recorderAmplitude,
 					onRecorderAction = viewModel::onAction,
-					onShowRecordings = {
+					onShowRecordings = dropUnlessResumed {
 						navController.navigate(NavRoutes.VoiceRecordings)
 					},
-					onNavigateToBin = {},
+					onNavigateToBin = dropUnlessResumed {
+						navController.navigate(NavRoutes.TrashRecordings)
+					},
 					onNavigateToSettings = {},
 				)
 			} else Box(modifier = Modifier.fillMaxSize())
