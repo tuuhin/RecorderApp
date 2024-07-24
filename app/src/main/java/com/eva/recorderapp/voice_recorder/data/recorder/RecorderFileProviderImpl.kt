@@ -37,6 +37,7 @@ class RecorderFileProviderImpl(
 			put(MediaStore.Audio.AudioColumns.DATE_ADDED, System.currentTimeMillis())
 			put(MediaStore.Audio.AudioColumns.DATE_TAKEN, System.currentTimeMillis())
 			put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, System.currentTimeMillis())
+			put(MediaStore.Audio.AudioColumns.ARTIST, context.packageName)
 			put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 				put(MediaStore.Audio.AudioColumns.IS_RECORDING, 1)
@@ -46,13 +47,16 @@ class RecorderFileProviderImpl(
 		return withContext(Dispatchers.IO) {
 			try {
 				Log.d(LOGGER_TAG, "CREATING FILE")
-				val finalUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+				val contenUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 					contentResolver.insert(volumeUri, metaData, null)
 				} else {
 					contentResolver.insert(volumeUri, metaData)
 				}
-				Log.d(LOGGER_TAG, "URI CREATED , $finalUri")
-				finalUri
+				Log.d(LOGGER_TAG, "URI CREATED , $contenUri")
+				contenUri
+			} catch (e: IllegalArgumentException) {
+				Log.e(LOGGER_TAG, "EXTRAS PROVIDED WRONG")
+				null
 			} catch (e: IOException) {
 				Log.e(LOGGER_TAG, "IO EXCEPTION", e)
 				e.printStackTrace()

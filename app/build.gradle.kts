@@ -5,6 +5,7 @@ plugins {
 	alias(libs.plugins.ksp)
 	alias(libs.plugins.hilt)
 	alias(libs.plugins.kotlinx.serialization)
+	alias(libs.plugins.androidx.room)
 }
 
 android {
@@ -13,7 +14,7 @@ android {
 
 	defaultConfig {
 		applicationId = "com.eva.recorderapp"
-		minSdk = 28
+		minSdk = 29
 		targetSdk = 34
 		versionCode = 1
 		versionName = "1.0"
@@ -52,6 +53,9 @@ android {
 		}
 	}
 }
+room {
+	schemaDirectory("$projectDir/schemas")
+}
 
 composeCompiler {
 	//	enableStrongSkippingMode = true
@@ -88,10 +92,16 @@ dependencies {
 	//hilt
 	ksp(libs.hilt.android.compiler)
 	implementation(libs.hilt.android)
+	//room
+	implementation(libs.androidx.room.runtime)
+	implementation(libs.androidx.room.ktx)
+	ksp(libs.androidx.room.compiler)
 	//media3
 	implementation(libs.androidx.media3.common)
 	//splash
 	implementation(libs.androidx.core.splashscreen)
+	//dynamic font
+	implementation(libs.androidx.ui.text.google.fonts)
 	// tests
 	testImplementation(libs.junit)
 	testImplementation(libs.turbine)

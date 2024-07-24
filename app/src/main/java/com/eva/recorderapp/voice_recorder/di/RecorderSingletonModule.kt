@@ -1,12 +1,8 @@
 package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
-import com.eva.recorderapp.voice_recorder.data.files.TrashRecordingsProviderImpl
-import com.eva.recorderapp.voice_recorder.data.files.VoiceRecordingsProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recorder.RecorderActionHandlerImpl
 import com.eva.recorderapp.voice_recorder.data.recorder.RecorderFileProviderImpl
-import com.eva.recorderapp.voice_recorder.domain.files.TrashRecordingsProvider
-import com.eva.recorderapp.voice_recorder.domain.files.VoiceRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderActionHandler
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import dagger.Module
@@ -33,16 +29,4 @@ object RecorderSingletonModule {
 		@ApplicationContext context: Context
 	): RecorderActionHandler = RecorderActionHandlerImpl(context)
 
-	@Provides
-	@Singleton
-	fun providesRecordingsProvider(
-		@ApplicationContext context: Context
-	): VoiceRecordingsProvider = VoiceRecordingsProviderImpl(context)
-
-
-	@Provides
-	@Singleton
-	fun providesTrashedRecordingsProvider(
-		@ApplicationContext context: Context
-	): TrashRecordingsProvider = TrashRecordingsProviderImpl(context)
 }

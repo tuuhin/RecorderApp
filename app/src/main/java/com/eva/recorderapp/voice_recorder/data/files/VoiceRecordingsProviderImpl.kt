@@ -1,7 +1,6 @@
 package com.eva.recorderapp.voice_recorder.data.files
 
 import android.content.ContentResolver
-import android.content.ContentValues
 import android.content.Context
 import android.database.ContentObserver
 import android.database.SQLException
@@ -10,7 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import androidx.core.database.getIntOrNull
 import androidx.core.net.toUri
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
@@ -49,8 +47,8 @@ class VoiceRecordingsProviderImpl(
 			}
 
 			val observer = object : ContentObserver(null) {
-				override fun onChange(selfChange: Boolean, uri: Uri?, flags: Int) {
-					super.onChange(selfChange, uri, flags)
+				override fun onChange(selfChange: Boolean) {
+					super.onChange(selfChange)
 
 					Log.d(LOGGER_TAG, "RECORDINGS CONTENT CHANGED")
 					// if the content updated then resend the values
@@ -92,8 +90,8 @@ class VoiceRecordingsProviderImpl(
 
 		return withContext(Dispatchers.IO) {
 			try {
-				val models = contentResolver.query(volumeUri, baseProjection, queryArgs, null)
-					?.use { cursor -> recordingsFromCursor(cursor = cursor, volumeUri = volumeUri) }
+				val models = contentResolver.query(volumeUri, recordingsProjection, queryArgs, null)
+					?.use { cursor -> readNormalRecordingsFromCursor(cursor = cursor) }
 					?: emptyList()
 
 				Resource.Success(models)
@@ -149,64 +147,28 @@ class VoiceRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun createTrashRecordings(models: Collection<RecordedVoiceModel>): Resource<Unit, Exception> {
+	override suspend fun permanentlyDeleteRecordedVoices(recordings: Collection<RecordedVoiceModel>): Resource<Unit, Exception> {
 		return withContext(Dispatchers.IO) {
-			try {
-				supervisorScope {
-					val trashRequests = models.map { model ->
+			supervisorScope {
+				try {
+					val deleteRequests = recordings.map { model ->
 						val uri = model.fileUri.toUri()
-						async { moveUriToTrash(uri) }
+						async { permanentDeleteFromStorage(uri) }
 					}
-					trashRequests.awaitAll()
+					deleteRequests.awaitAll()
 					Resource.Success(
 						data = Unit,
-						message = context.getString(R.string.recording_trash_request_success)
+						message = context.getString(R.string.recording_delete_request_success)
 					)
+				} catch (e: CancellationException) {
+					throw e
+				} catch (e: Exception) {
+					e.printStackTrace()
+					val errorMessage = context.getString(R.string.recording_delete_request_falied)
+					Resource.Error(e, errorMessage)
 				}
-			} catch (e: CancellationException) {
-				throw e
-			} catch (e: Exception) {
-				e.printStackTrace()
-				Resource.Error(
-					error = e,
-					message = context.getString(R.string.recording_trash_request_falied)
-				)
 			}
 		}
-	}
-
-	private suspend fun moveUriToTrash(uri: Uri): Boolean {
-		return withContext(Dispatchers.IO) {
-
-			val isTrashed = checkIfUriAlreadyTrashed(uri)
-			if (isTrashed) {
-				Log.d(LOGGER_TAG, "URI IS ALREADY IN BIN")
-				return@withContext false
-			}
-
-			val updatedMetaData = ContentValues().apply {
-				put(MediaStore.Audio.AudioColumns.IS_TRASHED, 1)
-				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, System.currentTimeMillis())
-			}
-			contentResolver.update(uri, updatedMetaData, null, null)
-			Log.d(LOGGER_TAG, "URI MOVED TO TRASH")
-			return@withContext true
-			// single row affected i.e, the updated file
-		}
-	}
-
-	private suspend fun checkIfUriAlreadyTrashed(uri: Uri): Boolean {
-		val projection = arrayOf(MediaStore.Audio.AudioColumns.IS_TRASHED)
-		return contentResolver.query(uri, projection, Bundle(), null)?.use { cursor ->
-			val column = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.IS_PENDING)
-
-			if (!cursor.moveToFirst()) return false
-
-			val isTrashed = cursor.getIntOrNull(column)
-			// its already updated so no need to delete
-			return isTrashed == 1
-
-		} ?: false
 	}
 
 }

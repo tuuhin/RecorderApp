@@ -27,8 +27,11 @@ object RecorderServiceModule {
 		@ApplicationContext context: Context,
 		fileProvider: RecorderFileProvider,
 		stopWatch: RecorderStopWatch
-	): VoiceRecorder =
-		VoiceRecorderImpl(context = context, fileProvider = fileProvider, stopWatch = stopWatch)
+	): VoiceRecorder = VoiceRecorderImpl(
+		context = context,
+		fileProvider = fileProvider,
+		stopWatch = stopWatch
+	)
 
 	@Provides
 	@ServiceScoped
