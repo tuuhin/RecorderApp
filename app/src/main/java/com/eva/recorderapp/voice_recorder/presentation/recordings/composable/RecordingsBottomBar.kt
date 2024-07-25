@@ -3,23 +3,31 @@ package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.SelectableRecordings
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.collections.immutable.ImmutableList
 
@@ -29,13 +37,16 @@ private val bottomBarAnimationSpec = tween<IntOffset>(
 	easing = EaseInOut
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordingsBottomBar(
 	recordings: ImmutableList<SelectableRecordings>,
-	isVisible: Boolean,
 	onItemDelete: () -> Unit,
+	isVisible: Boolean,
 	modifier: Modifier = Modifier,
 	showRename: Boolean = false,
+	onRename: () -> Unit = {},
+	onShareSelected: () -> Unit = {},
 ) {
 	AnimatedVisibility(
 		visible = isVisible,
@@ -44,31 +55,43 @@ fun RecordingsBottomBar(
 	) {
 		BottomAppBar(
 			actions = {
-				IconButton(onClick = { }) {
-					Icon(
-						Icons.Outlined.Category,
-						contentDescription = "Add category",
-					)
-				}
-				IconButton(onClick = { }) {
-					Icon(
-						imageVector = Icons.Outlined.StarOutline,
-						contentDescription = "Favourites"
-					)
-				}
-				if (showRename) {
-					IconButton(onClick = { /* do something */ }) {
-						Icon(
-							Icons.Outlined.Edit,
-							contentDescription = "Rename",
-						)
+				AnimatedVisibility(
+					visible = showRename,
+					enter = slideInHorizontally(),
+					exit = slideOutHorizontally()
+				) {
+					TooltipBox(
+						positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+						tooltip = {
+							PlainTooltip {
+								Text(text = stringResource(id = R.string.rename_recording_action))
+							}
+						},
+						state = rememberTooltipState()
+					) {
+						IconButton(onClick = onRename) {
+							Icon(
+								imageVector = Icons.Outlined.Edit,
+								contentDescription = stringResource(id = R.string.rename_recording_action),
+							)
+						}
 					}
 				}
-				IconButton(onClick = { /* do something */ }) {
-					Icon(
-						Icons.Outlined.Share,
-						contentDescription = "Share",
-					)
+				TooltipBox(
+					positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+					tooltip = {
+						PlainTooltip {
+							Text(text = stringResource(id = R.string.action_share))
+						}
+					},
+					state = rememberTooltipState()
+				) {
+					IconButton(onClick = onShareSelected) {
+						Icon(
+							Icons.Outlined.Share,
+							contentDescription = stringResource(id = R.string.action_share),
+						)
+					}
 				}
 			},
 			floatingActionButton = {
@@ -78,7 +101,7 @@ fun RecordingsBottomBar(
 				)
 			},
 			tonalElevation = 2.dp,
-			modifier = modifier
+			modifier = modifier,
 		)
 	}
 }
@@ -89,5 +112,7 @@ private fun RecorginsBottomBarPreview() = RecorderAppTheme {
 	RecordingsBottomBar(
 		recordings = PreviewFakes.FAKE_VOICE_RECORDING_MODELS,
 		isVisible = true,
-		onItemDelete = {})
+		onShareSelected = {},
+		onItemDelete = {}
+	)
 }

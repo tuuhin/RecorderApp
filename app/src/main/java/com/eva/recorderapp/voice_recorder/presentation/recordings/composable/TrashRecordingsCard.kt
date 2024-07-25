@@ -1,10 +1,8 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,54 +16,48 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
-import com.eva.recorderapp.common.LocalTimeFormats.NOTIFICATION_TIMER_TIME_FORMAT
-import com.eva.recorderapp.common.LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT
+import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.datetime.format
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun RecordingCard(
-	music: RecordedVoiceModel,
-	onItemClick: () -> Unit,
-	onItemSelect: () -> Unit,
+fun TrashRecordingsCard(
+	trashRecording: TrashRecordingModel,
+	onClick: () -> Unit,
 	modifier: Modifier = Modifier,
 	isSelectable: Boolean = false,
 	isSelected: Boolean = false,
 	shape: Shape = MaterialTheme.shapes.medium,
 ) {
 
-	val clickModifier = if (isSelectable)
-		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selcted")
-	else Modifier.combinedClickable(
-		onClick = onItemClick,
-		onLongClick = onItemSelect,
-		onClickLabel = "Item Clicked",
-		onLongClickLabel = "Item Selected"
-	)
+	val context = LocalContext.current
 
-	val cardColor = if (!isSelected) CardDefaults.elevatedCardColors()
-	else CardDefaults.cardColors()
+	val expiryDateText = remember(trashRecording.expiresAt) {
+		val readbleText =
+			trashRecording.expiresAt.format(LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT)
+		context.getString(R.string.recording_info_expires_at, readbleText)
+	}
 
 	ElevatedCard(
-		colors = cardColor,
 		shape = shape,
 		elevation = CardDefaults.elevatedCardElevation(pressedElevation = 4.dp),
 		modifier = modifier
 			.clip(shape)
-			.then(clickModifier),
+			.clickable(onClick = onClick),
 	) {
 		Row(
 			horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -78,14 +70,14 @@ fun RecordingCard(
 				if (showSelectOption) {
 					RadioButton(
 						selected = isSelected,
-						onClick = onItemSelect,
+						onClick = onClick,
 						colors = RadioButtonDefaults
 							.colors(selectedColor = MaterialTheme.colorScheme.secondary)
 
 					)
 				} else {
 					Image(
-						painter = painterResource(id = R.drawable.ic_play_variant),
+						painter = painterResource(id = R.drawable.ic_record_circle),
 						contentDescription = null,
 						colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.primary),
 						modifier = Modifier
@@ -99,66 +91,28 @@ fun RecordingCard(
 				verticalArrangement = Arrangement.spacedBy(4.dp)
 			) {
 				Text(
-					text = music.displayName,
+					text = trashRecording.displayName,
 					style = MaterialTheme.typography.titleSmall,
 					color = MaterialTheme.colorScheme.secondary
 				)
-				Row(
-					horizontalArrangement = Arrangement.SpaceBetween,
-					verticalAlignment = Alignment.CenterVertically,
-					modifier = Modifier.fillMaxWidth()
-				) {
-					Text(
-						text = music.durationAsLocaltime.format(NOTIFICATION_TIMER_TIME_FORMAT),
-						style = MaterialTheme.typography.bodyMedium
-					)
-					Text(
-						text = music.recordedAt.format(RECORDING_RECORD_TIME_FORMAT),
-						style = MaterialTheme.typography.bodyMedium,
-						color = MaterialTheme.colorScheme.onSurfaceVariant
-					)
-				}
+				Text(
+					text = expiryDateText,
+					style = MaterialTheme.typography.bodyMedium,
+					modifier = Modifier.align(Alignment.End)
+				)
+
 			}
 
 		}
 	}
 }
 
-@PreviewLightDark
-@Composable
-private fun RecordingCardNormalPreview() = RecorderAppTheme {
-	RecordingCard(
-		music = PreviewFakes.FAKE_VOICE_RECORDING_MODEL,
-		onItemClick = {},
-		onItemSelect = {},
-		modifier = Modifier.fillMaxWidth()
-	)
-}
 
 @PreviewLightDark
 @Composable
-private fun RecordingCardSelectModePreview() = RecorderAppTheme {
-	RecordingCard(
-		music = PreviewFakes.FAKE_VOICE_RECORDING_MODEL,
-		onItemClick = {},
-		onItemSelect = {},
-		isSelectable = true,
-		modifier = Modifier.fillMaxWidth(),
+private fun TrashRecordingsCardPreview() = RecorderAppTheme {
+	TrashRecordingsCard(
+		trashRecording = PreviewFakes.FAKE_TRASH_RECORDINGS_MODEL,
+		onClick = { },
 	)
 }
-
-
-@PreviewLightDark
-@Composable
-private fun RecordingCardSelectedPreview() = RecorderAppTheme {
-	RecordingCard(
-		music = PreviewFakes.FAKE_VOICE_RECORDING_MODEL,
-		isSelectable = true,
-		isSelected = true,
-		onItemClick = {},
-		onItemSelect = {},
-		modifier = Modifier.fillMaxWidth(),
-	)
-}
-
-

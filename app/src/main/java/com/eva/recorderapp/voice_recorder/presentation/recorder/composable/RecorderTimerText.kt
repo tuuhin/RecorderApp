@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.common.LocalTimeFormats
+import com.eva.recorderapp.ui.theme.DownloadableFonts
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 
@@ -29,5 +30,6 @@ fun RecorderTimerText(
 		text = timeText,
 		modifier = modifier.padding(horizontal = 20.dp, vertical = 10.dp),
 		style = MaterialTheme.typography.displayLarge,
+		fontFamily = DownloadableFonts.CLOCK_FACE
 	)
 }

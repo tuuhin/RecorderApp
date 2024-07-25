@@ -44,4 +44,15 @@ interface VoiceRecordingsProvider {
 	 */
 	suspend fun permanentlyDeleteRecordedVoices(recordings: Collection<RecordedVoiceModel>): Resource<Unit, Exception>
 
+	/**
+	 * Renames the previous recording to a new name
+	 * @param recording Thre [RecordedVoiceModel] whoes name need to be changed
+	 * @param newName New name for the file
+	 * @returna flow indicating everything performed well
+	 */
+	suspend fun renameRecording(
+		recording: RecordedVoiceModel,
+		newName: String
+	): Flow<Resource<Boolean, Exception>>
+
 }

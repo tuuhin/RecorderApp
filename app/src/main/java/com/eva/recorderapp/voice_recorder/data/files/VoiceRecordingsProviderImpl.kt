@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.data.files
 
 import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Context
 import android.database.ContentObserver
 import android.database.SQLException
@@ -24,6 +25,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
@@ -169,6 +172,27 @@ class VoiceRecordingsProviderImpl(
 				}
 			}
 		}
+	}
+
+	override suspend fun renameRecording(recording: RecordedVoiceModel, newName: String)
+			: Flow<Resource<Boolean, Exception>> {
+		return flow {
+			emit(Resource.Loading)
+			try {
+				val uri = recording.fileUri.toUri()
+				val contentValues = ContentValues().apply {
+					put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, newName)
+					put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, System.currentTimeMillis())
+				}
+				val rowsModified = contentResolver.update(uri, contentValues, null, null)
+				emit(Resource.Success(rowsModified == 1))
+			} catch (e: SQLException) {
+				emit(Resource.Error(e, "SQL EXCEPTION"))
+			} catch (e: Exception) {
+				e.printStackTrace()
+				emit(Resource.Error(e))
+			}
+		}.flowOn(Dispatchers.IO)
 	}
 
 }

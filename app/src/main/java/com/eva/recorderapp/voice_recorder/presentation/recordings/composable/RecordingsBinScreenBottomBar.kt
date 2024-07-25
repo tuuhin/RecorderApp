@@ -14,13 +14,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.SelectableRecordings
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun RecordingsBinScreenBottomBar(
-	recordings: ImmutableList<SelectableRecordings>,
+	recordings: ImmutableList<SelectableTrashRecordings>,
 	isVisible: Boolean,
 	onItemsDelete: () -> Unit,
 	onItemsRestore: () -> Unit,

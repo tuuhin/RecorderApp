@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.presentation.recordings.util
+package com.eva.recorderapp.voice_recorder.presentation.recordings.util.state
 
 import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
 

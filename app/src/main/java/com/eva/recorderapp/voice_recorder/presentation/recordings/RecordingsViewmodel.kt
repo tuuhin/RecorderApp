@@ -1,14 +1,23 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
+import android.util.Log
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
+import com.eva.recorderapp.voice_recorder.domain.files.RecordingsActionHelper
+import com.eva.recorderapp.voice_recorder.domain.files.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.files.VoiceRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.RecordingScreenEvent
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.SelectableRecordings
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.toSelectableRecordings
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RenameRecordingEvents
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RecordingsSortInfo
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RenameRecordingState
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SortOptions
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SortOrder
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -17,6 +26,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -28,10 +39,18 @@ import javax.inject.Inject
 @HiltViewModel
 class RecordingsViewmodel @Inject constructor(
 	private val recordingsProvider: VoiceRecordingsProvider,
+	private val trashProvider: TrashRecordingsProvider,
+	private val shareRecordingsHelper: RecordingsActionHelper,
 ) : AppViewModel() {
 
+	private val _sortInfo = MutableStateFlow(RecordingsSortInfo())
+	val sortInfo = _sortInfo.asStateFlow()
+
+	private val _renameState = MutableStateFlow(RenameRecordingState())
+	val renameState = _renameState.asStateFlow()
+
 	private val _recordings = MutableStateFlow(emptyList<SelectableRecordings>())
-	val recordings = _recordings
+	val recordings = combine(_recordings, _sortInfo, transform = ::sortedResults)
 		.map { it.toImmutableList() }
 		.stateIn(
 			scope = viewModelScope,
@@ -39,12 +58,17 @@ class RecordingsViewmodel @Inject constructor(
 			initialValue = persistentListOf()
 		)
 
-	private val _isRecodingsLoaded = MutableStateFlow(false)
-	val isRecordingLoaded = _isRecodingsLoaded.asSharedFlow()
+	private val _isLoaded = MutableStateFlow(false)
+	val isRecordingLoaded = _isLoaded.asStateFlow()
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
+
+
+	private val selectedRecordings: List<RecordedVoiceModel>
+		get() = _recordings.value.filter(SelectableRecordings::isSelected)
+			.map(SelectableRecordings::recoding)
 
 	init {
 		populateRecordings()
@@ -55,19 +79,21 @@ class RecordingsViewmodel @Inject constructor(
 			when (res) {
 				is Resource.Error -> {
 					_uiEvents.emit(
-						UIEvents.ShowSnackBar(
-							message = res.message ?: res.error.message ?: "SOME ERROR"
+						UIEvents.ShowSnackBarWithActions(
+							message = res.message ?: res.error.message ?: "SOME ERROR",
+							actionText = "Retry",
+							action = ::populateRecordings
 						)
 					)
-					_isRecodingsLoaded.update { true }
+					_isLoaded.update { true }
 				}
 
-				Resource.Loading -> _isRecodingsLoaded.update { false }
+				Resource.Loading -> _isLoaded.update { false }
 				is Resource.Success -> {
 					val new = res.data.toSelectableRecordings()
 					_recordings.update { new }
 
-					_isRecodingsLoaded.update { true }
+					_isLoaded.update { true }
 				}
 			}
 
@@ -79,7 +105,32 @@ class RecordingsViewmodel @Inject constructor(
 			is RecordingScreenEvent.OnRecordingSelectOrUnSelect -> ontoggleRecordingSelection(event.recording)
 			RecordingScreenEvent.OnSelectAllRecordings -> onSelectOrUnSelectAllRecordings(true)
 			RecordingScreenEvent.OnUnSelectAllRecordings -> onSelectOrUnSelectAllRecordings(false)
-			RecordingScreenEvent.OnSelectedItemTrashRequest -> {}
+			RecordingScreenEvent.OnSelectedItemTrashRequest -> onTrashSelectedRecordings()
+			is RecordingScreenEvent.OnSortOptionChange -> _sortInfo.update { it.copy(options = event.sort) }
+			is RecordingScreenEvent.OnSortOrderChange -> _sortInfo.update { it.copy(order = event.order) }
+			RecordingScreenEvent.ShareSelectedRecordings -> shareSelectedRecordings()
+		}
+	}
+
+	fun onRenameRecordingEvent(event: RenameRecordingEvents) {
+		when (event) {
+			RenameRecordingEvents.OnCancelRenameRecording -> _renameState.update { state ->
+				state.copy(showDialog = false, textFieldState = TextFieldValue())
+			}
+
+			RenameRecordingEvents.OnRenameRecording -> renameRecording()
+			is RenameRecordingEvents.OnTextValueChange -> _renameState.update { state ->
+				state.copy(textFieldState = event.textValue)
+			}
+
+			RenameRecordingEvents.OnShowRenameDialog -> viewModelScope.launch {
+				if (selectedRecordings.size > 1) {
+					_uiEvents.emit(UIEvents.ShowSnackBar("Cannot modify more than one recording"))
+					return@launch
+				}
+				_renameState.update { state -> state.copy(showDialog = true) }
+			}
+
 		}
 	}
 
@@ -89,16 +140,35 @@ class RecordingsViewmodel @Inject constructor(
 		}
 	}
 
+
+	private fun sortedResults(
+		recordings: List<SelectableRecordings>,
+		sortInfo: RecordingsSortInfo
+	): List<SelectableRecordings> {
+		val sortOptionResult = when (sortInfo.options) {
+			SortOptions.DATE_CREATED -> recordings.sortedBy { it.recoding.recordedAt }
+			SortOptions.DURATION -> recordings.sortedBy { it.recoding.duration }
+			SortOptions.NAME -> recordings.sortedBy { it.recoding.displayName }
+		}
+		return when (sortInfo.order) {
+			SortOrder.ASC -> sortOptionResult
+			SortOrder.DESC -> sortOptionResult.reversed()
+		}
+	}
+
 	private fun onTrashSelectedRecordings() {
-		val selected = _recordings.value.filter { it.isSelected }.map { it.recoding }
+
 		viewModelScope.launch {
-			val result = recordingsProvider.createTrashRecordings(selected)
+			val result = trashProvider.createTrashRecordings(selectedRecordings)
 			when (result) {
 				is Resource.Error -> _uiEvents.emit(
-					UIEvents.ShowSnackBar(result.message ?: "CANNOT DELETE")
+					UIEvents.ShowSnackBar(result.message ?: "Cannot move items to trash")
 				)
 
-				is Resource.Success -> TODO()
+				is Resource.Success -> _uiEvents.emit(
+					UIEvents.ShowSnackBar(result.message ?: "Moved items to trash")
+				)
+
 				else -> {}
 			}
 		}
@@ -114,5 +184,56 @@ class RecordingsViewmodel @Inject constructor(
 		}
 	}
 
+	private fun renameRecording() = viewModelScope.launch {
+
+		selectedRecordings.firstOrNull()?.let { recording ->
+			Log.d("TAG", "RENAME SELECTION $selectedRecordings")
+
+			val newName = _renameState.value.textFieldState.text
+
+			if (newName.isEmpty() || newName.isBlank()) {
+				_renameState.update { state -> state.copy(isBlank = true) }
+				return@launch
+			}
+
+			recordingsProvider.renameRecording(recording, newName)
+				.onEach { result ->
+					when (result) {
+						Resource.Loading -> _renameState.update { it.copy(isRenaming = true) }
+						is Resource.Error -> {
+							val event = UIEvents.ShowSnackBar(
+								message = result.message ?: result.error.message ?: ""
+							)
+							_renameState.update { RenameRecordingState() }
+							_uiEvents.emit(event)
+						}
+
+						is Resource.Success -> {
+							_renameState.update { RenameRecordingState() }
+							_uiEvents.emit(UIEvents.ShowToast("Updated recording name"))
+						}
+					}
+				}.launchIn(this)
+
+		} ?: run {
+			_uiEvents.emit(UIEvents.ShowSnackBar("None are selected to renamed"))
+		}
+
+	}
+
+
+	private fun shareSelectedRecordings() {
+		when (val resource = shareRecordingsHelper.shareAudioFiles(selectedRecordings)) {
+			is Resource.Error -> viewModelScope.launch {
+				_uiEvents.emit(
+					UIEvents.ShowToast(
+						resource.message ?: "SOME ERROR SHARING RECORDING"
+					)
+				)
+			}
+
+			else -> {}
+		}
+	}
 
 }

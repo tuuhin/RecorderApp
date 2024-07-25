@@ -24,12 +24,22 @@ fun NavGraphBuilder.recordingsroute(
 	val viewModel = hiltViewModel<RecordingsViewmodel>()
 
 	val recordings by viewModel.recordings.collectAsStateWithLifecycle()
+	val isRecordingsLoaded by viewModel.isRecordingLoaded.collectAsStateWithLifecycle()
+	val sortInfo by viewModel.sortInfo.collectAsStateWithLifecycle()
+	val renameState by viewModel.renameState.collectAsStateWithLifecycle()
 
 	UiEventsSideEffect(viewModel = viewModel)
 
 	RecordingsScreen(
+		isRecordingsLoaded = isRecordingsLoaded,
 		recordings = recordings,
+		sortInfo = sortInfo,
+		renameState = renameState,
 		onScreenEvent = viewModel::onScreenEvent,
+		onRenameEvent = viewModel::onRenameRecordingEvent,
+		onNavigateToBin = dropUnlessResumed {
+			controller.navigate(NavRoutes.TrashRecordings)
+		},
 		navigation = {
 			IconButton(
 				onClick = dropUnlessResumed(block = controller::popBackStack)

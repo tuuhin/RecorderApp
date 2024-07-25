@@ -1,7 +1,8 @@
 package com.eva.recorderapp.voice_recorder.presentation.util
 
 import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.toSelectableRecordings
+import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -21,8 +22,22 @@ object PreviewFakes {
 		sizeInBytes = 1024 * 20,
 		modifiedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
 		recordedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-		fileUri = ""
+		fileUri = "",
+		mimeType = "audio/mp3"
 	)
+
+	val FAKE_TRASH_RECORDINGS_MODEL = TrashRecordingModel(
+		id = 0L,
+		title = "TRAHSED_001",
+		displayName = "TRASHED",
+		mimeType = "audio/mp3",
+		expiresAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+		recordedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+		fileUri = "",
+	)
+
+	val FAKE_TRASH_RECORDINGS_MODELS = List(10) { FAKE_TRASH_RECORDINGS_MODEL }
+		.toSelectableRecordings().toImmutableList()
 
 	val FAKE_VOICE_RECORDING_MODELS = List(10) { FAKE_VOICE_RECORDING_MODEL }
 		.toSelectableRecordings()

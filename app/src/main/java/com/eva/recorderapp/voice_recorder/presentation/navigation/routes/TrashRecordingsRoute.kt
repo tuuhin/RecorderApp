@@ -25,10 +25,12 @@ fun NavGraphBuilder.trashRecordingsRoute(
 	val viewModel = hiltViewModel<RecordingsBinViewmodel>()
 
 	val recordings by viewModel.trashRecordings.collectAsStateWithLifecycle()
+	val isLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
 
 	UiEventsSideEffect(viewModel = viewModel)
 
 	RecordingsBinScreen(
+		isRecordingsLoaded = isLoaded,
 		recordings = recordings,
 		onScreenEvent = viewModel::onScreenEvent,
 		navigation = {
