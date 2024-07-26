@@ -19,6 +19,7 @@ import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -30,6 +31,9 @@ import kotlin.time.Duration.Companion.milliseconds
 private const val TAG = "RECORDING_UTILS_LOGGER"
 
 abstract class RecordingsUtils(private val context: Context) {
+
+	val epochSeconds: Long
+		get() = Clock.System.now().epochSeconds
 
 	val contentResolver
 		get() = context.contentResolver
@@ -85,8 +89,8 @@ abstract class RecordingsUtils(private val context: Context) {
 				val displayName = cursor.getString(nameColumn)
 				val duration = cursor.getLong(durationColumn)
 				val size = cursor.getLong(sizeColum)
-				val dateUpdated = cursor.getLong(updateColumn)
-				val dateAdded = cursor.getLong(createdColumn)
+				val dateUpdated = cursor.getInt(updateColumn)
+				val dateAdded = cursor.getInt(createdColumn)
 				val mimeType = cursor.getString(mimeTypeColumn)
 				val uriString = ContentUris.withAppendedId(volumeUri, id).toString()
 
@@ -121,9 +125,9 @@ abstract class RecordingsUtils(private val context: Context) {
 				val id = cursor.getLong(idColumn)
 				val title = cursor.getString(titleColumn)
 				val displayName = cursor.getString(nameColumn)
-				val dateAdded = cursor.getLong(createdColumn)
+				val dateAdded = cursor.getInt(createdColumn)
 				val mimeType = cursor.getString(mimeTypeColumn)
-				val expires = cursor.getLong(expiresColumn)
+				val expires = cursor.getInt(expiresColumn)
 				val uriString = ContentUris.withAppendedId(volumeUri, id).toString()
 
 
@@ -222,7 +226,7 @@ abstract class RecordingsUtils(private val context: Context) {
 
 		val updatedMetaData = ContentValues().apply {
 			put(MediaStore.Audio.AudioColumns.IS_TRASHED, 1)
-			put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, System.currentTimeMillis())
+			put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
 		}
 
 		val selection = "${MediaStore.Audio.AudioColumns._ID} = ?"
@@ -246,7 +250,7 @@ abstract class RecordingsUtils(private val context: Context) {
 
 			val updatedMetaData = ContentValues().apply {
 				put(MediaStore.Audio.AudioColumns.IS_TRASHED, 0)
-				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, System.currentTimeMillis())
+				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
 			}
 
 			val rowsUpdated = contentResolver.update(uri, updatedMetaData, null, null)
@@ -270,9 +274,30 @@ abstract class RecordingsUtils(private val context: Context) {
 	}
 
 	/**
+	 * Checks if the given uri  [uri] is pending or not
+	 * @param uri [Uri] to check
+	 * @return [Boolean] indicating if its pending
+	 */
+	suspend fun checkIfUriIsPending(uri: Uri): Boolean {
+		val projection = arrayOf(MediaStore.Audio.AudioColumns.IS_PENDING)
+		val args = Bundle()
+		return contentResolver.query(uri, projection, args, null)?.use { cursor ->
+			val column = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.IS_PENDING)
+
+			if (!cursor.moveToFirst()) return false
+
+			val isPending = cursor.getIntOrNull(column)
+			// its already updated so no need to delete
+			Log.d(TAG, "URI $uri : IS PENDING : $isPending")
+			return isPending == 1
+
+		} ?: false
+	}
+
+	/**
 	 * Converts the [Long] to [LocalDateTime] instance
 	 */
-	internal fun Long.toDateTime() = Instant.fromEpochMilliseconds(this * 1_000)
+	internal fun Int.toDateTime() = Instant.fromEpochSeconds(this.toLong(), 0)
 		.toLocalDateTime(TimeZone.currentSystemDefault())
 
 	/**

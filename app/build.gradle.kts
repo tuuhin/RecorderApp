@@ -91,11 +91,15 @@ dependencies {
 	implementation(libs.kotlinx.collections.immutable)
 	//hilt
 	ksp(libs.hilt.android.compiler)
+	ksp(libs.androidx.hilt.compiler)
 	implementation(libs.hilt.android)
 	//room
 	implementation(libs.androidx.room.runtime)
 	implementation(libs.androidx.room.ktx)
 	ksp(libs.androidx.room.compiler)
+	//work manager
+	implementation(libs.work.runtime.ktx)
+	implementation(libs.androidx.hilt.work)
 	//media3
 	implementation(libs.androidx.media3.common)
 	//splash

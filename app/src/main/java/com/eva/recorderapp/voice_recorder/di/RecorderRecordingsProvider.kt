@@ -13,23 +13,23 @@ import com.eva.recorderapp.voice_recorder.domain.files.VoiceRecordingsProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 object RecorderRecordingsProvider {
 
 	@Provides
-	@ViewModelScoped
+	@Singleton
 	fun providesRecordingsProvider(
 		@ApplicationContext context: Context
 	): VoiceRecordingsProvider = VoiceRecordingsProviderImpl(context)
 
 
 	@Provides
-	@ViewModelScoped
+	@Singleton
 	fun providesTrashedRecordingsProvider(
 		@ApplicationContext context: Context,
 		trashMetaData: TrashFilesMetaDataDao
@@ -41,7 +41,7 @@ object RecorderRecordingsProvider {
 
 
 	@Provides
-	@ViewModelScoped
+	@Singleton
 	fun providesShareRecordingsActionHelper(
 		@ApplicationContext context: Context
 	): RecordingsActionHelper = RecordingsActionHelperImpl(context)

@@ -33,7 +33,7 @@
   <string name="menu_option_sort_order">Sort Order</string>
   <string name="recording_restore_request">Restoring</string>
   <string name="recording_restore_request_falied">Restore failed</string>
-  <string name="recording_bin_explainantion">Trash files are to be deleted manually,please delete them if not required.</string>
+  <string name="recording_bin_explainantion">Trash files will be automatically deleted after a grace period of 30 days.</string>
   <string name="sort_option_date_created">Date Created</string>
   <string name="sort_option_duration">Duration</string>
   <string name="sort_option_name">Name</string>
@@ -53,4 +53,6 @@
   <string name="rename_label_text">New Name</string>
   <string name="rename_recording_action">Rename</string>
   <string name="rename_error_text">Enter atleast a character</string>
+  <string name="delete_recording_uri">Removing unsaved recording</string>
+  <string name="recorder_recording_completed_text">Recording Complted Successfully.</string>
 </resources>
