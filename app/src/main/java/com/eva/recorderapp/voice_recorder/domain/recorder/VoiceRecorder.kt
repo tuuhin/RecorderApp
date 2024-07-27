@@ -49,6 +49,10 @@ interface VoiceRecorder {
 	 */
 	fun resumeRecording()
 
+	/* Cancels the current running  recording
+	 */
+	suspend fun cancelRecording()
+
 	/**
 	 * Clean up funtion to clean all the allocated resources with the recorder
 	 */

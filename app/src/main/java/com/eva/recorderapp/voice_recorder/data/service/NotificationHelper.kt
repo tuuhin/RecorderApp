@@ -13,18 +13,28 @@ import com.eva.recorderapp.R
 import com.eva.recorderapp.common.IntentRequestCodes
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
 
-class NotificationHelper(private val context: Context) {
+class NotificationHelper(
+	private val context: Context
+) {
 
 	private val manager by lazy { context.getSystemService<NotificationManager>() }
 
-	private val serviceIntent: Intent
+	private val recorderServiceIntent: Intent
 		get() = Intent(context, VoiceRecorderService::class.java)
 
-	// TODO: If later any navroutes used set the data parameter for deeplinking
-	private val activityIntent: Intent
-		get() = Intent(context, MainActivity::class.java)
+	private val recorderScreenIntent: Intent
+		get() = Intent(context, MainActivity::class.java).apply {
+			data = NavDeepLinks.recorderDestinationUri
+			action = Intent.ACTION_VIEW
+		}
 
+	private val recordingsScreenIntent: Intent
+		get() = Intent(context, MainActivity::class.java).apply {
+			data = NavDeepLinks.recordingsDestinationUri
+			action = Intent.ACTION_VIEW
+		}
 
 	private fun buildNotificationAction(
 		title: String,
@@ -45,7 +55,7 @@ class NotificationHelper(private val context: Context) {
 			intent = buildServicePendingIntent(
 				context = context,
 				requestCodes = IntentRequestCodes.PAUSE_VOICE_RECORDER,
-				intent = serviceIntent.apply {
+				intent = recorderServiceIntent.apply {
 					action = RecorderAction.PAUSE_RECORDER.action
 				}
 			)
@@ -57,7 +67,7 @@ class NotificationHelper(private val context: Context) {
 			intent = buildServicePendingIntent(
 				context = context,
 				requestCodes = IntentRequestCodes.RESUME_VOICE_RECORDER,
-				intent = serviceIntent.apply {
+				intent = recorderServiceIntent.apply {
 					action = RecorderAction.RESUME_RECORDER.action
 				}
 			)
@@ -70,18 +80,25 @@ class NotificationHelper(private val context: Context) {
 			intent = buildServicePendingIntent(
 				context = context,
 				requestCodes = IntentRequestCodes.STOP_VOICE_RECORDER,
-				intent = serviceIntent.apply {
+				intent = recorderServiceIntent.apply {
 					action = RecorderAction.STOP_RECORDER.action
 				}
 			)
 		)
 
-	private val contentActivityIntent: PendingIntent
+	private val recorderScreenPendingIntent: PendingIntent
 		get() = buildServicePendingIntent(
 			context = context,
-			requestCodes = IntentRequestCodes.ACTIVITY_INTENT,
-			intent = activityIntent,
+			requestCodes = IntentRequestCodes.ACTIVITY_INTENT_RECORDER,
+			intent = recorderScreenIntent,
 			flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT
+		)
+
+	private val recordingsScreenPendingIntent: PendingIntent
+		get() = buildServicePendingIntent(
+			context,
+			IntentRequestCodes.ACTIVITY_INTENT_RECORDINGS,
+			intent = recordingsScreenIntent,
 		)
 
 	private val _recorderNotifcation =
@@ -92,16 +109,29 @@ class NotificationHelper(private val context: Context) {
 			.setSilent(true)
 			.setOnlyAlertOnce(true)
 			.setOngoing(true)
-			.setContentIntent(contentActivityIntent)
+			.setContentIntent(recorderScreenPendingIntent)
 
-	val recordingCompletedNotification: Notification
-		get() = NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
+	val recordingCompleteNotification: Notification =
+		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_launcher_foreground)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-			.setPriority(NotificationCompat.PRIORITY_HIGH)
+			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
 			.setContentTitle(context.getString(R.string.recorder_recording_completed))
+			.setContentText(context.getString(R.string.recorder_recording_completed_text))
+			.setAutoCancel(true)
 			.setOnlyAlertOnce(true)
-			.setContentIntent(contentActivityIntent)
+			.setContentIntent(recordingsScreenPendingIntent)
+			.build()
+
+	val recordingCancelNotificaiton: Notification =
+		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
+			.setSmallIcon(R.drawable.ic_launcher_foreground)
+			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+			.setContentTitle(context.getString(R.string.recorder_recording_notificaiton_title_canceled))
+			.setContentText(context.getString(R.string.recorder_recording_notification_canceled_text))
+			.setAutoCancel(true)
+			.setOnlyAlertOnce(true)
 			.build()
 
 	val timerNotification: Notification

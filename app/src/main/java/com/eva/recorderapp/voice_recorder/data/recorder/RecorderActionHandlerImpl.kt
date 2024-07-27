@@ -45,6 +45,13 @@ class RecorderActionHandlerImpl(
 		context.startService(intent)
 	}
 
+	private fun cancelRecording() {
+		val intent = serviceIntent.apply {
+			action = RecorderAction.CANCEL_RECORDER.action
+		}
+		context.startService(intent)
+	}
+
 	override fun onRecorderAction(action: RecorderAction): Resource<Unit, Exception> {
 		return try {
 			when (action) {
@@ -52,6 +59,7 @@ class RecorderActionHandlerImpl(
 				RecorderAction.RESUME_RECORDER -> resumeRecorder()
 				RecorderAction.PAUSE_RECORDER -> pauseRecorder()
 				RecorderAction.STOP_RECORDER -> stopRecorder()
+				RecorderAction.CANCEL_RECORDER -> cancelRecording()
 			}
 			Resource.Success<Unit, Exception>(data = Unit)
 		} catch (e: SecurityException) {

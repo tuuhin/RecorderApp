@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.util
+package com.eva.recorderapp.voice_recorder.data.service
 
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.ForegroundServiceTypeException

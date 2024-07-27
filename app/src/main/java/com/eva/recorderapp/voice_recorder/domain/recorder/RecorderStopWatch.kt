@@ -76,6 +76,12 @@ class RecorderStopWatch {
 		_elapsedTime.update { 0L }
 	}
 
+	fun cancel() {
+		// cancel the current run
+		_state.update { RecorderState.CANCELLED }
+		_elapsedTime.update { 0L }
+	}
+
 	fun reset() {
 		//cancels the scope
 		scope.cancel()

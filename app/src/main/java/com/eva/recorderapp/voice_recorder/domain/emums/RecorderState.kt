@@ -5,4 +5,5 @@ enum class RecorderState {
 	RECORDING,
 	PAUSED,
 	COMPLETED,
+	CANCELLED
 }

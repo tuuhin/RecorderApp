@@ -93,6 +93,7 @@ class RecorderFileProviderImpl(
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
 					contentResolver.delete(uri, null)
 				else contentResolver.delete(uri, null, null)
+				Log.d(LOGGER_TAG, "URI :$uri DELETED")
 			} catch (e: SecurityException) {
 				Log.e(LOGGER_TAG, "THERE IS A SECURITY PROBLEM", e)
 			} catch (e: Exception) {

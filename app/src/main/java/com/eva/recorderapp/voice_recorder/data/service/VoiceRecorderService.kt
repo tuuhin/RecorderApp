@@ -10,37 +10,35 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.eva.recorderapp.R
-import com.eva.recorderapp.common.NOTIFICATION_TIMER_TIME_FORMAT
+import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.common.NotificationConstants
-import com.eva.recorderapp.voice_recorder.data.util.startForegroundServiceMicrophone
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
-import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 import javax.inject.Inject
 
-private const val LOGGER_TAG = "VOICE RECORDER SERVICE"
+private const val LOGGER_TAG = "RECORDER_SERVICE"
 
 @AndroidEntryPoint
 class VoiceRecorderService : LifecycleService() {
@@ -55,26 +53,26 @@ class VoiceRecorderService : LifecycleService() {
 
 	private val binder = LocalBinder()
 
-	private val _amplitudes = MutableStateFlow(persistentListOf<Float>())
+	private val _amplitudes = MutableStateFlow(floatArrayOf())
 
-	/**
-	 * A contineous flow of current sampled amplitudes by the [VoiceRecorder]
-	 */
+	@OptIn(ExperimentalCoroutinesApi::class)
 	val amplitides: StateFlow<ImmutableList<Float>>
-		get() = _amplitudes.asStateFlow()
+		get() = _amplitudes.mapLatest { array ->
+			if (array.isEmpty()) return@mapLatest persistentListOf()
+			val listbuilder = persistentListOf<Float>().builder()
+			array.forEach(listbuilder::add)
+			listbuilder.build()
+		}.stateIn(
+			scope = lifecycleScope,
+			started = SharingStarted.Lazily,
+			initialValue = persistentListOf()
+		)
 
-	/**
-	 * Provides the [RecorderStopWatch] impl as [LocalTime] for the [VoiceRecorder]
-	 */
 	val recorderTime: StateFlow<LocalTime>
 		get() = voiceRecorder.recorderTimer
 
-	/**
-	 * Provides the current [RecorderState] of the [VoiceRecorder]
-	 */
 	val recorderState: StateFlow<RecorderState>
 		get() = voiceRecorder.recorderState
-
 
 	private val notificationTimer: Flow<LocalTime>
 		get() = voiceRecorder.recorderTimer.buffer(1)
@@ -97,17 +95,15 @@ class VoiceRecorderService : LifecycleService() {
 
 	override fun onCreate() {
 		super.onCreate()
-		// creates the recorder
+		// preparing the recorder
 		voiceRecorder.createRecorder()
 		// listen to changes
 		try {
-			// update the amplitude graph
+			// updates the amplitudes
 			readAmplitudes()
-			// read timer state
+			// update the notification
 			readTimerAndUpdateNotification()
-		} catch (e: CancellationException) {
-			Log.d(LOGGER_TAG, "COROUTINE CANCELLED")
-		} catch (e: Exception) {
+		}  catch (e: Exception) {
 			e.printStackTrace()
 		}
 	}
@@ -118,32 +114,27 @@ class VoiceRecorderService : LifecycleService() {
 			RecorderAction.RESUME_RECORDER.action -> onResumeRecording()
 			RecorderAction.PAUSE_RECORDER.action -> onPauseRecording()
 			RecorderAction.STOP_RECORDER.action -> onStopRecording()
+			RecorderAction.CANCEL_RECORDER.action -> onCancelRecording()
 		}
 		return super.onStartCommand(intent, flags, startId)
 	}
 
-	/**
-	 * Reads the [VoiceRecorder.maxAmplitudes] and update the [VoiceRecorderService.amplitides]
-	 * this methods seems working rather than directly reading [VoiceRecorder.maxAmplitudes]
-	 */
+
 	private fun readAmplitudes() {
 
-		Log.d(LOGGER_TAG, "READING RECORDER AMPLITUDES")
+		Log.d(LOGGER_TAG, "READING AMPLITUDES")
 
-		voiceRecorder.maxAmplitudes
-			.catch { err -> Log.e(LOGGER_TAG, err.message ?: "ERROR", err) }
-			.onEach { array ->
-
-				val listbuilder = persistentListOf<Float>().builder()
-				array.forEach(listbuilder::add)
-
-				_amplitudes.update { listbuilder.build() }
-			}.launchIn(lifecycleScope)
+		combine(voiceRecorder.maxAmplitudes, voiceRecorder.recorderState) { array, state ->
+			when (state) {
+				// in recording or paused state we update the recordings accordingly
+				RecorderState.RECORDING, RecorderState.PAUSED -> _amplitudes.update { array }
+				// on completed amplitides should reset again
+				else -> _amplitudes.update { floatArrayOf() }
+			}
+		}.launchIn(lifecycleScope)
 	}
 
-	/**
-	 * Read the [RecorderState] and update the notifications according to [VoiceRecorder]
-	 */
+
 	private fun readTimerAndUpdateNotification() {
 
 		Log.d(LOGGER_TAG, "UPDATING NOTIFICATION STATE")
@@ -151,9 +142,8 @@ class VoiceRecorderService : LifecycleService() {
 		combine(notificationTimer, recorderState) { time, state ->
 			when (state) {
 				RecorderState.RECORDING -> {
-
-					val readableTime = time.format(NOTIFICATION_TIMER_TIME_FORMAT)
-					//set the title
+					val readableTime = time.format(LocalTimeFormats.NOTIFICATION_TIMER_TIME_FORMAT)
+					// set the title
 					notificationHelper.setContentTitle(readableTime)
 					// show the notification
 					_notificationManager?.notify(
@@ -163,15 +153,20 @@ class VoiceRecorderService : LifecycleService() {
 				}
 
 				RecorderState.COMPLETED -> {
-					notificationHelper.setContentText("Recording completed")
-					notificationHelper.setContentTitle("Complete")
 					_notificationManager?.notify(
 						NotificationConstants.RECORDER_NOTIFICATION_ID,
-						notificationHelper.recordingCompletedNotification
+						notificationHelper.recordingCompleteNotification
 					)
 				}
 
-				else -> return@combine
+				RecorderState.CANCELLED -> {
+					_notificationManager?.notify(
+						NotificationConstants.RECORDER_NOTIFICATION_ID,
+						notificationHelper.recordingCancelNotificaiton
+					)
+				}
+
+				else -> {}
 			}
 		}.launchIn(lifecycleScope)
 	}
@@ -180,24 +175,25 @@ class VoiceRecorderService : LifecycleService() {
 		// configure notifications
 		notificationHelper.setContentText(text = getString(R.string.recorder_notification_text_running))
 		notificationHelper.setPauseStopAction()
-		//start foreground service
+		//start the recorder
+		lifecycleScope.launch { voiceRecorder.startRecording() }
+		// start foreground service
 		startForegroundServiceMicrophone(
 			NotificationConstants.RECORDER_NOTIFICATION_ID,
 			notificationHelper.timerNotification
 		)
-		//start thre recorder
-		lifecycleScope.launch { voiceRecorder.startRecording() }
 	}
 
 	private fun onStopRecording() {
+		// stop the foreground
+		stopForeground(Service.STOP_FOREGROUND_REMOVE)
 		// stop the recording
 		lifecycleScope.launch { voiceRecorder.stopRecording() }
-		stopForeground(Service.STOP_FOREGROUND_REMOVE)
+
 	}
 
 	private fun onResumeRecording() {
 		//update the notification
-		notificationHelper.setContentTitle("RUNNING RECORDER")
 		notificationHelper.setContentText(text = getString(R.string.recorder_notification_text_running))
 		notificationHelper.setPauseStopAction()
 		// notification notify
@@ -221,6 +217,14 @@ class VoiceRecorderService : LifecycleService() {
 		//pause recording
 		voiceRecorder.pauseRecording()
 	}
+
+	private fun onCancelRecording() {
+		// stop the foreground service
+		stopForeground(STOP_FOREGROUND_REMOVE)
+		// cancel recording
+		lifecycleScope.launch { voiceRecorder.cancelRecording() }
+	}
+
 
 	override fun onDestroy() {
 		// resources are cleared

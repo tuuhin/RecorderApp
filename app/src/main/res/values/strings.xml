@@ -6,8 +6,8 @@
   <string name="recorder_notification_text_running">Recorder is running</string>
   <string name="recorder_notification_text_paused">Recorder Paused</string>
   <string name="back_arrow">Back Arrow</string>
-  <string name="action_pasued">recoder action pause</string>
-  <string name="action_stop">recorder action stop</string>
+  <string name="action_pasued">Pause</string>
+  <string name="action_stop">Stop</string>
   <string name="allow_permissions">Allow permission</string>
   <string name="recorder_permission_not_found">Recorder Permission not found</string>
   <string name="recorder_permission_not_found_desc">Its a recorder app you need to allow audio recording in order to work</string>
@@ -55,4 +55,8 @@
   <string name="rename_error_text">Enter atleast a character</string>
   <string name="delete_recording_uri">Removing unsaved recording</string>
   <string name="recorder_recording_completed_text">Recording Complted Successfully.</string>
+  <string name="recorder_action_start">Record</string>
+  <string name="recorder_action_cancel">Cancel</string>
+  <string name="recorder_recording_notificaiton_title_canceled">Recording Canceled</string>
+  <string name="recorder_recording_notification_canceled_text">Recoring was canceled by the user</string>
 </resources>
