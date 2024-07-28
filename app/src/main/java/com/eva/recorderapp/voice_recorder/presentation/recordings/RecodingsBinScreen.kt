@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
@@ -95,8 +96,10 @@ fun RecordingsBinScreen(
 		) {
 			Text(
 				text = stringResource(R.string.recording_bin_explainantion),
-				modifier = Modifier.padding(vertical = 2.dp),
-				style = MaterialTheme.typography.labelMedium
+				modifier = Modifier
+					.align(Alignment.CenterHorizontally)
+					.padding(vertical = 2.dp),
+				style = MaterialTheme.typography.labelMedium,
 			)
 			RecordingsInteractiveList(
 				isRecordingsLoaded = isRecordingsLoaded,

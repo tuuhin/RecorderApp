@@ -44,7 +44,7 @@ fun DeleteRecordingsButton(
 	contentColor: Color = contentColorFor(containerColor),
 	elevation: FloatingActionButtonElevation = FloatingActionButtonDefaults.elevation(),
 ) {
-	val selectedModels by remember {
+	val selectedModels by remember(recordings) {
 		derivedStateOf {
 			recordings.filter(SelectableTrashRecordings::isSelected)
 				.map(SelectableTrashRecordings::trashRecording)
@@ -67,7 +67,7 @@ fun DeleteRecordingsButton(
 		}
 	)
 
-	val onButtonClick: () -> Unit = remember(context) {
+	val onButtonClick: () -> Unit = remember(selectedModels) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			{
 				val intentSender = RecordingsUtils.createDeleteRequest(

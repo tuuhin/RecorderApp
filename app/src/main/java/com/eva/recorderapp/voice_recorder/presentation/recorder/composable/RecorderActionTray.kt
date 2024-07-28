@@ -1,99 +1,92 @@
 package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Pause
-import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.icons.outlined.Stop
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.eva.recorderapp.R
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
+import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 
 @Composable
-fun RecorderActionTray(
+fun AnimatedRecorderActionTray(
 	recorderState: RecorderState,
 	onRecorderAction: (RecorderAction) -> Unit,
 	modifier: Modifier = Modifier
 ) {
+	AnimatedContent(
+		targetState = recorderState,
+		transitionSpec = { recorderStateAnimation() },
+		modifier = modifier.defaultMinSize(minHeight = 120.dp),
+		contentAlignment = Alignment.Center
+	) { state ->
 
-	when (recorderState) {
-		RecorderState.IDLE, RecorderState.COMPLETED -> Box(
-			modifier = modifier,
-			contentAlignment = Alignment.Center
-		) {
-			RecordButton(
-				onClick = { onRecorderAction(RecorderAction.START_RECORDER) },
-			)
-		}
+		when (state) {
+			RecorderState.IDLE, RecorderState.COMPLETED, RecorderState.CANCELLED -> {
+				Box(contentAlignment = Alignment.Center) {
+					RecordButton(
+						onClick = { onRecorderAction(RecorderAction.START_RECORDER) },
+					)
+				}
+			}
 
-		RecorderState.RECORDING -> Row(
-			modifier = modifier,
-			horizontalArrangement = Arrangement.SpaceBetween
-		) {
-			IconButton(
-				onClick = { onRecorderAction(RecorderAction.PAUSE_RECORDER) },
-				colors = IconButtonDefaults.iconButtonColors(
-					containerColor = MaterialTheme.colorScheme.primary,
-					contentColor = MaterialTheme.colorScheme.onPrimary
-				)
-			) {
-				Icon(
-					imageVector = Icons.Outlined.Pause,
-					contentDescription = stringResource(id = R.string.action_pasued)
+			RecorderState.RECORDING, RecorderState.PAUSED -> {
+				RecorderPausePLayAction(
+					state = state,
+					onResume = { onRecorderAction(RecorderAction.RESUME_RECORDER) },
+					onPause = { onRecorderAction(RecorderAction.PAUSE_RECORDER) },
+					onCancel = { onRecorderAction(RecorderAction.CANCEL_RECORDER) },
+					onStop = { onRecorderAction(RecorderAction.STOP_RECORDER) },
+					modifier = Modifier.fillMaxWidth()
 				)
 			}
-			IconButton(
-				onClick = { onRecorderAction(RecorderAction.STOP_RECORDER) },
-				colors = IconButtonDefaults.iconButtonColors(
-					containerColor = MaterialTheme.colorScheme.primary,
-					contentColor = MaterialTheme.colorScheme.onPrimary
-				)
-			) {
-				Icon(
-					imageVector = Icons.Outlined.Stop,
-					contentDescription = stringResource(id = R.string.action_stop)
-				)
-			}
-		}
 
-		RecorderState.PAUSED -> Row(
-			modifier = modifier,
-			horizontalArrangement = Arrangement.SpaceBetween
-		) {
-			IconButton(
-				onClick = { onRecorderAction(RecorderAction.RESUME_RECORDER) },
-				colors = IconButtonDefaults.iconButtonColors(
-					containerColor = MaterialTheme.colorScheme.primary,
-					contentColor = MaterialTheme.colorScheme.onPrimary
-				)
-			) {
-				Icon(
-					imageVector = Icons.Outlined.PlayArrow,
-					contentDescription = stringResource(id = R.string.action_pasued)
-				)
-			}
-			IconButton(
-				onClick = { onRecorderAction(RecorderAction.STOP_RECORDER) },
-				colors = IconButtonDefaults.iconButtonColors(
-					containerColor = MaterialTheme.colorScheme.primary,
-					contentColor = MaterialTheme.colorScheme.onPrimary
-				)
-			) {
-				Icon(
-					imageVector = Icons.Outlined.Stop,
-					contentDescription = stringResource(id = R.string.action_stop)
-				)
-			}
 		}
+	}
+}
+
+private fun AnimatedContentTransitionScope<RecorderState>.recorderStateAnimation(): ContentTransform {
+	return fadeIn() + expandIn(expandFrom = Alignment.Center) togetherWith
+			fadeOut() + shrinkOut(shrinkTowards = Alignment.Center)
+}
+
+private class RecorderStatePreviewParams : CollectionPreviewParameterProvider<RecorderState>(
+	listOf(
+		RecorderState.RECORDING,
+		RecorderState.COMPLETED,
+		RecorderState.PAUSED
+	)
+)
+
+@PreviewLightDark
+@Composable
+private fun AnimatedRecorderActionTrayPreview(
+	@PreviewParameter(RecorderStatePreviewParams::class)
+	state: RecorderState
+) = RecorderAppTheme {
+	Surface {
+		AnimatedRecorderActionTray(
+			recorderState = state,
+			onRecorderAction = {},
+			modifier = Modifier
+				.padding(horizontal = 4.dp)
+				.fillMaxWidth()
+		)
 	}
 }

@@ -34,8 +34,8 @@ import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
+import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.AnimatedRecorderActionTray
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.NoRecordPermissionBox
-import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderActionTray
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderAmplitudeGraph
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTimerText
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTopBar
@@ -107,7 +107,7 @@ fun VoiceRecroderScreen(
 						Spacer(modifier = Modifier.height(60.dp))
 
 					}
-					RecorderActionTray(
+					AnimatedRecorderActionTray(
 						recorderState = recorderState,
 						onRecorderAction = onRecorderAction,
 						modifier = Modifier

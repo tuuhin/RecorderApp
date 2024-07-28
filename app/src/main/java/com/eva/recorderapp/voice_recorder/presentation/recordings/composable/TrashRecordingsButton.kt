@@ -45,7 +45,7 @@ fun TrashSelectedRecordingsButton(
 	contentColor: Color = contentColorFor(containerColor),
 	elevation: FloatingActionButtonElevation = FloatingActionButtonDefaults.elevation(),
 ) {
-	val selectedModels by remember {
+	val selectedModels by remember(recordings) {
 		derivedStateOf {
 			recordings.filter(SelectableRecordings::isSelected)
 				.map(SelectableRecordings::recoding)
@@ -68,7 +68,7 @@ fun TrashSelectedRecordingsButton(
 		}
 	)
 
-	val onButtonClick: () -> Unit = remember {
+	val onButtonClick: () -> Unit = remember(selectedModels) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			{
 				val intentSender = RecordingsUtils.createTrashRequest(

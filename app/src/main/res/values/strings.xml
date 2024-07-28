@@ -59,4 +59,7 @@
   <string name="recorder_action_cancel">Cancel</string>
   <string name="recorder_recording_notificaiton_title_canceled">Recording Canceled</string>
   <string name="recorder_recording_notification_canceled_text">Recoring was canceled by the user</string>
+  <string name="recording_action_restore">Restore</string>
+  <string name="recording_restore_dialog_title">Restore Recordings?</string>
+  <string name="recording_restore_dialog_text">Restore the given set of selected recordings</string>
 </resources>

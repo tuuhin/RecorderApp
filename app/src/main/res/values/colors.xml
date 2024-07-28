@@ -7,7 +7,9 @@
   <color name="teal_700">#FF018786</color>
   <color name="black">#FF000000</color>
   <color name="white">#FFFFFFFF</color>
-  <color name="recorder_red">#B40000</color>
+  <color name="recorder_button_color">#B40000</color>
+
+  <color name="recorder_button_rim_color">#DCDCDC</color>
 
   <color name="surface">#FFFDFBFF</color>
   <color name="primary_container">#FFD7E3FF</color>

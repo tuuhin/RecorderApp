@@ -4,4 +4,5 @@
   <dimen name="card_padding">12dp</dimen>
   <dimen name="amplitudes_card_padding">6dp</dimen>
   <dimen name="sc_padding_secondary">6dp</dimen>
+  <dimen name="recorder_button_size">52dp</dimen>
 </resources>
