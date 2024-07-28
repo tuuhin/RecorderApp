@@ -24,7 +24,7 @@ class RecorderViewModel @Inject constructor(
 
 	fun onAction(action: RecorderAction) {
 		when (val resource = handler.onRecorderAction(action)) {
-			is Resource.Error<*, *> -> viewModelScope.launch {
+			is Resource.Error -> viewModelScope.launch {
 				_uiEvents.emit(UIEvents.ShowToast(resource.error.message ?: resource.message ?: ""))
 			}
 			else -> {}

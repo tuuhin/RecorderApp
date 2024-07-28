@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.navigation.routes
 
+import android.content.Intent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -12,7 +13,9 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import com.eva.recorderapp.R
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsScreen
@@ -20,7 +23,15 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsView
 
 fun NavGraphBuilder.recordingsroute(
 	controller: NavController
-) = composable<NavRoutes.VoiceRecordings> {
+) = composable<NavRoutes.VoiceRecordings>(
+	deepLinks = listOf(
+		navDeepLink {
+			uriPattern = NavDeepLinks.recordingsDestinationPattern
+			action = Intent.ACTION_VIEW
+		},
+	)
+) {
+
 	val viewModel = hiltViewModel<RecordingsViewmodel>()
 
 	val recordings by viewModel.recordings.collectAsStateWithLifecycle()

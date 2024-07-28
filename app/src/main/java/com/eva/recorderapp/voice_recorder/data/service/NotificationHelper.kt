@@ -48,6 +48,13 @@ class NotificationHelper(
 		flags: Int = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
 	) = PendingIntent.getService(context, requestCodes.code, intent, flags)
 
+	private fun buildActivityPendingIntent(
+		context: Context,
+		requestCodes: IntentRequestCodes,
+		intent: Intent,
+		flags: Int = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+	) = PendingIntent.getActivity(context, requestCodes.code, intent, flags)
+
 
 	private val pauseRecorderAction: NotificationCompat.Action
 		get() = buildNotificationAction(
@@ -87,15 +94,14 @@ class NotificationHelper(
 		)
 
 	private val recorderScreenPendingIntent: PendingIntent
-		get() = buildServicePendingIntent(
+		get() = buildActivityPendingIntent(
 			context = context,
 			requestCodes = IntentRequestCodes.ACTIVITY_INTENT_RECORDER,
 			intent = recorderScreenIntent,
-			flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT
 		)
 
 	private val recordingsScreenPendingIntent: PendingIntent
-		get() = buildServicePendingIntent(
+		get() = buildActivityPendingIntent(
 			context,
 			IntentRequestCodes.ACTIVITY_INTENT_RECORDINGS,
 			intent = recordingsScreenIntent,

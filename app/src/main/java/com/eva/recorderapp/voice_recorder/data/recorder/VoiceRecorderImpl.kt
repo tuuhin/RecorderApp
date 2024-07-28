@@ -24,11 +24,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.datetime.LocalTime
 import java.io.IOException
 
 private const val LOGGER_TAG = "VOICE_RECORDER"
-private const val SAMPLING_SIZE = 80
+private const val SAMPLING_SIZE = 100
 
 class VoiceRecorderImpl(
 	private val context: Context,
@@ -43,6 +44,9 @@ class VoiceRecorderImpl(
 	// recodings file related
 	private var _fd: ParcelFileDescriptor? = null
 	private var _currentRecordingUri: Uri? = null
+
+	// locks ensures a operation complete before an other operation can start
+	val operationLock = Mutex(false)
 
 	val _hasRecordPremission: Boolean
 		get() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
@@ -157,6 +161,14 @@ class VoiceRecorderImpl(
 	}
 
 	override suspend fun startRecording() {
+		// if its holding the lock dont do anything
+		if (operationLock.holdsLock(this)) {
+			Log.d(LOGGER_TAG, "CANNOT START RECORDING ITS LOCKED")
+			return
+		}
+		// staring an operation lock it
+		operationLock.lock(this)
+		// prepare the recording params
 		if (_currentRecordingUri == null) initiateRecorderParams()
 		try {
 			Log.i(LOGGER_TAG, "PREPARING RECORDER")
@@ -170,10 +182,21 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "IS RECORDING TO TRUE")
 		} catch (e: IOException) {
 			e.printStackTrace()
+		} finally {
+			// unlocks the current lock
+			operationLock.unlock(this)
+			Log.d(LOGGER_TAG, "CLEARING LOCK IN START")
 		}
 	}
 
 	override suspend fun stopRecording() {
+		// if its holding the lock dont do anything
+		if (operationLock.holdsLock(this)) {
+			Log.d(LOGGER_TAG, "CANNOT STOP RECORDING ITS LOCKED")
+			return
+		}
+		// staring an operation lock it
+		operationLock.lock(this)
 		try {
 			// reset the timer
 			Log.d(LOGGER_TAG, "STOPWATCH STOPPED")
@@ -185,6 +208,10 @@ class VoiceRecorderImpl(
 			stopAndUpdateFileMetaData()
 		} catch (e: IOException) {
 			e.printStackTrace()
+		} finally {
+			// unlocks the current lock
+			operationLock.unlock(this)
+			Log.d(LOGGER_TAG, "CLEARING LOCK IN STOP")
 		}
 	}
 
@@ -215,6 +242,13 @@ class VoiceRecorderImpl(
 	}
 
 	override suspend fun cancelRecording() {
+		// if its holding the lock dont do anything
+		if (operationLock.holdsLock(this)) {
+			Log.d(LOGGER_TAG, "CANNOT CANCEL RECORDING ITS LOCKED")
+			return
+		}
+		// staring an operation lock it
+		operationLock.lock(this)
 		try {
 			// cancel the timer watch
 			Log.d(LOGGER_TAG, "STOPWATCH STOPPED")
@@ -226,6 +260,10 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "RECORDER STOPPED")
 		} catch (e: Exception) {
 			e.printStackTrace()
+		} finally {
+			// unlocks the current lock
+			operationLock.unlock(this)
+			Log.d(LOGGER_TAG, "CLEARING LOCK IN CANCEL")
 		}
 	}
 

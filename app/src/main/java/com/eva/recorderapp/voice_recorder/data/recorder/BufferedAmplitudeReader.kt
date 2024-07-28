@@ -13,47 +13,44 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 private const val LOGGER_TAG = "AMPLITUDE_READER"
 
 class BufferedAmplitudeReader(
 	private val recorder: MediaRecorder?,
-	val maxBufferSize: Int = 100
+	val maxBufferSize: Int = 80,
+	val samplingInterval: Duration = 80.milliseconds
 ) {
 	private val _buffer = ConcurrentLinkedQueue<Int>()
 
-	private val _isAudioSourceConfigured: Boolean?
-		get() = recorder?.activeRecordingConfiguration?.audioSource != null
+	private val _isAudioSourceNull: Boolean
+		get() = recorder?.activeRecordingConfiguration?.audioSource == null
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	fun readAmplitudeBuffered(state: RecorderState): Flow<FloatArray> {
-		return readSampleAmplitude(state)
+		val sampledAmps = when (state) {
+			RecorderState.COMPLETED, RecorderState.CANCELLED -> clearBufferAndEmitZero()
+			else -> readSampleAmplitude(state)
+		}
+		return sampledAmps
 			.flatMapLatest(::flowToFixedSizeCollection)
 			.toNormalizedValues()
-			.flowOn(Dispatchers.Default)
 	}
 
 	private fun readSampleAmplitude(state: RecorderState): Flow<Int> = flow {
 		try {
-			while (state == RecorderState.RECORDING) {
+			while (recorder != null && state == RecorderState.RECORDING) {
 				// check if audio source set
-				if (_isAudioSourceConfigured == false) {
+				if (_isAudioSourceNull) {
 					Log.i(LOGGER_TAG, "AUDIO SOURCE NOT CONFIGURED")
 					break
 				}
-				delay(50.milliseconds)
+				delay(samplingInterval)
 				// record the max amplitude of the sample
-				val amplitude = recorder?.maxAmplitude ?: 0
+				val amplitude = recorder.maxAmplitude
 				emit(amplitude)
-			}
-			if (state == RecorderState.COMPLETED) {
-				// clearing the buffer ensures that again we
-				// read values from start of the buffer
-				Log.d(LOGGER_TAG, "CLEARING BUFFER AS RECORDING COMPLETED")
-				_buffer.clear()
-				// hope this fixes the glitz
-				emit(0)
 			}
 		} catch (e: CancellationException) {
 			// if the child flow is canceled while suspending in delay method
@@ -66,6 +63,19 @@ class BufferedAmplitudeReader(
 		}
 	}.flowOn(Dispatchers.IO)
 
+	/**
+	 * Clears the buffer if it contains any value and emit a end zero
+	 */
+	private fun clearBufferAndEmitZero() = flow<Int> {
+		if (_buffer.isNotEmpty())
+			_buffer.clear()
+		emit(0)
+	}
+
+	/**
+	 * Adds the new value to [_buffer] and compute a flow out of it
+	 * The flow will have a fix size [maxBufferSize].
+	 */
 	private fun flowToFixedSizeCollection(newValue: Int): Flow<List<Int>> {
 		return flow {
 			try {

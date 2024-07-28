@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.navigation.routes
 
+import android.content.Intent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -13,6 +14,8 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.recorder.RecorderServiceBinder
@@ -21,7 +24,14 @@ import com.eva.recorderapp.voice_recorder.presentation.recorder.VoiceRecroderScr
 
 fun NavGraphBuilder.recorderRoute(
 	navController: NavHostController
-) = composable<NavRoutes.VoiceRecorder> {
+) = composable<NavRoutes.VoiceRecorder>(
+	deepLinks = listOf(
+		navDeepLink {
+			uriPattern = NavDeepLinks.recorderDestinationPattern
+			action = Intent.ACTION_VIEW
+		},
+	)
+) {
 
 	val viewModel = hiltViewModel<RecorderViewModel>()
 
