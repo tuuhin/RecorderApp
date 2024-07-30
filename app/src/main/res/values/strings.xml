@@ -62,4 +62,10 @@
   <string name="recording_action_restore">Restore</string>
   <string name="recording_restore_dialog_title">Restore Recordings?</string>
   <string name="recording_restore_dialog_text">Restore the given set of selected recordings</string>
+  <string name="player_fast_forward">+1s</string>
+  <string name="player_fast_rewind">-1s</string>
+  <string name="player_action_edit">Edit</string>
+  <string name="music_file_not_found_title">Audio File not found</string>
+  <string name="music_file_not_found_desc">Make sure this file exists in your storage</string>
+  <string name="recorder_state_preparing">Initlizing</string>
 </resources>

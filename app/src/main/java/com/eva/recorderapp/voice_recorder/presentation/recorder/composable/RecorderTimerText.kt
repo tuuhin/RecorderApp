@@ -8,7 +8,10 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.ui.theme.DownloadableFonts
 import kotlinx.datetime.LocalTime
@@ -17,19 +20,25 @@ import kotlinx.datetime.format
 @Composable
 fun RecorderTimerText(
 	time: LocalTime,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
+	style: TextStyle = MaterialTheme.typography.displayLarge,
+	color: Color = MaterialTheme.colorScheme.onBackground
 ) {
-
+// TODO: Change the color of each of the units
 	val timeText by remember(time) {
 		derivedStateOf {
-			time.format(LocalTimeFormats.PRESENTATON_TIMER_TIME_FORMAT)
+			if (time.hour > 0)
+				time.format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
+			time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
 		}
 	}
 
 	Text(
 		text = timeText,
-		modifier = modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-		style = MaterialTheme.typography.displayLarge,
-		fontFamily = DownloadableFonts.CLOCK_FACE
+		modifier = modifier.padding(horizontal = 4.dp),
+		style = style,
+		color = color,
+		fontFamily = DownloadableFonts.CLOCK_FACE,
+		letterSpacing = 2.sp
 	)
 }

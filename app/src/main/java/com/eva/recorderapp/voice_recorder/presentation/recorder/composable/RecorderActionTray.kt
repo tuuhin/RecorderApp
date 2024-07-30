@@ -12,14 +12,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
@@ -47,7 +54,7 @@ fun AnimatedRecorderActionTray(
 			}
 
 			RecorderState.RECORDING, RecorderState.PAUSED -> {
-				RecorderPausePLayAction(
+				RecorderPausePlayAction(
 					state = state,
 					onResume = { onRecorderAction(RecorderAction.RESUME_RECORDER) },
 					onPause = { onRecorderAction(RecorderAction.PAUSE_RECORDER) },
@@ -57,6 +64,20 @@ fun AnimatedRecorderActionTray(
 				)
 			}
 
+			else -> Box(contentAlignment = Alignment.Center) {
+				AssistChip(
+					onClick = {},
+					label = {
+						Text(
+							text = stringResource(id = R.string.recorder_state_preparing),
+							style = MaterialTheme.typography.labelLarge
+						)
+					},
+					colors = AssistChipDefaults.elevatedAssistChipColors(
+						containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+					)
+				)
+			}
 		}
 	}
 }
@@ -70,7 +91,8 @@ private class RecorderStatePreviewParams : CollectionPreviewParameterProvider<Re
 	listOf(
 		RecorderState.RECORDING,
 		RecorderState.COMPLETED,
-		RecorderState.PAUSED
+		RecorderState.PAUSED,
+		RecorderState.PREPARING
 	)
 )
 

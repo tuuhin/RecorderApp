@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsBottomBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsInteractiveList
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsScreenTopBar
@@ -52,6 +53,7 @@ fun RecordingsScreen(
 	renameState: RenameRecordingState,
 	onRenameEvent: (RenameRecordingEvents) -> Unit,
 	onScreenEvent: (RecordingScreenEvent) -> Unit,
+	onRecordingSelect: (RecordedVoiceModel) -> Unit,
 	modifier: Modifier = Modifier,
 	onNavigateToBin: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
@@ -134,7 +136,7 @@ fun RecordingsScreen(
 		RecordingsInteractiveList(
 			isRecordingsLoaded = isRecordingsLoaded,
 			recordings = recordings,
-			onItemClick = {},
+			onItemClick = onRecordingSelect,
 			onItemSelect = { record ->
 				onScreenEvent(RecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
 			},
@@ -171,6 +173,7 @@ private fun RecordingScreenPreview(
 		renameState = RenameRecordingState(),
 		onScreenEvent = {},
 		onRenameEvent = {},
+		onRecordingSelect = {},
 		navigation = {
 			Icon(
 				imageVector = Icons.AutoMirrored.Default.ArrowBack,

@@ -51,6 +51,10 @@ fun NavGraphBuilder.recordingsroute(
 		onNavigateToBin = dropUnlessResumed {
 			controller.navigate(NavRoutes.TrashRecordings)
 		},
+		onRecordingSelect = { record ->
+			val audioRoute = NavRoutes.AudioPlayer(record.id)
+			controller.navigate(audioRoute)
+		},
 		navigation = {
 			IconButton(
 				onClick = dropUnlessResumed(block = controller::popBackStack)

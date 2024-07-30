@@ -5,10 +5,8 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -89,29 +87,29 @@ fun VoiceRecroderScreen(
 			label = "Has record audio permission"
 		) { hasPerms ->
 			if (hasPerms) {
-				Box(modifier = Modifier.fillMaxSize()) {
+				Box(
+					modifier = Modifier.fillMaxSize(),
+					contentAlignment = Alignment.Center
+				) {
 					Column(
 						horizontalAlignment = Alignment.CenterHorizontally,
-						verticalArrangement = Arrangement.Center,
-						modifier = Modifier.align(Alignment.Center)
+						verticalArrangement = Arrangement.spacedBy(20.dp),
+						modifier = Modifier.offset(y = dimensionResource(id = R.dimen.graph_offset))
 					) {
 						RecorderTimerText(time = stopWatch)
-						Spacer(modifier = Modifier.height(20.dp))
 						RecorderAmplitudeGraph(
 							amplitudes = recorderAmps,
-							modifier = Modifier.fillMaxWidth(),
 							barColor = MaterialTheme.colorScheme.onSecondaryContainer,
 							backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
-							shape = MaterialTheme.shapes.small,
+							shape = MaterialTheme.shapes.medium,
+							modifier = Modifier.fillMaxWidth(),
 						)
-						Spacer(modifier = Modifier.height(60.dp))
-
 					}
 					AnimatedRecorderActionTray(
 						recorderState = recorderState,
 						onRecorderAction = onRecorderAction,
 						modifier = Modifier
-							.offset(y = -40.dp)
+							.offset(y = dimensionResource(id = R.dimen.recordings_action_offset))
 							.fillMaxWidth()
 							.align(Alignment.BottomCenter)
 					)
@@ -132,7 +130,13 @@ fun VoiceRecroderScreen(
 }
 
 private class RecorderStatePreviewParams :
-	CollectionPreviewParameterProvider<RecorderState>(RecorderState.entries)
+	CollectionPreviewParameterProvider<RecorderState>(
+		listOf(
+			RecorderState.RECORDING,
+			RecorderState.COMPLETED,
+			RecorderState.PAUSED
+		)
+	)
 
 @PreviewLightDark
 @Composable

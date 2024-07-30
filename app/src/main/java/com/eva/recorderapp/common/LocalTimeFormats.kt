@@ -16,9 +16,17 @@ object LocalTimeFormats {
 		second()
 	}
 
-	val PRESENTATON_TIMER_TIME_FORMAT = LocalTime.Format {
+	val LOCALTIME_FORMAT_HH_MM_SS_SF2 = LocalTime.Format {
 		hour()
 		char(':')
+		minute()
+		char(':')
+		second()
+		char('.')
+		secondFraction(2)
+	}
+
+	val LOCALTIME_FORMAT_MM_SS_SF2 = LocalTime.Format {
 		minute()
 		char(':')
 		second()
@@ -36,5 +44,23 @@ object LocalTimeFormats {
 		minute()
 		char(' ')
 		amPmMarker("am", "pm")
+	}
+
+	val LOCALTIME_HH_MM_SS_FORMAT = LocalTime.Format {
+		hour()
+		char(':')
+		minute()
+		char(':')
+		second()
+	}
+
+	val LOCALTIME_HH_MM_SS_S_FORMAT = LocalTime.Format {
+		hour()
+		char(':')
+		minute()
+		char(':')
+		second()
+		char('.')
+		secondFraction(1)
 	}
 }

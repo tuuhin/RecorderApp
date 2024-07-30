@@ -26,8 +26,8 @@ import kotlinx.collections.immutable.ImmutableList
 fun RecorderAmplitudeGraph(
 	amplitudes: ImmutableList<Float>,
 	modifier: Modifier = Modifier,
-	barColor: Color = MaterialTheme.colorScheme.onTertiaryContainer,
-	backgroundColor: Color = MaterialTheme.colorScheme.tertiaryContainer,
+	barColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+	backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
 	shape: Shape = MaterialTheme.shapes.medium
 ) {
 
@@ -39,7 +39,7 @@ fun RecorderAmplitudeGraph(
 		Spacer(
 			modifier = Modifier
 				.padding(all = dimensionResource(id = R.dimen.amplitudes_card_padding))
-				.aspectRatio(2f)
+				.aspectRatio(1.75f)
 				.drawWithCache {
 					val spikesCount = amplitudes.size
 

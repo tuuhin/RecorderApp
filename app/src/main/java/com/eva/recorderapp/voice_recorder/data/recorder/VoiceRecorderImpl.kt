@@ -37,6 +37,9 @@ class VoiceRecorderImpl(
 	private val stopWatch: RecorderStopWatch,
 ) : VoiceRecorder {
 
+	// recorder format
+	val format = RecordFormats.MP3
+
 	// recorder related
 	private var _recorder: MediaRecorder? = null
 	private var _bufferReader: BufferedAmplitudeReader? = null
@@ -98,7 +101,7 @@ class VoiceRecorderImpl(
 		if (_recorder == null) createRecorder()
 
 		// ensures the file is being created in a differnt coroutine
-		val file = async(Dispatchers.IO) { fileProvider.createUriForRecording() }
+		val file = async(Dispatchers.IO) { fileProvider.createUriForRecording(format) }
 		_currentRecordingUri = file.await()
 
 		if (_currentRecordingUri == null) {
@@ -115,8 +118,8 @@ class VoiceRecorderImpl(
 
 		_recorder?.apply {
 			setAudioSource(MediaRecorder.AudioSource.MIC)
-			setOutputFormat(MediaRecorder.OutputFormat.AMR_NB)
-			setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+			setOutputFormat(format.outputFormat)
+			setAudioEncoder(format.encoder)
 			setOutputFile(fileDescriptor)
 		}
 		Log.d(LOGGER_TAG, "RECORDER CONFIGURED")
@@ -169,17 +172,19 @@ class VoiceRecorderImpl(
 		// staring an operation lock it
 		operationLock.lock(this)
 		// prepare the recording params
-		if (_currentRecordingUri == null) initiateRecorderParams()
+		if (_currentRecordingUri == null) {
+			stopWatch.prepare()
+			Log.i(LOGGER_TAG, "PREPARING FILE FOR RECORDING")
+			initiateRecorderParams()
+		}
 		try {
-			Log.i(LOGGER_TAG, "PREPARING RECORDER")
 			// prepare the recorder
 			_recorder?.prepare()
+			Log.d(LOGGER_TAG, "PREPARING RECORDER")
 			//start the recorder
 			_recorder?.start()
-			Log.d(LOGGER_TAG, "RECORDER PREPARED AND STARTED")
-			// set is recording to true
 			stopWatch.startOrResume()
-			Log.d(LOGGER_TAG, "IS RECORDING TO TRUE")
+			Log.d(LOGGER_TAG, "RECORDER PREPARED AND STARTED")
 		} catch (e: IOException) {
 			e.printStackTrace()
 		} finally {

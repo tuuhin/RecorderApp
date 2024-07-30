@@ -70,6 +70,8 @@ class RecorderStopWatch {
 
 	fun pause() = _state.update { RecorderState.PAUSED }
 
+	fun prepare() = _state.update { RecorderState.PREPARING }
+
 	fun stop() {
 		// completes the timer and reset the elpased time
 		_state.update { RecorderState.COMPLETED }

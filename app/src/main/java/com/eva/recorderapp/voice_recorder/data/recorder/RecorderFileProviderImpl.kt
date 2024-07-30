@@ -7,9 +7,9 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
-import androidx.media3.common.MimeTypes
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.data.files.RecordingsUtils
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecordEncoderAndFormat
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,7 +22,7 @@ class RecorderFileProviderImpl(
 ) : RecordingsUtils(context), RecorderFileProvider {
 
 
-	override suspend fun createUriForRecording(): Uri? {
+	override suspend fun createUriForRecording(format: RecordEncoderAndFormat): Uri? {
 		// TODO: Allow user to change the audio file name and also format
 		val fileName = "AUD_REC_$epochSeconds"
 
@@ -30,7 +30,7 @@ class RecorderFileProviderImpl(
 			put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, musicDir)
 			put(MediaStore.Audio.AudioColumns.TITLE, fileName)
 			put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileName)
-			put(MediaStore.Audio.AudioColumns.MIME_TYPE, MimeTypes.AUDIO_AMR_NB)
+			put(MediaStore.Audio.AudioColumns.MIME_TYPE, format.mimeType)
 			put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
 			put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
 			put(MediaStore.Audio.AudioColumns.ARTIST, context.packageName)

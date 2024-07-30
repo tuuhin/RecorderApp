@@ -22,7 +22,7 @@ import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecorderPausePLayAction(
+fun RecorderPausePlayAction(
 	state: RecorderState,
 	onResume: () -> Unit,
 	onPause: () -> Unit,
@@ -47,8 +47,8 @@ fun RecorderPausePLayAction(
 				IconButton(
 					onClick = onResume,
 					colors = IconButtonDefaults.iconButtonColors(
-						containerColor = MaterialTheme.colorScheme.primary,
-						contentColor = MaterialTheme.colorScheme.onPrimary
+						containerColor = MaterialTheme.colorScheme.tertiary,
+						contentColor = MaterialTheme.colorScheme.onTertiary
 					),
 					modifier = Modifier.size(dimensionResource(id = R.dimen.recorder_button_size))
 				) {
@@ -60,8 +60,8 @@ fun RecorderPausePLayAction(
 			} else IconButton(
 				onClick = onPause,
 				colors = IconButtonDefaults.iconButtonColors(
-					containerColor = MaterialTheme.colorScheme.primary,
-					contentColor = MaterialTheme.colorScheme.onPrimary
+					containerColor = MaterialTheme.colorScheme.tertiary,
+					contentColor = MaterialTheme.colorScheme.onTertiary
 				),
 				modifier = Modifier.size(dimensionResource(id = R.dimen.recorder_button_size))
 			) {
@@ -88,7 +88,6 @@ fun RecorderPausePLayAction(
 			)
 		}
 
-
 		IconButton(
 			onClick = onStop,
 			colors = IconButtonDefaults.iconButtonColors(
@@ -104,6 +103,5 @@ fun RecorderPausePLayAction(
 				contentDescription = stringResource(id = R.string.recorder_action_stop)
 			)
 		}
-
 	}
 }
