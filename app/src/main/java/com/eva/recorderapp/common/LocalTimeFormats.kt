@@ -8,6 +8,20 @@ import kotlinx.datetime.format.char
 
 object LocalTimeFormats {
 
+	val LOCALDATETIME_DATE_TIME_FORMAT = LocalDateTime.Format {
+		dayOfMonth()
+		char(' ')
+		monthName(MonthNames.ENGLISH_FULL)
+		char(' ')
+		year()
+		char(' ')
+		amPmHour()
+		char(':')
+		minute()
+		char(' ')
+		amPmMarker("am", "pm")
+	}
+
 	val NOTIFICATION_TIMER_TIME_FORMAT = LocalTime.Format {
 		hour()
 		char(':')

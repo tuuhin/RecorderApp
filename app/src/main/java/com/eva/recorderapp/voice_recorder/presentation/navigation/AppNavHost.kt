@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioEditorRoute
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioPlayerRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recorderRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingsroute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.trashRecordingsRoute
@@ -32,6 +34,9 @@ fun AppNavHost(
 			recorderRoute(navController = navController)
 			recordingsroute(controller = navController)
 			trashRecordingsRoute(controller = navController)
+			audioPlayerRoute(controller = navController)
+			audioEditorRoute(controller = navController)
+
 		}
 	}
 }
