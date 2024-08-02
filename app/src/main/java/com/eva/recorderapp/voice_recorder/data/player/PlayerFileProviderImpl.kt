@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import com.eva.recorderapp.common.Resource
+import com.eva.recorderapp.voice_recorder.data.util.toLocalDateTime
 import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.ResourcedDetailedRecordingModel
@@ -27,13 +28,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Duration.Companion.milliseconds
 
-private const val TAG = "PlayerFileProviderImpl"
+private const val TAG = "PLAYER_FILE_PROVIDER"
 
 class PlayerFileProviderImpl(
 	private val context: Context
@@ -54,7 +51,8 @@ class PlayerFileProviderImpl(
 			MediaStore.Audio.AudioColumns.SIZE,
 			MediaStore.Audio.AudioColumns.DURATION,
 			MediaStore.Audio.AudioColumns.DATE_MODIFIED,
-			MediaStore.Audio.AudioColumns.RELATIVE_PATH,
+			MediaStore.Audio.AudioColumns.DATA,
+			MediaStore.Audio.AudioColumns.MIME_TYPE,
 		)
 
 	override fun getAudioFileInfo(id: Long): Flow<ResourcedDetailedRecordingModel> {
@@ -133,7 +131,8 @@ class PlayerFileProviderImpl(
 			val dateModifiedCol =
 				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_MODIFIED)
 			val pathColumn =
-				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.RELATIVE_PATH)
+				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATA)
+			val mimeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.MIME_TYPE)
 
 			if (!cursor.moveToFirst()) return@coroutineScope null
 
@@ -144,7 +143,9 @@ class PlayerFileProviderImpl(
 			val size = cursor.getLong(sizeColum)
 			val lastModified = cursor.getInt(dateModifiedCol)
 			val relPath = cursor.getString(pathColumn)
-			val uriString = ContentUris.withAppendedId(baseVolume, id).toString()
+			val mimeType = cursor.getString(mimeCol)
+			val uriString = ContentUris.withAppendedId(baseVolume, id)
+				.toString()
 
 			val extractor = extractMediaInfo(uri = ContentUris.withAppendedId(baseVolume, id))
 
@@ -156,9 +157,10 @@ class PlayerFileProviderImpl(
 				size = size,
 				fileUri = uriString,
 				bitRateInKbps = extractor?.bitRate?.toFloat() ?: 0f,
-				lastModified = lastModified.toDateTime(),
+				lastModified = lastModified.milliseconds.toLocalDateTime(),
 				channel = extractor?.channelCount ?: 0,
 				path = relPath,
+				mimeType = mimeType,
 				samplingRatekHz = (extractor?.sampleRate ?: 0).let { it / 1000f }
 			)
 		}
@@ -206,9 +208,4 @@ class PlayerFileProviderImpl(
 		val sampleRate: Int = 0,
 		val bitRate: Float = 0f,
 	)
-}
-
-private fun Int.toDateTime(): LocalDateTime {
-	return Instant.fromEpochSeconds(epochSeconds = this.toLong(), nanosecondAdjustment = 0)
-		.toLocalDateTime(TimeZone.currentSystemDefault())
 }

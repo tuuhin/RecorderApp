@@ -7,23 +7,30 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.RecordEncoderAndFormat
 
 object RecordFormats {
 
-	val THREE_GPP = RecordEncoderAndFormat(
+	val AMR = RecordEncoderAndFormat(
 		encoder = AudioEncoder.AMR_NB,
 		outputFormat = OutputFormat.AMR_NB,
-		mimeType = MimeTypes.AUDIO_AMR_NB
+		mimeType = MimeTypes.AUDIO_AMR
 	)
 
-	val MP3 = RecordEncoderAndFormat(
-		encoder = AudioEncoder.DEFAULT,
+	val AMR_WB = RecordEncoderAndFormat(
+		encoder = AudioEncoder.AMR_WB,
+		outputFormat = AudioEncoder.AMR_WB,
+		mimeType = MimeTypes.AUDIO_AMR_WB
+	)
+
+	val M4A = RecordEncoderAndFormat(
+		encoder = AudioEncoder.HE_AAC,
 		outputFormat = OutputFormat.MPEG_4,
 		mimeType = MimeTypes.AUDIO_MP4
 	)
 
-	val WEBM = RecordEncoderAndFormat(
-		encoder = AudioEncoder.VORBIS,
-		outputFormat = OutputFormat.WEBM,
-		mimeType = MimeTypes.AUDIO_WEBM
+	val OGG = RecordEncoderAndFormat(
+		encoder = AudioEncoder.OPUS,
+		outputFormat = OutputFormat.OGG,
+		mimeType = MimeTypes.AUDIO_OGG
 	)
+
 }
 
 

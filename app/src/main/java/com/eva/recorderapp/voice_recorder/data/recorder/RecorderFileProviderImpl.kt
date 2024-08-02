@@ -1,10 +1,12 @@
 package com.eva.recorderapp.voice_recorder.data.recorder
 
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.database.SQLException
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import com.eva.recorderapp.common.Resource
@@ -23,24 +25,26 @@ class RecorderFileProviderImpl(
 
 
 	override suspend fun createUriForRecording(format: RecordEncoderAndFormat): Uri? {
-		// TODO: Allow user to change the audio file name and also format
-		val fileName = "AUD_REC_$epochSeconds"
-
-		val metaData = ContentValues().apply {
-			put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, musicDir)
-			put(MediaStore.Audio.AudioColumns.TITLE, fileName)
-			put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileName)
-			put(MediaStore.Audio.AudioColumns.MIME_TYPE, format.mimeType)
-			put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
-			put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
-			put(MediaStore.Audio.AudioColumns.ARTIST, context.packageName)
-			put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-				put(MediaStore.Audio.AudioColumns.IS_RECORDING, 1)
-			}
-		}
-
 		return withContext(Dispatchers.IO) {
+
+			// get the current no. of recordings
+			val count = getItemNumber()
+			val fileName = "Voice_${count + 1}"
+
+			val metaData = ContentValues().apply {
+				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, musicDir)
+				put(MediaStore.Audio.AudioColumns.TITLE, fileName)
+				put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileName)
+				put(MediaStore.Audio.AudioColumns.MIME_TYPE, format.mimeType)
+				put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
+				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
+				put(MediaStore.Audio.AudioColumns.ARTIST, context.packageName)
+				put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+					put(MediaStore.Audio.AudioColumns.IS_RECORDING, 1)
+				}
+			}
+
 			try {
 				Log.d(LOGGER_TAG, "CREATING FILE")
 				val contenUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -102,5 +106,19 @@ class RecorderFileProviderImpl(
 		}
 	}
 
+	suspend fun getItemNumber(): Int {
+		val projection = arrayOf(MediaStore.Audio.AudioColumns._ID)
+		val selection = "${MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME} = ?"
+		val selectionArgs = arrayOf(context.packageName)
+
+		val bundle = Bundle().apply {
+			putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+			putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+		}
+
+		return contentResolver.query(volumeUri, projection, bundle, null)
+			?.use { cursor -> cursor.count }
+			?: 0
+	}
 }
 

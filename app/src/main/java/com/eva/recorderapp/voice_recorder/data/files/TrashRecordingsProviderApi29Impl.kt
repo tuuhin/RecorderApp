@@ -13,6 +13,7 @@ import com.eva.recorderapp.voice_recorder.data.database.TrashFileMetaDataEntity
 import com.eva.recorderapp.voice_recorder.data.database.TrashFilesMetaDataDao
 import com.eva.recorderapp.voice_recorder.data.mapper.toEntity
 import com.eva.recorderapp.voice_recorder.data.mapper.toModel
+import com.eva.recorderapp.voice_recorder.data.util.toMillis
 import com.eva.recorderapp.voice_recorder.domain.files.ResourcedTrashRecordingModels
 import com.eva.recorderapp.voice_recorder.domain.files.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.files.TrashVoiceRecordings
@@ -122,11 +123,11 @@ class TrashRecordingsProviderApi29Impl(
 			supervisorScope {
 				try {
 					val operations = trashRecordings.map(TrashRecordingModel::toEntity).map { entity ->
-						async(Dispatchers.IO) {
-							// delete from internal storage
-							deleteRecordingInfoFromFileAndTable(entity)
+							async(Dispatchers.IO) {
+								// delete from internal storage
+								deleteRecordingInfoFromFileAndTable(entity)
+							}
 						}
-					}
 					// run all the operations together
 					val isAllGood = operations.awaitAll().all { it }
 					Log.d(TAG, "PERMANENELTY REMOVED FILES FROM TRASH : RESULT :$isAllGood")
@@ -225,11 +226,11 @@ class TrashRecordingsProviderApi29Impl(
 			put(MediaStore.Audio.AudioColumns.MIME_TYPE, trash.mimeType)
 			put(
 				MediaStore.Audio.AudioColumns.DATE_ADDED,
-				trash.dateAdded.toMilliSeconds()
+				trash.dateAdded.toMillis()
 			)
 			put(
 				MediaStore.Audio.AudioColumns.DATE_TAKEN,
-				trash.dateAdded.toMilliSeconds()
+				trash.dateAdded.toMillis()
 			)
 			put(MediaStore.Audio.AudioColumns.ARTIST, context.packageName)
 			put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)

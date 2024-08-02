@@ -16,6 +16,7 @@ data class AudioFileModel(
 	val samplingRatekHz: Float,
 	val path: String,
 	val fileUri: String,
+	val mimeType: String,
 ) {
 	val durationAsLocaltime: LocalTime
 		get() = LocalTime.fromSecondOfDay(duration.inWholeSeconds.toInt())

@@ -15,18 +15,15 @@ import androidx.annotation.RequiresApi
 import androidx.core.database.getIntOrNull
 import androidx.core.database.getLongOrNull
 import androidx.core.net.toUri
+import com.eva.recorderapp.voice_recorder.data.util.toLocalDateTime
 import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
 import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "RECORDING_UTILS_LOGGER"
 
@@ -46,7 +43,7 @@ abstract class RecordingsUtils(private val context: Context) {
 			MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
 		else MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
 
-	val recordingsProjection: Array<String>
+	protected val recordingsProjection: Array<String>
 		get() = arrayOf(
 			MediaStore.Audio.AudioColumns._ID,
 			MediaStore.Audio.AudioColumns.TITLE,
@@ -56,9 +53,10 @@ abstract class RecordingsUtils(private val context: Context) {
 			MediaStore.Audio.AudioColumns.SIZE,
 			MediaStore.Audio.AudioColumns.DATE_MODIFIED,
 			MediaStore.Audio.AudioColumns.DATE_ADDED,
+			MediaStore.Audio.AudioColumns.DATA
 		)
 
-	val trashRecoringsProjection: Array<String>
+	protected val trashRecoringsProjection: Array<String>
 		get() = arrayOf(
 			MediaStore.Audio.AudioColumns._ID,
 			MediaStore.Audio.AudioColumns.TITLE,
@@ -79,6 +77,7 @@ abstract class RecordingsUtils(private val context: Context) {
 		val sizeColum = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.SIZE)
 		val updateColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_MODIFIED)
 		val createdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_ADDED)
+		val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATA)
 
 		return buildList<RecordedVoiceModel> {
 
@@ -93,6 +92,11 @@ abstract class RecordingsUtils(private val context: Context) {
 				val dateAdded = cursor.getInt(createdColumn)
 				val mimeType = cursor.getString(mimeTypeColumn)
 				val uriString = ContentUris.withAppendedId(volumeUri, id).toString()
+				val data = cursor.getString(dataColumn)
+
+				// checking the file exists or not
+				// in API-29 we can delete the file without deleting the metadata
+				if (!File(data).exists()) continue
 
 				val model = RecordedVoiceModel(
 					id = id,
@@ -100,8 +104,8 @@ abstract class RecordingsUtils(private val context: Context) {
 					displayName = displayName,
 					duration = duration.milliseconds,
 					sizeInBytes = size,
-					modifiedAt = dateUpdated.toDateTime(),
-					recordedAt = dateAdded.toDateTime(),
+					modifiedAt = dateUpdated.seconds.toLocalDateTime(),
+					recordedAt = dateAdded.seconds.toLocalDateTime(),
 					fileUri = uriString,
 					mimeType = mimeType,
 				)
@@ -135,10 +139,10 @@ abstract class RecordingsUtils(private val context: Context) {
 					id = id,
 					title = title,
 					displayName = displayName,
-					recordedAt = dateAdded.toDateTime(),
+					recordedAt = dateAdded.seconds.toLocalDateTime(),
 					fileUri = uriString,
 					mimeType = mimeType,
-					expiresAt = expires.toDateTime()
+					expiresAt = expires.seconds.toLocalDateTime()
 				)
 				add(model)
 			}
@@ -293,18 +297,6 @@ abstract class RecordingsUtils(private val context: Context) {
 
 		} ?: false
 	}
-
-	/**
-	 * Converts the [Long] to [LocalDateTime] instance
-	 */
-	internal fun Int.toDateTime() = Instant.fromEpochSeconds(this.toLong(), 0)
-		.toLocalDateTime(TimeZone.currentSystemDefault())
-
-	/**
-	 * Converts the [LocalDateTime] to epoch milliseconds
-	 */
-	internal fun LocalDateTime.toMilliSeconds() =
-		toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 
 
 	companion object {

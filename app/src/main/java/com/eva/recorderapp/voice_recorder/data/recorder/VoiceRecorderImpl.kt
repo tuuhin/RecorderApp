@@ -36,9 +36,7 @@ class VoiceRecorderImpl(
 	private val fileProvider: RecorderFileProvider,
 	private val stopWatch: RecorderStopWatch,
 ) : VoiceRecorder {
-
-	// recorder format
-	val format = RecordFormats.MP3
+	val format = RecordFormats.M4A
 
 	// recorder related
 	private var _recorder: MediaRecorder? = null

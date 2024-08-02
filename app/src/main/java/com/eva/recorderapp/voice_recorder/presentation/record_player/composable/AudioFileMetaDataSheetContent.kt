@@ -44,14 +44,6 @@ fun AudioFileMetaDataSheetContent(
 		audio.lastModified.format(LocalTimeFormats.LOCALDATETIME_DATE_TIME_FORMAT)
 	}
 
-	val bitRate = remember(audio.bitRateInKbps) {
-		"${audio.bitRateInKbps}kbps"
-	}
-
-	val samplingRate = remember(audio.samplingRatekHz) {
-		"${audio.samplingRatekHz}Khz"
-	}
-
 	Column(
 		modifier = modifier.padding(12.dp),
 		verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -62,14 +54,42 @@ fun AudioFileMetaDataSheetContent(
 			color = MaterialTheme.colorScheme.onSurface
 		)
 		Spacer(modifier = Modifier.height(4.dp))
-		FileMetaData(title = "Name", text = audio.displayName)
-		FileMetaData(title = "Size", text = fileSize)
-		FileMetaData(title = "Duration", text = durationText)
-		FileMetaData(title = "Last Modified", text = lastModified)
-		FileMetaData(title = "Channel", text = "Mono ${audio.channel}")
-		FileMetaData(title = "Bit Rate", text = bitRate)
-		FileMetaData(title = "Sampling Rate", text = samplingRate)
-		FileMetaData(title = "Path", text = audio.path)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_name_title),
+			text = audio.displayName
+		)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_filesize_title),
+			text = fileSize
+		)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_duration_title),
+			text = durationText
+		)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_mime_type_title),
+			text = audio.mimeType
+		)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_last_edit_title),
+			text = lastModified
+		)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_channel_title),
+			text = "Mono ${audio.channel}"
+		)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_bitrate_title),
+			text = stringResource(id = R.string.audio_metadata_bitrate, audio.bitRateInKbps)
+		)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_sample_rate_title),
+			text = stringResource(id = R.string.audio_metadata_sample_rate, audio.samplingRatekHz)
+		)
+		FileMetaData(
+			title = stringResource(id = R.string.audio_metadata_path_title),
+			text = audio.path
+		)
 	}
 }
 

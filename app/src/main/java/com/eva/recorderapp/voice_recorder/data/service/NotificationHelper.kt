@@ -109,7 +109,7 @@ class NotificationHelper(
 
 	private val _recorderNotifcation =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
-			.setSmallIcon(R.drawable.ic_launcher_foreground)
+			.setSmallIcon(R.drawable.ic_microphone)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_HIGH)
 			.setSilent(true)
@@ -119,7 +119,7 @@ class NotificationHelper(
 
 	val recordingCompleteNotification: Notification =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
-			.setSmallIcon(R.drawable.ic_launcher_foreground)
+			.setSmallIcon(R.drawable.ic_microphone)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
 			.setContentTitle(context.getString(R.string.recorder_recording_completed))
@@ -131,7 +131,7 @@ class NotificationHelper(
 
 	val recordingCancelNotificaiton: Notification =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
-			.setSmallIcon(R.drawable.ic_launcher_foreground)
+			.setSmallIcon(R.drawable.ic_microphone)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
 			.setContentTitle(context.getString(R.string.recorder_recording_notificaiton_title_canceled))

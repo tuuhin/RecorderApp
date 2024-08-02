@@ -1,6 +1,5 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
-import android.util.Log
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
@@ -187,7 +186,6 @@ class RecordingsViewmodel @Inject constructor(
 	private fun renameRecording() = viewModelScope.launch {
 
 		selectedRecordings.firstOrNull()?.let { recording ->
-			Log.d("TAG", "RENAME SELECTION $selectedRecordings")
 
 			val newName = _renameState.value.textFieldState.text
 

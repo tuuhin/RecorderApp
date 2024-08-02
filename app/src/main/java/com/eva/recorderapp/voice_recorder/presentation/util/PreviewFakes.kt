@@ -42,7 +42,7 @@ object PreviewFakes {
 		samplingRatekHz = 0f,
 		path = "Somepath/file",
 		channel = 1,
-		size = 100L
+		size = 100L, mimeType = "This/that"
 	)
 
 	val FAKE_TRASH_RECORDINGS_MODEL = TrashRecordingModel(
