@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,9 +67,20 @@ fun VoiceRecroderScreen(
 		)
 	}
 
+	val canShowActions by remember(recorderState) {
+		derivedStateOf {
+			recorderState in arrayOf(
+				RecorderState.IDLE,
+				RecorderState.COMPLETED,
+				RecorderState.CANCELLED
+			)
+		}
+	}
+
 	Scaffold(
 		topBar = {
 			RecorderTopBar(
+				showActions = canShowActions,
 				onShowRecordings = onShowRecordings,
 				onNavigateToSettings = onNavigateToSettings,
 				onNavigateToBin = onNavigateToBin,

@@ -20,7 +20,7 @@ object RecordFormats {
 	)
 
 	val M4A = RecordEncoderAndFormat(
-		encoder = AudioEncoder.HE_AAC,
+		encoder = AudioEncoder.AAC,
 		outputFormat = OutputFormat.MPEG_4,
 		mimeType = MimeTypes.AUDIO_MP4
 	)

@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.collections.immutable.ImmutableList
 
@@ -41,20 +42,16 @@ fun RecorderAmplitudeGraph(
 				.padding(all = dimensionResource(id = R.dimen.amplitudes_card_padding))
 				.aspectRatio(1.75f)
 				.drawWithCache {
-					val spikesCount = amplitudes.size
-
-					val spikesWidth = size.width / spikesCount
+					val spikesWidth = size.width / VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
 					val centerYAxis = size.height / 2
 
 					val spikes = mutableListOf<Pair<Offset, Offset>>()
 					val dots = mutableListOf<Offset>()
 
-					for (idx in 0..<amplitudes.size) {
-						val normal = amplitudes.getOrNull(idx) ?: 0f
-
+					amplitudes.forEachIndexed { idx, value ->
 						val xAxis = spikesWidth * idx.toFloat()
-						val start = Offset(xAxis, centerYAxis * (1 - normal))
-						val end = Offset(xAxis, centerYAxis * (1 + normal))
+						val start = Offset(xAxis, centerYAxis * (1 - value))
+						val end = Offset(xAxis, centerYAxis * (1 + value))
 						if (start.y != end.y) spikes.add(Pair(start, end))
 						else dots.add(start)
 					}
@@ -65,7 +62,7 @@ fun RecorderAmplitudeGraph(
 								color = barColor,
 								start = start,
 								end = end,
-								strokeWidth = spikesWidth - 2.dp.toPx(),
+								strokeWidth = spikesWidth - 1.5.dp.toPx(),
 								cap = StrokeCap.Round
 							)
 						}

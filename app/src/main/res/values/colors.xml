@@ -15,4 +15,6 @@
   <color name="primary_container">#FFD7E3FF</color>
   <color name="ic_launcher_background">#EDF7FF</color>
 
+  <color name="notifcation_button_color">#000000</color>
+
 </resources>

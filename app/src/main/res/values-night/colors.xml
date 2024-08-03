@@ -3,4 +3,6 @@
   <color name="recorder_button_rim_color">@color/white</color>
   <color name="surface">#FF1A1B1F</color>
   <color name="primary_container">#FF00458F</color>
+
+  <color name="notifcation_button_color">#FFFFFF</color>
 </resources>

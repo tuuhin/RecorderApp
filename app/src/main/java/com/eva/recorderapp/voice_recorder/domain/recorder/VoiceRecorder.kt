@@ -57,4 +57,8 @@ interface VoiceRecorder {
 	 * Clean up funtion to clean all the allocated resources with the recorder
 	 */
 	fun releaseResources()
+
+	companion object {
+		const val RECORDER_AMPLITUDES_BUFFER_SIZE = 80
+	}
 }

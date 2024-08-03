@@ -1,5 +1,10 @@
 package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -28,6 +33,7 @@ import com.eva.recorderapp.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecorderTopBar(
+	showActions: Boolean,
 	onShowRecordings: () -> Unit,
 	onNavigateToSettings: () -> Unit,
 	onNavigateToBin: () -> Unit,
@@ -40,42 +46,58 @@ fun RecorderTopBar(
 		title = { Text(text = stringResource(id = R.string.recorder_topbar_title)) },
 		navigationIcon = navigation,
 		actions = {
-			TextButton(onClick = onShowRecordings) {
-				Text(text = "List", fontWeight = FontWeight.SemiBold)
-			}
-			Box {
-				IconButton(onClick = { showDropDown = !showDropDown }) {
-					Icon(
-						imageVector = Icons.Default.MoreVert,
-						contentDescription = stringResource(id = R.string.menu_more_option)
-					)
-				}
-				DropdownMenu(
-					expanded = showDropDown,
-					onDismissRequest = { showDropDown = false }
-				) {
-					DropdownMenuItem(
-						text = { Text(text = stringResource(id = R.string.menu_option_recycle_bin)) },
-						onClick = onNavigateToBin,
-						leadingIcon = {
-							Icon(
-								imageVector = Icons.Outlined.Delete,
-								contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
-							)
-						},
-					)
-					DropdownMenuItem(
-						text = { Text(text = stringResource(id = R.string.menu_option_settings)) },
-						onClick = onNavigateToSettings,
-						leadingIcon = {
-							Icon(
-								imageVector = Icons.Outlined.Settings,
-								contentDescription = stringResource(id = R.string.menu_option_settings)
-							)
-						},
+			AnimatedVisibility(
+				visible = showActions,
+				enter = fadeIn() + slideInVertically(),
+				exit = slideOutVertically() + fadeOut()
+			) {
+				TextButton(onClick = onShowRecordings) {
+					Text(
+						text = stringResource(id = R.string.show_recordings_list),
+						fontWeight = FontWeight.SemiBold
 					)
 				}
 			}
+			AnimatedVisibility(
+				visible = showActions,
+				enter = fadeIn() + slideInVertically(),
+				exit = slideOutVertically() + fadeOut()
+			) {
+				Box {
+					IconButton(onClick = { showDropDown = !showDropDown }) {
+						Icon(
+							imageVector = Icons.Default.MoreVert,
+							contentDescription = stringResource(id = R.string.menu_more_option)
+						)
+					}
+					DropdownMenu(
+						expanded = showDropDown,
+						onDismissRequest = { showDropDown = false }
+					) {
+						DropdownMenuItem(
+							text = { Text(text = stringResource(id = R.string.menu_option_recycle_bin)) },
+							onClick = onNavigateToBin,
+							leadingIcon = {
+								Icon(
+									imageVector = Icons.Outlined.Delete,
+									contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
+								)
+							},
+						)
+						DropdownMenuItem(
+							text = { Text(text = stringResource(id = R.string.menu_option_settings)) },
+							onClick = onNavigateToSettings,
+							leadingIcon = {
+								Icon(
+									imageVector = Icons.Outlined.Settings,
+									contentDescription = stringResource(id = R.string.menu_option_settings)
+								)
+							},
+						)
+					}
+				}
+			}
+
 		},
 		colors = TopAppBarDefaults
 			.topAppBarColors(actionIconContentColor = MaterialTheme.colorScheme.primary),

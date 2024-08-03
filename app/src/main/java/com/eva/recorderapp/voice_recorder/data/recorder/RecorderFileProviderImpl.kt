@@ -28,17 +28,14 @@ class RecorderFileProviderImpl(
 		return withContext(Dispatchers.IO) {
 
 			// get the current no. of recordings
-			val count = getItemNumber()
-			val fileName = "Voice_${count + 1}"
+			val fileName = "Voice_$epochSeconds"
 
 			val metaData = ContentValues().apply {
 				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, musicDir)
-				put(MediaStore.Audio.AudioColumns.TITLE, fileName)
 				put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileName)
 				put(MediaStore.Audio.AudioColumns.MIME_TYPE, format.mimeType)
 				put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
 				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
-				put(MediaStore.Audio.AudioColumns.ARTIST, context.packageName)
 				put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 					put(MediaStore.Audio.AudioColumns.IS_RECORDING, 1)
@@ -106,6 +103,9 @@ class RecorderFileProviderImpl(
 		}
 	}
 
+	/**
+	 * Method used to get a unique no. to give the file name should be short
+	 */
 	suspend fun getItemNumber(): Int {
 		val projection = arrayOf(MediaStore.Audio.AudioColumns._ID)
 		val selection = "${MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME} = ?"

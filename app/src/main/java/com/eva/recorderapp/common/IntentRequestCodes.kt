@@ -10,4 +10,8 @@ enum class IntentRequestCodes(val code: Int) {
 	PAUSE_VOICE_RECORDER(102),
 	RESUME_VOICE_RECORDER(103),
 	STOP_VOICE_RECORDER(104),
+	CANCEL_VOICE_RECORDER(105),
+
+	// Player notification content intent
+	PLAYER_NOTIFICATION_INTENT(200)
 }

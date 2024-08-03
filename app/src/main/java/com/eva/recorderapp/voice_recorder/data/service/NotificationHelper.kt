@@ -1,11 +1,12 @@
 package com.eva.recorderapp.voice_recorder.data.service
 
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.view.View
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import com.eva.recorderapp.MainActivity
@@ -56,43 +57,6 @@ class NotificationHelper(
 	) = PendingIntent.getActivity(context, requestCodes.code, intent, flags)
 
 
-	private val pauseRecorderAction: NotificationCompat.Action
-		get() = buildNotificationAction(
-			title = context.getString(R.string.recorder_action_pause),
-			intent = buildServicePendingIntent(
-				context = context,
-				requestCodes = IntentRequestCodes.PAUSE_VOICE_RECORDER,
-				intent = recorderServiceIntent.apply {
-					action = RecorderAction.PAUSE_RECORDER.action
-				}
-			)
-		)
-
-	private val resumeRecorderAction: NotificationCompat.Action
-		get() = buildNotificationAction(
-			title = context.getString(R.string.recorder_action_resume),
-			intent = buildServicePendingIntent(
-				context = context,
-				requestCodes = IntentRequestCodes.RESUME_VOICE_RECORDER,
-				intent = recorderServiceIntent.apply {
-					action = RecorderAction.RESUME_RECORDER.action
-				}
-			)
-		)
-
-
-	private val stopRecorderAction: NotificationCompat.Action
-		get() = buildNotificationAction(
-			title = context.getString(R.string.recorder_action_stop),
-			intent = buildServicePendingIntent(
-				context = context,
-				requestCodes = IntentRequestCodes.STOP_VOICE_RECORDER,
-				intent = recorderServiceIntent.apply {
-					action = RecorderAction.STOP_RECORDER.action
-				}
-			)
-		)
-
 	private val recorderScreenPendingIntent: PendingIntent
 		get() = buildActivityPendingIntent(
 			context = context,
@@ -107,9 +71,56 @@ class NotificationHelper(
 			intent = recordingsScreenIntent,
 		)
 
+	private val stopRecorderPendingIntent: PendingIntent
+		get() = buildServicePendingIntent(
+			context = context,
+			requestCodes = IntentRequestCodes.STOP_VOICE_RECORDER,
+			intent = recorderServiceIntent.apply {
+				action = RecorderAction.STOP_RECORDER.action
+			}
+		)
+
+	private val cancelRecorderPendingIntent: PendingIntent
+		get() = buildServicePendingIntent(
+			context = context,
+			requestCodes = IntentRequestCodes.CANCEL_VOICE_RECORDER,
+			intent = recorderServiceIntent.apply {
+				action = RecorderAction.CANCEL_RECORDER.action
+			}
+		)
+
+	private val pauseRecorderPendingIntent: PendingIntent
+		get() = buildServicePendingIntent(
+			context = context,
+			requestCodes = IntentRequestCodes.PAUSE_VOICE_RECORDER,
+			intent = recorderServiceIntent.apply {
+				action = RecorderAction.PAUSE_RECORDER.action
+			}
+		)
+
+	private val resumeRecorderPendingIntent: PendingIntent
+		get() = buildServicePendingIntent(
+			context = context,
+			requestCodes = IntentRequestCodes.RESUME_VOICE_RECORDER,
+			intent = recorderServiceIntent.apply {
+				action = RecorderAction.RESUME_RECORDER.action
+			}
+		)
+
+	private val recorderCustomView = RemoteViews(
+		context.packageName, R.layout.recorder_remote_view_layout
+	).apply {
+		setOnClickPendingIntent(R.id.stop_button, stopRecorderPendingIntent)
+		setOnClickPendingIntent(R.id.cancel_button, cancelRecorderPendingIntent)
+		setOnClickPendingIntent(R.id.resume_button, resumeRecorderPendingIntent)
+		setOnClickPendingIntent(R.id.pause_button, pauseRecorderPendingIntent)
+	}
+
 	private val _recorderNotifcation =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_microphone)
+			.setStyle(NotificationCompat.DecoratedCustomViewStyle())
+			.setCustomContentView(recorderCustomView)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_HIGH)
 			.setSilent(true)
@@ -143,28 +154,37 @@ class NotificationHelper(
 	val timerNotification: Notification
 		get() = _recorderNotifcation.build()
 
-	@SuppressLint("RestrictedApi")
+
 	fun setPauseStopAction() {
-		_recorderNotifcation.apply {
-			val actions = arrayListOf(pauseRecorderAction, stopRecorderAction)
-			mActions = actions
+		val updatedRemoteView = recorderCustomView.apply {
+			setViewVisibility(R.id.pause_button, View.VISIBLE)
+			setViewVisibility(R.id.resume_button, View.GONE)
 		}
+		_recorderNotifcation.setCustomContentView(updatedRemoteView)
 	}
 
-	@SuppressLint("RestrictedApi")
+
 	fun setResumeStopAction() {
-		_recorderNotifcation.apply {
-			val actions = arrayListOf(resumeRecorderAction, stopRecorderAction)
-			mActions = actions
+		val updatedRemoteView = recorderCustomView.apply {
+			setViewVisibility(R.id.pause_button, View.GONE)
+			setViewVisibility(R.id.resume_button, View.VISIBLE)
 		}
+		_recorderNotifcation.setCustomContentView(updatedRemoteView)
 	}
 
 	fun setContentTitle(title: String) {
-		_recorderNotifcation.setContentTitle(title)
+
+		val updatedRemoteView = recorderCustomView.apply {
+			setTextViewText(R.id.notification_title, title)
+		}
+		_recorderNotifcation.setCustomContentView(updatedRemoteView)
 	}
 
 	fun setContentText(text: String) {
-		_recorderNotifcation.setContentText(text)
+		val updatedRemoteView = recorderCustomView.apply {
+			setTextViewText(R.id.notification_text, text)
+		}
+		_recorderNotifcation.setCustomContentView(updatedRemoteView)
 	}
 
 }

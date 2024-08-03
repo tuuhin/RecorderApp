@@ -68,4 +68,25 @@
   <string name="music_file_not_found_title">Audio File not found</string>
   <string name="music_file_not_found_desc">Make sure this file exists in your storage</string>
   <string name="recorder_state_preparing">Initlizing</string>
+  <string name="menu_option_details">Details</string>
+  <string name="menu_option_share">Share</string>
+  <string name="menu_option_delete">Delete</string>
+  <string name="menu_more_rename">Rename</string>
+  <string name="meta_data_sheet_heading">Details</string>
+  <string name="player_action_add_bookmark">BookMark</string>
+  <string name="player_action_show_bookmarks">Show List</string>
+  <string name="audio_metadata_bitrate">%.2f kbps</string>
+  <string name="audio_metadata_sample_rate">%.2f khz</string>
+  <string name="audio_metadata_sample_rate_title">Sample Rate</string>
+  <string name="audio_metadata_path_title">Path</string>
+  <string name="audio_metadata_bitrate_title">Bitrate</string>
+  <string name="audio_metadata_channel_title">Channel</string>
+  <string name="audio_metadata_last_edit_title">Last Modified</string>
+  <string name="audio_metadata_mime_type_title">MimeType</string>
+  <string name="audio_metadata_duration_title">Duration</string>
+  <string name="audio_metadata_filesize_title">Size</string>
+  <string name="audio_metadata_name_title">Name</string>
+  <string name="player_channel_resource_id">player_channel</string>
+  <string name="show_recordings_list">List</string>
+  <string name="cannot_create_file">Cannot create file for recording</string>
 </resources>

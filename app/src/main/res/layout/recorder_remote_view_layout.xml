@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:baselineAligned="false"
+  android:orientation="horizontal">
+
+  <LinearLayout
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:orientation="vertical">
+
+    <TextView
+      android:id="@+id/notification_title"
+      style="@style/TextAppearance.Compat.Notification.Title"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="4dp"
+      android:textFontWeight="700" />
+
+    <TextView
+      android:id="@+id/notification_text"
+      style="@style/TextAppearance.Compat.Notification.Media"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content" />
+
+  </LinearLayout>
+
+  <LinearLayout
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <RelativeLayout
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:layout_marginEnd="12dp">
+
+      <Button
+        android:id="@+id/pause_button"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/ic_pause"
+        android:backgroundTint="@color/notifcation_button_color"
+        android:contentDescription="@string/recorder_action_pause" />
+
+      <Button
+        android:id="@+id/resume_button"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/ic_play"
+        android:backgroundTint="@color/notifcation_button_color"
+        android:contentDescription="@string/recorder_action_resume"
+        android:visibility="gone" />
+    </RelativeLayout>
+
+    <Button
+      android:id="@+id/stop_button"
+      android:layout_width="24dp"
+      android:layout_height="24dp"
+      android:layout_gravity="center"
+      android:layout_marginEnd="12dp"
+      android:background="@drawable/ic_stop"
+      android:backgroundTint="@color/notifcation_button_color"
+      android:contentDescription="@string/action_stop" />
+
+    <Button
+      android:id="@+id/cancel_button"
+      android:layout_width="32dp"
+      android:layout_height="32dp"
+      android:layout_gravity="center"
+      android:background="@drawable/ic_close"
+      android:backgroundTint="@color/notifcation_button_color"
+      android:contentDescription="@string/recorder_action_cancel" />
+
+  </LinearLayout>
+
+</LinearLayout>

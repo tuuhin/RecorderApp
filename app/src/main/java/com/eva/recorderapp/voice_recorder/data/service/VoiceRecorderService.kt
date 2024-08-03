@@ -103,7 +103,7 @@ class VoiceRecorderService : LifecycleService() {
 			readAmplitudes()
 			// update the notification
 			readTimerAndUpdateNotification()
-		}  catch (e: Exception) {
+		} catch (e: Exception) {
 			e.printStackTrace()
 		}
 	}
@@ -185,11 +185,12 @@ class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun onStopRecording() {
-		// stop the foreground
-		stopForeground(Service.STOP_FOREGROUND_REMOVE)
 		// stop the recording
 		lifecycleScope.launch { voiceRecorder.stopRecording() }
-
+			.invokeOnCompletion {
+				// stop the foreground
+				stopForeground(Service.STOP_FOREGROUND_REMOVE)
+			}
 	}
 
 	private fun onResumeRecording() {
@@ -219,10 +220,12 @@ class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun onCancelRecording() {
-		// stop the foreground service
-		stopForeground(STOP_FOREGROUND_REMOVE)
 		// cancel recording
 		lifecycleScope.launch { voiceRecorder.cancelRecording() }
+			.invokeOnCompletion {
+				// stop the foregound
+				stopForeground(Service.STOP_FOREGROUND_REMOVE)
+			}
 	}
 
 

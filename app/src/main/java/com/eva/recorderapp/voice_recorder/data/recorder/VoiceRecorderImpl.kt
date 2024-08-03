@@ -25,17 +25,18 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
 import java.io.IOException
 
 private const val LOGGER_TAG = "VOICE_RECORDER"
-private const val SAMPLING_SIZE = 100
 
 class VoiceRecorderImpl(
 	private val context: Context,
 	private val fileProvider: RecorderFileProvider,
 	private val stopWatch: RecorderStopWatch,
 ) : VoiceRecorder {
+	//record format make sure this is change-able
 	val format = RecordFormats.M4A
 
 	// recorder related
@@ -61,11 +62,17 @@ class VoiceRecorderImpl(
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	override val maxAmplitudes: Flow<FloatArray>
-		get() = recorderState
-			.flatMapLatest { state ->
-				_bufferReader?.readAmplitudeBuffered(state)
-					?: emptyFlow()
-			}
+		get() = recorderState.flatMapLatest { state ->
+			_bufferReader?.readAmplitudeBuffered(state)
+				?: emptyFlow()
+		}
+
+
+	private val _errorListener = object : MediaRecorder.OnErrorListener {
+		override fun onError(mr: MediaRecorder?, what: Int, extra: Int) {
+			Log.e(LOGGER_TAG, "SOME ERROR OCCURED WITH RECORDER")
+		}
+	}
 
 	@Suppress("DEPRECATION")
 	override fun createRecorder() {
@@ -84,10 +91,9 @@ class VoiceRecorderImpl(
 			MediaRecorder(context)
 		else MediaRecorder()
 
-		_bufferReader = BufferedAmplitudeReader(
-			recorder = _recorder,
-			maxBufferSize = SAMPLING_SIZE
-		)
+		_recorder?.setOnErrorListener(_errorListener)
+
+		_bufferReader = BufferedAmplitudeReader(recorder = _recorder)
 		Log.d(LOGGER_TAG, "CREATED RECORDER AND AMPLITUDE SUCCESSFULLY")
 	}
 
@@ -95,32 +101,35 @@ class VoiceRecorderImpl(
 	 * Creates the file uri in which the audio to be recorded and initiate
 	 * the recorder parameters
 	 */
-	private suspend fun initiateRecorderParams() = coroutineScope {
-		if (_recorder == null) createRecorder()
+	private suspend fun initiateRecorderParams(): Boolean {
+		return coroutineScope {
+			if (_recorder == null) createRecorder()
 
-		// ensures the file is being created in a differnt coroutine
-		val file = async(Dispatchers.IO) { fileProvider.createUriForRecording(format) }
-		_currentRecordingUri = file.await()
+			// ensures the file is being created in a differnt coroutine
+			val file = async(Dispatchers.IO) { fileProvider.createUriForRecording(format) }
+			_currentRecordingUri = file.await()
 
-		if (_currentRecordingUri == null) {
-			Log.i(LOGGER_TAG, "CANNOT CREATE FILE FOR RECORDING")
-			return@coroutineScope
+			if (_currentRecordingUri == null) {
+				Log.i(LOGGER_TAG, "CANNOT CREATE FILE FOR RECORDING")
+				return@coroutineScope false
+			}
+
+			Log.d(LOGGER_TAG, "NEW_FILE_URI_CREATED")
+
+			_fd = context.contentResolver.openFileDescriptor(_currentRecordingUri!!, "w")
+			Log.d(LOGGER_TAG, "FILE DESCRIPTOR SET")
+
+			val fileDescriptor = _fd?.fileDescriptor ?: return@coroutineScope false
+
+			_recorder?.apply {
+				setAudioSource(MediaRecorder.AudioSource.MIC)
+				setOutputFormat(format.outputFormat)
+				setAudioEncoder(format.encoder)
+				setOutputFile(fileDescriptor)
+			}
+			Log.d(LOGGER_TAG, "RECORDER CONFIGURED")
+			true
 		}
-
-		Log.d(LOGGER_TAG, "NEW_FILE_URI_CREATED")
-
-		_fd = context.contentResolver.openFileDescriptor(_currentRecordingUri!!, "w")
-		Log.d(LOGGER_TAG, "FILE DESCRIPTOR SET")
-
-		val fileDescriptor = _fd?.fileDescriptor ?: return@coroutineScope
-
-		_recorder?.apply {
-			setAudioSource(MediaRecorder.AudioSource.MIC)
-			setOutputFormat(format.outputFormat)
-			setAudioEncoder(format.encoder)
-			setOutputFile(fileDescriptor)
-		}
-		Log.d(LOGGER_TAG, "RECORDER CONFIGURED")
 	}
 
 	/**
@@ -134,8 +143,10 @@ class VoiceRecorderImpl(
 		Log.d(LOGGER_TAG, "FILE DESCRIPTOR CLOSED")
 		// update the file
 		_currentRecordingUri?.let { uri ->
-			fileProvider.updateUriAfterRecording(uri)
-			Log.d(LOGGER_TAG, "RECORDER FILE UPDATED")
+			withContext(Dispatchers.IO) {
+				fileProvider.updateUriAfterRecording(uri)
+				Log.d(LOGGER_TAG, "RECORDER FILE UPDATED")
+			}
 		}
 		// set recording uri to null and close the socket
 		_currentRecordingUri = null
@@ -151,8 +162,10 @@ class VoiceRecorderImpl(
 		Log.d(LOGGER_TAG, "FILE DESCRIPTOR CLOSED")
 		// update the file
 		_currentRecordingUri?.let { uri ->
-			fileProvider.deleteUriIfNotPending(uri)
-			Log.d(LOGGER_TAG, "RECORDER FILE DELETED")
+			withContext(Dispatchers.IO) {
+				fileProvider.deleteUriIfNotPending(uri)
+				Log.d(LOGGER_TAG, "RECORDER FILE DELETED")
+			}
 		}
 		// set recording uri to null and close the socket
 		_currentRecordingUri = null
@@ -169,20 +182,30 @@ class VoiceRecorderImpl(
 		}
 		// staring an operation lock it
 		operationLock.lock(this)
+		// current uri is already set cannot set it again
+		if (_currentRecordingUri != null) {
+			Log.d(LOGGER_TAG, "CURRENT URI IS ALREDY SET")
+			return
+		}
 		// prepare the recording params
-		if (_currentRecordingUri == null) {
-			stopWatch.prepare()
-			Log.i(LOGGER_TAG, "PREPARING FILE FOR RECORDING")
-			initiateRecorderParams()
+		stopWatch.prepare()
+		Log.i(LOGGER_TAG, "PREPARING FILE FOR RECORDING")
+		val isOK = initiateRecorderParams()
+		if (!isOK) {
+			Log.d(LOGGER_TAG, "CANNOT INITATE RECORDER PARAMS")
+			val message = context.getString(R.string.cannot_create_file)
+			Toast.makeText(context, message, Toast.LENGTH_SHORT)
+				.show()
+			return
 		}
 		try {
 			// prepare the recorder
 			_recorder?.prepare()
-			Log.d(LOGGER_TAG, "PREPARING RECORDER")
+			Log.d(LOGGER_TAG, "RECORDER PREPARED")
 			//start the recorder
 			_recorder?.start()
 			stopWatch.startOrResume()
-			Log.d(LOGGER_TAG, "RECORDER PREPARED AND STARTED")
+			Log.d(LOGGER_TAG, "RECORDER STARTED")
 		} catch (e: IOException) {
 			e.printStackTrace()
 		} finally {
@@ -197,6 +220,9 @@ class VoiceRecorderImpl(
 		if (operationLock.holdsLock(this)) {
 			Log.d(LOGGER_TAG, "CANNOT STOP RECORDING ITS LOCKED")
 			return
+		}
+		if (_currentRecordingUri == null) {
+			Log.d(LOGGER_TAG, "FILE URI IS NOT SET SO RECORDER IS NOT READY")
 		}
 		// staring an operation lock it
 		operationLock.lock(this)
@@ -257,6 +283,7 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "STOPWATCH STOPPED")
 			stopWatch.cancel()
 			//stop the ongoing recording
+			Log.d(LOGGER_TAG, "RECORDER STOPPED")
 			_recorder?.stop()
 			// delete the current recording
 			stopAndDeleteFileMetaData()
