@@ -7,11 +7,10 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-fun LocalDateTime.toDuration(): Duration {
-	val millis = toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-	return millis.toDuration(DurationUnit.MILLISECONDS)
-}
-
 fun LocalDateTime.toMillis(): Long {
 	return toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+}
+
+fun LocalDateTime.toDuration(): Duration {
+	return toMillis().toDuration(DurationUnit.MILLISECONDS)
 }

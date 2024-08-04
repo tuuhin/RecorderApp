@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -35,9 +36,10 @@ fun IconButtonWithText(
 	text: String,
 	onClick: () -> Unit,
 	modifier: Modifier = Modifier,
-	spacing: Dp = 2.dp,
+	spacing: Dp = 4.dp,
 	enabled: Boolean = true,
 	shape: Shape = MaterialTheme.shapes.medium,
+	textStyle: TextStyle = MaterialTheme.typography.labelMedium,
 	colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
 	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
@@ -66,7 +68,7 @@ fun IconButtonWithText(
 			icon()
 			Text(
 				text = text,
-				style = MaterialTheme.typography.labelMedium,
+				style = textStyle,
 				color = if (enabled) colors.contentColor else colors.disabledContentColor
 			)
 		}

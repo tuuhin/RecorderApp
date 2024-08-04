@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.ui.theme.DownloadableFonts
 import kotlinx.datetime.LocalTime
@@ -40,7 +39,7 @@ fun PlayerDurationText(
 
 	Column(
 		modifier = modifier.padding(horizontal = 10.dp),
-		verticalArrangement = Arrangement.spacedBy(6.dp),
+		verticalArrangement = Arrangement.spacedBy(8.dp),
 		horizontalAlignment = Alignment.CenterHorizontally
 	) {
 		Text(
@@ -49,12 +48,11 @@ fun PlayerDurationText(
 			style = MaterialTheme.typography.displayMedium,
 			color = MaterialTheme.colorScheme.secondary,
 			fontFamily = DownloadableFonts.CLOCK_FACE,
-			letterSpacing = 2.sp
 		)
 		Text(
 			text = totalDurationText,
 			style = MaterialTheme.typography.displaySmall,
-			color = MaterialTheme.colorScheme.secondary,
+			color = MaterialTheme.colorScheme.primary,
 		)
 	}
 }

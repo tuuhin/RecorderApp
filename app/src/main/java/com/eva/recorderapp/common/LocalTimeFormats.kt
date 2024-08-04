@@ -40,12 +40,26 @@ object LocalTimeFormats {
 		secondFraction(2)
 	}
 
+	val LOCALTIME_FORMAT_HH_MM_SS = LocalTime.Format {
+		hour()
+		char(':')
+		minute()
+		char(':')
+		second()
+	}
+
 	val LOCALTIME_FORMAT_MM_SS_SF2 = LocalTime.Format {
 		minute()
 		char(':')
 		second()
 		char('.')
 		secondFraction(2)
+	}
+
+	val LOCALTIME_FORMAT_MM_SS = LocalTime.Format {
+		minute()
+		char(':')
+		second()
 	}
 
 	val RECORDING_RECORD_TIME_FORMAT = LocalDateTime.Format {

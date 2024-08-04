@@ -1,21 +1,27 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DoNotDisturbOnTotalSilence
-import androidx.compose.material.icons.filled.DoubleArrow
-import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,6 +35,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerPlayBackSpeed
 import com.eva.recorderapp.voice_recorder.presentation.composables.IconButtonWithText
 
 @Composable
@@ -37,6 +44,11 @@ fun AudioPlayerActions(
 	onPause: () -> Unit,
 	onPlay: () -> Unit,
 	modifier: Modifier = Modifier,
+	speed: PlayerPlayBackSpeed = PlayerPlayBackSpeed.NORMAL,
+	canRepeat: Boolean = false,
+	onRepeatModeChange: (Boolean) -> Unit = {},
+	onMutePlayer: () -> Unit = {},
+	onSpeedChange: () -> Unit = {},
 	onForwardBy1s: () -> Unit = {},
 	onRewindBy1s: () -> Unit = {},
 	shape: Shape = MaterialTheme.shapes.large,
@@ -51,8 +63,7 @@ fun AudioPlayerActions(
 		contentColor = contentColor
 	) {
 		Column(
-			modifier = Modifier
-				.padding(all = dimensionResource(id = R.dimen.player_options_card_padding)),
+			modifier = Modifier.padding(all = dimensionResource(id = R.dimen.player_options_card_padding)),
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.spacedBy(24.dp)
 		) {
@@ -60,18 +71,38 @@ fun AudioPlayerActions(
 				modifier = Modifier.fillMaxWidth(),
 				horizontalArrangement = Arrangement.SpaceBetween
 			) {
-				IconButton(onClick = {}) {
-					Icon(
-						imageVector = Icons.Default.DoNotDisturbOnTotalSilence,
-						contentDescription = null
-					)
-				}
-				IconButton(onClick = { /*TODO*/ }) {
-					Icon(imageVector = Icons.Default.Repeat, contentDescription = null)
-				}
-				IconButton(onClick = {}) {
-					Icon(imageVector = Icons.Default.DoubleArrow, contentDescription = null)
-				}
+				IconButtonWithText(
+					icon = {
+						Icon(
+							painter = painterResource(id = R.drawable.ic_mute_device),
+							contentDescription = stringResource(id = R.string.player_action_mute)
+						)
+					},
+					text = stringResource(id = R.string.player_action_mute),
+					onClick = onMutePlayer,
+				)
+				IconButtonWithText(
+					icon = {
+						Icon(
+							painter = painterResource(id = R.drawable.ic_repeat),
+							contentDescription = stringResource(id = R.string.player_action_repeat),
+							tint = if (canRepeat) MaterialTheme.colorScheme.primary else contentColor
+						)
+					},
+					text = stringResource(id = R.string.player_action_repeat),
+					onClick = { onRepeatModeChange(!canRepeat) },
+				)
+				IconButtonWithText(
+					icon = {
+						Text(
+							text = stringResource(R.string.player_playback_speed, speed.speed),
+							style = MaterialTheme.typography.titleMedium,
+							color = MaterialTheme.colorScheme.onSurface
+						)
+					},
+					text = stringResource(id = R.string.player_action_speed),
+					onClick = onSpeedChange,
+				)
 			}
 			Row(
 				modifier = Modifier.fillMaxWidth(),
@@ -81,7 +112,7 @@ fun AudioPlayerActions(
 					icon = {
 						Icon(
 							painter = painterResource(id = R.drawable.ic_fast_rewind),
-							contentDescription = stringResource(id = R.string.player_fast_forward)
+							contentDescription = stringResource(id = R.string.player_fast_rewind)
 						)
 					},
 					text = stringResource(id = R.string.player_fast_rewind),
@@ -96,7 +127,12 @@ fun AudioPlayerActions(
 					contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
 					containerColor = MaterialTheme.colorScheme.secondaryContainer
 				) {
-					Crossfade(targetState = isPlaying) { playing ->
+					AnimatedContent(
+						targetState = isPlaying,
+						transitionSpec = { isPlayingAnimation() },
+						label = "Trasform between playing states",
+						contentAlignment = Alignment.Center
+					) { playing ->
 						if (playing)
 							Icon(
 								painter = painterResource(id = R.drawable.ic_pause),
@@ -123,8 +159,30 @@ fun AudioPlayerActions(
 	}
 }
 
+private fun AnimatedContentTransitionScope<Boolean>.isPlayingAnimation(): ContentTransform {
+	return fadeIn(
+		animationSpec = tween(400)
+	) + scaleIn(
+		animationSpec = spring(
+			dampingRatio = Spring.DampingRatioLowBouncy,
+			stiffness = Spring.StiffnessLow,
+		),
+	) togetherWith fadeOut(
+		animationSpec = tween(400)
+	) + scaleOut(
+		animationSpec = spring(
+			dampingRatio = Spring.DampingRatioLowBouncy,
+			stiffness = Spring.StiffnessLow,
+		),
+	)
+}
+
 @PreviewLightDark
 @Composable
 private fun AudioPlayerActionsPreview() = RecorderAppTheme {
-	AudioPlayerActions(isPlaying = true, onPlay = {}, onPause = {})
+	AudioPlayerActions(
+		speed = PlayerPlayBackSpeed.NORMAL,
+		isPlaying = true,
+		onPlay = {},
+		onPause = {})
 }

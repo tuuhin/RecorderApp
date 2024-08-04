@@ -89,4 +89,8 @@
   <string name="player_channel_resource_id">player_channel</string>
   <string name="show_recordings_list">List</string>
   <string name="cannot_create_file">Cannot create file for recording</string>
+  <string name="player_playback_speed">%.2f x</string>
+  <string name="player_action_speed">Speed</string>
+  <string name="player_action_repeat">Repeat</string>
+  <string name="player_action_mute">Mute</string>
 </resources>

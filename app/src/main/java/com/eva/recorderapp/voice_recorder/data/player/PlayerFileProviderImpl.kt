@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "PLAYER_FILE_PROVIDER"
 
@@ -157,7 +158,7 @@ class PlayerFileProviderImpl(
 				size = size,
 				fileUri = uriString,
 				bitRateInKbps = extractor?.bitRate?.toFloat() ?: 0f,
-				lastModified = lastModified.milliseconds.toLocalDateTime(),
+				lastModified = lastModified.seconds.toLocalDateTime(),
 				channel = extractor?.channelCount ?: 0,
 				path = relPath,
 				mimeType = mimeType,
