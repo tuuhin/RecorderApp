@@ -79,7 +79,7 @@ private fun AudioPlaybackSpeedCard(
 	val color by animateColorAsState(
 		targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer
 		else MaterialTheme.colorScheme.surfaceContainerHigh,
-		animationSpec = tween(durationMillis = 8000, easing = EaseInBack)
+		animationSpec = tween(durationMillis = 100, easing = EaseInBack)
 	)
 
 	Card(

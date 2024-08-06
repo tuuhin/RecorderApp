@@ -3,27 +3,13 @@ package com.eva.recorderapp.voice_recorder.domain.player
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
 
 interface AudioFilePlayer {
 
-	/**
-	 * Checks if the current player is playing
-	 */
-	val isPlaying: StateFlow<Boolean>
-
-	/**
-	 * Player state of the player in [PlayerState]
-	 * @see PlayerState
-	 */
-	val playerState: StateFlow<PlayerState>
 
 	val trackInfoAsFlow: Flow<PlayerTrackData>
-
-	val playBackSpeedFlow: StateFlow<PlayerPlayBackSpeed>
-
-	val isLooping: StateFlow<Boolean>
+	val playerMetaDataFlow: Flow<PlayerMetaData>
 
 	fun onMuteDevice()
 
@@ -31,6 +17,8 @@ interface AudioFilePlayer {
 	fun setPlayBackSpeed(playBackSpeed: PlayerPlayBackSpeed)
 
 	fun setPlayLooping(loop: Boolean = false)
+
+	fun onSeekDuration(duration: Duration)
 
 	/**
 	 * Prepares the player from a [AudioFileModel]

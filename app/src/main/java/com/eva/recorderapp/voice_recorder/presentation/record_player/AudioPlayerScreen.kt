@@ -1,7 +1,10 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -34,7 +37,8 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayBackSpeedSelector
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerDurationText
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerGraphAndBookMarks
-import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerState
+import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerSlider
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
@@ -44,7 +48,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioPlayerScreen(
-	playerState: AudioPlayerState,
+	playerState: AudioPlayerInformation,
 	loadState: ContentLoadState,
 	onPlayerEvents: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
@@ -114,34 +118,49 @@ fun AudioPlayerScreen(
 				.padding(scPadding)
 				.padding(all = dimensionResource(id = R.dimen.sc_padding))
 				.fillMaxSize(),
-			onSuccess = { audio ->
+			onSuccess = { _ ->
 				PlayerDurationText(
-					playedDuration = playerState.trackData.currentAsLocalTime,
-					totalDuration = audio.durationAsLocaltime,
+					track = playerState.trackData,
 					modifier = Modifier.align(Alignment.TopCenter)
 				)
 				PlayerGraphAndBookMarks(
+					samples = playerState.sampling,
 					isGraphMode = true,
 					onToggleListAndWave = { },
 					onAddBookMark = { },
 					modifier = Modifier
 						.align(Alignment.Center)
-						.offset(y = -30.dp)
+						.offset(y = -80.dp)
 				)
-				AudioPlayerActions(
-					speed = playerState.playBackSpeed,
-					isPlaying = playerState.isPlaying,
-					canRepeat = playerState.isRepeating,
-					onPlay = { onPlayerEvents(PlayerEvents.OnStartPlayer) },
-					onPause = { onPlayerEvents(PlayerEvents.OnPausePlayer) },
-					onMutePlayer = { onPlayerEvents(PlayerEvents.OnMutePlayer) },
-					onRepeatModeChange = { onPlayerEvents(PlayerEvents.OnRepeatModeChange(it)) },
-					onSpeedChange = {
-						scope.launch { playBackSpeedBottomSheet.show() }
-							.invokeOnCompletion { openPlayBackSpeedBottomSheet = true }
-					},
-					modifier = Modifier.align(Alignment.BottomCenter)
-				)
+				Column(
+					modifier = Modifier
+						.fillMaxWidth()
+						.align(Alignment.BottomCenter),
+					verticalArrangement = Arrangement.spacedBy(8.dp)
+				) {
+					PlayerSlider(
+						track = playerState.trackData,
+						onSeekToDuration = { amount ->
+							onPlayerEvents(PlayerEvents.OnSeekPlayer(amount))
+						},
+						onSeekDurationComplete = { onPlayerEvents(PlayerEvents.OnSeekComplete) },
+					)
+					AudioPlayerActions(
+						speed = playerState.playBackSpeed,
+						isPlaying = playerState.isPlaying,
+						canRepeat = playerState.isRepeating,
+						onPlay = { onPlayerEvents(PlayerEvents.OnStartPlayer) },
+						onPause = { onPlayerEvents(PlayerEvents.OnPausePlayer) },
+						onMutePlayer = { onPlayerEvents(PlayerEvents.OnMutePlayer) },
+						onRepeatModeChange = { onPlayerEvents(PlayerEvents.OnRepeatModeChange(it)) },
+						onRewind = { onPlayerEvents(PlayerEvents.OnRewindByNDuration()) },
+						onForward = { onPlayerEvents(PlayerEvents.OnForwardByNDuration()) },
+						onSpeedChange = {
+							scope.launch { playBackSpeedBottomSheet.show() }
+								.invokeOnCompletion { openPlayBackSpeedBottomSheet = true }
+						},
+					)
+				}
 			},
 		)
 	}
@@ -151,7 +170,7 @@ fun AudioPlayerScreen(
 @Composable
 private fun AudioPlayerScreenPreview() = RecorderAppTheme {
 	AudioPlayerScreen(
-		playerState = AudioPlayerState(),
+		playerState = AudioPlayerInformation(),
 		loadState = ContentLoadState.Content(data = PreviewFakes.FAKE_AUDIO_MODEL),
 		onPlayerEvents = {},
 		navigation = {

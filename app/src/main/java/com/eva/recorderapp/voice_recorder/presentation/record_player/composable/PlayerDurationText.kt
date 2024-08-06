@@ -1,6 +1,5 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.ui.theme.DownloadableFonts
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 
@@ -39,7 +39,6 @@ fun PlayerDurationText(
 
 	Column(
 		modifier = modifier.padding(horizontal = 10.dp),
-		verticalArrangement = Arrangement.spacedBy(8.dp),
 		horizontalAlignment = Alignment.CenterHorizontally
 	) {
 		Text(
@@ -51,8 +50,20 @@ fun PlayerDurationText(
 		)
 		Text(
 			text = totalDurationText,
-			style = MaterialTheme.typography.displaySmall,
+			style = MaterialTheme.typography.headlineMedium,
 			color = MaterialTheme.colorScheme.primary,
 		)
 	}
+}
+
+@Composable
+fun PlayerDurationText(
+	track: PlayerTrackData,
+	modifier: Modifier = Modifier
+) {
+	PlayerDurationText(
+		playedDuration = track.currentAsLocalTime,
+		totalDuration = track.totalAsLocalTime,
+		modifier = modifier
+	)
 }

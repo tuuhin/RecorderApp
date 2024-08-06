@@ -49,8 +49,8 @@ fun AudioPlayerActions(
 	onRepeatModeChange: (Boolean) -> Unit = {},
 	onMutePlayer: () -> Unit = {},
 	onSpeedChange: () -> Unit = {},
-	onForwardBy1s: () -> Unit = {},
-	onRewindBy1s: () -> Unit = {},
+	onForward: () -> Unit = {},
+	onRewind: () -> Unit = {},
 	shape: Shape = MaterialTheme.shapes.large,
 	color: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 	contentColor: Color = contentColorFor(backgroundColor = color)
@@ -116,7 +116,7 @@ fun AudioPlayerActions(
 						)
 					},
 					text = stringResource(id = R.string.player_fast_rewind),
-					onClick = onRewindBy1s,
+					onClick = onRewind,
 				)
 				FloatingActionButton(
 					onClick = {
@@ -152,7 +152,7 @@ fun AudioPlayerActions(
 						)
 					},
 					text = stringResource(id = R.string.player_fast_forward),
-					onClick = onForwardBy1s,
+					onClick = onForward,
 				)
 			}
 		}
