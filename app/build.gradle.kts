@@ -102,6 +102,9 @@ dependencies {
 	implementation(libs.androidx.hilt.work)
 	//media3
 	implementation(libs.androidx.media3.common)
+	implementation(libs.androidx.media3.exoplayer)
+	implementation(libs.androidx.media3.ui)
+	implementation(libs.androidx.media3.session)
 	//splash
 	implementation(libs.androidx.core.splashscreen)
 	//dynamic font

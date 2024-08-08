@@ -28,20 +28,30 @@ class RecorderApp : Application(), Configuration.Provider {
 
 	override fun onCreate() {
 		super.onCreate()
-		val channelId = NotificationConstants.RECORDER_CHANNEL_ID
-		val channelName = NotificationConstants.RECORDER_CHANNEL_NAME
-		val channelDescription = NotificationConstants.RECORDER_CHANNEL_DESC
 
-		val channel = NotificationChannel(
-			channelId,
-			channelName,
+		val channel1 = NotificationChannel(
+			NotificationConstants.RECORDER_CHANNEL_ID,
+			NotificationConstants.RECORDER_CHANNEL_NAME,
 			NotificationManager.IMPORTANCE_HIGH
 		).apply {
-			description = channelDescription
+			description = NotificationConstants.RECORDER_CHANNEL_DESC
 			setShowBadge(false)
 			lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
 		}
-		notificationManager?.createNotificationChannel(channel)
+
+		val channel2 = NotificationChannel(
+			NotificationConstants.PLAYER_CHANNEL_ID,
+			NotificationConstants.PLAYER_CHANNEL_NAME,
+			NotificationManager.IMPORTANCE_DEFAULT
+		).apply {
+			description = NotificationConstants.PLAYER_CHANNEL_DESC
+			setShowBadge(false)
+			lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
+		}
+
+		val channels = listOf(channel1, channel2)
+
+		notificationManager?.createNotificationChannels(channels)
 
 		//start wokers
 		RemoveTrashRecordingWorker.startRepeatWorker(applicationContext)

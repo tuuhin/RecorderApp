@@ -7,6 +7,7 @@
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
   <uses-permission
     android:name="android.permission.WRITE_EXTERNAL_STORAGE"
     android:maxSdkVersion="32"
@@ -31,6 +32,16 @@
       tools:node="merge" />
 
     <service
+      android:name=".voice_recorder.data.service.MediaPlayerService"
+      android:enabled="true"
+      android:exported="false"
+      android:foregroundServiceType="mediaPlayback">
+      <intent-filter>
+        <action android:name="androidx.media3.session.MediaSessionService" />
+      </intent-filter>
+    </service>
+
+    <service
       android:name=".voice_recorder.data.service.VoiceRecorderService"
       android:enabled="true"
       android:exported="false"
@@ -42,17 +53,21 @@
       android:launchMode="singleTask"
       android:theme="@style/Theme.App.Starting"
       android:windowSoftInputMode="adjustResize">
+
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
+      <!-- For app deeplinks-->
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
-        <data
-          android:host="app"
-          android:scheme="${applicationId}" />
+
+        <data android:scheme="app" />
+        <data android:host="${applicationId}" />
+
       </intent-filter>
+
     </activity>
 
     <provider
