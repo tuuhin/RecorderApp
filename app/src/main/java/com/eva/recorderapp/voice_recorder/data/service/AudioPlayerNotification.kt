@@ -25,8 +25,9 @@ class AudioPlayerNotification(
 	NotificationConstants.PLAYER_CHANNEL_ID,
 	R.string.player_channel_resource_id
 ) {
-	override fun getNotificationContentTitle(metadata: MediaMetadata): CharSequence?
-		= metadata.displayTitle ?: metadata.title
+	override fun getNotificationContentTitle(metadata: MediaMetadata): CharSequence? =
+		metadata.displayTitle ?: metadata.title
+
 
 	override fun getMediaButtons(
 		session: MediaSession,
@@ -41,12 +42,15 @@ class AudioPlayerNotification(
 			builder.add(
 				PlayerSessionCommands.playPauseButton(
 					showPauseButton = showPauseButton,
-					extras = bundleOf(COMMAND_KEY_COMPACT_VIEW_INDEX to C.INDEX_UNSET),
+					extras = bundleOf(
+						DefaultMediaNotificationProvider.COMMAND_KEY_COMPACT_VIEW_INDEX to
+								C.INDEX_UNSET
+					),
 					displayName = if (showPauseButton) "Paused" else "Play"
 				)
 			)
 		}
-
+		// attach all the other player commands
 		customLayout.filter { it.sessionCommand != null }
 			.forEach(builder::add)
 

@@ -11,12 +11,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.eva.recorderapp.common.PlayerConstants
 import com.eva.recorderapp.voice_recorder.data.service.MediaPlayerService
 import com.google.common.util.concurrent.MoreExecutors
 import java.util.concurrent.ExecutionException
@@ -25,6 +27,7 @@ private const val TAG = "PLAYER_CONTROLLER_PROVIDER"
 
 @Composable
 fun PlayerMediaControllerProvider(
+	audioId: Long,
 	onPlayerReady: @Composable (Player) -> Unit,
 	onOther: @Composable () -> Unit,
 	modifier: Modifier = Modifier,
@@ -43,7 +46,12 @@ fun PlayerMediaControllerProvider(
 			ComponentName(context, MediaPlayerService::class.java)
 		)
 
+		val sessionExtras = bundleOf(
+			PlayerConstants.PLAYER_AUDIO_FILE_ID_KEY to audioId
+		)
+
 		val controller = MediaController.Builder(context, sessionToken)
+			.setConnectionHints(sessionExtras)
 			.buildAsync()
 
 		val observer = LifecycleEventObserver { _, event ->

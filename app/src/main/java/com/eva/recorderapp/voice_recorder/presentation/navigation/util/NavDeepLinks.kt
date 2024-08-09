@@ -10,4 +10,7 @@ object NavDeepLinks {
 
 	val recordingsDestinationPattern = baseUri + "/recordings"
 	val recordingsDestinationUri = recordingsDestinationPattern.toUri()
+
+	val appPlayerDestinationPattern = baseUri + "/player/{audioId}"
+	fun audioPlayerDestinationUri(id: Long) = (baseUri + "/player" + "/${id}").toUri()
 }

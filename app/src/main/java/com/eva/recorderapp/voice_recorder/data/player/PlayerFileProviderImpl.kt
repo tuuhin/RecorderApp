@@ -19,6 +19,7 @@ import com.eva.recorderapp.voice_recorder.data.util.toLocalDateTime
 import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.ResourcedDetailedRecordingModel
+import com.eva.recorderapp.voice_recorder.domain.player.exceptions.PlayerFileNotFoundException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel

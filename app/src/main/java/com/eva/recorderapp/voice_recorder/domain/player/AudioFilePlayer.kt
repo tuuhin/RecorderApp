@@ -4,6 +4,7 @@ import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 interface AudioFilePlayer {
 
@@ -31,13 +32,13 @@ interface AudioFilePlayer {
 	 * Seeks the player by n [duration] forward
 	 * @param duration The amount of duration to seek forward
 	 */
-	fun forwardPlayerByNDuration(duration: Duration)
+	fun forwardPlayerByNDuration(duration: Duration = 2.seconds)
 
 	/**
 	 * Seeks the player by n [duration] backwards
 	 * @param duration The amount of duration to seek backwards
 	 */
-	fun rewindPlayerByNDuration(duration: Duration)
+	fun rewindPlayerByNDuration(duration: Duration = 2.seconds)
 
 	/**
 	 * Pauses the ongoing play

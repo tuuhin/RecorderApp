@@ -67,9 +67,7 @@ class AudioPlayerViewModel @AssistedInject constructor(
 	) { trackData, metadata, amplitude ->
 		AudioPlayerInformation(
 			trackData = trackData,
-			playerState = metadata.playerState,
-			playBackSpeed = metadata.playBackSpeed,
-			isRepeating = metadata.isRepeating,
+			playerMetaData = metadata,
 			sampling = amplitude
 		)
 	}.stateIn(

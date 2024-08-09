@@ -42,12 +42,14 @@ fun NavGraphBuilder.audioPlayerRoute(
 	val route = backStackEntry.toRoute<NavRoutes.AudioPlayer>()
 
 	PlayerMediaControllerProvider(
+		audioId = route.audioId,
 		onPlayerReady = { player ->
 			val viewModel = hiltViewModel<AudioPlayerViewModel, AudioPlayerViewModelFactory>(
 				creationCallback = { factory ->
 					val playerImpl = AudioFilePlayerImpl(player)
 					factory.create(player = playerImpl, audioId = route.audioId)
 				},
+				viewModelStoreOwner = backStackEntry,
 			)
 
 			val contentState by viewModel.loadState.collectAsStateWithLifecycle()

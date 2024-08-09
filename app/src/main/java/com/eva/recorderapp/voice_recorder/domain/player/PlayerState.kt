@@ -5,5 +5,10 @@ enum class PlayerState {
 	PLAYER_READY,
 	PLAYING,
 	PAUSED,
-	COMPLETED
+	COMPLETED;
+
+	val canAdvertisePlayerCurrentPostion: Boolean
+		get() = this in arrayOf(
+			PlayerState.PLAYER_READY, PlayerState.PLAYING, PlayerState.PAUSED
+		)
 }
