@@ -1,8 +1,16 @@
 package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -18,31 +26,28 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecorderPausePlayAction(
-	state: RecorderState,
+	showPausedAction: Boolean,
 	onResume: () -> Unit,
 	onPause: () -> Unit,
 	onCancel: () -> Unit,
 	onStop: () -> Unit,
 	modifier: Modifier = Modifier
 ) {
+
 	Box(
 		modifier = modifier,
 		contentAlignment = Alignment.Center
 	) {
 		AnimatedContent(
-			targetState = state == RecorderState.PAUSED,
-			transitionSpec = {
-				if (initialState) {
-					slideInVertically { height -> height } togetherWith slideOutVertically { height -> -height }
-				} else slideInVertically { height -> -height } togetherWith slideOutVertically { height -> height }
-			},
+			targetState = showPausedAction,
+			transitionSpec = { recorderStateAnimation() },
 			modifier = Modifier.align(Alignment.CenterStart),
 		) { isPaused ->
+
 			if (isPaused) {
 				IconButton(
 					onClick = onResume,
@@ -71,6 +76,7 @@ fun RecorderPausePlayAction(
 				)
 			}
 		}
+
 
 		IconButton(
 			onClick = onCancel,
@@ -104,4 +110,22 @@ fun RecorderPausePlayAction(
 			)
 		}
 	}
+}
+
+private fun AnimatedContentTransitionScope<Boolean>.recorderStateAnimation(): ContentTransform {
+	return fadeIn(
+		animationSpec = tween(400)
+	) + scaleIn(
+		animationSpec = spring(
+			dampingRatio = Spring.DampingRatioLowBouncy,
+			stiffness = Spring.StiffnessLow,
+		),
+	) togetherWith fadeOut(
+		animationSpec = tween(400)
+	) + scaleOut(
+		animationSpec = spring(
+			dampingRatio = Spring.DampingRatioLowBouncy,
+			stiffness = Spring.StiffnessLow,
+		),
+	) using SizeTransform(clip = false)
 }

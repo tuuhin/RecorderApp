@@ -124,6 +124,7 @@ class NotificationHelper(
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_HIGH)
 			.setSilent(true)
+			.setShowWhen(false)
 			.setOnlyAlertOnce(true)
 			.setOngoing(true)
 			.setContentIntent(recorderScreenPendingIntent)

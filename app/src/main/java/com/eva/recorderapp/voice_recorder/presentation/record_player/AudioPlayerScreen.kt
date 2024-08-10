@@ -76,7 +76,7 @@ fun AudioPlayerScreen(
 			onDismissRequest = { openPlayBackSpeedBottomSheet = false },
 		) {
 			PlayBackSpeedSelector(
-				selectedSpeed = playerState.playBackSpeed,
+				selectedSpeed = playerState.playerMetaData.playBackSpeed,
 				onSpeedSelected = { speed ->
 					onPlayerEvents(PlayerEvents.OnPlayerSpeedChange(speed))
 				},
@@ -129,6 +129,7 @@ fun AudioPlayerScreen(
 					onToggleListAndWave = { },
 					onAddBookMark = { },
 					modifier = Modifier
+						.fillMaxWidth()
 						.align(Alignment.Center)
 						.offset(y = -80.dp)
 				)
@@ -146,9 +147,7 @@ fun AudioPlayerScreen(
 						onSeekDurationComplete = { onPlayerEvents(PlayerEvents.OnSeekComplete) },
 					)
 					AudioPlayerActions(
-						speed = playerState.playBackSpeed,
-						isPlaying = playerState.isPlaying,
-						canRepeat = playerState.isRepeating,
+						playerMetaData = playerState.playerMetaData,
 						onPlay = { onPlayerEvents(PlayerEvents.OnStartPlayer) },
 						onPause = { onPlayerEvents(PlayerEvents.OnPausePlayer) },
 						onMutePlayer = { onPlayerEvents(PlayerEvents.OnMutePlayer) },
@@ -170,7 +169,7 @@ fun AudioPlayerScreen(
 @Composable
 private fun AudioPlayerScreenPreview() = RecorderAppTheme {
 	AudioPlayerScreen(
-		playerState = AudioPlayerInformation(),
+		playerState = PreviewFakes.FAKE_AUDIO_INFORMATION,
 		loadState = ContentLoadState.Content(data = PreviewFakes.FAKE_AUDIO_MODEL),
 		onPlayerEvents = {},
 		navigation = {

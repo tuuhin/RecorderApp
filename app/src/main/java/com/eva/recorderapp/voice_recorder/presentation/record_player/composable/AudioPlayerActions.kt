@@ -35,17 +35,16 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerPlayBackSpeed
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerMetaData
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerState
 import com.eva.recorderapp.voice_recorder.presentation.composables.IconButtonWithText
 
 @Composable
 fun AudioPlayerActions(
-	isPlaying: Boolean,
+	playerMetaData: PlayerMetaData,
 	onPause: () -> Unit,
 	onPlay: () -> Unit,
 	modifier: Modifier = Modifier,
-	speed: PlayerPlayBackSpeed = PlayerPlayBackSpeed.NORMAL,
-	canRepeat: Boolean = false,
 	onRepeatModeChange: (Boolean) -> Unit = {},
 	onMutePlayer: () -> Unit = {},
 	onSpeedChange: () -> Unit = {},
@@ -75,7 +74,8 @@ fun AudioPlayerActions(
 					icon = {
 						Icon(
 							painter = painterResource(id = R.drawable.ic_mute_device),
-							contentDescription = stringResource(id = R.string.player_action_mute)
+							contentDescription = stringResource(id = R.string.player_action_mute),
+							tint = if (playerMetaData.isMuted) MaterialTheme.colorScheme.primary else contentColor
 						)
 					},
 					text = stringResource(id = R.string.player_action_mute),
@@ -86,16 +86,19 @@ fun AudioPlayerActions(
 						Icon(
 							painter = painterResource(id = R.drawable.ic_repeat),
 							contentDescription = stringResource(id = R.string.player_action_repeat),
-							tint = if (canRepeat) MaterialTheme.colorScheme.primary else contentColor
+							tint = if (playerMetaData.isRepeating) MaterialTheme.colorScheme.primary else contentColor
 						)
 					},
 					text = stringResource(id = R.string.player_action_repeat),
-					onClick = { onRepeatModeChange(!canRepeat) },
+					onClick = { onRepeatModeChange(!playerMetaData.isRepeating) },
 				)
 				IconButtonWithText(
 					icon = {
 						Text(
-							text = stringResource(R.string.player_playback_speed, speed.speed),
+							text = stringResource(
+								R.string.player_playback_speed,
+								playerMetaData.playBackSpeed.speed
+							),
 							style = MaterialTheme.typography.titleMedium,
 							color = MaterialTheme.colorScheme.onSurface
 						)
@@ -120,7 +123,7 @@ fun AudioPlayerActions(
 				)
 				FloatingActionButton(
 					onClick = {
-						if (isPlaying) onPause()
+						if (playerMetaData.playerState == PlayerState.PLAYING) onPause()
 						else onPlay()
 					},
 					elevation = FloatingActionButtonDefaults.loweredElevation(),
@@ -128,7 +131,7 @@ fun AudioPlayerActions(
 					containerColor = MaterialTheme.colorScheme.secondaryContainer
 				) {
 					AnimatedContent(
-						targetState = isPlaying,
+						targetState = playerMetaData.playerState == PlayerState.PLAYING,
 						transitionSpec = { isPlayingAnimation() },
 						label = "Trasform between playing states",
 						contentAlignment = Alignment.Center
@@ -161,14 +164,14 @@ fun AudioPlayerActions(
 
 private fun AnimatedContentTransitionScope<Boolean>.isPlayingAnimation(): ContentTransform {
 	return fadeIn(
-		animationSpec = tween(400)
+		animationSpec = tween(200)
 	) + scaleIn(
 		animationSpec = spring(
 			dampingRatio = Spring.DampingRatioLowBouncy,
 			stiffness = Spring.StiffnessLow,
 		),
 	) togetherWith fadeOut(
-		animationSpec = tween(400)
+		animationSpec = tween(200)
 	) + scaleOut(
 		animationSpec = spring(
 			dampingRatio = Spring.DampingRatioLowBouncy,
@@ -181,8 +184,8 @@ private fun AnimatedContentTransitionScope<Boolean>.isPlayingAnimation(): Conten
 @Composable
 private fun AudioPlayerActionsPreview() = RecorderAppTheme {
 	AudioPlayerActions(
-		speed = PlayerPlayBackSpeed.NORMAL,
-		isPlaying = true,
+		playerMetaData = PlayerMetaData(),
 		onPlay = {},
-		onPause = {})
+		onPause = {},
+	)
 }

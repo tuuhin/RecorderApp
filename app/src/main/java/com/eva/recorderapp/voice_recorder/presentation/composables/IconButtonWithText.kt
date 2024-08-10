@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.composables
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
@@ -44,6 +44,8 @@ fun IconButtonWithText(
 	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
 
+	val indication = LocalIndication.current
+
 	Column(
 		modifier = modifier
 			.defaultMinSize(minWidth = 56.dp)
@@ -55,7 +57,7 @@ fun IconButtonWithText(
 			.clickable(
 				interactionSource = interactionSource,
 				enabled = enabled,
-				indication = rememberRipple(),
+				indication = indication,
 				onClick = onClick,
 				role = Role.Button
 			),

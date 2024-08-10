@@ -3,10 +3,12 @@ package com.eva.recorderapp.voice_recorder.presentation.util
 import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.random.Random
@@ -17,7 +19,12 @@ object PreviewFakes {
 	private val now: LocalDateTime
 		get() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
+	private val nowTime: LocalTime
+		get() = now.time
+
 	val PREVIEW_RECORDER_AMPLITUDES = List(80) { Random(it).nextFloat() }.toImmutableList()
+
+	val FAKE_AUDIO_INFORMATION = AudioPlayerInformation(sampling = PREVIEW_RECORDER_AMPLITUDES)
 
 	val FAKE_VOICE_RECORDING_MODEL = RecordedVoiceModel(
 		id = 0L,

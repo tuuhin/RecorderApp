@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -7,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
@@ -59,7 +59,10 @@ fun RecordButton(
 	) {
 		Spacer(
 			modifier = modifier
-				.indication(interactionSource = interactionSource, indication = rememberRipple())
+				.indication(
+					interactionSource = interactionSource,
+					indication = LocalIndication.current
+				)
 				.semantics {
 					contentDescription = contentDesciption
 				}
