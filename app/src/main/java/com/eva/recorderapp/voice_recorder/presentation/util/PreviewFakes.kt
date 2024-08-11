@@ -4,6 +4,7 @@ import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.datetime.Clock
@@ -24,7 +25,7 @@ object PreviewFakes {
 
 	val PREVIEW_RECORDER_AMPLITUDES = List(80) { Random(it).nextFloat() }.toImmutableList()
 
-	val FAKE_AUDIO_INFORMATION = AudioPlayerInformation(sampling = PREVIEW_RECORDER_AMPLITUDES)
+	val FAKE_AUDIO_INFORMATION = AudioPlayerInformation(waveforms = PlayerGraphInfo(waves = PREVIEW_RECORDER_AMPLITUDES))
 
 	val FAKE_VOICE_RECORDING_MODEL = RecordedVoiceModel(
 		id = 0L,

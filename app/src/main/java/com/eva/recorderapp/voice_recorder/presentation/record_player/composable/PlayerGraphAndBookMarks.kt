@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -19,9 +20,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 
 @Composable
 fun PlayerGraphAndBookMarks(
+	trackData: PlayerTrackData,
+	graphData: PlayerGraphInfo,
 	isGraphMode: Boolean,
 	onToggleListAndWave: () -> Unit,
 	onAddBookMark: () -> Unit,
@@ -32,7 +37,11 @@ fun PlayerGraphAndBookMarks(
 		modifier = modifier
 	) {
 		PlayerAmplitudeGraph(
-			modifier = Modifier.fillMaxWidth()
+			trackData = trackData,
+			samples = graphData.waves,
+			modifier = Modifier
+				.aspectRatio(1.5f)
+				.fillMaxWidth()
 		)
 		Row(
 			modifier = Modifier.fillMaxWidth(),

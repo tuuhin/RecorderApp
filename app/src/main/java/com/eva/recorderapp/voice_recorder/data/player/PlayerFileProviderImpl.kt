@@ -57,6 +57,10 @@ class PlayerFileProviderImpl(
 			MediaStore.Audio.AudioColumns.MIME_TYPE,
 		)
 
+	override fun providesAudioFileUri(audioId: Long): Uri {
+		return ContentUris.withAppendedId(baseVolume, audioId)
+	}
+
 	override fun getAudioFileInfo(id: Long): Flow<ResourcedDetailedRecordingModel> {
 		return callbackFlow<ResourcedDetailedRecordingModel> {
 

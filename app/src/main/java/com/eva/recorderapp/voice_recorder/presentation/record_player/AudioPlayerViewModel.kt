@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
+import com.eva.recorderapp.voice_recorder.data.player.AudioAmplitudeReader
 import com.eva.recorderapp.voice_recorder.domain.files.RecordingsActionHelper
 import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
@@ -11,6 +12,7 @@ import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerSliderControl
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -35,22 +37,31 @@ import kotlinx.coroutines.launch
 	assistedFactory = AudioPlayerViewModelFactory::class
 )
 class AudioPlayerViewModel @AssistedInject constructor(
-	@Assisted private val player: AudioFilePlayer,
+	@Assisted private val audioPlayer: AudioFilePlayer,
 	@Assisted private val audioId: Long,
-	private val playerFileProvider: PlayerFileProvider,
+	private val fileProvider: PlayerFileProvider,
 	private val actionHelper: RecordingsActionHelper,
+	private val samplesReader: AudioAmplitudeReader,
 ) : AppViewModel() {
 
 	//slider info
-	private val playerSliderControls = PlayerSliderControl(player)
+	private val playerSliderControls = PlayerSliderControl(audioPlayer)
 
 	private val _currentAudio = MutableStateFlow<AudioFileModel?>(null)
 	private val _isAudioLoaded = MutableStateFlow(false)
 	private val _isPlayerPrepared = MutableStateFlow(false)
-	private val _audioSamples = MutableStateFlow(persistentListOf<Float>())
 
-	// player state
-	private val _playerState = player.playerMetaDataFlow.map { it.playerState }
+	private val samplesIntoImmutableList = samplesReader.samples.map { data ->
+		val builder = persistentListOf<Float>().builder()
+		data.forEach(builder::add)
+		builder.build()
+	}.distinctUntilChanged()
+
+	// graph data
+	private val graphData = combine(
+		samplesIntoImmutableList,
+		samplesReader.isLoadingCompleted
+	) { waves, isLoaded -> PlayerGraphInfo(isLoaded = isLoaded, waves = waves) }
 
 	// media load state
 	val loadState = combine(_isAudioLoaded, _currentAudio, transform = ::prepareLoadState)
@@ -60,15 +71,16 @@ class AudioPlayerViewModel @AssistedInject constructor(
 			initialValue = ContentLoadState.Loading
 		)
 
+	// player information
 	val playerInfo = combine(
 		playerSliderControls.trackData,
-		player.playerMetaDataFlow,
-		_audioSamples,
-	) { trackData, metadata, amplitude ->
+		audioPlayer.playerMetaDataFlow,
+		graphData,
+	) { trackData, metadata, graph ->
 		AudioPlayerInformation(
 			trackData = trackData,
 			playerMetaData = metadata,
-			sampling = amplitude
+			waveforms = graph
 		)
 	}.stateIn(
 		scope = viewModelScope,
@@ -84,19 +96,20 @@ class AudioPlayerViewModel @AssistedInject constructor(
 
 	init {
 		preparePlayer()
-		prepareCurrentRecording(audioId)
+		prepareCurrentRecording()
+		computeSamples()
 	}
 
 	fun onPlayerEvents(event: PlayerEvents) {
 		when (event) {
 			PlayerEvents.ShareCurrentAudioFile -> shareCurrentAudioFile()
-			PlayerEvents.OnPausePlayer -> viewModelScope.launch { player.pausePlayer() }
-			PlayerEvents.OnStartPlayer -> viewModelScope.launch { player.startOrResumePlayer() }
-			is PlayerEvents.OnForwardByNDuration -> player.forwardPlayerByNDuration(event.duration)
-			is PlayerEvents.OnRewindByNDuration -> player.rewindPlayerByNDuration(event.duration)
-			is PlayerEvents.OnPlayerSpeedChange -> player.setPlayBackSpeed(event.speed)
-			is PlayerEvents.OnRepeatModeChange -> player.setPlayLooping(event.canRepeat)
-			PlayerEvents.OnMutePlayer -> player.onMuteDevice()
+			PlayerEvents.OnPausePlayer -> viewModelScope.launch { audioPlayer.pausePlayer() }
+			PlayerEvents.OnStartPlayer -> viewModelScope.launch { audioPlayer.startOrResumePlayer() }
+			is PlayerEvents.OnForwardByNDuration -> audioPlayer.forwardPlayerByNDuration(event.duration)
+			is PlayerEvents.OnRewindByNDuration -> audioPlayer.rewindPlayerByNDuration(event.duration)
+			is PlayerEvents.OnPlayerSpeedChange -> audioPlayer.setPlayBackSpeed(event.speed)
+			is PlayerEvents.OnRepeatModeChange -> audioPlayer.setPlayLooping(event.canRepeat)
+			PlayerEvents.OnMutePlayer -> audioPlayer.onMuteDevice()
 			is PlayerEvents.OnSeekPlayer -> playerSliderControls.onSliderSlide(event.amount)
 			PlayerEvents.OnSeekComplete -> playerSliderControls.onSliderSlideComplete()
 		}
@@ -108,8 +121,8 @@ class AudioPlayerViewModel @AssistedInject constructor(
 		}
 	}
 
-	private fun prepareCurrentRecording(audioId: Long) {
-		playerFileProvider.getAudioFileInfo(id = audioId)
+	private fun prepareCurrentRecording() {
+		fileProvider.getAudioFileInfo(id = audioId)
 			.onEach { res ->
 				when (res) {
 					is Resource.Error -> {
@@ -145,15 +158,25 @@ class AudioPlayerViewModel @AssistedInject constructor(
 			.onEach { model ->
 				if (_isPlayerPrepared.value) return@onEach
 				// set isconfigured to true
-				player.preparePlayer(model)
+				audioPlayer.preparePlayer(model)
 				_isPlayerPrepared.update { true }
 			}
 			.launchIn(viewModelScope)
 	}
 
+	private fun computeSamples() = viewModelScope.launch {
+		val result = samplesReader.evaluteSamplesGraphFromAudioId(audioId)
+		// if there is an error show the error
+		(result as? Resource.Error)?.let {
+			_uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: ""))
+		}
+	}
+
 	override fun onCleared() {
+		//clear codec
+		samplesReader.clearResources()
 		// clearing the player resources
-		player.clearResources()
+		audioPlayer.clearResources()
 		super.onCleared()
 	}
 }

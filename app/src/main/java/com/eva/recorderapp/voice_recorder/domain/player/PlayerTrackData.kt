@@ -14,6 +14,16 @@ data class PlayerTrackData(
 	val totalAsLocalTime: LocalTime
 		get() = LocalTime.fromSecondOfDay(total.inWholeSeconds.toInt())
 
+	val leftDuration: Duration
+		get() {
+			val newDuration = total.minus(current)
+			return if (newDuration.isPositive()) newDuration
+			else 0.seconds
+		}
+
+	val leftDurationAsLocalTime: LocalTime
+		get() = LocalTime.fromSecondOfDay(leftDuration.inWholeSeconds.toInt())
+
 	val playRatio: Float
 		get() {
 			val totalSeconds = total.inWholeMilliseconds.toFloat()

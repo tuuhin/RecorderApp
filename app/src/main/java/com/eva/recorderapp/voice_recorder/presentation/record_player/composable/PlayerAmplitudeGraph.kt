@@ -1,29 +1,141 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 
+import android.util.Log
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.eva.recorderapp.R
+import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
+import kotlinx.collections.immutable.ImmutableList
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun PlayerAmplitudeGraph(
+	trackData: PlayerTrackData,
+	samples: ImmutableList<Float>,
 	modifier: Modifier = Modifier,
-	color: Color = MaterialTheme.colorScheme.primaryContainer,
+	barColor: Color = MaterialTheme.colorScheme.secondary,
+	trackPointerColor: Color = MaterialTheme.colorScheme.tertiary,
+	backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 	shape: Shape = MaterialTheme.shapes.medium
 ) {
+// TODO: Make it performat to show larger dataset's
+
+	var dragStart by remember { mutableStateOf(Offset.Zero) }
+	var isDragStarted by remember { mutableStateOf(false) }
+
 	Surface(
-		color = color,
+		color = backgroundColor,
 		shape = shape,
-		contentColor = contentColorFor(backgroundColor = color),
-		modifier = modifier.aspectRatio(1.5f),
+		modifier = modifier
 	) {
-		Spacer(modifier = Modifier.defaultMinSize(minHeight = 120.dp))
+		Spacer(
+			modifier = Modifier
+				.padding(all = dimensionResource(id = R.dimen.amplitudes_card_padding))
+				.defaultMinSize(minHeight = 130.dp)
+				.pointerInput(samples) {
+					detectHorizontalDragGestures(
+						onDragStart = { isDragStarted = true },
+						onDragEnd = { isDragStarted = false },
+						onHorizontalDrag = { change, dragAmount ->
+							change.consume()
+							val amount = dragAmount.coerceIn(0f, size.width.toFloat())
+							Log.d("DRAG CHANGES", "$amount")
+						},
+					)
+				}
+				.drawWithCache {
+
+					val spikesWidth = 3.dp.toPx()
+					val spikeSpace = 2.dp.toPx()
+					val centerYAxis = size.height / 2
+					val spikes = mutableListOf<Pair<Offset, Offset>>()
+					val dots = mutableListOf<Offset>()
+
+					samples.forEachIndexed { idx, value ->
+						val xAxis = (spikesWidth + spikeSpace) * idx.toFloat()
+						val start = Offset(xAxis, centerYAxis * (1 - value))
+						val end = Offset(xAxis, centerYAxis * (1 + value))
+						if (start.y != end.y) spikes.add(Pair(start, end))
+						else dots.add(start)
+					}
+
+					val totalSize = spikes.lastOrNull()?.first?.x ?: size.width
+
+					onDrawBehind {
+
+						val translate = size.width / 2 - (totalSize * trackData.playRatio)
+
+						translate(left = translate) {
+							spikes.forEach { (start, end) ->
+								drawLine(
+									color = barColor,
+									start = start,
+									end = end,
+									strokeWidth = spikesWidth,
+									cap = StrokeCap.Round
+								)
+							}
+							drawPoints(
+								points = dots,
+								pointMode = PointMode.Points,
+								color = barColor,
+								strokeWidth = spikeSpace,
+								cap = StrokeCap.Round
+							)
+						}
+						drawCircle(
+							color = trackPointerColor,
+							radius = spikesWidth + spikeSpace,
+							center = Offset(size.width / 2, 0f)
+						)
+						drawCircle(
+							color = trackPointerColor,
+							radius = spikesWidth + spikeSpace,
+							center = Offset(size.width / 2, size.height)
+						)
+						drawLine(
+							color = trackPointerColor,
+							start = Offset(size.width / 2, 0f),
+							end = Offset(size.width / 2, size.height),
+							strokeWidth = spikesWidth,
+							cap = StrokeCap.Round
+						)
+					}
+				},
+		)
 	}
+}
+
+@Preview
+@Composable
+private fun PlayerAmplitudeGraphPreview() = RecorderAppTheme {
+	PlayerAmplitudeGraph(
+		trackData = PlayerTrackData(current = 5.minutes, total = 10.minutes),
+		samples = PreviewFakes.PREVIEW_RECORDER_AMPLITUDES,
+		modifier = Modifier.fillMaxWidth()
+	)
 }
