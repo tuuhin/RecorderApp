@@ -13,6 +13,10 @@
     android:maxSdkVersion="32"
     tools:ignore="ScopedStorage" />
 
+  <uses-feature
+    android:name="android.hardware.microphone"
+    android:required="true" />
+
   <application
     android:name=".RecorderApp"
     android:allowBackup="true"

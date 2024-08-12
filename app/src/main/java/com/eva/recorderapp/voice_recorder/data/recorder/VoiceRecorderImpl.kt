@@ -3,9 +3,7 @@ package com.eva.recorderapp.voice_recorder.data.recorder
 import android.Manifest
 import android.content.Context
 import android.media.MediaRecorder
-import android.net.Uri
 import android.os.Build
-import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -27,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
+import java.io.File
 import java.io.IOException
 
 private const val LOGGER_TAG = "VOICE_RECORDER"
@@ -44,8 +43,7 @@ class VoiceRecorderImpl(
 	private var _bufferReader: BufferedAmplitudeReader? = null
 
 	// recodings file related
-	private var _fd: ParcelFileDescriptor? = null
-	private var _currentRecordingUri: Uri? = null
+	private var _recordingFile: File? = null
 
 	// locks ensures a operation complete before an other operation can start
 	val operationLock = Mutex(false)
@@ -106,26 +104,24 @@ class VoiceRecorderImpl(
 			if (_recorder == null) createRecorder()
 
 			// ensures the file is being created in a differnt coroutine
-			val file = async(Dispatchers.IO) { fileProvider.createUriForRecording(format) }
-			_currentRecordingUri = file.await()
+			val file = async { fileProvider.createFileForRecoring() }
+			_recordingFile = file.await()
 
-			if (_currentRecordingUri == null) {
+			if (_recordingFile == null) {
 				Log.i(LOGGER_TAG, "CANNOT CREATE FILE FOR RECORDING")
 				return@coroutineScope false
 			}
 
 			Log.d(LOGGER_TAG, "NEW_FILE_URI_CREATED")
 
-			_fd = context.contentResolver.openFileDescriptor(_currentRecordingUri!!, "w")
-			Log.d(LOGGER_TAG, "FILE DESCRIPTOR SET")
-
-			val fileDescriptor = _fd?.fileDescriptor ?: return@coroutineScope false
-
 			_recorder?.apply {
 				setAudioSource(MediaRecorder.AudioSource.MIC)
 				setOutputFormat(format.outputFormat)
 				setAudioEncoder(format.encoder)
-				setOutputFile(fileDescriptor)
+				setOutputFile(_recordingFile)
+				// TODO: Change values from settings
+				setAudioSamplingRate(44_100)
+				setAudioEncodingBitRate(128_000)
 			}
 			Log.d(LOGGER_TAG, "RECORDER CONFIGURED")
 			true
@@ -136,39 +132,31 @@ class VoiceRecorderImpl(
 	 * Method to be called when recording has been finished and you update the file
 	 * metadata
 	 */
-	private suspend fun stopAndUpdateFileMetaData() {
-		// close the descriptor
-		_fd?.close()
-		_fd = null
-		Log.d(LOGGER_TAG, "FILE DESCRIPTOR CLOSED")
+	private suspend fun updateFileDataToExternalStorage() {
 		// update the file
-		_currentRecordingUri?.let { uri ->
+		_recordingFile?.let { file ->
 			withContext(Dispatchers.IO) {
-				fileProvider.updateUriAfterRecording(uri)
+				fileProvider.transferFileDataToStorage(file, format)
 				Log.d(LOGGER_TAG, "RECORDER FILE UPDATED")
 			}
 		}
 		// set recording uri to null and close the socket
-		_currentRecordingUri = null
+		_recordingFile = null
 		// resets the recorder for  next recording
 		Log.d(LOGGER_TAG, "RESETING THE RECORDER")
 		_recorder?.reset()
 	}
 
 	private suspend fun stopAndDeleteFileMetaData() {
-		// close the descriptor
-		_fd?.close()
-		_fd = null
-		Log.d(LOGGER_TAG, "FILE DESCRIPTOR CLOSED")
 		// update the file
-		_currentRecordingUri?.let { uri ->
+		_recordingFile?.let { file ->
 			withContext(Dispatchers.IO) {
-				fileProvider.deleteUriIfNotPending(uri)
+				fileProvider.deleteCreatedFile(file)
 				Log.d(LOGGER_TAG, "RECORDER FILE DELETED")
 			}
 		}
 		// set recording uri to null and close the socket
-		_currentRecordingUri = null
+		_recordingFile = null
 		// resets the recorder for  next recording
 		Log.d(LOGGER_TAG, "RESETING THE RECORDER")
 		_recorder?.reset()
@@ -183,7 +171,7 @@ class VoiceRecorderImpl(
 		// staring an operation lock it
 		operationLock.lock(this)
 		// current uri is already set cannot set it again
-		if (_currentRecordingUri != null) {
+		if (_recordingFile != null) {
 			Log.d(LOGGER_TAG, "CURRENT URI IS ALREDY SET")
 			return
 		}
@@ -221,7 +209,7 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "CANNOT STOP RECORDING ITS LOCKED")
 			return
 		}
-		if (_currentRecordingUri == null) {
+		if (_recordingFile == null) {
 			Log.d(LOGGER_TAG, "FILE URI IS NOT SET SO RECORDER IS NOT READY")
 		}
 		// staring an operation lock it
@@ -234,7 +222,7 @@ class VoiceRecorderImpl(
 			_recorder?.stop()
 			Log.d(LOGGER_TAG, "RECORDER STOPPED")
 			// update the file
-			stopAndUpdateFileMetaData()
+			updateFileDataToExternalStorage()
 		} catch (e: IOException) {
 			e.printStackTrace()
 		} finally {
@@ -298,21 +286,16 @@ class VoiceRecorderImpl(
 	}
 
 	override fun releaseResources() {
-		// closing the descriptor
-		Log.d(LOGGER_TAG, "CLOSING THE FILE DESCRIPTOR")
-		_fd?.close()
-		_fd = null
-		//set recorder null
-		_currentRecordingUri == null
-		// deleting the file
-		_currentRecordingUri?.let { uri ->
+		// delete the recording file if its exits
+		_recordingFile?.let { file ->
 			// run blocking as we want to run this blocking code in the IO thread.
-			runBlocking(Dispatchers.IO) {
+			runBlocking {
 				Log.d(LOGGER_TAG, "CLEARING THE FILE AS RECORDER CLEAR METHOD IS CALLED")
-				fileProvider.deleteUriIfNotPending(uri)
+				fileProvider.deleteCreatedFile(file)
 			}
-			Toast.makeText(context, R.string.delete_recording_uri, Toast.LENGTH_SHORT).show()
 		}
+		//set recording file to null
+		_recordingFile == null
 		//set buffer reader to null
 		_bufferReader = null
 		Log.d(LOGGER_TAG, "CLEARING THE BUFFER READER")

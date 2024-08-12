@@ -44,6 +44,8 @@ fun RecorderAmplitudeGraph(
 				.drawWithCache {
 					val spikesWidth = size.width / VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
 					val centerYAxis = size.height / 2
+					val spikesGap = 1.dp.toPx()
+					val strokeWidth = spikesWidth - spikesGap
 
 					val spikes = mutableListOf<Pair<Offset, Offset>>()
 					val dots = mutableListOf<Offset>()
@@ -62,7 +64,7 @@ fun RecorderAmplitudeGraph(
 								color = barColor,
 								start = start,
 								end = end,
-								strokeWidth = spikesWidth - 1.5.dp.toPx(),
+								strokeWidth = strokeWidth,
 								cap = StrokeCap.Round
 							)
 						}

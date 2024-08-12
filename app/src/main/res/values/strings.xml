@@ -16,6 +16,7 @@
   <string name="menu_more_option">More Options</string>
   <string name="recorder_topbar_title">Voice Recorder</string>
   <string name="recorder_recording_completed">Recording finished</string>
+  <string name="recorder_recording_completed_text">Saving file to external storage</string>
   <string name="recording_action_delete">Delete</string>
   <string name="selected_recording_count">%d selected</string>
   <string name="cancel_selection">Close Action</string>
@@ -54,11 +55,10 @@
   <string name="rename_recording_action">Rename</string>
   <string name="rename_error_text">Enter atleast a character</string>
   <string name="delete_recording_uri">Removing unsaved recording</string>
-  <string name="recorder_recording_completed_text">Recording Complted Successfully.</string>
   <string name="recorder_action_start">Record</string>
   <string name="recorder_action_cancel">Cancel</string>
-  <string name="recorder_recording_notificaiton_title_canceled">Recording Canceled</string>
-  <string name="recorder_recording_notification_canceled_text">Recoring was canceled by the user</string>
+  <string name="recorder_recording_notificaiton_title_canceled">Recording Cancelled</string>
+  <string name="recorder_recording_notification_canceled_text">Recording was canceled by the user</string>
   <string name="recording_action_restore">Restore</string>
   <string name="recording_restore_dialog_title">Restore Recordings?</string>
   <string name="recording_restore_dialog_text">Restore the given set of selected recordings</string>

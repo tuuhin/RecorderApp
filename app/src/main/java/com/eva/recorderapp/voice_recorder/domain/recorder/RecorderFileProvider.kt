@@ -1,16 +1,14 @@
 package com.eva.recorderapp.voice_recorder.domain.recorder
 
-import android.net.Uri
-import com.eva.recorderapp.common.Resource
+import java.io.File
 
 
 interface RecorderFileProvider {
 
-	suspend fun createUriForRecording(format: RecordEncoderAndFormat): Uri?
+	suspend fun createFileForRecoring(): File
 
-	suspend fun updateUriAfterRecording(file: Uri): Resource<Unit, Exception>
+	suspend fun transferFileDataToStorage(file: File, format: RecordEncoderAndFormat): Boolean
 
-	suspend fun deleteUriIfNotPending(uri: Uri)
-
+	suspend fun deleteCreatedFile(file: File): Boolean
 
 }

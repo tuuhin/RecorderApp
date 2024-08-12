@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.math.pow
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -23,6 +24,9 @@ class BufferedAmplitudeReader(
 	private val recorder: MediaRecorder?,
 	val samplingRate: Duration = 80.milliseconds
 ) {
+	// max amplitude will be 32_768
+	private val MAX_AMPLITUDE = 2f.pow(15)
+
 	private val _buffer = ConcurrentLinkedQueue<Int>()
 
 	@Volatile
@@ -38,8 +42,8 @@ class BufferedAmplitudeReader(
 			else -> readSampleAmplitude(state)
 		}
 		return sampledAmps.flatMapLatest(::flowToFixedSizeCollection)
-			.mapLatest(::smoothAmplitudes)
-			.mapLatest(::normalizeValues)
+			.mapLatest(::smoothen)
+			.mapLatest { it.normalize() }
 			.flowOn(Dispatchers.Default)
 	}
 
@@ -52,6 +56,7 @@ class BufferedAmplitudeReader(
 					break
 				}
 				// record the max amplitude of the sample
+				// multiply with 0.707 to get the rms value
 				val amplitude = recorder.maxAmplitude
 				emit(amplitude)
 				delay(samplingRate)
@@ -65,6 +70,7 @@ class BufferedAmplitudeReader(
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
+
 	}.flowOn(Dispatchers.IO)
 
 	/**
@@ -109,33 +115,33 @@ class BufferedAmplitudeReader(
 		}.flowOn(Dispatchers.Default)
 	}
 
-	private fun normalizeValues(amplitudes: List<Float>): FloatArray {
+	private fun List<Float>.normalize(): FloatArray {
 
 		val range = ampsRange.range
 		// if range is zero  return empty
 		// that's probably the empty case
 		if (range <= 0) return floatArrayOf()
 
-		val normalizedValue = amplitudes.map { amp ->
+		val normalizedValue = map { amp ->
 			val normalizedValue = (amp - ampsRange.min).toFloat() / range
 			normalizedValue.coerceIn(0f..1f)
 		}
 		return normalizedValue.toFloatArray()
-
 	}
 
-	private fun smoothAmplitudes(
-		amplitudes: List<Int>,
-		factor: Float = 0.5f
+	private fun smoothen(
+		data: List<Int>,
+		factor: Float = 0.3f
 	): List<Float> {
-		var previousValue = 0f
-		return buildList {
-			amplitudes.forEach { amplitude ->
-				val smooth = previousValue * factor + amplitude * (1 - factor)
+		var prev = 0f
+		val out = buildList<Float> {
+			data.forEach { amplitude ->
+				val smooth = (prev * factor + amplitude * (1 - factor))
 				add(smooth)
-				previousValue = smooth
+				prev = smooth
 			}
 		}
+		return out
 	}
 
 	private data class AmpsRange(
@@ -144,6 +150,5 @@ class BufferedAmplitudeReader(
 	) {
 		val range = max - min
 	}
-
 
 }

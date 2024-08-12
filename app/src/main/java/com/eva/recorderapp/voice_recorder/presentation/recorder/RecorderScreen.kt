@@ -105,7 +105,7 @@ fun VoiceRecroderScreen(
 				) {
 					Column(
 						horizontalAlignment = Alignment.CenterHorizontally,
-						verticalArrangement = Arrangement.spacedBy(20.dp),
+						verticalArrangement = Arrangement.spacedBy(40.dp),
 						modifier = Modifier.offset(y = dimensionResource(id = R.dimen.graph_offset))
 					) {
 						RecorderTimerText(time = stopWatch)

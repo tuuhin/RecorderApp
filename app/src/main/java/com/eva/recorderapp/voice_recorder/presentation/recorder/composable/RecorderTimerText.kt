@@ -21,10 +21,9 @@ import kotlinx.datetime.format
 fun RecorderTimerText(
 	time: LocalTime,
 	modifier: Modifier = Modifier,
-	style: TextStyle = MaterialTheme.typography.displayLarge,
-	color: Color = MaterialTheme.colorScheme.onBackground
+	style: TextStyle = MaterialTheme.typography.displayMedium,
+	color: Color = MaterialTheme.colorScheme.primary
 ) {
-// TODO: Change the color of each of the units
 	val timeText by remember(time) {
 		derivedStateOf {
 			if (time.hour > 0)
