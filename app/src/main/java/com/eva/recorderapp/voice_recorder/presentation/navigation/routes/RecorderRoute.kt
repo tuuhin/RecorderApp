@@ -60,7 +60,9 @@ fun NavGraphBuilder.recorderRoute(
 					onNavigateToBin = dropUnlessResumed {
 						navController.navigate(NavRoutes.TrashRecordings)
 					},
-					onNavigateToSettings = {},
+					onNavigateToSettings = dropUnlessResumed {
+						navController.navigate(NavRoutes.AudioSettings)
+					},
 				)
 			} else Box(modifier = Modifier.fillMaxSize())
 

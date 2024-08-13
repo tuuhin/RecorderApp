@@ -19,6 +19,9 @@ sealed interface NavRoutes {
 	@Serializable
 	data object AudioEditor : NavRoutes
 
+	@Serializable
+	data object AudioSettings : NavRoutes
+
 	companion object {
 		const val AUDIO_PLAYER_PARAM_NAME = "audioId"
 	}

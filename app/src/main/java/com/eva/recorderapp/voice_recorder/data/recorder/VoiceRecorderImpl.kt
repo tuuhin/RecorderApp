@@ -9,7 +9,11 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.eva.recorderapp.R
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecordEncoderAndFormat
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
@@ -34,9 +38,21 @@ class VoiceRecorderImpl(
 	private val context: Context,
 	private val fileProvider: RecorderFileProvider,
 	private val stopWatch: RecorderStopWatch,
+	private val settings: RecorderSettingsRepo,
 ) : VoiceRecorder {
-	//record format make sure this is change-able
-	val format = RecordFormats.M4A
+
+	// recording format and encoder
+	private val format: RecordEncoderAndFormat
+		get() = when (settings.recorderSettings.encoders) {
+			RecordingEncoders.AMR_NARROW_BAND -> RecordFormats.AMR
+			RecordingEncoders.AMR_WIDE_BAND -> RecordFormats.AMR_WB
+			RecordingEncoders.OPTUS -> RecordFormats.OGG
+			RecordingEncoders.ACC -> RecordFormats.M4A
+		}
+
+	// recorder quality
+	private val quality: RecordQuality
+		get() = settings.recorderSettings.quality
 
 	// recorder related
 	private var _recorder: MediaRecorder? = null
@@ -115,15 +131,19 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "NEW_FILE_URI_CREATED")
 
 			_recorder?.apply {
+				setOutputFile(_recordingFile)
 				setAudioSource(MediaRecorder.AudioSource.MIC)
+				// recorder format
 				setOutputFormat(format.outputFormat)
 				setAudioEncoder(format.encoder)
-				setOutputFile(_recordingFile)
-				// TODO: Change values from settings
-				setAudioSamplingRate(44_100)
-				setAudioEncodingBitRate(128_000)
+				// recording qulaity
+				setAudioSamplingRate(quality.sampleRate)
+				setAudioEncodingBitRate(quality.bitRate)
 			}
 			Log.d(LOGGER_TAG, "RECORDER CONFIGURED")
+			Log.i(LOGGER_TAG, "SAMPLING RATE : ${quality.sampleRate}")
+			Log.i(LOGGER_TAG, "ENCODING BIT RATE : ${quality.bitRate}")
+			Log.i(LOGGER_TAG, "MIME TYPE: ${format.mimeType}")
 			true
 		}
 	}

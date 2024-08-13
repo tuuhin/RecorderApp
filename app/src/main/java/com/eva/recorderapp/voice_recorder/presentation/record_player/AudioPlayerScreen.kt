@@ -1,8 +1,5 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -31,13 +28,11 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.AudioFileMetaDataSheetContent
-import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.AudioPlayerActions
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.AudioPlayerScreenTopBar
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ContentStateLoading
-import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayBackSpeedSelector
+import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerActionsAndSlider
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerDurationText
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerGraphAndBookMarks
-import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerSlider
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
@@ -59,29 +54,12 @@ fun AudioPlayerScreen(
 	val scope = rememberCoroutineScope()
 
 	val metaDataBottomSheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-	val playBackSpeedBottomSheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
 	var openMetaDataBottomSheet by remember { mutableStateOf(false) }
-	var openPlayBackSpeedBottomSheet by remember { mutableStateOf(false) }
 
 	val canShowMetaDataBottomSheet by remember(loadState, openMetaDataBottomSheet) {
 		derivedStateOf {
 			loadState is ContentLoadState.Content && openMetaDataBottomSheet
-		}
-	}
-
-	if (openPlayBackSpeedBottomSheet) {
-		ModalBottomSheet(
-			sheetState = playBackSpeedBottomSheet,
-			onDismissRequest = { openPlayBackSpeedBottomSheet = false },
-		) {
-			PlayBackSpeedSelector(
-				selectedSpeed = playerState.playerMetaData.playBackSpeed,
-				onSpeedSelected = { speed ->
-					onPlayerEvents(PlayerEvents.OnPlayerSpeedChange(speed))
-				},
-				contentPadding = PaddingValues(dimensionResource(id = R.dimen.bottomsheet_padding_lg))
-			)
 		}
 	}
 
@@ -115,8 +93,12 @@ fun AudioPlayerScreen(
 		ContentStateLoading(
 			loadState = loadState,
 			modifier = Modifier
-				.padding(scPadding)
-				.padding(all = dimensionResource(id = R.dimen.sc_padding))
+				.padding(
+					start = dimensionResource(id = R.dimen.sc_padding),
+					end = dimensionResource(R.dimen.sc_padding),
+					top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
+					bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
+				)
 				.fillMaxSize(),
 			onSuccess = { _ ->
 				PlayerDurationText(
@@ -124,7 +106,8 @@ fun AudioPlayerScreen(
 					modifier = Modifier.align(Alignment.TopCenter)
 				)
 				PlayerGraphAndBookMarks(
-					samples = playerState.sampling,
+					trackData = playerState.trackData,
+					graphData = playerState.waveforms,
 					isGraphMode = true,
 					onToggleListAndWave = { },
 					onAddBookMark = { },
@@ -133,33 +116,14 @@ fun AudioPlayerScreen(
 						.align(Alignment.Center)
 						.offset(y = -80.dp)
 				)
-				Column(
+				PlayerActionsAndSlider(
+					metaData = playerState.playerMetaData,
+					trackData = playerState.trackData,
+					onPlayerAction = onPlayerEvents,
 					modifier = Modifier
 						.fillMaxWidth()
 						.align(Alignment.BottomCenter),
-					verticalArrangement = Arrangement.spacedBy(8.dp)
-				) {
-					PlayerSlider(
-						track = playerState.trackData,
-						onSeekToDuration = { amount ->
-							onPlayerEvents(PlayerEvents.OnSeekPlayer(amount))
-						},
-						onSeekDurationComplete = { onPlayerEvents(PlayerEvents.OnSeekComplete) },
-					)
-					AudioPlayerActions(
-						playerMetaData = playerState.playerMetaData,
-						onPlay = { onPlayerEvents(PlayerEvents.OnStartPlayer) },
-						onPause = { onPlayerEvents(PlayerEvents.OnPausePlayer) },
-						onMutePlayer = { onPlayerEvents(PlayerEvents.OnMutePlayer) },
-						onRepeatModeChange = { onPlayerEvents(PlayerEvents.OnRepeatModeChange(it)) },
-						onRewind = { onPlayerEvents(PlayerEvents.OnRewindByNDuration()) },
-						onForward = { onPlayerEvents(PlayerEvents.OnForwardByNDuration()) },
-						onSpeedChange = {
-							scope.launch { playBackSpeedBottomSheet.show() }
-								.invokeOnCompletion { openPlayBackSpeedBottomSheet = true }
-						},
-					)
-				}
+				)
 			},
 		)
 	}

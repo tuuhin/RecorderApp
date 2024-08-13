@@ -1,16 +1,26 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.eva.recorderapp.common.LocalTimeFormats
+import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import kotlinx.datetime.format
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -26,23 +36,68 @@ fun PlayerSlider(
 		derivedStateOf(track::playRatio)
 	}
 
-	Slider(
-		value = sliderPercentage,
-		onValueChange = { seekAmt ->
-			if (track.total.isPositive()) {
-				val seekAmount = (track.total.inWholeMilliseconds * seekAmt).toLong()
-				val amt = seekAmount.coerceIn(0L, track.total.inWholeMilliseconds)
-				val duration = amt.milliseconds
-				onSeekToDuration(duration)
-			}
-		},
-		onValueChangeFinished = onSeekDurationComplete,
-		colors = SliderDefaults.colors(
-			activeTrackColor = MaterialTheme.colorScheme.secondary,
-			thumbColor = MaterialTheme.colorScheme.secondary,
-			inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant
-		),
-		modifier = modifier.padding(horizontal = 8.dp),
-	)
+	val currentReadable by remember(track.current) {
+		derivedStateOf {
+			track.currentAsLocalTime.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
+		}
+	}
 
+	val negativeTimeReadable by remember(track.current, track.total) {
+		derivedStateOf {
+			val durationText = track.leftDurationAsLocalTime
+				.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
+
+			return@derivedStateOf buildString {
+				append("- ")
+				append(durationText)
+			}
+		}
+	}
+
+	Column(
+		modifier = modifier.padding(horizontal = 12.dp),
+	) {
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			horizontalArrangement = Arrangement.SpaceBetween
+		) {
+			Text(
+				text = currentReadable,
+				color = MaterialTheme.colorScheme.secondary,
+				style = MaterialTheme.typography.titleSmall
+			)
+			Text(
+				text = negativeTimeReadable,
+				style = MaterialTheme.typography.titleSmall,
+				color = MaterialTheme.colorScheme.tertiary
+			)
+		}
+		Slider(
+			value = sliderPercentage,
+			onValueChange = { seekAmt ->
+				if (track.total.isPositive()) {
+					val seekAmount = (track.total.inWholeMilliseconds * seekAmt).toLong()
+					val amt = seekAmount.coerceIn(0L, track.total.inWholeMilliseconds)
+					val duration = amt.milliseconds
+					onSeekToDuration(duration)
+				}
+			},
+
+			onValueChangeFinished = onSeekDurationComplete,
+			colors = SliderDefaults.colors(
+				activeTrackColor = MaterialTheme.colorScheme.primary,
+				thumbColor = MaterialTheme.colorScheme.primary,
+				inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant
+			),
+		)
+	}
+}
+
+
+@PreviewLightDark
+@Composable
+private fun PlayerSliderPreview() = RecorderAppTheme {
+	Surface {
+		PlayerSlider(track = PlayerTrackData(), onSeekToDuration = {})
+	}
 }
