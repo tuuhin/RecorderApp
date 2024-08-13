@@ -1,7 +1,9 @@
 [versions]
-agp = "8.5.1"
+agp = "8.5.2"
 assertk = "0.28.1"
+datastore = "1.1.1"
 coreSplashscreen = "1.0.1"
+graphicsShapes = "1.0.0-rc01"
 hiltNavigation = "1.2.0"
 kotlin = "2.0.0"
 coreKtx = "1.13.1"
@@ -24,12 +26,15 @@ navigationCompose = "2.8.0-beta06"
 roomCompiler = "2.6.1"
 turbine = "1.1.0"
 uiTextGoogleFonts = "1.6.8"
-workRuntimeKtxVersion = "2.9.0"
+workRuntimeKtxVersion = "2.9.1"
 hiltWork = "1.2.0"
+protobufJavalite = "4.27.2"
+protobuf_version = "0.9.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphicsShapes" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltNavigation" }
 androidx-hilt-navigation = { module = "androidx.hilt:hilt-navigation", version.ref = "hiltNavigation" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigation" }
@@ -69,6 +74,10 @@ material-icons-extended = { module = "androidx.compose.material:material-icons-e
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
+# protobuf and datastore
+androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
+protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufJavalite" }
+protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufJavalite" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -78,4 +87,5 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlinx_serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 androidx_room = { id = "androidx.room", version.ref = "roomCompiler" }
+google_protobuf = { id = "com.google.protobuf", version.ref = "protobuf_version" }
 

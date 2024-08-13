@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option java_package = "com.eva.recorderapp.voice_recorder.data.datastore";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+message RecorderSettingsProto {
+  RecorderQualityProto quality = 1;
+  RecoderFormatProto format = 2;
+  RecoderEncoderProto encoder = 3;
+  bool blockIncommingCalls = 4;
+  bool useBluetoothMic = 5;
+}
+
+enum RecorderQualityProto{
+  QUALITY_NORMAL = 0;
+  QUALITY_HIGH = 1;
+  QUALITY_LOW = 2;
+}
+
+enum RecoderFormatProto{
+  FORMAAT_VIA_DATE = 0;
+  FORMAT_VIA_COUNT = 1;
+}
+
+enum RecoderEncoderProto{
+  ENCODER_MP3 = 0;
+  ENCODER_ACC = 1;
+}

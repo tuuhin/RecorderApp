@@ -6,6 +6,7 @@ plugins {
 	alias(libs.plugins.hilt)
 	alias(libs.plugins.kotlinx.serialization)
 	alias(libs.plugins.androidx.room)
+	alias(libs.plugins.google.protobuf)
 }
 
 android {
@@ -15,6 +16,7 @@ android {
 	defaultConfig {
 		applicationId = "com.eva.recorderapp"
 		minSdk = 29
+		//noinspection OldTargetApi
 		targetSdk = 34
 		versionCode = 1
 		versionName = "1.0"
@@ -75,8 +77,9 @@ dependencies {
 	implementation(libs.androidx.ui.graphics)
 	implementation(libs.androidx.ui.tooling.preview)
 	implementation(libs.androidx.material3)
-	//icons
+	//icons & shapes
 	implementation(libs.material.icons.extended)
+	implementation(libs.androidx.graphics.shapes)
 	//navigation
 	implementation(libs.androidx.navigation.compose)
 	implementation(libs.androidx.hilt.navigation.compose)
@@ -109,6 +112,10 @@ dependencies {
 	implementation(libs.androidx.core.splashscreen)
 	//dynamic font
 	implementation(libs.androidx.ui.text.google.fonts)
+	//datastore
+	implementation(libs.androidx.datastore)
+	implementation(libs.protobuf.javalite)
+	implementation(libs.protobuf.kotlin.lite)
 	// tests
 	testImplementation(libs.junit)
 	testImplementation(libs.turbine)
@@ -123,4 +130,28 @@ dependencies {
 	//debug
 	debugImplementation(libs.androidx.ui.tooling)
 	debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:4.27.3"
+	}
+	plugins {
+		create("java") {
+			artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+		}
+	}
+
+	generateProtoTasks {
+		all().forEach { task ->
+			task.plugins {
+				create("java") {
+					option("lite")
+				}
+				create("kotlin") {
+					option("lite")
+				}
+			}
+		}
+	}
 }
