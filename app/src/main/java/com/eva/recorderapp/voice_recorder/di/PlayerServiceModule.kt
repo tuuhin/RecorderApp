@@ -12,6 +12,7 @@ import androidx.media3.session.MediaSession
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.data.player.AudioPlayerMediaCallBacks
 import com.eva.recorderapp.voice_recorder.data.service.AudioPlayerNotification
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +28,8 @@ object PlayerServiceModule {
 	@Provides
 	@ServiceScoped
 	fun providesExoPlayer(
-		@ApplicationContext context: Context
+		@ApplicationContext context: Context,
+		settings: RecorderAudioSettingsRepo,
 	): Player {
 
 		val attibutes = AudioAttributes.Builder()
@@ -37,6 +39,7 @@ object PlayerServiceModule {
 			.build()
 
 		return ExoPlayer.Builder(context)
+			.setSkipSilenceEnabled(settings.audioSettings.skipSilences)
 			.setAudioAttributes(attibutes, true)
 			.build()
 	}

@@ -5,8 +5,8 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderSettings
-import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderAudioSettings
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -15,15 +15,15 @@ import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 import java.io.OutputStream
 
-class RecorderSettingsRepoImpl(
+class RecorderAudioSettingsRepoImpl(
 	private val context: Context
-) : RecorderSettingsRepo {
+) : RecorderAudioSettingsRepo {
 
-	override val recorderSettingsAsFlow: Flow<RecorderSettings>
+	override val audioSettingsFlow: Flow<RecorderAudioSettings>
 		get() = context.recorderSettings.data.map(RecorderSettingsProto::toDomain)
 
-	override val recorderSettings: RecorderSettings
-		get() = runBlocking { recorderSettingsAsFlow.first() }
+	override val audioSettings: RecorderAudioSettings
+		get() = runBlocking { audioSettingsFlow.first() }
 }
 
 

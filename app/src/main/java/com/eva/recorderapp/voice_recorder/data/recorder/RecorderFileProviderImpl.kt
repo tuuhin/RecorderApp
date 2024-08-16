@@ -11,8 +11,8 @@ import android.provider.MediaStore
 import android.util.Log
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.data.files.RecordingsUtils
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderNameFormat
-import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.AudioFileNamingFormat
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecordEncoderAndFormat
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +25,7 @@ private const val LOGGER_TAG = "RECORDER_FILE_PROVIDE"
 
 class RecorderFileProviderImpl(
 	private val context: Context,
-	private val settings: RecorderSettingsRepo,
+	private val settings: RecorderFileSettingsRepo,
 ) : RecordingsUtils(context), RecorderFileProvider {
 
 	override suspend fun createFileForRecoring(): File {
@@ -79,18 +79,19 @@ class RecorderFileProviderImpl(
 
 	suspend fun createUriForRecording(format: RecordEncoderAndFormat): Uri? {
 		return try {
-
-			val nameFormat = settings.recorderSettings.nameFormat
+			val fileSettings = settings.fileSettings
+			val name = fileSettings.nameStyle
+			val nameFormat = fileSettings.nameFormat
 			val identifier = when (nameFormat) {
-				RecorderNameFormat.DATE_TIME -> "$epochSeconds"
-				RecorderNameFormat.COUNT -> {
+				AudioFileNamingFormat.DATE_TIME -> "$epochSeconds"
+				AudioFileNamingFormat.COUNT -> {
 					val currentCount = getItemNumber()
 					"${currentCount + 1}".padStart(3, '0')
 				}
 			}
 
 			// file name
-			val fileName = "Recording_$identifier"
+			val fileName = "$name\\_$identifier"
 
 			val metaData = ContentValues().apply {
 				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, musicDir)

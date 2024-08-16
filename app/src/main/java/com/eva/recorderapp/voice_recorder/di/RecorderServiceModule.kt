@@ -3,7 +3,7 @@ package com.eva.recorderapp.voice_recorder.di
 import android.content.Context
 import com.eva.recorderapp.voice_recorder.data.recorder.VoiceRecorderImpl
 import com.eva.recorderapp.voice_recorder.data.service.NotificationHelper
-import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
@@ -28,12 +28,12 @@ object RecorderServiceModule {
 		@ApplicationContext context: Context,
 		fileProvider: RecorderFileProvider,
 		stopWatch: RecorderStopWatch,
-		settingsRepo: RecorderSettingsRepo,
+		settings: RecorderAudioSettingsRepo,
 	): VoiceRecorder = VoiceRecorderImpl(
 		context = context,
 		fileProvider = fileProvider,
 		stopWatch = stopWatch,
-		settings = settingsRepo
+		settings = settings
 	)
 
 	@Provides

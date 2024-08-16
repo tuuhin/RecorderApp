@@ -1,16 +1,21 @@
 package com.eva.recorderapp.voice_recorder.data.datastore
 
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.AudioFileNamingFormat
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderNameFormat
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderSettings
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderAudioSettings
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderFileSettings
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
 
-fun RecorderSettingsProto.toDomain() = RecorderSettings(
-	nameFormat = format.toDomain,
+fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderAudioSettings(
 	encoders = encoder.toDomain,
 	quality = quality.toDomain,
 	blockCallsDuringRecording = blockIncommingCalls,
 	useBluetoothHeadSet = useBluetoothMic
+)
+
+fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSettings(
+	nameStyle = namingStyle,
+	nameFormat = format.toDomain
 )
 
 val RecorderQualityProto.toDomain: RecordQuality
@@ -21,11 +26,11 @@ val RecorderQualityProto.toDomain: RecordQuality
 		RecorderQualityProto.UNRECOGNIZED -> RecordQuality.NORMAL
 	}
 
-val RecoderFormatProto.toDomain: RecorderNameFormat
+val NamingFormatProto.toDomain: AudioFileNamingFormat
 	get() = when (this) {
-		RecoderFormatProto.FORMAAT_VIA_DATE -> RecorderNameFormat.DATE_TIME
-		RecoderFormatProto.FORMAT_VIA_COUNT -> RecorderNameFormat.COUNT
-		RecoderFormatProto.UNRECOGNIZED -> RecorderNameFormat.DATE_TIME
+		NamingFormatProto.FORMAAT_VIA_DATE -> AudioFileNamingFormat.DATE_TIME
+		NamingFormatProto.FORMAT_VIA_COUNT -> AudioFileNamingFormat.COUNT
+		NamingFormatProto.UNRECOGNIZED -> AudioFileNamingFormat.DATE_TIME
 	}
 
 val RecoderEncoderProto.toDomain

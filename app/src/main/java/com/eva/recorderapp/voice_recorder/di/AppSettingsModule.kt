@@ -1,8 +1,10 @@
 package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
-import com.eva.recorderapp.voice_recorder.data.datastore.RecorderSettingsRepoImpl
-import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderSettingsRepo
+import com.eva.recorderapp.voice_recorder.data.datastore.RecorderAudioSettingsRepoImpl
+import com.eva.recorderapp.voice_recorder.data.datastore.RecorderFileSettingsRepoImpl
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,5 +20,11 @@ object AppSettingsModule {
 	@Singleton
 	fun providesRecorderSettings(
 		@ApplicationContext context: Context
-	): RecorderSettingsRepo = RecorderSettingsRepoImpl(context)
+	): RecorderAudioSettingsRepo = RecorderAudioSettingsRepoImpl(context)
+
+	@Provides
+	@Singleton
+	fun providesFileSettings(
+		@ApplicationContext context: Context
+	): RecorderFileSettingsRepo = RecorderFileSettingsRepoImpl(context)
 }
