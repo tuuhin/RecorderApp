@@ -16,6 +16,7 @@ import com.eva.recorderapp.voice_recorder.domain.player.PlayerPlayBackSpeed
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerState
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
 import com.eva.recorderapp.voice_recorder.domain.player.exceptions.CannotStartPlayerException
+import com.eva.recorderapp.voice_recorder.domain.player.exceptions.SetPlayerCommandNotFound
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -42,9 +43,6 @@ class AudioFilePlayerImpl(
 	private val _isLooping = MutableStateFlow(false)
 	private val _isDeviceMuted = MutableStateFlow(false)
 
-	val hasCurrentMediaItem: Boolean
-		get() = player.currentMediaItem != null
-
 	private val _listener = object : Player.Listener {
 
 		override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -53,7 +51,6 @@ class AudioFilePlayerImpl(
 			// only updates to play or pause mode
 			_playerState.update { state }
 		}
-
 
 		override fun onPlaybackStateChanged(playbackState: Int) {
 			super.onPlaybackStateChanged(playbackState)
@@ -75,8 +72,8 @@ class AudioFilePlayerImpl(
 		}
 
 		override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-			val paramsSpeed = playbackParameters.speed
-			val speed = PlayerPlayBackSpeed.fromInt(paramsSpeed) ?: return
+			val playerSpeed = playbackParameters.speed
+			val speed = PlayerPlayBackSpeed.fromInt(playerSpeed) ?: return
 			// updates the player speed
 			_playBackSpeed.update { speed }
 		}
@@ -104,28 +101,26 @@ class AudioFilePlayerImpl(
 			)
 		}
 
-	fun computeMusicTrackInfo(state: PlayerState): Flow<PlayerTrackData> {
-		return flow<PlayerTrackData> {
-			Log.d(LOGGER, "CURRENT PLAYER STATE: $state")
+	fun computeMusicTrackInfo(state: PlayerState): Flow<PlayerTrackData> = flow<PlayerTrackData> {
+		Log.d(LOGGER, "CURRENT PLAYER STATE: $state")
 
-			// If the player can advertise postions ie, its ready or play or paused
-			// then continue the loop
-			while (state.canAdvertisePlayerCurrentPostion) {
-				val duration = PlayerTrackData(
-					current = player.currentPosition.milliseconds,
-					total = player.duration.milliseconds,
-				)
-				emit(duration)
-				delay(100.milliseconds)
-			}
+		// If the player can advertise postions ie, its ready or play or paused
+		// then continue the loop
+		while (state.canAdvertiseCurrentPosition) {
+			val trackData = PlayerTrackData(
+				current = player.currentPosition.milliseconds,
+				total = player.duration.milliseconds,
+			)
+			emit(trackData)
+			delay(100.milliseconds)
+		}
+	}.distinctUntilChanged()
 
-		}.distinctUntilChanged()
-	}
 
 	override fun setPlayBackSpeed(playBackSpeed: PlayerPlayBackSpeed) {
 		val command = player.isCommandAvailable(Player.COMMAND_SET_SPEED_AND_PITCH)
 		if (!command) {
-			Log.d(LOGGER, "CANNOT CHANGE SPEED COMMAND NOT AVAILABLE")
+			Log.w(LOGGER, "CANNOT CHANGE SPEED COMMAND NOT AVAILABLE")
 			return
 		}
 		player.setPlaybackSpeed(playBackSpeed.speed)
@@ -150,12 +145,19 @@ class AudioFilePlayerImpl(
 			return
 		}
 		val muted = !player.isDeviceMuted
+		// TODO: Not properly implemented 
 		player.setDeviceMuted(muted, C.VOLUME_FLAG_VIBRATE)
 		_isDeviceMuted.update { muted }
 		Log.d(LOGGER, "ON MUTE DEVICE SET TO $muted")
 	}
 
 	override suspend fun preparePlayer(audio: AudioFileModel): Resource<Boolean, Exception> {
+		val command = player.isCommandAvailable(Player.COMMAND_SET_MEDIA_ITEM)
+		if (!command) {
+			// command is not available
+			return Resource.Error(SetPlayerCommandNotFound())
+		}
+
 		if (lock.holdsLock(this)) {
 			Log.d(LOGGER, "METHOD IS LOCKED")
 			// cannot start as the method is locked
@@ -164,22 +166,32 @@ class AudioFilePlayerImpl(
 		//  locking this w.r.t to this class
 		lock.lock(this)
 		try {
-			Log.i(LOGGER, "MEDIA ITEM FOR AUDIO FILE : $audio")
-			val mediaItem = prepareMediaItem(audio)
-			player.apply {
-				prepare()
-				addListener(_listener)
-			}
-			Log.d(LOGGER, "PLAYER PREPARED AND LISTENER ADDED")
-			// set the media item if not present ,this is the default case
-			// but when the player is started via the session
-			// the player already has a media item
-			if (!hasCurrentMediaItem) {
-				player.setMediaItem(mediaItem)
-				Log.d(LOGGER, "MEDIA ITEM ADDED TO THE PLAYER")
-			} else {
+			// current mediaId is same as the file audioId
+			val areMediaIdSame = player.currentMediaItem?.mediaId == audio.id.toString()
+
+			if (areMediaIdSame) {
+				Log.d(LOGGER, "UPDATING PLAYER PARAMETERS")
 				// player media item is set so need to update the parameters
-				updatePlayerInCaseMediaItemAlreadyConfigured()
+				updatePlayerStateIfSameAudioFileModel()
+			} else {
+				Log.i(LOGGER, "MEDIA ITEM FOR AUDIO FILE : ${audio.id}")
+				val mediaItem = prepareMediaItem(audio)
+				// set this current media item
+				player.apply {
+					clearMediaItems()
+					setMediaItem(mediaItem)
+				}
+				Log.d(LOGGER, "MEDIA ITEM ADDED TO THE PLAYER")
+				if (player.playbackState != Player.STATE_IDLE) {
+					Log.d(LOGGER, "STOPPING PLAYER ")
+					// if the player is not in idle state stop the player
+					stopPlayer()
+				}
+			}
+			// prepare the player if the state is idle
+			if (player.playbackState == Player.STATE_IDLE) {
+				player.prepare()
+				Log.d(LOGGER, "PLAYER PREPARED ")
 			}
 			return Resource.Success(true)
 		} catch (e: IllegalStateException) {
@@ -195,6 +207,11 @@ class AudioFilePlayerImpl(
 
 
 	override suspend fun pausePlayer() {
+		val command = player.isCommandAvailable(Player.COMMAND_PLAY_PAUSE)
+		if (!command) {
+			Log.w(LOGGER, "PLAYER PLAY PAUSE COMMAND NOT FOUND")
+			return
+		}
 		if (lock.holdsLock(this)) {
 			Log.d(LOGGER, "OTHER FUNCTION IS HOLDING LOCK CANNOT PERFORM OPERATION")
 			return
@@ -211,6 +228,11 @@ class AudioFilePlayerImpl(
 	}
 
 	override suspend fun startOrResumePlayer() {
+		val command = player.isCommandAvailable(Player.COMMAND_PLAY_PAUSE)
+		if (!command) {
+			Log.w(LOGGER, "PLAYER PLAY PAUSE COMMAND NOT FOUND")
+			return
+		}
 		if (lock.holdsLock(this)) {
 			Log.d(LOGGER, "OTHER FUNCTION IS HOLDING LOCK CANNOT PERFORM OPERATION")
 			return
@@ -247,9 +269,9 @@ class AudioFilePlayerImpl(
 	}
 
 	override fun onSeekDuration(duration: Duration) {
-		val hasCommand = player.isCommandAvailable(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
-		if (!hasCommand) {
-			Log.d(LOGGER, "PLAYER COMMAND NOT FOUND")
+		val command = player.isCommandAvailable(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
+		if (!command) {
+			Log.w(LOGGER, "PLAYER SEEK IN MEDIA COMMAND NOT FOUND")
 			return
 		}
 		val totalDuration = player.duration
@@ -260,31 +282,21 @@ class AudioFilePlayerImpl(
 		}
 	}
 
-	override fun forwardPlayerByNDuration(duration: Duration) {
-		val hasCommand = player.isCommandAvailable(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
-		if (!hasCommand) {
-			Log.d(LOGGER, "PLAYER COMMAND NOT FOUND")
+	override fun seekPlayerByNDuration(duration: Duration, rewind: Boolean) {
+		val command = player.isCommandAvailable(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
+		if (!command) {
+			Log.w(LOGGER, "PLAYER SEEK IN MEDIA COMMAND NOT FOUND")
 			return
 		}
-		val seekPosition = player.currentPosition + duration.inWholeMilliseconds
+		val seekPosition = if (rewind) player.currentPosition + duration.inWholeMilliseconds
+		else player.currentPosition - duration.inWholeMilliseconds
+
 		if (seekPosition >= player.duration) {
 			// seek to max duration
 			Log.d(LOGGER, "SEEK POSITION IS PLAYER DURATION")
 			player.seekTo(player.duration)
 			return
-		}
-		Log.d(LOGGER, "PLAYER POSITION CHANGED $seekPosition")
-		player.seekTo(seekPosition)
-	}
-
-	override fun rewindPlayerByNDuration(duration: Duration) {
-		val hasCommand = player.isCommandAvailable(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
-		if (!hasCommand) {
-			Log.d(LOGGER, "PLAYER COMMAND NOT FOUND")
-			return
-		}
-		val seekPosition = player.currentPosition - duration.inWholeMilliseconds
-		if (seekPosition < 0) {
+		} else if (seekPosition < 0) {
 			Log.d(LOGGER, "SEEK POSITION IS LESSER THAN 0")
 			player.seekTo(0)
 			return
@@ -293,12 +305,17 @@ class AudioFilePlayerImpl(
 		player.seekTo(seekPosition)
 	}
 
-	override fun clearResources() {
+	override fun addPlayerListener() {
+		player.addListener(_listener)
+		Log.d(LOGGER, "PLAYER LISTENER ADDED")
+	}
+
+	override fun clearPlayerListener() {
 		player.removeListener(_listener)
 		Log.d(LOGGER, "REMOVED LISTENER FOR PLAYER")
 	}
 
-	private fun updatePlayerInCaseMediaItemAlreadyConfigured() {
+	private fun updatePlayerStateIfSameAudioFileModel() {
 		// update the repeat mode
 		_isLooping.update { player.repeatMode == Player.REPEAT_MODE_ONE }
 		// update the playback speed

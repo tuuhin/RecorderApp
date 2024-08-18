@@ -10,17 +10,26 @@ import android.util.Log
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.exceptions.InvalidMimeTypeException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 private const val TAG = "AMPLITUDE_READER"
+typealias RMSValues = List<Float>
+
+private const val TWO_POWER_15 = 32_768f
+private const val TWO_POWER_31 = 2_14_74_83_648f
+private const val TWO_POWER_7 = 128f
+private const val RMS_VALUES_MIN_SIZE = 120
 
 class AudioAmplitudeReader(
 	private val context: Context,
@@ -33,11 +42,18 @@ class AudioAmplitudeReader(
 	private var _channels = 1
 	private var _pcmEncodingBit = 16
 	private val perSamplePoints = 1_000
-	private var sampleSum = 0.0f
+	private var squaredSum = 0.0f
+
+	private var sampleCount = AtomicInteger(0)
 
 	private val _isEofReached = MutableStateFlow(false)
-	private var sampleCount = MutableStateFlow(0)
-	private val _sampleData = MutableStateFlow<List<Float>>(emptyList())
+	private val _sampleData = MutableStateFlow<RMSValues>(emptyList())
+
+	/**
+	 * Codec state provides which state the [MediaCodec] is in
+	 * ensuring correctly calling methods
+	 */
+	private val _codecState = MutableStateFlow(MediaCodecState.STOP)
 
 	val samples = _sampleData.filter { it.isNotEmpty() }
 		.map { data -> data.paddedList().normalize() }
@@ -47,8 +63,13 @@ class AudioAmplitudeReader(
 	suspend fun evaluteSamplesGraphFromAudioId(audioId: Long): Resource<Unit, Exception> {
 		return coroutineScope {
 			try {
+				// clearing the values
+				_sampleData.update { emptyList() }
+				_isEofReached.update { false }
+				// get the audio uri
 				val audioUri = fileProvider.providesAudioFileUri(audioId)
 				Log.d(TAG, "EVALUTATING FOR URI: $audioUri")
+				// start media codec
 				startMediaDecoder(audioUri)
 				Resource.Success(Unit)
 			} catch (e: Exception) {
@@ -65,70 +86,87 @@ class AudioAmplitudeReader(
 				Log.d(TAG, "END OF BUFFER REACHED...")
 				return
 			}
-			extractor?.let { extrac ->
-				if (index >= 0) {
-					// get the input buffer
-					val inputBuffer = codec.getInputBuffer(index) ?: return
-					// read the sample data and store it in the buffer
-					val sampleSize = extrac.readSampleData(inputBuffer, 0)
-					if (sampleSize < 0) {
-						//no data so end of stream
-						codec.signalEndOfInputStream()
-						Log.d(TAG, "END OF INPUT STREAM")
+			if (_codecState.value != MediaCodecState.EXEC) {
+				Log.d(TAG, "STATE SHOULD BE EXECUTING FOUND ${_codecState.value}")
+				return
+			}
+			try {
+				val extrac = extractor ?: return
+				if (index < 0) return
+				// get the input buffer
+				val inputBuffer = codec.getInputBuffer(index) ?: return
+				// read the sample data and store it in the buffer
+				val sampleSize = extrac.readSampleData(inputBuffer, 0)
+				if (sampleSize < 0) {
+					//no data so end of stream
+					codec.signalEndOfInputStream()
+					Log.d(TAG, "END OF INPUT STREAM")
+					_codecState.update { MediaCodecState.END }
+					_isEofReached.update { true }
+				} else {
+					// enque the buffer with the buffer info
+					codec.queueInputBuffer(
+						index, 0, sampleSize, extrac.sampleTime, 0
+					)
+					//advance the extractor to read the next sample
+					val advance = extrac.advance()
+					if (!advance) {
+						Log.d(TAG, "CANNOT ADVANCE EXTRACTOR ANY MORE")
 						_isEofReached.update { true }
-					} else {
-						// enque the buffer with the buffer info
-						codec.queueInputBuffer(
-							index, 0, sampleSize, extrac.sampleTime, 0
-						)
-						//advance the extractor to read the next sample
-						val advance = extrac.advance()
-						if (!advance) {
-							Log.d(TAG, "CANNOT ADVANCE EXTRACTOR ANY MORE")
-							_isEofReached.update { true }
-						}
 					}
 				}
+			} catch (e: IllegalStateException) {
+				Log.e(TAG, "MEDIA CODEC IS NOT IN EXECUTION STATE")
 			}
 		}
 
 		override fun onOutputBufferAvailable(
 			codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo
 		) {
-			// stop if end of buffer is reached
-			if (info.isEof) {
-				Log.d(TAG, "END OF BUFFER REACHED...")
-				codec.stop()
+			if (_codecState.value != MediaCodecState.EXEC) {
+				Log.d(TAG, "STATE SHOULD BE EXECUTING FOUND ${_codecState.value}")
 				return
 			}
-			if (info.size > 0) {// byte buffer for the ouput buffer
-				val outputBuffer = codec.getOutputBuffer(index)
-				outputBuffer?.position(info.offset)
-				// each will prepare the output
-				when (_pcmEncodingBit) {
-					8 -> outputBuffer?.handle8bit(info.size)
-					16 -> outputBuffer?.handle16bit(info.size)
-					32 -> outputBuffer?.handle32bit(info.size)
+			try {
+				// stop if end of buffer is reached
+				if (info.isEof) {
+					Log.d(TAG, "END OF BUFFER REACHED...")
+					codec.stop()
+					_codecState.update { MediaCodecState.STOP }
+					return
 				}
-				// release the output buffer
-				codec.releaseOutputBuffer(index, false)
+				if (info.size > 0) {
+					val outputBuffer = codec.getOutputBuffer(index)
+					outputBuffer?.position(info.offset)
+					// each will prepare the output
+					when (_pcmEncodingBit) {
+						8 -> outputBuffer?.handle8bit(info.size)
+						16 -> outputBuffer?.handle16bit(info.size)
+						32 -> outputBuffer?.handle32bit(info.size)
+					}
+					// release the output buffer
+					codec.releaseOutputBuffer(index, false)
+				}
+			} catch (e: IllegalStateException) {
+				Log.e(TAG, "MEDIA CODEC IS NOT IN EXECUTION STATE")
 			}
 		}
 
 		override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+			_codecState.update { MediaCodecState.STOP }
 			Log.e(TAG, "ERROR HAPPENED", e)
 		}
 
 		override fun onCryptoError(codec: MediaCodec, e: MediaCodec.CryptoException) = Unit
 
 		override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-			Log.d(TAG, "OUTPUT FORMAT CHANGED")
+			Log.d(TAG, "CHECKING METADATA FOR THE MEDIA")
 			_channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
 			_pcmEncodingBit = if (format.containsKey(MediaFormat.KEY_PCM_ENCODING)) {
 				when (format.getInteger(MediaFormat.KEY_PCM_ENCODING)) {
 					AudioFormat.ENCODING_PCM_8BIT -> 8
 					AudioFormat.ENCODING_PCM_16BIT -> 16
-					AudioFormat.ENCODING_PCM_FLOAT -> 32
+					AudioFormat.ENCODING_PCM_32BIT -> 32
 					else -> 16
 				}
 			} else 16
@@ -136,11 +174,11 @@ class AudioAmplitudeReader(
 	}
 
 
-	private suspend fun startMediaDecoder(uri: Uri) {
+	private suspend fun startMediaDecoder(uri: Uri) = withContext(Dispatchers.Default) {
 		extractor = MediaExtractor().apply {
 			setDataSource(context, uri, null)
 		}
-		val format = extractor?.getTrackFormat(0) ?: return
+		val format = extractor?.getTrackFormat(0) ?: return@withContext
 
 		val mimeType = format.getString(MediaFormat.KEY_MIME)
 		Log.d(TAG, "MIME TYPE SELECTED $mimeType")
@@ -153,6 +191,8 @@ class AudioAmplitudeReader(
 		Log.d(TAG, "TRACK SELECTED")
 		// creates the decorder
 		try {
+			// preparing the media codec
+			_codecState.update { MediaCodecState.STOP }
 			// configure the decoder
 			mediaCodec = MediaCodec.createDecoderByType(mimeType).apply {
 				configure(format, null, null, 0)
@@ -160,6 +200,7 @@ class AudioAmplitudeReader(
 			}
 			//start the decorder
 			mediaCodec?.start()
+			_codecState.update { MediaCodecState.EXEC }
 			Log.d(TAG, "MEDIA CODEC STARTED SUCCESSFULLY")
 		} catch (e: IllegalStateException) {
 			Log.e(TAG, "ILLEGAL STATE FOUND PLEASE CHECK", e)
@@ -168,61 +209,59 @@ class AudioAmplitudeReader(
 		}
 	}
 
-	private fun rms(value: Float) {
-		if (sampleCount.value == perSamplePoints) {
-			val rms = sqrt(sampleSum / perSamplePoints)
-			_sampleData.update { it + rms.toFloat() }
-			sampleCount.update { 0 }
-			sampleSum = 0.0f
+	private fun evaluate_rms(value: Float) {
+		val count = sampleCount.getAndIncrement()
+		if (count == perSamplePoints) {
+			// the root mean square value of the sample points
+			val rms: Float = sqrt(squaredSum / perSamplePoints)
+			_sampleData.update { it + rms }
+			sampleCount.set(0)
+			squaredSum = 0.0f
 		}
-		sampleCount.update { it + 1 }
-		sampleSum += value.toDouble().pow(2.0).toFloat()
+		squaredSum += value.pow(2)
 	}
 
 
 	private fun ByteBuffer.handle8bit(bufferInfoSize: Int) {
 		val times = bufferInfoSize / if (_channels == 2) 2 else 1
-		val divisor = 2f.pow(7f)
 		repeat(times) {
-			val result = get().toInt() / divisor
+			val result = get().toInt() / TWO_POWER_7
 			if (_channels == 2) {
 				// skip the next value
 				get()
 			}
-			rms(result)
+			evaluate_rms(result)
 		}
 	}
 
 	private fun ByteBuffer.handle16bit(bufferInfoSize: Int) {
 		val times = bufferInfoSize / if (_channels == 2) 8 else 4
-		val divisor = 2f.pow(15)
 		repeat(times) {
 			val first = get().toInt()
 			val second = get().toInt() shl 8
-			val value = (first or second) / divisor
+			val value = (first or second) / TWO_POWER_15
 			if (_channels == 2) {
 				//skipping the next 3 values
 				repeat(2) { get() }
 			}
-			rms(value)
+			evaluate_rms(value)
 		}
 	}
 
 	private fun ByteBuffer.handle32bit(bufferInfoSize: Int) {
 		val times = bufferInfoSize / if (_channels == 2) 8 else 4
-		val divisor = 2f.pow(31)
 
 		repeat(times) {
 			val first = get().toLong()
 			val second = get().toLong() shl 8
 			val third = get().toLong() shl 16
 			val forth = get().toLong() shl 24
-			val value = (first or second or third or forth) / divisor
+			val value = (first or second or third or forth) / TWO_POWER_31
 			if (_channels == 2) {
 				//skipping the next 4 values
 				repeat(4) { get() }
 			}
-			rms(value)
+			evaluate_rms(value)
 		}
 	}
 
@@ -237,7 +276,10 @@ class AudioAmplitudeReader(
 		}.toFloatArray()
 	}
 
-	fun List<Float>.paddedList(minSize: Int = 100, builder: (Int) -> Float = { 0f }): List<Float> {
+	fun List<Float>.paddedList(
+		minSize: Int = RMS_VALUES_MIN_SIZE,
+		builder: (Int) -> Float = { 0f }
+	): List<Float> {
 		val extraSize = minSize - size
 		return if (extraSize < 0) this
 		else this + List(extraSize, builder)
@@ -245,12 +287,31 @@ class AudioAmplitudeReader(
 
 	//clears the extractor
 	fun clearResources() {
-		Log.i(TAG, "CLEARING MEDIA EXTRACTOR AND MEDIA CODEC")
+		Log.i(TAG, "RELEASING MEDIA EXTRACTOR")
 		extractor?.release()
-		mediaCodec?.release()
 		extractor = null
+		Log.i(TAG, "RELEASING MEDIA CODEC")
+		mediaCodec?.release()
 		mediaCodec = null
+		_codecState.update { MediaCodecState.END }
 	}
+}
+
+private enum class MediaCodecState {
+	/**
+	 * [MediaCodec] state stopped
+	 */
+	STOP,
+
+	/**
+	 * [MediaCodec] state executing
+	 */
+	EXEC,
+
+	/**
+	 * [MediaCodec] state released
+	 */
+	END
 }
 
 private val MediaCodec.BufferInfo.isEof: Boolean

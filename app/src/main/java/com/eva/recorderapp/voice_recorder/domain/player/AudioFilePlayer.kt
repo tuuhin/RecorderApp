@@ -29,16 +29,12 @@ interface AudioFilePlayer {
 	suspend fun preparePlayer(audio: AudioFileModel): Resource<Boolean, Exception>
 
 	/**
-	 * Seeks the player by n [duration] forward
+	 * Seeks the player by n [duration] forward or backward
+	 * @param rewind If player is to be rewind set [rewind] to [true]
 	 * @param duration The amount of duration to seek forward
 	 */
-	fun forwardPlayerByNDuration(duration: Duration = 2.seconds)
+	fun seekPlayerByNDuration(duration: Duration = 2.seconds, rewind: Boolean = false)
 
-	/**
-	 * Seeks the player by n [duration] backwards
-	 * @param duration The amount of duration to seek backwards
-	 */
-	fun rewindPlayerByNDuration(duration: Duration = 2.seconds)
 
 	/**
 	 * Pauses the ongoing play
@@ -55,8 +51,11 @@ interface AudioFilePlayer {
 	 */
 	suspend fun stopPlayer()
 
+
+	fun addPlayerListener()
+
 	/**
 	 * Remove callbacks and resouces associated with the player
 	 */
-	fun clearResources()
+	fun clearPlayerListener()
 }
