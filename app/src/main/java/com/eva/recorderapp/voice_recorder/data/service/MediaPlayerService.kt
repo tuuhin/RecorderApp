@@ -2,7 +2,6 @@ package com.eva.recorderapp.voice_recorder.data.service
 
 import android.app.PendingIntent
 import android.content.Intent
-import android.os.IBinder
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.core.os.bundleOf
@@ -36,7 +35,7 @@ class MediaPlayerService : MediaSessionService() {
 	@Inject
 	lateinit var sessionCallback: MediaSession.Callback
 
-	val listener = object : MediaSessionService.Listener {
+	private val listener = object : MediaSessionService.Listener {
 		override fun onForegroundServiceStartNotAllowedException() {
 			Log.e(TAG, "CANNOT START FOREGROUND SERVICE")
 		}
@@ -50,25 +49,19 @@ class MediaPlayerService : MediaSessionService() {
 		Log.d(TAG, "MEDIA SESSION CONFIGURED AND NOTIFICATON SET")
 	}
 
-	override fun onBind(intent: Intent?): IBinder? {
-		return super.onBind(intent)
-	}
 
 	override fun onTaskRemoved(rootIntent: Intent?) {
-		Log.d(TAG, "TASK REMOVED IS CALLED")
-		// if the player is playing or its in ready state keep the notification
-		if (player.playWhenReady || player.isPlaying) {
+		val player = mediaSession?.player ?: return
+		if (player.playWhenReady) {
+			// Make sure the service is not in foreground.
 			player.pause()
-		} else {
-			// stop the on-going foreground
-			stopForeground(STOP_FOREGROUND_REMOVE)
-			// if the playback is running stop that and then stop the service
-			stopSelf()
 		}
+		stopSelf()
 	}
 
 
 	override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
+		Log.i(TAG, "SESSION SET")
 
 		val audioId = controllerInfo.connectionHints
 			.getLong(PlayerConstants.PLAYER_AUDIO_FILE_ID_KEY, -1)
@@ -111,6 +104,7 @@ class MediaPlayerService : MediaSessionService() {
 	private fun createPlayerIntent(audioId: Long): PendingIntent {
 		return Intent(applicationContext, MainActivity::class.java).apply {
 			data = NavDeepLinks.audioPlayerDestinationUri(audioId)
+			action = Intent.ACTION_VIEW
 		}.let { intent ->
 			PendingIntent.getActivity(
 				applicationContext,

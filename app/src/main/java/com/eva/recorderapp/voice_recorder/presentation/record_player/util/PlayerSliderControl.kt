@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.util
 
-import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
+import com.eva.recorderapp.voice_recorder.data.player.MediaControllerProvider
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -12,7 +12,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class PlayerSliderControl(
-	private val player: AudioFilePlayer
+	private val controller: MediaControllerProvider,
 ) {
 
 	//seek amount we have certain amount for the player and user
@@ -28,7 +28,7 @@ class PlayerSliderControl(
 
 	val trackData = combine(
 		_seekAmountByUser,
-		player.trackInfoAsFlow,
+		controller.trackDataFlow,
 		_isSeekPlayerUserControlled
 	) { userAmt, trackInfo, flag ->
 		// set the current pos as user amount if user has selected or plyer is in ready state
@@ -50,7 +50,7 @@ class PlayerSliderControl(
 	 * Slider Value change completed
 	 */
 	fun onSliderSlideComplete() {
-		player.onSeekDuration(_seekAmountByUser.value)
+		controller.player?.onSeekDuration(_seekAmountByUser.value)
 		_seekControlledByUser.update { false }
 	}
 }

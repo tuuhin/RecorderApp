@@ -8,17 +8,28 @@ import kotlin.time.Duration.Companion.seconds
 
 interface AudioFilePlayer {
 
-
 	val trackInfoAsFlow: Flow<PlayerTrackData>
 	val playerMetaDataFlow: Flow<PlayerMetaData>
 
 	fun onMuteDevice()
 
-
+	/**
+	 * Contols the  playback speed of the player
+	 * @param playBackSpeed Playback speed for the current player
+	 * @see PlayerPlayBackSpeed
+	 */
 	fun setPlayBackSpeed(playBackSpeed: PlayerPlayBackSpeed)
 
+	/**
+	 * Set is the player is looping the current media
+	 * @param loop indicating if loop is allowed or not
+	 */
 	fun setPlayLooping(loop: Boolean = false)
 
+	/**
+	 * Seek the player to a certain duration on the timeline
+	 * @param duration Amount of [Duration] to be seeked on the player
+	 */
 	fun onSeekDuration(duration: Duration)
 
 	/**
@@ -51,11 +62,8 @@ interface AudioFilePlayer {
 	 */
 	suspend fun stopPlayer()
 
-
-	fun addPlayerListener()
-
 	/**
 	 * Remove callbacks and resouces associated with the player
 	 */
-	fun clearPlayerListener()
+	fun cleanUp()
 }
