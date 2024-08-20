@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
@@ -55,7 +55,7 @@ fun PlayerAmplitudeGraph(
 		Spacer(
 			modifier = Modifier
 				.padding(all = dimensionResource(id = R.dimen.amplitudes_card_padding))
-				.defaultMinSize(minHeight = 130.dp)
+				.defaultMinSize(minHeight = dimensionResource(id = R.dimen.line_graph_min_height))
 				.pointerInput(samples) {
 					detectHorizontalDragGestures(
 						onDragStart = { isDragStarted = true },
@@ -69,16 +69,17 @@ fun PlayerAmplitudeGraph(
 				}
 				.drawWithCache {
 
-					val spikesWidth = 3.dp.toPx()
+					val spikesWidth = 2.dp.toPx()
 					val spikeSpace = 2.dp.toPx()
 					val centerYAxis = size.height / 2
 					val spikes = mutableListOf<Pair<Offset, Offset>>()
 					val dots = mutableListOf<Offset>()
 
 					samples.forEachIndexed { idx, value ->
+						val sizeFactor = 0.75f * value
 						val xAxis = (spikesWidth + spikeSpace) * idx.toFloat()
-						val start = Offset(xAxis, centerYAxis * (1 - value))
-						val end = Offset(xAxis, centerYAxis * (1 + value))
+						val start = Offset(xAxis, centerYAxis * (1 - sizeFactor))
+						val end = Offset(xAxis, centerYAxis * (1 + sizeFactor))
 						if (start.y != end.y) spikes.add(Pair(start, end))
 						else dots.add(start)
 					}
@@ -130,7 +131,7 @@ fun PlayerAmplitudeGraph(
 	}
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun PlayerAmplitudeGraphPreview() = RecorderAppTheme {
 	PlayerAmplitudeGraph(

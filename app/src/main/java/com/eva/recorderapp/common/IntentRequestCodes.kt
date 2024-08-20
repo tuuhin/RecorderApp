@@ -13,5 +13,8 @@ enum class IntentRequestCodes(val code: Int) {
 	CANCEL_VOICE_RECORDER(105),
 
 	// Player notification content intent
-	PLAYER_NOTIFICATION_INTENT(200)
+	PLAYER_NOTIFICATION_INTENT(200),
+
+	// player backStack pending intent
+	PLAYER_BACKSTACK_INTENT(201)
 }

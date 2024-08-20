@@ -189,8 +189,8 @@ class AudioFilePlayerImpl(
 			Log.w(LOGGER, "PLAYER SEEK IN MEDIA COMMAND NOT FOUND")
 			return
 		}
-		val amount = duration.inWholeMilliseconds.also {
-			if (rewind) it.unaryMinus()
+		val amount = duration.inWholeMilliseconds.run {
+			if (rewind) unaryMinus() else this
 		}
 		val seekPosition = player.currentPosition + amount
 
@@ -198,14 +198,13 @@ class AudioFilePlayerImpl(
 			// seek to max duration
 			Log.d(LOGGER, "SEEK POSITION IS PLAYER DURATION")
 			player.seekTo(player.duration)
-			return
 		} else if (seekPosition < 0) {
 			Log.d(LOGGER, "SEEK POSITION IS LESSER THAN 0")
 			player.seekTo(0)
-			return
+		} else {
+			Log.d(LOGGER, "PLAYER POSITION CHANGED $seekPosition")
+			player.seekTo(seekPosition)
 		}
-		Log.d(LOGGER, "PLAYER POSITION CHANGED $seekPosition")
-		player.seekTo(seekPosition)
 	}
 
 	override fun cleanUp() {

@@ -84,7 +84,7 @@ class MediaControllerProvider(
 		override fun onSuccess(result: MediaController?) {
 
 			result?.let { controller ->
-				Log.d(TAG, "CONTROLLER CREATED")
+				Log.i(TAG, "CONTROLLER CREATED")
 				val appPlayer = controller.appPlayer
 				_isConnected.update { controller.isConnected }
 				_player.update { appPlayer }
@@ -115,9 +115,11 @@ class MediaControllerProvider(
 
 	fun removeController() {
 		_future?.let(MediaController::releaseFuture)
+		_future = null
 		Log.d(TAG, "FUTURE FOR MEDIA CONTROLLER RELEASED")
 	}
+
 }
 
-val MediaController.appPlayer: AudioFilePlayer
+private val MediaController.appPlayer: AudioFilePlayer
 	get() = AudioFilePlayerImpl(this)

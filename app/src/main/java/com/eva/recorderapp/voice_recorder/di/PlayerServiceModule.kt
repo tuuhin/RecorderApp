@@ -2,11 +2,13 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import androidx.annotation.OptIn
+import androidx.core.os.bundleOf
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaConstants
 import androidx.media3.session.MediaNotification
 import androidx.media3.session.MediaSession
 import com.eva.recorderapp.R
@@ -56,7 +58,21 @@ object PlayerServiceModule {
 
 	@Provides
 	@ServiceScoped
-	fun providesMediaSessionCallback(): MediaSession.Callback {
-		return AudioPlayerMediaCallBacks()
+	fun providesServiceSessions(
+		@ApplicationContext context: Context,
+		player: Player,
+	): MediaSession {
+
+		val callback = AudioPlayerMediaCallBacks()
+
+		val extras = bundleOf(
+			MediaConstants.EXTRAS_KEY_SLOT_RESERVATION_SEEK_TO_NEXT to true,
+			MediaConstants.EXTRAS_KEY_SLOT_RESERVATION_SEEK_TO_PREV to true
+		)
+
+		return MediaSession.Builder(context, player)
+			.setExtras(extras)
+			.setCallback(callback)
+			.build()
 	}
 }

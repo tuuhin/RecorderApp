@@ -11,11 +11,16 @@ import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.exceptions.InvalidMimeTypeException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
@@ -29,35 +34,42 @@ typealias RMSValues = List<Float>
 private const val TWO_POWER_15 = 32_768f
 private const val TWO_POWER_31 = 2_14_74_83_648f
 private const val TWO_POWER_7 = 128f
-private const val RMS_VALUES_MIN_SIZE = 120
 
 class AudioAmplitudeReader(
 	private val context: Context,
 	private val fileProvider: PlayerFileProvider,
 ) {
+	private val PER_SAMPLE_POINTS = 3_000
 
 	private var extractor: MediaExtractor? = null
 	private var mediaCodec: MediaCodec? = null
 
 	private var _channels = 1
 	private var _pcmEncodingBit = 16
-	private val perSamplePoints = 1_000
+
 	private var squaredSum = 0.0f
-
+	private var selectedAudioDurationInUs = 0L
 	private var sampleCount = AtomicInteger(0)
-
-	private val _isEofReached = MutableStateFlow(false)
-	private val _sampleData = MutableStateFlow<RMSValues>(emptyList())
+	private var _expectedPoints = 0
 
 	/**
 	 * Codec state provides which state the [MediaCodec] is in
 	 * ensuring correctly calling methods
 	 */
 	private val _codecState = MutableStateFlow(MediaCodecState.STOP)
+	val state = _codecState.asStateFlow()
 
-	val samples = _sampleData.filter { it.isNotEmpty() }
-		.map { data -> data.paddedList().normalize() }
+	private val _sampleData = MutableStateFlow<RMSValues>(emptyList())
+	private val filterSamples = _sampleData.filter(RMSValues::isNotEmpty)
 
+	@OptIn(ExperimentalCoroutinesApi::class)
+	val samples: Flow<FloatArray>
+		get() = filterSamples
+			.mapLatest { samples -> samples.paddedList(_expectedPoints) }
+			.distinctUntilChanged()
+			.map { it.normalize() }
+
+	private val _isEofReached = MutableStateFlow(false)
 	val isLoadingCompleted = _isEofReached.asSharedFlow()
 
 	suspend fun evaluteSamplesGraphFromAudioId(audioId: Long): Resource<Unit, Exception> {
@@ -170,6 +182,13 @@ class AudioAmplitudeReader(
 					else -> 16
 				}
 			} else 16
+			val sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+
+			val totalNoOfPoints = sampleRate * (selectedAudioDurationInUs / 10_00_000)
+			val expectedPoints = (totalNoOfPoints / PER_SAMPLE_POINTS).toInt()
+
+			_expectedPoints = expectedPoints
+			Log.d(TAG, "NO OF POINTS EXPECTED ARE :$expectedPoints")
 		}
 	}
 
@@ -181,6 +200,7 @@ class AudioAmplitudeReader(
 		val format = extractor?.getTrackFormat(0) ?: return@withContext
 
 		val mimeType = format.getString(MediaFormat.KEY_MIME)
+		selectedAudioDurationInUs = format.getLong(MediaFormat.KEY_DURATION)
 		Log.d(TAG, "MIME TYPE SELECTED $mimeType")
 		if (mimeType == null) {
 			Log.d(TAG, "AMPLITUDE READER")
@@ -209,11 +229,12 @@ class AudioAmplitudeReader(
 		}
 	}
 
+	@Synchronized
 	private fun evaluate_rms(value: Float) {
 		val count = sampleCount.getAndIncrement()
-		if (count == perSamplePoints) {
+		if (count == PER_SAMPLE_POINTS) {
 			// the root mean square value of the sample points
-			val rms: Float = sqrt(squaredSum / perSamplePoints)
+			val rms: Float = sqrt(squaredSum / PER_SAMPLE_POINTS)
 			_sampleData.update { it + rms }
 			sampleCount.set(0)
 			squaredSum = 0.0f
@@ -265,23 +286,25 @@ class AudioAmplitudeReader(
 		}
 	}
 
-	fun List<Float>.normalize(): FloatArray {
-		val max = maxOrNull() ?: 0f
-		val min = minOrNull() ?: 0f
-		val range = max - min
-		if (range <= 0) return floatArrayOf()
+	private suspend fun List<Float>.normalize(): FloatArray {
+		return withContext(Dispatchers.Default) {
+			val max = maxOrNull() ?: 0f
+			val min = minOrNull() ?: 0f
+			val range = max - min
+			if (range <= 0) return@withContext floatArrayOf()
 
-		return map { amt ->
-			((amt - min) / range).coerceIn(0f..1f)
-		}.toFloatArray()
+			map { amt ->
+				((amt - min) / range).coerceIn(0f..1f)
+			}.toFloatArray()
+		}
 	}
 
-	fun List<Float>.paddedList(
-		minSize: Int = RMS_VALUES_MIN_SIZE,
+	private fun RMSValues.paddedList(
+		minSize: Int = 1,
 		builder: (Int) -> Float = { 0f }
-	): List<Float> {
+	): RMSValues {
 		val extraSize = minSize - size
-		return if (extraSize < 0) this
+		return if (extraSize <= 0) this
 		else this + List(extraSize, builder)
 	}
 
@@ -290,29 +313,36 @@ class AudioAmplitudeReader(
 		Log.i(TAG, "RELEASING MEDIA EXTRACTOR")
 		extractor?.release()
 		extractor = null
+
 		Log.i(TAG, "RELEASING MEDIA CODEC")
 		mediaCodec?.release()
 		mediaCodec = null
 		_codecState.update { MediaCodecState.END }
+		// reinititating the fields
+		squaredSum = 0f
+		selectedAudioDurationInUs = 0L
+		_expectedPoints = 0
+		sampleCount.set(0)
+	}
+
+	enum class MediaCodecState {
+		/**
+		 * [MediaCodec] stopped, its either started or configured
+		 */
+		STOP,
+
+		/**
+		 * [MediaCodec] state executing mediacodec is running
+		 */
+		EXEC,
+
+		/**
+		 * [MediaCodec] state released
+		 */
+		END
 	}
 }
 
-private enum class MediaCodecState {
-	/**
-	 * [MediaCodec] state stopped
-	 */
-	STOP,
-
-	/**
-	 * [MediaCodec] state executing
-	 */
-	EXEC,
-
-	/**
-	 * [MediaCodec] state released
-	 */
-	END
-}
 
 private val MediaCodec.BufferInfo.isEof: Boolean
 	get() = flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
