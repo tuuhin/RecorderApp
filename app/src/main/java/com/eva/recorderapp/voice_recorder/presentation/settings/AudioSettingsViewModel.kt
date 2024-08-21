@@ -7,14 +7,15 @@ import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderAudioS
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderFileSettings
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
-import com.eva.recorderapp.voice_recorder.presentation.settings.utils.ChangeAudioSettingsEvent
-import com.eva.recorderapp.voice_recorder.presentation.settings.utils.ChangeFileSettingsEvent
+import com.eva.recorderapp.voice_recorder.presentation.settings.utils.AudioSettingsEvent
+import com.eva.recorderapp.voice_recorder.presentation.settings.utils.FileSettingsEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,11 +44,23 @@ class AudioSettingsViewModel @Inject constructor(
 		get() = _uiEvents.asSharedFlow()
 
 
-	fun onAudioEvent(event: ChangeAudioSettingsEvent) {
+	fun onAudioEvent(event: AudioSettingsEvent) = viewModelScope.launch {
+		when (event) {
+			is AudioSettingsEvent.OnEncoderChange ->
+				audioSettingsRepo.onEncoderChange(event.encoder)
 
+			is AudioSettingsEvent.OnQualityChange ->
+				audioSettingsRepo.onQualityChange(event.quality)
+
+			is AudioSettingsEvent.OnSkipSilencesChange ->
+				audioSettingsRepo.onSkipSilencesChange(event.skipAllowed)
+
+			is AudioSettingsEvent.OnStereoModeChange ->
+				audioSettingsRepo.onStereoModeChange(event.mode)
+		}
 	}
 
-	fun onFileEvent(event: ChangeFileSettingsEvent) {
+	fun onFileEvent(event: FileSettingsEvent) {
 
 	}
 }

@@ -80,8 +80,8 @@ class RecorderFileProviderImpl(
 	suspend fun createUriForRecording(format: RecordEncoderAndFormat): Uri? {
 		return try {
 			val fileSettings = settings.fileSettings
-			val name = fileSettings.nameStyle
-			val nameFormat = fileSettings.nameFormat
+			val name = fileSettings.name
+			val nameFormat = fileSettings.format
 			val identifier = when (nameFormat) {
 				AudioFileNamingFormat.DATE_TIME -> "$epochSeconds"
 				AudioFileNamingFormat.COUNT -> {

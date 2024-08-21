@@ -6,9 +6,8 @@ option java_generate_equals_and_hash = true;
 
 message RecorderSettingsProto {
   RecorderQualityProto quality = 1;
-  RecoderEncoderProto encoder = 2;
+  RecorderEncodingFormatsProto encoder = 2;
   bool blockIncommingCalls = 3;
-  bool useBluetoothMic = 4;
   bool skipSilences = 5;
   bool isStereoMode = 6;
 }
@@ -19,7 +18,9 @@ enum RecorderQualityProto{
   QUALITY_LOW = 2;
 }
 
-enum RecoderEncoderProto{
-  ENCODER_MP3 = 0;
-  ENCODER_ACC = 1;
+enum RecorderEncodingFormatsProto{
+  ENCODER_ACC = 0;
+  ENCODER_AMR_NB = 1;
+  ENCODER_AMR_WB = 2;
+  ENCODER_MPEG = 3;
 }

@@ -10,7 +10,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecordEncoderAndFormat
@@ -43,12 +42,7 @@ class VoiceRecorderImpl(
 
 	// recording format and encoder
 	private val format: RecordEncoderAndFormat
-		get() = when (settings.audioSettings.encoders) {
-			RecordingEncoders.AMR_NARROW_BAND -> RecordFormats.AMR
-			RecordingEncoders.AMR_WIDE_BAND -> RecordFormats.AMR_WB
-			RecordingEncoders.OPTUS -> RecordFormats.OGG
-			RecordingEncoders.ACC -> RecordFormats.M4A
-		}
+		get() = settings.audioSettings.encoders.recordFormat
 
 	// recorder quality
 	private val quality: RecordQuality

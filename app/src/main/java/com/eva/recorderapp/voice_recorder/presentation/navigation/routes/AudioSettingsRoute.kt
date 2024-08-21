@@ -23,11 +23,14 @@ fun NavGraphBuilder.audioSettingsRoute(
 
 	val viewModel = hiltViewModel<AudioSettingsViewModel>()
 
-	val settings by viewModel.settings.collectAsStateWithLifecycle()
+	val audioSettings by viewModel.audioSettings.collectAsStateWithLifecycle()
+	val fileSettings by viewModel.fileSettings.collectAsStateWithLifecycle()
 
 	AudioSettingsScreen(
-		settings = settings,
-		onEvent = viewModel::onEvent,
+		audioSettings = audioSettings,
+		fileSettings = fileSettings,
+		onAudioSettingsChange = viewModel::onAudioEvent,
+		onFileSettingsChange = viewModel::onFileEvent,
 		navigation = {
 			IconButton(
 				onClick = dropUnlessResumed(block = controller::popBackStack)

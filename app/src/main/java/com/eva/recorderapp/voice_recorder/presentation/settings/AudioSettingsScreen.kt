@@ -1,17 +1,17 @@
 package com.eva.recorderapp.voice_recorder.presentation.settings
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,54 +19,92 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderSettings
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderAudioSettings
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderFileSettings
+import com.eva.recorderapp.voice_recorder.presentation.settings.composables.SettingsTabContent
+import com.eva.recorderapp.voice_recorder.presentation.settings.composables.audio.AudioSettings
+import com.eva.recorderapp.voice_recorder.presentation.settings.composables.files.FileSettings
+import com.eva.recorderapp.voice_recorder.presentation.settings.utils.AudioSettingsEvent
+import com.eva.recorderapp.voice_recorder.presentation.settings.utils.FileSettingsEvent
+import com.eva.recorderapp.voice_recorder.presentation.settings.utils.SettingsTabs
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioSettingsScreen(
-	settings: RecorderSettings,
-	onEvent: (ChangeSettingsEvent) -> Unit,
+	audioSettings: RecorderAudioSettings,
+	fileSettings: RecorderFileSettings,
+	onFileSettingsChange: (FileSettingsEvent) -> Unit,
+	onAudioSettingsChange: (AudioSettingsEvent) -> Unit,
 	modifier: Modifier = Modifier,
+	initialTab: SettingsTabs = SettingsTabs.AUDIO_SETTINGS,
 	navigation: @Composable () -> Unit = {},
+	onNavigateToInfo: () -> Unit = {},
 ) {
 
 	val snackBarProvider = LocalSnackBarProvider.current
-	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+	val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
 	Scaffold(
 		topBar = {
-			MediumTopAppBar(
-				title = { Text(text = "Audio Settings") },
+			TopAppBar(
+				title = { Text(text = stringResource(id = R.string.app_settings_common)) },
 				navigationIcon = navigation,
+				actions = {
+					IconButton(onClick = onNavigateToInfo) {
+						Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
+					}
+				}
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
 		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
-		LazyColumn(
-			verticalArrangement = Arrangement.spacedBy(4.dp),
+		SettingsTabContent(
+			initialTab = initialTab,
+			audioSettings = {
+				AudioSettings(
+					settings = audioSettings,
+					onEvent = onAudioSettingsChange
+				)
+			},
+			filesSettings = {
+				FileSettings(
+					settings = fileSettings,
+					onEvent = onFileSettingsChange
+				)
+			},
 			contentPadding = PaddingValues(
-				start = dimensionResource(id = R.dimen.sc_padding),
+				start = dimensionResource(R.dimen.sc_padding),
 				end = dimensionResource(R.dimen.sc_padding),
-				top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
-				bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
+				top = scPadding.calculateTopPadding(),
+				bottom = scPadding.calculateBottomPadding()
 			),
-			modifier = Modifier.fillMaxSize()
-		) {
-
-		}
+			modifier = Modifier.fillMaxSize(),
+		)
 	}
 }
 
+
+private class SettingsTabPreviewParams :
+	CollectionPreviewParameterProvider<SettingsTabs>(SettingsTabs.entries)
+
 @PreviewLightDark
 @Composable
-private fun AudioSettingsScreenPreview() = RecorderAppTheme {
+private fun AudioSettingsScreenPreview(
+	@PreviewParameter(SettingsTabPreviewParams::class)
+	initialTab: SettingsTabs
+) = RecorderAppTheme {
 	AudioSettingsScreen(
-		settings = RecorderSettings(), onEvent = {},
+		audioSettings = RecorderAudioSettings(),
+		fileSettings = RecorderFileSettings(),
+		onAudioSettingsChange = {},
+		onFileSettingsChange = {},
+		initialTab = initialTab,
 		navigation = {
 			Icon(
 				imageVector = Icons.AutoMirrored.Default.ArrowBack,

@@ -10,12 +10,11 @@ fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderAudioSetti
 	encoders = encoder.toDomain,
 	quality = quality.toDomain,
 	blockCallsDuringRecording = blockIncommingCalls,
-	useBluetoothHeadSet = useBluetoothMic
 )
 
 fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSettings(
-	nameStyle = namingStyle,
-	nameFormat = format.toDomain
+	name = namingStyle,
+	format = format.toDomain
 )
 
 val RecorderQualityProto.toDomain: RecordQuality
@@ -33,9 +32,11 @@ val NamingFormatProto.toDomain: AudioFileNamingFormat
 		NamingFormatProto.UNRECOGNIZED -> AudioFileNamingFormat.DATE_TIME
 	}
 
-val RecoderEncoderProto.toDomain
+val RecorderEncodingFormatsProto.toDomain: RecordingEncoders
 	get() = when (this) {
-		RecoderEncoderProto.ENCODER_MP3 -> RecordingEncoders.ACC
-		RecoderEncoderProto.ENCODER_ACC -> RecordingEncoders.ACC
-		RecoderEncoderProto.UNRECOGNIZED -> RecordingEncoders.ACC
+		RecorderEncodingFormatsProto.ENCODER_ACC -> RecordingEncoders.ACC
+		RecorderEncodingFormatsProto.UNRECOGNIZED -> RecordingEncoders.ACC
+		RecorderEncodingFormatsProto.ENCODER_AMR_NB -> RecordingEncoders.AMR_NB
+		RecorderEncodingFormatsProto.ENCODER_AMR_WB -> RecordingEncoders.AMR_WB
+		RecorderEncodingFormatsProto.ENCODER_MPEG -> RecordingEncoders.MPEG
 	}

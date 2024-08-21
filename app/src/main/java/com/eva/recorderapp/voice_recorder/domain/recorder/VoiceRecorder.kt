@@ -59,6 +59,6 @@ interface VoiceRecorder {
 	fun releaseResources()
 
 	companion object {
-		const val RECORDER_AMPLITUDES_BUFFER_SIZE = 80
+		const val RECORDER_AMPLITUDES_BUFFER_SIZE = 120
 	}
 }

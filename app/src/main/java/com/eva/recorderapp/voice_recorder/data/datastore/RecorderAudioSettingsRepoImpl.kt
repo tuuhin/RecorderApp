@@ -5,7 +5,9 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderAudioSettings
+import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +26,38 @@ class RecorderAudioSettingsRepoImpl(
 
 	override val audioSettings: RecorderAudioSettings
 		get() = runBlocking { audioSettingsFlow.first() }
+
+	override suspend fun onEncoderChange(encoder: RecordingEncoders) {
+		context.recorderSettings.updateData { settings ->
+			settings.toBuilder()
+				.setEncoder(encoder.toProto)
+				.build()
+		}
+	}
+
+	override suspend fun onQualityChange(quality: RecordQuality) {
+		context.recorderSettings.updateData { settings ->
+			settings.toBuilder()
+				.setQuality(quality.toProto)
+				.build()
+		}
+	}
+
+	override suspend fun onStereoModeChange(mode: Boolean) {
+		context.recorderSettings.updateData { settings ->
+			settings.toBuilder()
+				.setIsStereoMode(mode)
+				.build()
+		}
+	}
+
+	override suspend fun onSkipSilencesChange(skipAllowed: Boolean) {
+		context.recorderSettings.updateData { settings ->
+			settings.toBuilder()
+				.setSkipSilences(skipAllowed)
+				.build()
+		}
+	}
 }
 
 
