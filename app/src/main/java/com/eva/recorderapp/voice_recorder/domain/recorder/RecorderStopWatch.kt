@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.domain.recorder
 
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

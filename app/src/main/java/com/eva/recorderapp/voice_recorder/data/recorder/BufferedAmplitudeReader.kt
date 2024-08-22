@@ -2,8 +2,8 @@ package com.eva.recorderapp.voice_recorder.data.recorder
 
 import android.media.MediaRecorder
 import android.util.Log
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -11,21 +11,20 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.math.pow
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 private const val LOGGER_TAG = "AMPLITUDE_READER"
+private val MAX_AMPLITUDE = 32_768
 
 class BufferedAmplitudeReader(
 	private val recorder: MediaRecorder?,
 	val samplingRate: Duration = 80.milliseconds
 ) {
-	// max amplitude will be 32_768
-	private val MAX_AMPLITUDE = 2f.pow(15)
 
 	private val _buffer = ConcurrentLinkedQueue<Int>()
 
@@ -43,7 +42,7 @@ class BufferedAmplitudeReader(
 		}
 		return sampledAmps.flatMapLatest(::flowToFixedSizeCollection)
 			.mapLatest(::smoothen)
-			.mapLatest { it.normalize() }
+			.map { it.normalize() }
 			.flowOn(Dispatchers.Default)
 	}
 
@@ -148,7 +147,8 @@ class BufferedAmplitudeReader(
 		val max: Int = 0,
 		val min: Int = 0
 	) {
-		val range = max - min
+		val range: Int
+			get() = max - min
 	}
 
 }

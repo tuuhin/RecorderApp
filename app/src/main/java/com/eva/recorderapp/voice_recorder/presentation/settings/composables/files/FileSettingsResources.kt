@@ -3,7 +3,7 @@ package com.eva.recorderapp.voice_recorder.presentation.settings.composables.fil
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.AudioFileNamingFormat
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.AudioFileNamingFormat
 
 @Composable
 fun AudioFileNamingFormat.stringRes(name: String): String = when (this) {

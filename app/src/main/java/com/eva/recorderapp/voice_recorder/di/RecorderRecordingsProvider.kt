@@ -2,14 +2,14 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import android.os.Build
-import com.eva.recorderapp.voice_recorder.data.database.TrashFilesMetaDataDao
-import com.eva.recorderapp.voice_recorder.data.files.RecordingsActionHelperImpl
-import com.eva.recorderapp.voice_recorder.data.files.TrashRecordingsProviderApi29Impl
-import com.eva.recorderapp.voice_recorder.data.files.TrashRecordingsProviderImpl
-import com.eva.recorderapp.voice_recorder.data.files.VoiceRecordingsProviderImpl
-import com.eva.recorderapp.voice_recorder.domain.files.RecordingsActionHelper
-import com.eva.recorderapp.voice_recorder.domain.files.TrashRecordingsProvider
-import com.eva.recorderapp.voice_recorder.domain.files.VoiceRecordingsProvider
+import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFilesMetaDataDao
+import com.eva.recorderapp.voice_recorder.data.recordings.files.RecordingsActionHelperImpl
+import com.eva.recorderapp.voice_recorder.data.recordings.files.TrashRecordingsProviderApi29Impl
+import com.eva.recorderapp.voice_recorder.data.recordings.files.TrashRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.data.recordings.files.VoiceRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
+import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

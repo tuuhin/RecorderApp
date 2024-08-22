@@ -2,6 +2,7 @@ package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,8 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.collections.immutable.ImmutableList
 
+typealias Postitions = Pair<Offset, Offset>
+
 @Composable
 fun RecorderAmplitudeGraph(
 	amplitudes: ImmutableList<Float>,
@@ -40,20 +43,24 @@ fun RecorderAmplitudeGraph(
 		Spacer(
 			modifier = Modifier
 				.padding(all = dimensionResource(id = R.dimen.amplitudes_card_padding))
+				.defaultMinSize(minHeight = dimensionResource(id = R.dimen.line_graph_min_height))
 				.aspectRatio(1.75f)
 				.drawWithCache {
+
 					val spikesWidth = size.width / VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
-					val centerYAxis = size.height / 2
 					val spikesGap = 1.dp.toPx()
+
+					val centerYAxis = size.height / 2
 					val strokeWidth = spikesWidth - spikesGap
 
-					val spikes = mutableListOf<Pair<Offset, Offset>>()
+					val spikes = mutableListOf<Postitions>()
 					val dots = mutableListOf<Offset>()
 
 					amplitudes.forEachIndexed { idx, value ->
-						val xAxis = spikesWidth * idx.toFloat()
-						val start = Offset(xAxis, centerYAxis * (1 - value))
-						val end = Offset(xAxis, centerYAxis * (1 + value))
+						val scaleValue = value * .85f
+						val xAxis = (spikesWidth + spikesGap) * idx.toFloat()
+						val start = Offset(xAxis, centerYAxis * (1 - scaleValue))
+						val end = Offset(xAxis, centerYAxis * (1 + scaleValue))
 						if (start.y != end.y) spikes.add(Pair(start, end))
 						else dots.add(start)
 					}
@@ -72,7 +79,7 @@ fun RecorderAmplitudeGraph(
 							points = dots,
 							pointMode = PointMode.Points,
 							color = barColor,
-							strokeWidth = 2.dp.toPx()
+							strokeWidth = strokeWidth
 						)
 					}
 				},
@@ -85,9 +92,7 @@ fun RecorderAmplitudeGraph(
 private fun RecorderAmplitudeGraphPreview() = RecorderAppTheme {
 	RecorderAmplitudeGraph(
 		amplitudes = PreviewFakes.PREVIEW_RECORDER_AMPLITUDES,
-		modifier = Modifier
-			.fillMaxWidth()
-
+		modifier = Modifier.fillMaxWidth()
 	)
 }
 

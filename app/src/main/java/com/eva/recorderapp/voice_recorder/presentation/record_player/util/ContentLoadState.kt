@@ -1,7 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.util
 
 import androidx.compose.runtime.Composable
-import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 
 sealed interface ContentLoadState {
 

@@ -3,8 +3,8 @@ package com.eva.recorderapp.voice_recorder.presentation.settings.composables.aud
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
 
 val RecordQuality.strRes: String
 	@Composable

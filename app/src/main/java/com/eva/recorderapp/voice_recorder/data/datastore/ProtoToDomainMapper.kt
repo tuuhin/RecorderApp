@@ -1,10 +1,10 @@
 package com.eva.recorderapp.voice_recorder.data.datastore
 
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.AudioFileNamingFormat
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.AudioFileNamingFormat
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderAudioSettings
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderFileSettings
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
 
 fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderAudioSettings(
 	encoders = encoder.toDomain,

@@ -1,3 +1,0 @@
-package com.eva.recorderapp.voice_recorder.presentation.settings
-
-sealed interface ChangeSettingsEvent

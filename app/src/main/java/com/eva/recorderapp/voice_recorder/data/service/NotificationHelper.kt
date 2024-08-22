@@ -13,7 +13,7 @@ import com.eva.recorderapp.MainActivity
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.IntentRequestCodes
 import com.eva.recorderapp.common.NotificationConstants
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
 
 class NotificationHelper(

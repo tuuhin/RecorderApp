@@ -11,7 +11,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
 
 @Composable

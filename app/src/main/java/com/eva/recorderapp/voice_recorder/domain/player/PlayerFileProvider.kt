@@ -2,7 +2,7 @@ package com.eva.recorderapp.voice_recorder.domain.player
 
 import android.net.Uri
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import kotlinx.coroutines.flow.Flow
 
 typealias ResourcedDetailedRecordingModel = Resource<AudioFileModel, Exception>

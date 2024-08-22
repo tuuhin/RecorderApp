@@ -3,8 +3,8 @@ package com.eva.recorderapp.voice_recorder.data.recorder
 import android.media.MediaFormat
 import android.media.MediaRecorder.AudioEncoder
 import android.media.MediaRecorder.OutputFormat
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
-import com.eva.recorderapp.voice_recorder.domain.recorder.RecordEncoderAndFormat
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
+import com.eva.recorderapp.voice_recorder.domain.recorder.models.RecordEncoderAndFormat
 
 object RecordFormats {
 

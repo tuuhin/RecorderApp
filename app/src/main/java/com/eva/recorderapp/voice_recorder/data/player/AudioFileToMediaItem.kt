@@ -3,7 +3,7 @@ package com.eva.recorderapp.voice_recorder.data.player
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 
 internal fun AudioFileModel.toMediaItem(): MediaItem {
 	// adding much of the metadata available from audiofile

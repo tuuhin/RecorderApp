@@ -12,9 +12,9 @@ import androidx.lifecycle.lifecycleScope
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.common.NotificationConstants
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf

@@ -1,8 +1,8 @@
 package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
-import com.eva.recorderapp.voice_recorder.data.database.RecorderDataBase
-import com.eva.recorderapp.voice_recorder.data.database.TrashFilesMetaDataDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.RecorderDataBase
+import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFilesMetaDataDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

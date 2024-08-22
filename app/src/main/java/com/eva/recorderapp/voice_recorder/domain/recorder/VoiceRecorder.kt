@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.domain.recorder
 
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalTime

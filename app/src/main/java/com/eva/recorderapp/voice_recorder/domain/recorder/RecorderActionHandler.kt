@@ -1,7 +1,7 @@
 package com.eva.recorderapp.voice_recorder.domain.recorder
 
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 
 interface RecorderActionHandler {
 

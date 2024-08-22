@@ -1,5 +1,8 @@
 package com.eva.recorderapp.voice_recorder.domain.datastore.models
 
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
+
 data class RecorderAudioSettings(
 	val encoders: RecordingEncoders = RecordingEncoders.ACC,
 	val quality: RecordQuality = RecordQuality.NORMAL,

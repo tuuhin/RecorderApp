@@ -21,7 +21,7 @@ import androidx.work.workDataOf
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.files.TrashRecordingsProvider
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers

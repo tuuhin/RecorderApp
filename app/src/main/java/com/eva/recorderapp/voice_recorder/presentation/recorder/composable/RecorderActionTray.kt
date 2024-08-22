@@ -35,8 +35,8 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderAction
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.presentation.recorder.util.RecorderActionMode
 
 @Composable

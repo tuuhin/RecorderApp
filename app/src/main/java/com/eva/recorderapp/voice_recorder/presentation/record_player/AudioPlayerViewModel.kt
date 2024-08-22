@@ -7,10 +7,10 @@ import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.data.player.AudioAmplitudeReader
 import com.eva.recorderapp.voice_recorder.data.player.MediaControllerProvider
-import com.eva.recorderapp.voice_recorder.domain.files.RecordingsActionHelper
-import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ControllerEvents

@@ -5,9 +5,9 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderAudioSettings
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.coroutines.flow.Flow

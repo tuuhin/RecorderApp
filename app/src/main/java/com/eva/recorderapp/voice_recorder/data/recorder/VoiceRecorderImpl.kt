@@ -9,13 +9,13 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
-import com.eva.recorderapp.voice_recorder.domain.emums.RecorderState
-import com.eva.recorderapp.voice_recorder.domain.recorder.RecordEncoderAndFormat
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
+import com.eva.recorderapp.voice_recorder.domain.recorder.models.RecordEncoderAndFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async

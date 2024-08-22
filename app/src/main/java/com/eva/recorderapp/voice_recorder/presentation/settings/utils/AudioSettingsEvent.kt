@@ -1,7 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.settings.utils
 
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordQuality
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
 
 sealed interface AudioSettingsEvent {
 

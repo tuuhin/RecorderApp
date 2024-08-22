@@ -1,11 +1,14 @@
 package com.eva.recorderapp.voice_recorder.presentation.util
 
-import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
-import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
@@ -25,7 +28,8 @@ object PreviewFakes {
 
 	val PREVIEW_RECORDER_AMPLITUDES = List(80) { Random(it).nextFloat() }.toImmutableList()
 
-	val FAKE_AUDIO_INFORMATION = AudioPlayerInformation(waveforms = PlayerGraphInfo(waves = PREVIEW_RECORDER_AMPLITUDES))
+	val FAKE_AUDIO_INFORMATION =
+		AudioPlayerInformation(waveforms = PlayerGraphInfo(waves = PREVIEW_RECORDER_AMPLITUDES))
 
 	val FAKE_VOICE_RECORDING_MODEL = RecordedVoiceModel(
 		id = 0L,
@@ -63,8 +67,12 @@ object PreviewFakes {
 		fileUri = "",
 	)
 
+	val FAKE_TRASH_RECORDINGS_EMPTY = persistentListOf<SelectableTrashRecordings>()
+
 	val FAKE_TRASH_RECORDINGS_MODELS = List(10) { FAKE_TRASH_RECORDINGS_MODEL }
 		.toSelectableRecordings().toImmutableList()
+
+	val FAKE_VOICE_RECORDINGS_EMPTY = persistentListOf<SelectableRecordings>()
 
 	val FAKE_VOICE_RECORDING_MODELS = List(10) { FAKE_VOICE_RECORDING_MODEL }
 		.toSelectableRecordings()
