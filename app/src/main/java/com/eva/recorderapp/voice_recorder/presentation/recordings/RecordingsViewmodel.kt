@@ -5,10 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
-import com.eva.recorderapp.voice_recorder.domain.files.RecordingsActionHelper
-import com.eva.recorderapp.voice_recorder.domain.files.TrashRecordingsProvider
-import com.eva.recorderapp.voice_recorder.domain.files.VoiceRecordingsProvider
-import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
+import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RenameRecordingEvents
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RecordingsSortInfo
@@ -143,17 +143,13 @@ class RecordingsViewmodel @Inject constructor(
 	private fun sortedResults(
 		recordings: List<SelectableRecordings>,
 		sortInfo: RecordingsSortInfo
-	): List<SelectableRecordings> {
-		val sortOptionResult = when (sortInfo.options) {
-			SortOptions.DATE_CREATED -> recordings.sortedBy { it.recoding.recordedAt }
-			SortOptions.DURATION -> recordings.sortedBy { it.recoding.duration }
-			SortOptions.NAME -> recordings.sortedBy { it.recoding.displayName }
-		}
-		return when (sortInfo.order) {
-			SortOrder.ASC -> sortOptionResult
-			SortOrder.DESC -> sortOptionResult.reversed()
-		}
+	): List<SelectableRecordings> = when (sortInfo.options) {
+		SortOptions.DATE_CREATED -> recordings.sortSelector(sortInfo.order) { it.recoding.recordedAt }
+		SortOptions.DURATION -> recordings.sortSelector(sortInfo.order) { it.recoding.duration }
+		SortOptions.NAME -> recordings.sortSelector(sortInfo.order) { it.recoding.displayName }
+		SortOptions.SIZE -> recordings.sortSelector(sortInfo.order) { it.recoding.sizeInBytes }
 	}
+
 
 	private fun onTrashSelectedRecordings() {
 
@@ -234,4 +230,16 @@ class RecordingsViewmodel @Inject constructor(
 		}
 	}
 
+}
+
+private fun <T, R> Iterable<T>.sortSelector(
+	sortOrder: SortOrder,
+	selector: (T) -> Comparable<R>
+): List<T> {
+	return sortedWith { a, b ->
+		when (sortOrder) {
+			SortOrder.ASC -> compareValuesBy(a, b, selector)
+			SortOrder.DESC -> compareValuesBy(b, a, selector)
+		}
+	}
 }

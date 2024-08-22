@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.models.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.datetime.format
 
@@ -76,7 +76,11 @@ fun AudioFileMetaDataSheetContent(
 		)
 		FileMetaData(
 			title = stringResource(id = R.string.audio_metadata_channel_title),
-			text = "Mono ${audio.channel}"
+			text = stringResource(
+				id = if (audio.channel == 1) R.string.audio_metadata_channel_mono
+				else R.string.audio_metadata_channel_stereo
+			)
+
 		)
 		FileMetaData(
 			title = stringResource(id = R.string.audio_metadata_bitrate_title),

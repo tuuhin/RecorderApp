@@ -2,7 +2,7 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import com.eva.recorderapp.voice_recorder.data.recordings.database.RecorderDataBase
-import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFilesMetaDataDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,5 +24,5 @@ object RecorderDataBaseModule {
 	@Singleton
 	fun providesTrashDataDao(
 		dataBase: RecorderDataBase
-	): TrashFilesMetaDataDao = dataBase.trashMetadataEntityDao()
+	): TrashFileDao = dataBase.trashMetadataEntityDao()
 }

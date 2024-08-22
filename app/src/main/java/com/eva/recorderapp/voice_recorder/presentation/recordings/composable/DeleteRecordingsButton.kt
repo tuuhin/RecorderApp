@@ -7,8 +7,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -27,10 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.data.files.RecordingsUtils
+import com.eva.recorderapp.voice_recorder.data.recordings.files.RecordingsUtils
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import kotlinx.collections.immutable.ImmutableList
 
@@ -101,7 +100,7 @@ fun DeleteRecordingsButton(
 			},
 			icon = {
 				Icon(
-					imageVector = Icons.Outlined.Delete,
+					painter = painterResource(id = R.drawable.ic_delete),
 					contentDescription = stringResource(R.string.recording_action_delete)
 				)
 			},
@@ -116,7 +115,7 @@ fun DeleteRecordingsButton(
 		elevation = elevation
 	) {
 		Icon(
-			imageVector = Icons.Outlined.Delete,
+			painter = painterResource(id = R.drawable.ic_delete),
 			contentDescription = stringResource(id = R.string.recording_action_delete)
 		)
 		Spacer(modifier = Modifier.width(6.dp))

@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -31,7 +32,7 @@ import com.eva.recorderapp.R
 import com.eva.recorderapp.common.LocalTimeFormats.NOTIFICATION_TIMER_TIME_FORMAT
 import com.eva.recorderapp.common.LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.datetime.format
 
@@ -44,9 +45,8 @@ fun RecordingCard(
 	modifier: Modifier = Modifier,
 	isSelectable: Boolean = false,
 	isSelected: Boolean = false,
-	shape: Shape = MaterialTheme.shapes.medium,
+	shape: Shape = MaterialTheme.shapes.large,
 ) {
-
 	val clickModifier = if (isSelectable)
 		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selcted")
 	else Modifier.combinedClickable(
@@ -74,25 +74,28 @@ fun RecordingCard(
 				.fillMaxWidth()
 				.padding(all = dimensionResource(id = R.dimen.card_padding)),
 		) {
-			Crossfade(targetState = isSelectable) { showSelectOption ->
-				if (showSelectOption) {
+			Crossfade(
+				targetState = isSelectable,
+				animationSpec = tween(durationMillis = 400),
+				modifier = Modifier.padding(8.dp)
+			) { showSelectOption ->
+				if (showSelectOption)
 					RadioButton(
 						selected = isSelected,
 						onClick = onItemSelect,
 						colors = RadioButtonDefaults
-							.colors(selectedColor = MaterialTheme.colorScheme.secondary)
+							.colors(selectedColor = MaterialTheme.colorScheme.secondary),
+						modifier = Modifier.size(24.dp)
 
 					)
-				} else {
+				else
 					Image(
 						painter = painterResource(id = R.drawable.ic_play_variant),
 						contentDescription = null,
-						colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.primary),
-						modifier = Modifier
-							.size(48.dp)
-							.padding(8.dp)
+						colorFilter = ColorFilter
+							.tint(color = MaterialTheme.colorScheme.primary),
 					)
-				}
+
 			}
 			Column(
 				modifier = Modifier.weight(1f),
@@ -100,8 +103,8 @@ fun RecordingCard(
 			) {
 				Text(
 					text = music.displayName,
-					style = MaterialTheme.typography.titleSmall,
-					color = MaterialTheme.colorScheme.secondary
+					style = MaterialTheme.typography.titleMedium,
+					color = MaterialTheme.colorScheme.primary
 				)
 				Row(
 					horizontalArrangement = Arrangement.SpaceBetween,
@@ -110,12 +113,11 @@ fun RecordingCard(
 				) {
 					Text(
 						text = music.durationAsLocaltime.format(NOTIFICATION_TIMER_TIME_FORMAT),
-						style = MaterialTheme.typography.bodyMedium
+						style = MaterialTheme.typography.labelLarge
 					)
 					Text(
 						text = music.recordedAt.format(RECORDING_RECORD_TIME_FORMAT),
-						style = MaterialTheme.typography.bodyMedium,
-						color = MaterialTheme.colorScheme.onSurfaceVariant
+						style = MaterialTheme.typography.bodySmall,
 					)
 				}
 			}

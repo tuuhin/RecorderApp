@@ -1,24 +1,18 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
@@ -26,7 +20,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingBinScreenTopBar
@@ -48,15 +41,14 @@ fun RecordingsBinScreen(
 	navigation: @Composable () -> Unit = {}
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
-	val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
 	val isAnySelected by remember(recordings) {
 		derivedStateOf { recordings.any { it.isSelected } }
 	}
 
-	val selectedCount by remember(recordings, isAnySelected) {
+	val selectedCount by remember(recordings) {
 		derivedStateOf {
-			if (!isAnySelected) return@derivedStateOf 0
 			recordings.filter { it.isSelected }.count()
 		}
 	}
@@ -82,39 +74,28 @@ fun RecordingsBinScreen(
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
 		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
-		Column(
-			modifier = Modifier
-				.fillMaxSize()
-				.padding(
-					paddingValues = PaddingValues(
-						start = dimensionResource(id = R.dimen.sc_padding),
-						end = dimensionResource(R.dimen.sc_padding),
-						top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
-						bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
-					)
-				), verticalArrangement = Arrangement.spacedBy(4.dp)
-		) {
-			Text(
-				text = stringResource(R.string.recording_bin_explainantion),
-				modifier = Modifier
-					.align(Alignment.CenterHorizontally)
-					.padding(vertical = 2.dp),
-				style = MaterialTheme.typography.labelMedium,
-			)
-			RecordingsInteractiveList(
-				isRecordingsLoaded = isRecordingsLoaded,
-				recordings = recordings,
-				onItemSelect = { record ->
-					onScreenEvent(TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
-				}
-			)
-		}
+
+		RecordingsInteractiveList(
+			isRecordingsLoaded = isRecordingsLoaded,
+			recordings = recordings,
+			onItemSelect = { record ->
+				onScreenEvent(TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
+			},
+			contentPadding = PaddingValues(
+				start = dimensionResource(id = R.dimen.sc_padding),
+				end = dimensionResource(R.dimen.sc_padding),
+				top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
+				bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
+			),
+			modifier = Modifier.fillMaxSize(),
+		)
 	}
 }
 
 class SelectableTrashRecordingPreviewParams :
 	CollectionPreviewParameterProvider<ImmutableList<SelectableTrashRecordings>>(
 		listOf(
+			PreviewFakes.FAKE_TRASH_RECORDINGS_EMPTY,
 			PreviewFakes.FAKE_TRASH_RECORDINGS_MODELS
 		)
 	)

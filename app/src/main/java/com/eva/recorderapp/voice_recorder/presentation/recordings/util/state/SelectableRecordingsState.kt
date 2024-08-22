@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.util.state
 
-import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 
 data class SelectableRecordings(
 	val recoding: RecordedVoiceModel,

@@ -73,6 +73,7 @@ fun RenameRecordingNameDialog(
 				Text(
 					text = stringResource(id = R.string.rename_recording_dialog_text),
 					color = AlertDialogDefaults.textContentColor,
+					style = MaterialTheme.typography.bodyMedium,
 					modifier = Modifier.padding(vertical = 6.dp),
 				)
 				OutlinedTextField(
@@ -80,6 +81,7 @@ fun RenameRecordingNameDialog(
 					onValueChange = onValueChange,
 					label = { Text(text = stringResource(id = R.string.rename_label_text)) },
 					isError = error,
+					shape = MaterialTheme.shapes.large,
 					keyboardActions = KeyboardActions(onDone = { onRename() }),
 					keyboardOptions = KeyboardOptions(
 						keyboardType = KeyboardType.Text,

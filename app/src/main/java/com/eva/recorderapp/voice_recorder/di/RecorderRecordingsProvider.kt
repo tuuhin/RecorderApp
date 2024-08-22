@@ -2,7 +2,7 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import android.os.Build
-import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFilesMetaDataDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileDao
 import com.eva.recorderapp.voice_recorder.data.recordings.files.RecordingsActionHelperImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.files.TrashRecordingsProviderApi29Impl
 import com.eva.recorderapp.voice_recorder.data.recordings.files.TrashRecordingsProviderImpl
@@ -32,7 +32,7 @@ object RecorderRecordingsProvider {
 	@Singleton
 	fun providesTrashedRecordingsProvider(
 		@ApplicationContext context: Context,
-		trashMetaData: TrashFilesMetaDataDao
+		trashMetaData: TrashFileDao
 	): TrashRecordingsProvider =
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
 			TrashRecordingsProviderImpl(context = context)

@@ -4,8 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
-import com.eva.recorderapp.voice_recorder.domain.files.TrashRecordingsProvider
-import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.TrashRecordingScreenEvent
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
@@ -109,7 +109,6 @@ class RecordingsBinViewmodel @Inject constructor(
 		}
 	}
 
-	// TODO: Promt the user that its permanent
 	private fun onPermanentDelete() {
 		val selected = _trashedRecordings.value
 			.filter(SelectableTrashRecordings::isSelected)

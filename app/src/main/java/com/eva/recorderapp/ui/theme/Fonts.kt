@@ -12,11 +12,24 @@ private val provider = GoogleFont.Provider(
 	certificates = R.array.com_google_android_gms_fonts_certs
 )
 
-private val ROBOTO_CONDENSED = GoogleFont("Roboto Condensed")
+private val REDDIT_MONO = GoogleFont("M PLUS Code Latin")
+private val NOVA_MONO = GoogleFont("Nova Mono")
 
-object DownloadableFonts{
+object DownloadableFonts {
 	val CLOCK_FACE = FontFamily(
-		Font(googleFont = ROBOTO_CONDENSED, fontProvider = provider, weight = FontWeight.SemiBold)
+		Font(
+			googleFont = REDDIT_MONO,
+			fontProvider = provider,
+			weight = FontWeight.Medium,
+		)
+	)
+
+	val NOVA_MONO_FONT_FAMILY = FontFamily(
+		Font(
+			googleFont = NOVA_MONO,
+			fontProvider = provider,
+			weight = FontWeight.Medium
+		)
 	)
 }
 

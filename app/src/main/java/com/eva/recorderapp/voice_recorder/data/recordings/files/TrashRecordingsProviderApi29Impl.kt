@@ -9,8 +9,8 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileMetaDataEntity
-import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFilesMetaDataDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toModel
 import com.eva.recorderapp.voice_recorder.data.util.toMillis
@@ -39,7 +39,7 @@ private const val TAG = "TRASH_RECORDING_PROVIDER"
 
 class TrashRecordingsProviderApi29Impl(
 	private val context: Context,
-	private val trashMediaDao: TrashFilesMetaDataDao
+	private val trashMediaDao: TrashFileDao
 ) : RecordingsUtils(context), TrashRecordingsProvider {
 
 	private val filesDir: File
@@ -48,7 +48,7 @@ class TrashRecordingsProviderApi29Impl(
 	override val trashedRecordingsFlow: Flow<ResourcedTrashRecordingModels>
 		get() = trashMediaDao.getAllTrashFilesFlow()
 			.map { entires ->
-				val result = entires.map(TrashFileMetaDataEntity::toModel)
+				val result = entires.map(TrashFileEntity::toModel)
 				Resource.Success<TrashVoiceRecordings, Nothing>(result)
 			}
 			.flowOn(Dispatchers.IO)
@@ -57,7 +57,7 @@ class TrashRecordingsProviderApi29Impl(
 		return withContext(Dispatchers.IO) {
 			try {
 				val trashedItems = trashMediaDao.getAllTrashFiles()
-					.map(TrashFileMetaDataEntity::toModel)
+					.map(TrashFileEntity::toModel)
 				Resource.Success(trashedItems)
 			} catch (e: SQLException) {
 				Resource.Error(e, "SQL EXCEPTION")
@@ -147,7 +147,7 @@ class TrashRecordingsProviderApi29Impl(
 	}
 
 
-	suspend private fun restoreRecordingsDataFromTableAndFile(entity: TrashFileMetaDataEntity): Boolean {
+	suspend private fun restoreRecordingsDataFromTableAndFile(entity: TrashFileEntity): Boolean {
 		return withContext(Dispatchers.IO) {
 			try {
 
@@ -191,7 +191,7 @@ class TrashRecordingsProviderApi29Impl(
 		}
 	}
 
-	suspend fun deleteRecordingInfoFromFileAndTable(entity: TrashFileMetaDataEntity): Boolean {
+	suspend fun deleteRecordingInfoFromFileAndTable(entity: TrashFileEntity): Boolean {
 		return withContext(Dispatchers.IO) {
 			try {
 				val file = entity.file.toUri().toFile()
@@ -213,7 +213,7 @@ class TrashRecordingsProviderApi29Impl(
 	}
 
 	suspend private fun contentValuesFromTrashMetaData(
-		trash: TrashFileMetaDataEntity,
+		trash: TrashFileEntity,
 		isNewId: Boolean = false
 	): ContentValues {
 		return ContentValues().apply {
@@ -238,7 +238,7 @@ class TrashRecordingsProviderApi29Impl(
 	}
 
 
-	suspend private fun createBackupFileForRecording(recording: RecordedVoiceModel): TrashFileMetaDataEntity {
+	suspend private fun createBackupFileForRecording(recording: RecordedVoiceModel): TrashFileEntity {
 		return withContext(Dispatchers.IO) {
 
 			val recordingUri = recording.fileUri.toUri()

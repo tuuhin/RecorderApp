@@ -24,7 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecordingEncoders
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
 
 @Composable
 fun AudioEncoderSelector(

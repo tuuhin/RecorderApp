@@ -52,6 +52,7 @@ fun PlayerDurationText(
 			text = totalDurationText,
 			style = MaterialTheme.typography.headlineMedium,
 			color = MaterialTheme.colorScheme.primary,
+			fontFamily = DownloadableFonts.NOVA_MONO_FONT_FAMILY
 		)
 	}
 }

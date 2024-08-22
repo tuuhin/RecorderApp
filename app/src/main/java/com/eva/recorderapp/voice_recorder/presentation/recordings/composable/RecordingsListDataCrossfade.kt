@@ -31,22 +31,22 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.Lis
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-fun <T> RecordingsListInformationStateCrossfade(
+fun <T> RecordingsListDataCrossfade(
 	isRecordingsLoaded: Boolean,
 	recordings: ImmutableList<T>,
 	onData: @Composable () -> Unit,
 	modifier: Modifier = Modifier,
 	isBin: Boolean = false,
 	contentPadding: PaddingValues = PaddingValues(0.dp),
-	animationSpec: FiniteAnimationSpec<Float> = tween(durationMillis = 200, easing = EaseInOut)
+	animationSpec: FiniteAnimationSpec<Float> = tween(durationMillis = 600, easing = EaseInOut)
 ) {
 
 	val listInfoState by remember(isRecordingsLoaded, recordings) {
 		derivedStateOf {
 			when {
-				isRecordingsLoaded && recordings.isEmpty() -> ListInformationState.EMPTY
-				isRecordingsLoaded && recordings.isNotEmpty() -> ListInformationState.DATA
-				else -> ListInformationState.LOADING
+				!isRecordingsLoaded -> ListInformationState.LOADING
+				recordings.isNotEmpty() -> ListInformationState.DATA
+				else -> ListInformationState.EMPTY
 			}
 		}
 	}
@@ -54,23 +54,21 @@ fun <T> RecordingsListInformationStateCrossfade(
 	Crossfade(
 		targetState = listInfoState,
 		animationSpec = animationSpec,
-		modifier = modifier,
+		modifier = modifier.padding(contentPadding),
 	) { state ->
 		when (state) {
-			ListInformationState.LOADING -> Box(
-				modifier = Modifier
-					.fillMaxSize()
-					.padding(contentPadding),
-				contentAlignment = Alignment.Center
-			) {
-				CircularProgressIndicator()
+			ListInformationState.LOADING -> {
+				Box(
+					modifier = Modifier.fillMaxSize(),
+					contentAlignment = Alignment.Center,
+				) {
+					CircularProgressIndicator()
+				}
 			}
 
 			ListInformationState.EMPTY -> {
 				Column(
-					modifier = Modifier
-						.fillMaxSize()
-						.padding(contentPadding),
+					modifier = Modifier.fillMaxSize(),
 					verticalArrangement = Arrangement.Center,
 					horizontalAlignment = Alignment.CenterHorizontally
 				) {
@@ -84,8 +82,8 @@ fun <T> RecordingsListInformationStateCrossfade(
 					Spacer(modifier = Modifier.height(20.dp))
 					Text(
 						text = stringResource(id = R.string.no_recodings),
-						style = MaterialTheme.typography.bodyLarge,
-						color = MaterialTheme.colorScheme.onBackground
+						style = MaterialTheme.typography.titleMedium,
+						color = MaterialTheme.colorScheme.tertiary
 					)
 				}
 			}

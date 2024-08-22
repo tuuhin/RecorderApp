@@ -57,8 +57,8 @@ fun SortOptionsSheetContent(
 						.colors(selectedColor = MaterialTheme.colorScheme.secondary)
 				)
 				Text(
-					text = stringResource(id = option.res),
-					style = MaterialTheme.typography.bodyMedium
+					text = option.strRes,
+					style = MaterialTheme.typography.bodyLarge
 				)
 			}
 		}
@@ -73,7 +73,7 @@ fun SortOptionsSheetContent(
 		SortOrder.entries.forEach { order ->
 			Row(
 				verticalAlignment = Alignment.CenterVertically,
-				modifier =  Modifier
+				modifier = Modifier
 					.fillMaxWidth()
 					.clip(MaterialTheme.shapes.medium)
 					.clickable { onSortOrderChange(order) }
@@ -85,8 +85,8 @@ fun SortOptionsSheetContent(
 						.colors(selectedColor = MaterialTheme.colorScheme.secondary)
 				)
 				Text(
-					text = stringResource(id = order.res),
-					style = MaterialTheme.typography.bodyMedium
+					text = order.strResource,
+					style = MaterialTheme.typography.bodyLarge
 				)
 			}
 		}

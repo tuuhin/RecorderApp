@@ -113,7 +113,7 @@ fun AudioPlayerActions(
 					onClick = onRewind,
 				)
 				AnimatedPlayPauseButton(
-					isPlaying = playerMetaData.playerState == PlayerState.PLAYING,
+					isPlaying = playerMetaData.isPlaying,
 					onPause = onPause,
 					onPlay = onPlay
 				)
@@ -137,7 +137,7 @@ fun AudioPlayerActions(
 @Composable
 private fun AudioPlayerActionsPreview() = RecorderAppTheme {
 	AudioPlayerActions(
-		playerMetaData = PlayerMetaData(playerState = PlayerState.PLAYING),
+		playerMetaData = PlayerMetaData(playerState = PlayerState.PLAYER_READY),
 		onPlay = {},
 		onPause = {},
 	)

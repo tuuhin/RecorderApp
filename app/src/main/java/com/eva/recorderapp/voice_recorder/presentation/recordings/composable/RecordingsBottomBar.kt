@@ -97,7 +97,7 @@ fun RecordingsBottomBar(
 			floatingActionButton = {
 				TrashSelectedRecordingsButton(
 					recordings = recordings,
-					onDelete = onItemDelete
+					onLegacyDelete = onItemDelete
 				)
 			},
 			tonalElevation = 2.dp,

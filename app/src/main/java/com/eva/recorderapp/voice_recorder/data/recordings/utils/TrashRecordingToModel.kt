@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.data.recordings.utils
 
-import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileMetaDataEntity
+import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileEntity
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import kotlinx.datetime.Clock
@@ -9,7 +9,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Duration.Companion.days
 
-fun TrashRecordingModel.toEntity() = TrashFileMetaDataEntity(
+fun TrashRecordingModel.toEntity() = TrashFileEntity(
 	id = id,
 	title = title,
 	displayName = displayName,
@@ -19,7 +19,7 @@ fun TrashRecordingModel.toEntity() = TrashFileMetaDataEntity(
 	file = fileUri
 )
 
-fun TrashFileMetaDataEntity.toModel() = TrashRecordingModel(
+fun TrashFileEntity.toModel() = TrashRecordingModel(
 	id = id,
 	title = title,
 	displayName = displayName,
@@ -30,7 +30,7 @@ fun TrashFileMetaDataEntity.toModel() = TrashRecordingModel(
 		.toLocalDateTime(TimeZone.currentSystemDefault())
 )
 
-fun RecordedVoiceModel.toEntity(expires: LocalDateTime, fileUri: String) = TrashFileMetaDataEntity(
+fun RecordedVoiceModel.toEntity(expires: LocalDateTime, fileUri: String) = TrashFileEntity(
 	id = id,
 	title = title,
 	displayName = displayName,

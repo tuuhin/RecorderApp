@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.common.LocalTimeFormats
+import com.eva.recorderapp.ui.theme.DownloadableFonts
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
 import kotlinx.datetime.format
@@ -38,19 +39,15 @@ fun PlayerSlider(
 
 	val currentReadable by remember(track.current) {
 		derivedStateOf {
-			track.currentAsLocalTime.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
+			track.currentAsLocalTime
+				.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
 		}
 	}
 
 	val negativeTimeReadable by remember(track.current, track.total) {
 		derivedStateOf {
-			val durationText = track.leftDurationAsLocalTime
+			track.leftDurationAsLocalTime
 				.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
-
-			return@derivedStateOf buildString {
-				append("- ")
-				append(durationText)
-			}
 		}
 	}
 
@@ -64,12 +61,14 @@ fun PlayerSlider(
 			Text(
 				text = currentReadable,
 				color = MaterialTheme.colorScheme.secondary,
-				style = MaterialTheme.typography.titleSmall
+				style = MaterialTheme.typography.titleSmall,
+				fontFamily = DownloadableFonts.NOVA_MONO_FONT_FAMILY
 			)
 			Text(
 				text = negativeTimeReadable,
 				style = MaterialTheme.typography.titleSmall,
-				color = MaterialTheme.colorScheme.tertiary
+				color = MaterialTheme.colorScheme.tertiary,
+				fontFamily = DownloadableFonts.NOVA_MONO_FONT_FAMILY
 			)
 		}
 		Slider(

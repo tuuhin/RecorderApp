@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsBottomBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsInteractiveList
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsScreenTopBar
@@ -41,7 +41,6 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.Sel
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,16 +58,15 @@ fun RecordingsScreen(
 	navigation: @Composable () -> Unit = {},
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
-	val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
 	val isAnySelected by remember(recordings) {
-		derivedStateOf { recordings.any { it.isSelected } }
+		derivedStateOf { recordings.any(SelectableRecordings::isSelected) }
 	}
 
-	val selectedCount by remember(recordings, isAnySelected) {
+	val selectedCount by remember(recordings) {
 		derivedStateOf {
-			if (!isAnySelected) return@derivedStateOf 0
-			recordings.filter { it.isSelected }.count()
+			recordings.filter(SelectableRecordings::isSelected).count()
 		}
 	}
 
@@ -77,7 +75,7 @@ fun RecordingsScreen(
 	}
 
 	var showSheet by remember { mutableStateOf(false) }
-	val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+	val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
 	val scope = rememberCoroutineScope()
 
@@ -109,13 +107,11 @@ fun RecordingsScreen(
 				onUnSelectAll = { onScreenEvent(RecordingScreenEvent.OnUnSelectAllRecordings) },
 				onSelectAll = { onScreenEvent(RecordingScreenEvent.OnSelectAllRecordings) },
 				onSortItems = {
-					scope.launch {
-						sheetState.show()
-					}.invokeOnCompletion {
-						showSheet = true
-					}
+					scope.launch { sheetState.show() }
+						.invokeOnCompletion {
+							showSheet = true
+						}
 				},
-
 				onNavigateToBin = onNavigateToBin,
 				scrollBehavior = scrollBehavior
 			)
@@ -154,7 +150,7 @@ fun RecordingsScreen(
 class SelectedRecordingsPreviewParams :
 	CollectionPreviewParameterProvider<ImmutableList<SelectableRecordings>>(
 		listOf(
-			persistentListOf(),
+			PreviewFakes.FAKE_VOICE_RECORDINGS_EMPTY,
 			PreviewFakes.FAKE_VOICE_RECORDING_MODELS,
 			PreviewFakes.FAKE_VOICE_RECORDINGS_SELECTED
 		)

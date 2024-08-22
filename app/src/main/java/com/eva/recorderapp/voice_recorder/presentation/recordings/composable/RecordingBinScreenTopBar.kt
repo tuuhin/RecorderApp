@@ -1,13 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
-import androidx.compose.animation.shrinkOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DoneAll
@@ -15,11 +8,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -46,31 +39,13 @@ fun RecordingBinScreenTopBar(
 ) {
 	AnimatedContent(
 		targetState = isSelectedMode,
-		transitionSpec = {
-
-			val enterIn = expandIn(
-				animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
-				expandFrom = Alignment.TopCenter
-			) + slideInVertically(
-				animationSpec = tween(durationMillis = 400),
-				initialOffsetY = { height -> height },
-			)
-
-			val exitOut = shrinkOut(
-				animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
-				shrinkTowards = Alignment.TopCenter
-			) + slideOutVertically(
-				animationSpec = tween(durationMillis = 400),
-				targetOffsetY = { height -> -height },
-			)
-			enterIn togetherWith exitOut
-		},
+		transitionSpec = { animateTopbar() },
 		label = "Selectable Topbar animation",
 		contentAlignment = Alignment.TopCenter,
 		modifier = modifier,
 	) { isSelected ->
 		if (isSelected) {
-			TopAppBar(
+			MediumTopAppBar(
 				title = {
 					Text(text = stringResource(R.string.selected_recording_count, selectedCount))
 				},
@@ -115,7 +90,7 @@ fun RecordingBinScreenTopBar(
 				)
 			)
 		} else {
-			TopAppBar(
+			MediumTopAppBar(
 				title = { Text(text = stringResource(id = R.string.recording_bin_top_bar_title)) },
 				scrollBehavior = scrollBehavior,
 				navigationIcon = navigation,

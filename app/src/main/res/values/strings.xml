@@ -125,4 +125,6 @@
   <string name="storage_statistics_used">Used</string>
   <string name="audio_metadata_channel_mono">Mono</string>
   <string name="audio_metadata_channel_stereo">Stereo</string>
+  <string name="sort_option_size">File Size</string>
+  <string name="extras_info">Extra information</string>
 </resources>

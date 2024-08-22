@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.models.TrashRecordingModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.datetime.format
 
@@ -41,7 +41,7 @@ fun TrashRecordingsCard(
 	modifier: Modifier = Modifier,
 	isSelectable: Boolean = false,
 	isSelected: Boolean = false,
-	shape: Shape = MaterialTheme.shapes.medium,
+	shape: Shape = MaterialTheme.shapes.large,
 ) {
 
 	val context = LocalContext.current
@@ -92,12 +92,12 @@ fun TrashRecordingsCard(
 			) {
 				Text(
 					text = trashRecording.displayName,
-					style = MaterialTheme.typography.titleSmall,
-					color = MaterialTheme.colorScheme.secondary
+					style = MaterialTheme.typography.titleMedium,
+					color = MaterialTheme.colorScheme.primary
 				)
 				Text(
 					text = expiryDateText,
-					style = MaterialTheme.typography.bodyMedium,
+					style = MaterialTheme.typography.bodySmall,
 					modifier = Modifier.align(Alignment.End)
 				)
 
