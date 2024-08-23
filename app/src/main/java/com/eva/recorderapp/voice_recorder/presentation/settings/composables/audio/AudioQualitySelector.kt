@@ -34,9 +34,8 @@ fun AudioQualitySelector(
 	quality: RecordQuality,
 	onQualityChanged: (RecordQuality) -> Unit,
 	modifier: Modifier = Modifier,
-	contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp)
+	contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-
 	Column(
 		modifier = modifier
 			.wrapContentHeight()

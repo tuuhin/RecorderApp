@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -29,7 +29,7 @@ import com.eva.recorderapp.voice_recorder.presentation.settings.composables.Sett
 import com.eva.recorderapp.voice_recorder.presentation.settings.composables.audio.AudioSettings
 import com.eva.recorderapp.voice_recorder.presentation.settings.composables.files.FileSettings
 import com.eva.recorderapp.voice_recorder.presentation.settings.utils.AudioSettingsEvent
-import com.eva.recorderapp.voice_recorder.presentation.settings.utils.FileSettingsEvent
+import com.eva.recorderapp.voice_recorder.presentation.settings.utils.FileSettingsChangeEvent
 import com.eva.recorderapp.voice_recorder.presentation.settings.utils.SettingsTabs
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 
@@ -38,7 +38,7 @@ import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvide
 fun AudioSettingsScreen(
 	audioSettings: RecorderAudioSettings,
 	fileSettings: RecorderFileSettings,
-	onFileSettingsChange: (FileSettingsEvent) -> Unit,
+	onFileSettingsChange: (FileSettingsChangeEvent) -> Unit,
 	onAudioSettingsChange: (AudioSettingsEvent) -> Unit,
 	modifier: Modifier = Modifier,
 	initialTab: SettingsTabs = SettingsTabs.AUDIO_SETTINGS,
@@ -56,7 +56,10 @@ fun AudioSettingsScreen(
 				navigationIcon = navigation,
 				actions = {
 					IconButton(onClick = onNavigateToInfo) {
-						Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
+						Icon(
+							painter = painterResource(id = R.drawable.ic_info),
+							contentDescription = stringResource(R.string.extras_info)
+						)
 					}
 				}
 			)
@@ -69,21 +72,24 @@ fun AudioSettingsScreen(
 			audioSettings = {
 				AudioSettings(
 					settings = audioSettings,
-					onEvent = onAudioSettingsChange
+					onEvent = onAudioSettingsChange,
+					contentPadding = PaddingValues(
+						horizontal = dimensionResource(R.dimen.sc_padding),
+						vertical = dimensionResource(R.dimen.sc_padding_secondary),
+					),
 				)
 			},
 			filesSettings = {
 				FileSettings(
 					settings = fileSettings,
-					onEvent = onFileSettingsChange
+					onEvent = onFileSettingsChange,
+					contentPadding = PaddingValues(
+						horizontal = dimensionResource(R.dimen.sc_padding),
+						vertical = dimensionResource(R.dimen.sc_padding_secondary),
+					),
 				)
 			},
-			contentPadding = PaddingValues(
-				start = dimensionResource(R.dimen.sc_padding),
-				end = dimensionResource(R.dimen.sc_padding),
-				top = scPadding.calculateTopPadding(),
-				bottom = scPadding.calculateBottomPadding()
-			),
+			contentPadding = scPadding,
 			modifier = Modifier.fillMaxSize(),
 		)
 	}

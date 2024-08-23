@@ -4,7 +4,7 @@ import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
 
 data class RecorderAudioSettings(
-	val encoders: RecordingEncoders = RecordingEncoders.ACC,
+	val encoders: RecordingEncoders = RecordingEncoders.MP3,
 	val quality: RecordQuality = RecordQuality.NORMAL,
 	val blockCallsDuringRecording: Boolean = false,
 	val skipSilences: Boolean = false,

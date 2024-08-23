@@ -106,7 +106,7 @@
   <string name="recording_settings_encoder_acc_text">Good qaulity with smaller file size</string>
   <string name="recording_settings_encoder_mpeg_text">Good quality at same bitrate with large file size</string>
   <string name="recording_settings_encoder_acc">.m4a</string>
-  <string name="recording_settings_encoder_amr">.amr</string>
+  <string name="recording_settings_encoder_three_gpp">.3gpp</string>
   <string name="recording_settings_skip_silences_title">Skip Silences</string>
   <string name="recording_settings_skip_silences_text">Skip silences while recording</string>
   <string name="recording_settings_enable_stereo">Stereo</string>
@@ -116,8 +116,8 @@
   <string name="app_settings_common">Settings</string>
   <string name="recording_settings_file_format_title">File Naming</string>
   <string name="recording_settings_file_format_text">Pick a naming stategy file names, for now it can be either the current time or a count</string>
-  <string name="recording_settings_name_format_date_time">%s 2022–12–31–00:00:00</string>
-  <string name="recording_settings_name_format_count">%s 001</string>
+  <string name="recording_settings_name_format_date_time">%s_2022–12–31–00:00:00</string>
+  <string name="recording_settings_name_format_count">%s_001</string>
   <string name="recording_settings_block_calls">Block Calls</string>
   <string name="recording_settings_block_calls_text">Block Incomming calls while recording</string>
   <string name="storage_statistics">Storage</string>
@@ -127,4 +127,10 @@
   <string name="audio_metadata_channel_stereo">Stereo</string>
   <string name="sort_option_size">File Size</string>
   <string name="extras_info">Extra information</string>
+  <string name="turn_off_optimization">Its recommended to turn off battery optimization to run the recorder without any interuptions</string>
+  <string name="cannot_launch_activity">Cannot launch this intent</string>
+  <string name="recording_settings_encoder_amr_wb">.awb</string>
+  <string name="rename_recording_prefix_title">Rename Prefix</string>
+  <string name="rename_recording_prefix_text">Changing the prefix will add this text as prefix to each of the recording</string>
+  <string name="recording_settings_change_name_prefix">Naming Prefix</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.settings.composables.audio
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,12 +24,18 @@ import com.eva.recorderapp.voice_recorder.presentation.settings.utils.AudioSetti
 @Composable
 fun AudioSettings(
 	settings: RecorderAudioSettings,
-	onEvent: (AudioSettingsEvent) -> Unit, modifier: Modifier = Modifier
+	onEvent: (AudioSettingsEvent) -> Unit,
+	modifier: Modifier = Modifier,
+	contentPadding: PaddingValues = PaddingValues(12.dp)
 ) {
 	LazyColumn(
 		modifier = modifier.fillMaxSize(),
+		contentPadding = contentPadding,
 		verticalArrangement = Arrangement.spacedBy(8.dp)
 	) {
+		item {
+			IgnoreBatteryOptimizationCard(modifier = Modifier.animateItem())
+		}
 		item {
 			AudioEncoderSelector(
 				encoder = settings.encoders,
@@ -66,13 +73,15 @@ fun AudioSettings(
 						contentDescription = stringResource(id = R.string.recording_settings_skip_silences_title),
 					)
 				},
-				onSelect = { onEvent(AudioSettingsEvent.OnSkipSilencesChange(it)) },
-
-				)
+				onSelect = {
+					onEvent(AudioSettingsEvent.OnSkipSilencesChange(it))
+				},
+			)
 		}
 		item {
 			SettingsItemWithSwitch(
 				isSelected = settings.blockCallsDuringRecording,
+				enabled = false,
 				title = stringResource(id = R.string.recording_settings_block_calls),
 				text = stringResource(id = R.string.recording_settings_block_calls_text),
 				leading = {

@@ -19,8 +19,8 @@ enum RecorderQualityProto{
 }
 
 enum RecorderEncodingFormatsProto{
-  ENCODER_ACC = 0;
+  ENCODER_MP3 = 0;
   ENCODER_AMR_NB = 1;
   ENCODER_AMR_WB = 2;
-  ENCODER_MPEG = 3;
+  ENCODER_M4A = 3;
 }

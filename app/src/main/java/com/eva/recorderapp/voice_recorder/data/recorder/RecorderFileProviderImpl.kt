@@ -91,7 +91,11 @@ class RecorderFileProviderImpl(
 			}
 
 			// file name
-			val fileName = "$name\\_$identifier"
+			val fileName = buildString {
+				append(name)
+				append("_")
+				append(identifier)
+			}
 
 			val metaData = ContentValues().apply {
 				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, musicDir)

@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.presentation.settings.composables.audio
+package com.eva.recorderapp.voice_recorder.presentation.settings.composables.files
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -24,58 +25,54 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncoders
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.AudioFileNamingFormat
 
 @Composable
-fun AudioEncoderSelector(
-	encoder: RecordingEncoders,
-	onEncoderChange: (RecordingEncoders) -> Unit,
+fun FileNamingFormat(
+	prefix: String,
+	format: AudioFileNamingFormat,
+	onFormatChange: (AudioFileNamingFormat) -> Unit,
 	modifier: Modifier = Modifier,
-	padding: PaddingValues = PaddingValues(0.dp)
+	padding: PaddingValues = PaddingValues(16.dp),
 ) {
 	Column(
-		modifier = modifier.padding(padding),
+		modifier = modifier
+			.wrapContentHeight()
+			.padding(padding),
 	) {
 		Text(
-			text = stringResource(id = R.string.recording_settings_encoder_title),
+			text = stringResource(id = R.string.recording_settings_file_format_title),
 			style = MaterialTheme.typography.titleMedium,
 			color = MaterialTheme.colorScheme.onBackground
 		)
 		Spacer(modifier = Modifier.height(4.dp))
 		Text(
-			text = stringResource(id = R.string.recording_settings_encoder_text),
+			text = stringResource(id = R.string.recording_settings_file_format_text),
 			style = MaterialTheme.typography.bodyMedium,
 			color = MaterialTheme.colorScheme.onSurfaceVariant
 		)
 		Column(
 			verticalArrangement = Arrangement.spacedBy(2.dp)
 		) {
-			RecordingEncoders.entries.forEach { entry ->
+			AudioFileNamingFormat.entries.forEach { displayFormat ->
 				Row(
 					modifier = Modifier
 						.fillMaxWidth()
 						.clip(MaterialTheme.shapes.medium)
-						.clickable(role = Role.RadioButton, onClick = { onEncoderChange(entry) }),
+						.clickable(role = Role.RadioButton) { onFormatChange(displayFormat) },
 					verticalAlignment = Alignment.CenterVertically
 				) {
 					RadioButton(
-						selected = entry == encoder,
-						onClick = { onEncoderChange(entry) },
+						selected = displayFormat == format,
+						onClick = { onFormatChange(displayFormat) },
 						colors = RadioButtonDefaults
-							.colors(selectedColor = MaterialTheme.colorScheme.secondary),
+							.colors(selectedColor = MaterialTheme.colorScheme.secondary)
 					)
-
-					Column {
-						Text(
-							text = entry.titleStrRes,
-							style = MaterialTheme.typography.labelLarge
-						)
-						Text(
-							text = entry.descriptionStrRes,
-							style = MaterialTheme.typography.labelSmall,
-							color = MaterialTheme.colorScheme.onSurfaceVariant
-						)
-					}
+					Text(
+						text = displayFormat.stringRes(prefix),
+						style = MaterialTheme.typography.labelLarge,
+						color = MaterialTheme.colorScheme.onBackground
+					)
 				}
 			}
 		}
@@ -84,11 +81,13 @@ fun AudioEncoderSelector(
 
 @PreviewLightDark
 @Composable
-private fun AudioEncoderSelectorPreview() = RecorderAppTheme {
+private fun FileNamingFormatSelectorPickerPreview() = RecorderAppTheme {
 	Surface {
-		AudioEncoderSelector(
-			encoder = RecordingEncoders.MP3,
-			onEncoderChange = {}
+		FileNamingFormat(
+			prefix = "Voice_",
+			format = AudioFileNamingFormat.COUNT,
+			onFormatChange = {},
+			padding = PaddingValues(10.dp)
 		)
 	}
 }

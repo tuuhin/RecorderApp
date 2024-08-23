@@ -10,10 +10,12 @@ fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderAudioSetti
 	encoders = encoder.toDomain,
 	quality = quality.toDomain,
 	blockCallsDuringRecording = blockIncommingCalls,
+	enableStero = isStereoMode,
+	skipSilences = skipSilences
 )
 
 fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSettings(
-	name = namingStyle,
+	name = prefix,
 	format = format.toDomain
 )
 
@@ -27,16 +29,16 @@ val RecorderQualityProto.toDomain: RecordQuality
 
 val NamingFormatProto.toDomain: AudioFileNamingFormat
 	get() = when (this) {
-		NamingFormatProto.FORMAAT_VIA_DATE -> AudioFileNamingFormat.DATE_TIME
+		NamingFormatProto.FORMAT_VIA_DATE -> AudioFileNamingFormat.DATE_TIME
 		NamingFormatProto.FORMAT_VIA_COUNT -> AudioFileNamingFormat.COUNT
 		NamingFormatProto.UNRECOGNIZED -> AudioFileNamingFormat.DATE_TIME
 	}
 
 val RecorderEncodingFormatsProto.toDomain: RecordingEncoders
 	get() = when (this) {
-		RecorderEncodingFormatsProto.ENCODER_ACC -> RecordingEncoders.ACC
-		RecorderEncodingFormatsProto.UNRECOGNIZED -> RecordingEncoders.ACC
-		RecorderEncodingFormatsProto.ENCODER_AMR_NB -> RecordingEncoders.AMR_NB
+		RecorderEncodingFormatsProto.ENCODER_MP3 -> RecordingEncoders.MP3
+		RecorderEncodingFormatsProto.ENCODER_AMR_NB -> RecordingEncoders.THREE_GPP
+		RecorderEncodingFormatsProto.ENCODER_M4A -> RecordingEncoders.MP4
 		RecorderEncodingFormatsProto.ENCODER_AMR_WB -> RecordingEncoders.AMR_WB
-		RecorderEncodingFormatsProto.ENCODER_MPEG -> RecordingEncoders.MPEG
+		RecorderEncodingFormatsProto.UNRECOGNIZED -> RecordingEncoders.MP3
 	}

@@ -5,6 +5,7 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
+import com.eva.recorderapp.voice_recorder.domain.datastore.enums.AudioFileNamingFormat
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderFileSettings
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.google.protobuf.InvalidProtocolBufferException
@@ -24,6 +25,22 @@ class RecorderFileSettingsRepoImpl(
 
 	override val fileSettings: RecorderFileSettings
 		get() = runBlocking { fileSettingsFlow.first() }
+
+	override suspend fun onFileNameFormatChange(format: AudioFileNamingFormat) {
+		context.recorderFileSettings.updateData { settings ->
+			settings.toBuilder()
+				.setFormat(format.toProto)
+				.build()
+		}
+	}
+
+	override suspend fun onFilePrefixChange(prefix: String) {
+		context.recorderFileSettings.updateData { settings ->
+			settings.toBuilder()
+				.setPrefix(prefix)
+				.build()
+		}
+	}
 }
 
 
@@ -32,8 +49,8 @@ private val Context.recorderFileSettings: DataStore<FileSettingsProto> by dataSt
 	serializer = object : Serializer<FileSettingsProto> {
 
 		override val defaultValue: FileSettingsProto = fileSettingsProto {
-			namingStyle = "Voice"
-			format = NamingFormatProto.FORMAAT_VIA_DATE
+			prefix = "Voice"
+			format = NamingFormatProto.FORMAT_VIA_DATE
 		}
 
 		override suspend fun readFrom(input: InputStream): FileSettingsProto {

@@ -1,8 +1,8 @@
 package com.eva.recorderapp.voice_recorder.domain.datastore.enums
 
 enum class RecordingEncoders {
-	ACC,
-	AMR_NB,
+	MP3,
+	THREE_GPP,
 	AMR_WB,
-	MPEG,
+	MP4,
 }

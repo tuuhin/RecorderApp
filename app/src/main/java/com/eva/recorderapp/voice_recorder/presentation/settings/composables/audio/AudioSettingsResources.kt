@@ -17,17 +17,17 @@ val RecordQuality.strRes: String
 val RecordingEncoders.titleStrRes: String
 	@Composable
 	get() = when (this) {
-		RecordingEncoders.MPEG-> stringResource(id = R.string.recording_settings_encoder_mpeg)
-		RecordingEncoders.AMR_WB ->stringResource(id = R.string.recording_settings_encoder_amr)
-		RecordingEncoders.AMR_NB -> stringResource(id = R.string.recording_settings_encoder_amr)
-		RecordingEncoders.ACC -> stringResource(id = R.string.recording_settings_encoder_acc)
+		RecordingEncoders.MP4-> stringResource(id = R.string.recording_settings_encoder_mpeg)
+		RecordingEncoders.AMR_WB ->stringResource(id = R.string.recording_settings_encoder_amr_wb)
+		RecordingEncoders.THREE_GPP -> stringResource(id = R.string.recording_settings_encoder_three_gpp)
+		RecordingEncoders.MP3 -> stringResource(id = R.string.recording_settings_encoder_acc)
 	}
 
 val RecordingEncoders.descriptionStrRes: String
 	@Composable
 	get() = when (this) {
-		RecordingEncoders.AMR_NB -> stringResource(id = R.string.recording_settings_encoder_amr_nb_text)
+		RecordingEncoders.THREE_GPP -> stringResource(id = R.string.recording_settings_encoder_amr_nb_text)
 		RecordingEncoders.AMR_WB -> stringResource(id = R.string.recording_settings_encoder_amr_wb_text)
-		RecordingEncoders.MPEG -> stringResource(id = R.string.recording_settings_encoder_mpeg_text)
-		RecordingEncoders.ACC -> stringResource(id = R.string.recording_settings_encoder_acc_text)
+		RecordingEncoders.MP4 -> stringResource(id = R.string.recording_settings_encoder_mpeg_text)
+		RecordingEncoders.MP3 -> stringResource(id = R.string.recording_settings_encoder_acc_text)
 	}

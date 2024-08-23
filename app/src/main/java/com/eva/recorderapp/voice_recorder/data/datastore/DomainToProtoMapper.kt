@@ -13,14 +13,14 @@ val RecordQuality.toProto: RecorderQualityProto
 
 val AudioFileNamingFormat.toProto: NamingFormatProto
 	get() = when (this) {
-		AudioFileNamingFormat.DATE_TIME -> NamingFormatProto.FORMAAT_VIA_DATE
+		AudioFileNamingFormat.DATE_TIME -> NamingFormatProto.FORMAT_VIA_DATE
 		AudioFileNamingFormat.COUNT -> NamingFormatProto.FORMAT_VIA_COUNT
 	}
 
 val RecordingEncoders.toProto: RecorderEncodingFormatsProto
 	get() = when (this) {
-		RecordingEncoders.ACC -> RecorderEncodingFormatsProto.ENCODER_ACC
-		RecordingEncoders.AMR_NB -> RecorderEncodingFormatsProto.ENCODER_AMR_NB
+		RecordingEncoders.MP3 -> RecorderEncodingFormatsProto.ENCODER_MP3
+		RecordingEncoders.THREE_GPP -> RecorderEncodingFormatsProto.ENCODER_AMR_NB
 		RecordingEncoders.AMR_WB -> RecorderEncodingFormatsProto.ENCODER_AMR_WB
-		RecordingEncoders.MPEG -> RecorderEncodingFormatsProto.ENCODER_MPEG
+		RecordingEncoders.MP4 -> RecorderEncodingFormatsProto.ENCODER_M4A
 	}
