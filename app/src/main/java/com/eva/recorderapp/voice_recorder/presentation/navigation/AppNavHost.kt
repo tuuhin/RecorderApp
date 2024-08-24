@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.eva.recorderapp.voice_recorder.presentation.navigation.dialogs.appInfoDialog
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioEditorRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioPlayerRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioSettingsRoute
@@ -38,6 +39,8 @@ fun AppNavHost(
 			audioPlayerRoute(controller = navController)
 			audioEditorRoute(controller = navController)
 			audioSettingsRoute(controller = navController)
+			//dialog
+			appInfoDialog()
 		}
 	}
 }

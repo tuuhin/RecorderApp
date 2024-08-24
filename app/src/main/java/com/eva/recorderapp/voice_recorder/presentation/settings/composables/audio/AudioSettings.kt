@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.settings.composables.audio
 
+import android.os.PowerManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,11 +11,15 @@ import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.core.content.getSystemService
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderAudioSettings
@@ -28,14 +33,30 @@ fun AudioSettings(
 	modifier: Modifier = Modifier,
 	contentPadding: PaddingValues = PaddingValues(12.dp)
 ) {
+
+	val isInspectionMode = LocalInspectionMode.current
+	val context = LocalContext.current
+
+	val isIgnoreOptimization = remember(context) {
+		if (isInspectionMode) return@remember false
+		context.getSystemService<PowerManager>()
+			?.isIgnoringBatteryOptimizations(context.packageName)
+			?: false
+	}
+
 	LazyColumn(
 		modifier = modifier.fillMaxSize(),
 		contentPadding = contentPadding,
 		verticalArrangement = Arrangement.spacedBy(8.dp)
 	) {
-		item {
-			IgnoreBatteryOptimizationCard(modifier = Modifier.animateItem())
+		if (!isIgnoreOptimization) {
+			item {
+				IgnoreBatteryOptimizationCard(
+					modifier = Modifier.animateItem()
+				)
+			}
 		}
+
 		item {
 			AudioEncoderSelector(
 				encoder = settings.encoders,

@@ -11,15 +11,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.settings.AudioSettingsScreen
 import com.eva.recorderapp.voice_recorder.presentation.settings.AudioSettingsViewModel
 
 fun NavGraphBuilder.audioSettingsRoute(
 	controller: NavController
-) = composable<NavRoutes.AudioSettings> {
+) = animatedComposable<NavRoutes.AudioSettings> {
 
 	val viewModel = hiltViewModel<AudioSettingsViewModel>()
 
@@ -31,6 +31,9 @@ fun NavGraphBuilder.audioSettingsRoute(
 		fileSettings = fileSettings,
 		onAudioSettingsChange = viewModel::onAudioEvent,
 		onFileSettingsChange = viewModel::onFileEvent,
+		onNavigateToInfo = {
+			controller.navigate(NavRoutes.ApplicationInfo)
+		},
 		navigation = {
 			IconButton(
 				onClick = dropUnlessResumed(block = controller::popBackStack)

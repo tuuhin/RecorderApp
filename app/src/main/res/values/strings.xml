@@ -133,4 +133,6 @@
   <string name="rename_recording_prefix_title">Rename Prefix</string>
   <string name="rename_recording_prefix_text">Changing the prefix will add this text as prefix to each of the recording</string>
   <string name="recording_settings_change_name_prefix">Naming Prefix</string>
+  <string name="app_info_source_code">Source Code</string>
+  <string name="app_info_author">Author</string>
 </resources>

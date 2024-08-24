@@ -9,6 +9,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.voice_recorder.data.worker.RemoveTrashRecordingWorker
+import com.eva.recorderapp.voice_recorder.presentation.util.AppShortCuts
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -55,5 +56,8 @@ class RecorderApp : Application(), Configuration.Provider {
 
 		//start wokers
 		RemoveTrashRecordingWorker.startRepeatWorker(applicationContext)
+
+		//shortcuts
+		AppShortCuts(this).attachShortcutsIfNotPresent()
 	}
 }

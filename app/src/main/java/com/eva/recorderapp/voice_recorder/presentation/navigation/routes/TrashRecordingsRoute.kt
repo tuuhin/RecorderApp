@@ -11,16 +11,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinScreen
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinViewmodel
 
 fun NavGraphBuilder.trashRecordingsRoute(
 	controller: NavController
-) = composable<NavRoutes.TrashRecordings> {
+) = animatedComposable<NavRoutes.TrashRecordings> {
 
 	val viewModel = hiltViewModel<RecordingsBinViewmodel>()
 

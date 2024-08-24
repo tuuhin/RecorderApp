@@ -8,14 +8,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.record_editor.RecordEditor
 
 
-fun NavGraphBuilder.audioEditorRoute(controller: NavController) = composable<NavRoutes.AudioEditor>(
-) {
+fun NavGraphBuilder.audioEditorRoute(
+	controller: NavController
+) = animatedComposable<NavRoutes.AudioEditor> {
 	RecordEditor(
 		navigation = {
 			IconButton(

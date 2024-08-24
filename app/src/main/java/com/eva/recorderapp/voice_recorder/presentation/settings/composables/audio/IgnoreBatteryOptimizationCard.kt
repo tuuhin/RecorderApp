@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.layout.Row
@@ -17,52 +16,40 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.core.content.getSystemService
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
 @SuppressLint("BatteryLife")
 @Composable
-fun IgnoreBatteryOptimizationCard(modifier: Modifier = Modifier) {
-	val isInspectionMode = LocalInspectionMode.current
+fun IgnoreBatteryOptimizationCard(
+	modifier: Modifier = Modifier
+) {
 	val context = LocalContext.current
-
-	val powerManger = remember(context) {
-		if (isInspectionMode) return@remember null
-		context.getSystemService<PowerManager>()
-	}
-
-	val isIgnoreOptimization = remember(powerManger) {
-		powerManger?.isIgnoringBatteryOptimizations(context.packageName) ?: false
-	}
-
-	if (isIgnoreOptimization) return
-
 	Card(
 		modifier = modifier,
 		onClick = {
 			try {
-				// TODO: Read the official docs
-
-				Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+				// TODO: Read the official docs why its required
+				val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
 					data = Uri.fromParts("package", context.packageName, null)
 
 					addCategory(Intent.CATEGORY_DEFAULT)
 					addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
 					addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
 					addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
-					context.startActivity(this)
 				}
+
+				context.startActivity(intent)
+
 			} catch (e: ActivityNotFoundException) {
 				Toast.makeText(context, R.string.cannot_launch_activity, Toast.LENGTH_SHORT).show()
 			} catch (e: Exception) {
@@ -76,8 +63,7 @@ fun IgnoreBatteryOptimizationCard(modifier: Modifier = Modifier) {
 		shape = MaterialTheme.shapes.medium,
 	) {
 		Row(
-			modifier = Modifier
-				.padding(all = dimensionResource(id = R.dimen.card_padding)),
+			modifier = Modifier.padding(all = dimensionResource(id = R.dimen.card_padding)),
 			verticalAlignment = Alignment.CenterVertically
 		) {
 			Icon(
@@ -90,7 +76,6 @@ fun IgnoreBatteryOptimizationCard(modifier: Modifier = Modifier) {
 				style = MaterialTheme.typography.labelMedium
 			)
 		}
-
 	}
 }
 

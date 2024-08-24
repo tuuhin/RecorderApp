@@ -12,13 +12,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerScreen
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerViewModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerViewModelFactory
@@ -26,13 +26,13 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.
 
 fun NavGraphBuilder.audioPlayerRoute(
 	controller: NavHostController
-) = composable<NavRoutes.AudioPlayer>(
+) = animatedComposable<NavRoutes.AudioPlayer>(
 	deepLinks = listOf(
 		navDeepLink {
 			uriPattern = NavDeepLinks.appPlayerDestinationPattern
 			action = Intent.ACTION_VIEW
 		},
-	)
+	),
 ) { backStackEntry ->
 
 	val route = backStackEntry.toRoute<NavRoutes.AudioPlayer>()
@@ -46,7 +46,7 @@ fun NavGraphBuilder.audioPlayerRoute(
 
 	UiEventsSideEffect(viewModel = viewModel)
 
-	ControllerLifeCyleObserver(onEvent = viewModel::onControllerEvents)
+	ControllerLifeCyleObserver(audioId = route.audioId, onEvent = viewModel::onControllerEvents)
 
 	AudioPlayerScreen(
 		loadState = contentState,
