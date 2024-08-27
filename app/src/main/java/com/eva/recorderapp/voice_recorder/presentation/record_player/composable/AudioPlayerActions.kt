@@ -39,16 +39,18 @@ fun AudioPlayerActions(
 	onForward: () -> Unit = {},
 	onRewind: () -> Unit = {},
 	shape: Shape = MaterialTheme.shapes.large,
-	color: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	color: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
 	contentColor: Color = contentColorFor(backgroundColor = color),
-	shadowElevation: Dp = 0.dp,
+	shadowElevation: Dp = 2.dp,
+	tonalElevation:Dp = 2.dp,
 ) {
 	Surface(
 		modifier = modifier,
 		shape = shape,
 		color = color,
 		contentColor = contentColor,
-		shadowElevation = shadowElevation
+		shadowElevation = shadowElevation,
+		tonalElevation = tonalElevation
 	) {
 		Column(
 			modifier = Modifier

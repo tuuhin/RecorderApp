@@ -22,12 +22,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
-import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
+import com.eva.recorderapp.voice_recorder.presentation.util.PlayerGraphData
 
 @Composable
 fun PlayerGraphAndBookMarks(
 	trackData: PlayerTrackData,
-	graphData: PlayerGraphInfo,
+	graphData: PlayerGraphData,
 	isGraphMode: Boolean,
 	onToggleListAndWave: () -> Unit,
 	onAddBookMark: () -> Unit,
@@ -40,7 +40,7 @@ fun PlayerGraphAndBookMarks(
 	) {
 		PlayerAmplitudeGraph(
 			trackData = trackData,
-			samples = graphData.waves,
+			graphData = graphData,
 			modifier = Modifier
 				.aspectRatio(16f / 9f)
 				.fillMaxWidth()

@@ -5,6 +5,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -38,9 +39,10 @@ import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.NoRec
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderAmplitudeGraph
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTimerText
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTopBar
+import com.eva.recorderapp.voice_recorder.presentation.recorder.util.isRecording
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
-import kotlinx.collections.immutable.ImmutableList
+import com.eva.recorderapp.voice_recorder.presentation.util.RecordingAmplitudes
 import kotlinx.datetime.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +50,7 @@ import kotlinx.datetime.LocalTime
 fun VoiceRecroderScreen(
 	stopWatch: LocalTime,
 	recorderState: RecorderState,
-	recorderAmps: ImmutableList<Float>,
+	amplitudeCallback: RecordingAmplitudes,
 	onRecorderAction: (RecorderAction) -> Unit,
 	onShowRecordings: () -> Unit,
 	onNavigateToSettings: () -> Unit,
@@ -68,13 +70,7 @@ fun VoiceRecroderScreen(
 	}
 
 	val canShowActions by remember(recorderState) {
-		derivedStateOf {
-			recorderState in arrayOf(
-				RecorderState.IDLE,
-				RecorderState.COMPLETED,
-				RecorderState.CANCELLED
-			)
-		}
+		derivedStateOf(recorderState::isRecording)
 	}
 
 	Scaffold(
@@ -93,9 +89,13 @@ fun VoiceRecroderScreen(
 		Crossfade(
 			targetState = hasRecordPermission,
 			modifier = Modifier
-				.fillMaxSize()
-				.padding(scPadding)
-				.padding(horizontal = dimensionResource(id = R.dimen.sc_padding)),
+				.padding(
+					start = dimensionResource(id = R.dimen.sc_padding),
+					end = dimensionResource(R.dimen.sc_padding),
+					top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
+					bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
+				)
+				.fillMaxSize(),
 			label = "Has record audio permission"
 		) { hasPerms ->
 			if (hasPerms) {
@@ -110,11 +110,12 @@ fun VoiceRecroderScreen(
 					) {
 						RecorderTimerText(time = stopWatch)
 						RecorderAmplitudeGraph(
-							amplitudes = recorderAmps,
+							amplitudeCallback = amplitudeCallback,
 							barColor = MaterialTheme.colorScheme.onSecondaryContainer,
 							backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
 							shape = MaterialTheme.shapes.medium,
 							modifier = Modifier.fillMaxWidth(),
+							contentPadding = PaddingValues(all = dimensionResource(id = R.dimen.graph_card_padding))
 						)
 					}
 					AnimatedRecorderActionTray(
@@ -159,7 +160,7 @@ private fun VoiceRecorderScreenPreview(
 	VoiceRecroderScreen(
 		stopWatch = LocalTime(0, 10, 56, 0),
 		recorderState = recorderState,
-		recorderAmps = PreviewFakes.PREVIEW_RECORDER_AMPLITUDES,
+		amplitudeCallback = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
 		onRecorderAction = {},
 		onShowRecordings = {},
 		onNavigateToSettings = {},

@@ -36,14 +36,16 @@ class BufferedAmplitudeReader(
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	fun readAmplitudeBuffered(state: RecorderState): Flow<FloatArray> {
-		val sampledAmps = when (state) {
-			RecorderState.COMPLETED, RecorderState.CANCELLED -> clearBufferAndEmitZero()
-			else -> readSampleAmplitude(state)
+		return when (state) {
+			// show the amplitudes when its recording or paused
+			RecorderState.RECORDING, RecorderState.PAUSED -> readSampleAmplitude(state)
+				.flatMapLatest(::flowToFixedSizeCollection)
+				.mapLatest(::smoothen)
+				.map { it.normalize() }
+				.flowOn(Dispatchers.Default)
+
+			else -> clearBufferAndEmptyFlow()
 		}
-		return sampledAmps.flatMapLatest(::flowToFixedSizeCollection)
-			.mapLatest(::smoothen)
-			.map { it.normalize() }
-			.flowOn(Dispatchers.Default)
 	}
 
 	private fun readSampleAmplitude(state: RecorderState): Flow<Int> = flow {
@@ -75,12 +77,11 @@ class BufferedAmplitudeReader(
 	/**
 	 * Clears the buffer if it contains any value and emit a end zero
 	 */
-	private fun clearBufferAndEmitZero() = flow<Int> {
+	private fun clearBufferAndEmptyFlow() = flow<FloatArray> {
 		if (_buffer.isNotEmpty()) {
 			_buffer.clear()
 			ampsRange = AmpsRange()
 		}
-		emit(0)
 	}
 
 	/**

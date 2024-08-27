@@ -38,6 +38,7 @@ import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.presentation.recorder.util.RecorderActionMode
+import com.eva.recorderapp.voice_recorder.presentation.recorder.util.toAction
 
 @Composable
 fun AnimatedRecorderActionTray(
@@ -46,13 +47,7 @@ fun AnimatedRecorderActionTray(
 	modifier: Modifier = Modifier
 ) {
 	val mode by remember(recorderState) {
-		derivedStateOf {
-			when (recorderState) {
-				RecorderState.IDLE, RecorderState.COMPLETED, RecorderState.CANCELLED -> RecorderActionMode.INIT
-				RecorderState.RECORDING, RecorderState.PAUSED -> RecorderActionMode.RECORDING
-				else -> RecorderActionMode.PREPARING
-			}
-		}
+		derivedStateOf(recorderState::toAction)
 	}
 
 	AnimatedContent(

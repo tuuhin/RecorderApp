@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.EaseInBounce
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -21,14 +22,15 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -51,6 +53,7 @@ fun AnimatedPlayPauseButton(
 	containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
 	contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
 ) {
+	val inverseColor = MaterialTheme.colorScheme.inverseSurface
 	// TODO: Check recomposition
 
 	val polygon = remember {
@@ -73,10 +76,6 @@ fun AnimatedPlayPauseButton(
 		)
 	)
 
-	val clipShape = remember(polygon, isPlaying, rotation) {
-		RoundedPolygonShape(polygon, if (isPlaying) rotation else 0f)
-	}
-
 	FloatingActionButton(
 		onClick = {
 			if (isPlaying) onPause()
@@ -85,11 +84,14 @@ fun AnimatedPlayPauseButton(
 		contentColor = contentColor,
 		containerColor = containerColor,
 		modifier = modifier
-			.sizeIn(minWidth = 72.dp, minHeight = 72.dp)
-			.clip(clipShape)
+			.sizeIn(
+				minWidth = dimensionResource(id = R.dimen.play_button_min_size),
+				minHeight = dimensionResource(id = R.dimen.play_button_min_size)
+			)
 			.graphicsLayer {
-				shadowElevation = 4.dp.toPx()
-			},
+				clip = true
+				shape = RoundedPolygonShape(polygon, if (isPlaying) rotation else 0f)
+			}
 	) {
 		AnimatedContent(
 			targetState = isPlaying,
@@ -112,24 +114,24 @@ fun AnimatedPlayPauseButton(
 }
 
 private fun AnimatedContentTransitionScope<Boolean>.isPlayingAnimation(): ContentTransform {
-	return fadeIn(
-		animationSpec = tween(200)
-	) + scaleIn(
-		animationSpec = spring(
-			dampingRatio = Spring.DampingRatioLowBouncy,
-			stiffness = Spring.StiffnessLow,
-		),
-	) togetherWith fadeOut(
-		animationSpec = tween(200)
-	) + scaleOut(
-		animationSpec = spring(
-			dampingRatio = Spring.DampingRatioLowBouncy,
-			stiffness = Spring.StiffnessLow,
-		),
+
+	val fadeAnimationSpec = tween<Float>(durationMillis = 200, easing = EaseInBounce)
+	val scaleAnimationSpec = spring<Float>(
+		dampingRatio = Spring.DampingRatioMediumBouncy,
+		stiffness = Spring.StiffnessMedium,
 	)
+
+	val enter = fadeIn(animationSpec = fadeAnimationSpec) +
+			scaleIn(animationSpec = scaleAnimationSpec)
+
+	val exit = fadeOut(animationSpec = fadeAnimationSpec) +
+			scaleOut(animationSpec = scaleAnimationSpec)
+
+	return enter togetherWith exit
+
 }
 
-class IsPlayingPreviewParams
+private class IsPlayingPreviewParams
 	: CollectionPreviewParameterProvider<Boolean>(listOf(true, false))
 
 
@@ -139,10 +141,12 @@ private fun AnimatedPlayPauseButtonIsPlayingPreview(
 	@PreviewParameter(IsPlayingPreviewParams::class)
 	isPlaying: Boolean
 ) = RecorderAppTheme {
-	AnimatedPlayPauseButton(
-		isPlaying = isPlaying,
-		onPause = { },
-		onPlay = { },
-	)
+	Surface {
+		AnimatedPlayPauseButton(
+			isPlaying = isPlaying,
+			onPause = { },
+			onPlay = { },
+		)
+	}
 }
 

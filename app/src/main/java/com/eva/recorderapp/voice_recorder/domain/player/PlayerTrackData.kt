@@ -32,4 +32,15 @@ data class PlayerTrackData(
 			if (ratio.isNaN() || ratio.isInfinite()) return 0f
 			return ratio.coerceIn(0f, 1f)
 		}
+
+	fun calculateSeekAmount(seek: Float): Long {
+
+		require(value = seek in 0f..1f)
+
+		return if (total.isPositive()) {
+			val seekAmount = (total.inWholeMilliseconds * seek).toLong()
+			val amt = seekAmount.coerceIn(0L, total.inWholeMilliseconds)
+			return amt
+		} else 0L
+	}
 }

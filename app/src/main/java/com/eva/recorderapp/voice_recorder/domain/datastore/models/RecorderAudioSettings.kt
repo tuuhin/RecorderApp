@@ -6,7 +6,8 @@ import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordingEncode
 data class RecorderAudioSettings(
 	val encoders: RecordingEncoders = RecordingEncoders.MP3,
 	val quality: RecordQuality = RecordQuality.NORMAL,
-	val blockCallsDuringRecording: Boolean = false,
+	val pauseRecordingOnCall: Boolean = false,
 	val skipSilences: Boolean = false,
 	val enableStero: Boolean = false,
+	val useBluetoothMic: Boolean = false,
 )

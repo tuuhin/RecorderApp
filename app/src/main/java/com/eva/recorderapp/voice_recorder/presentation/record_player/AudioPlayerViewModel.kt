@@ -10,6 +10,7 @@ import com.eva.recorderapp.voice_recorder.data.player.MediaControllerProvider
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
 import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
@@ -48,6 +49,7 @@ class AudioPlayerViewModel @AssistedInject constructor(
 	private val fileProvider: PlayerFileProvider,
 	private val actionHelper: RecordingsActionHelper,
 	private val samplesReader: AudioAmplitudeReader,
+	private val shortcutsUtil: AppShortcutFacade
 ) : AppViewModel() {
 
 	// audio player instance for calling the underlying api's
@@ -115,17 +117,16 @@ class AudioPlayerViewModel @AssistedInject constructor(
 
 
 	init {
-		prepareCurrentRecording()
+		prepareCurrentRecording(audioId)
+		computeSamples(audioId)
 		preparePlayer()
-		computeSamples()
+		// add last played shortcut
+		shortcutsUtil.addLastPlayedShortcut(audioId)
 	}
 
 	fun onControllerEvents(event: ControllerEvents) {
 		when (event) {
-			ControllerEvents.OnAddController -> viewModelScope.launch {
-				controller.prepareController(audioId)
-			}
-
+			is ControllerEvents.OnAddController -> controller.prepareController(event.audioId)
 			ControllerEvents.OnRemoveController -> controller.removeController()
 		}
 	}
@@ -155,7 +156,7 @@ class AudioPlayerViewModel @AssistedInject constructor(
 		}
 	}
 
-	private fun prepareCurrentRecording() {
+	private fun prepareCurrentRecording(audioId: Long) {
 		fileProvider
 			.getAudioFileInfo(id = audioId)
 			.onEach { res ->
@@ -202,7 +203,7 @@ class AudioPlayerViewModel @AssistedInject constructor(
 		}.launchIn(viewModelScope)
 	}
 
-	private fun computeSamples() = viewModelScope.launch {
+	private fun computeSamples(audioId: Long) = viewModelScope.launch {
 
 		Log.d(TAG, "STARTING TO COMPUTE SAMPLES")
 

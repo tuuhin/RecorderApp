@@ -71,17 +71,13 @@ fun PlayerSlider(
 				fontFamily = DownloadableFonts.NOVA_MONO_FONT_FAMILY
 			)
 		}
+
 		Slider(
 			value = sliderPercentage,
 			onValueChange = { seekAmt ->
-				if (track.total.isPositive()) {
-					val seekAmount = (track.total.inWholeMilliseconds * seekAmt).toLong()
-					val amt = seekAmount.coerceIn(0L, track.total.inWholeMilliseconds)
-					val duration = amt.milliseconds
-					onSeekToDuration(duration)
-				}
+				val seek = track.calculateSeekAmount(seekAmt)
+				onSeekToDuration(seek.milliseconds)
 			},
-
 			onValueChangeFinished = onSeekDurationComplete,
 			colors = SliderDefaults.colors(
 				activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -97,6 +93,9 @@ fun PlayerSlider(
 @Composable
 private fun PlayerSliderPreview() = RecorderAppTheme {
 	Surface {
-		PlayerSlider(track = PlayerTrackData(), onSeekToDuration = {})
+		PlayerSlider(
+			track = PlayerTrackData(),
+			onSeekToDuration = {},
+		)
 	}
 }

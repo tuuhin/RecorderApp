@@ -37,9 +37,9 @@ fun PlayerActionsAndSlider(
 	trackData: PlayerTrackData,
 	onPlayerAction: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
-	actionsContainerShape: Shape = MaterialTheme.shapes.large,
-	actionsContainerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
-	actionsContainerBackground: Color = contentColorFor(backgroundColor = actionsContainerColor)
+	containerShape: Shape = MaterialTheme.shapes.large,
+	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	containerBackground: Color = contentColorFor(backgroundColor = containerColor)
 ) {
 
 	val playBackSpeedBottomSheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -85,9 +85,9 @@ fun PlayerActionsAndSlider(
 				scope.launch { playBackSpeedBottomSheet.show() }
 					.invokeOnCompletion { openPlayBackSpeedBottomSheet = true }
 			},
-			color = actionsContainerColor,
-			shape = actionsContainerShape,
-			contentColor = actionsContainerBackground,
+			color = containerColor,
+			shape = containerShape,
+			contentColor = containerBackground,
 		)
 	}
 }

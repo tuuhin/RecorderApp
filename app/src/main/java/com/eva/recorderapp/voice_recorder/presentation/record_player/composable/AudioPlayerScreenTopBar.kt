@@ -3,6 +3,8 @@ package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -60,13 +62,13 @@ fun AudioPlayerScreenTopBar(
 	TopAppBar(
 		title = {
 			AnimatedVisibility(
-				visible = state is ContentLoadState.Content,
-				enter = fadeIn(),
-				exit = fadeOut()
+				visible = isActionEnabled,
+				enter = fadeIn() + slideInVertically(),
+				exit = fadeOut() + slideOutVertically()
 			) {
 				state.OnContent { model ->
 					Text(
-						text = model.title,
+						text = model.displayName,
 						overflow = TextOverflow.Ellipsis,
 						maxLines = 1
 					)
@@ -107,22 +109,34 @@ fun AudioPlayerScreenTopBar(
 						DropdownMenuItem(
 							text = { Text(text = stringResource(id = R.string.menu_more_rename)) },
 							enabled = isActionEnabled,
-							onClick = onRenameOption
+							onClick = {
+								showDropDown = false
+								onRenameOption()
+							}
 						)
 						DropdownMenuItem(
 							text = { Text(text = stringResource(id = R.string.menu_option_delete)) },
 							enabled = isActionEnabled,
-							onClick = onDeleteOption
+							onClick = {
+								showDropDown = false
+								onDeleteOption()
+							}
 						)
 						DropdownMenuItem(
 							text = { Text(text = stringResource(id = R.string.menu_option_share)) },
 							enabled = isActionEnabled,
-							onClick = onShareOption
+							onClick = {
+								showDropDown = false
+								onShareOption()
+							}
 						)
 						DropdownMenuItem(
 							text = { Text(text = stringResource(id = R.string.menu_option_details)) },
 							enabled = isActionEnabled,
-							onClick = onDetailsOptions
+							onClick = {
+								showDropDown = false
+								onDetailsOptions()
+							}
 						)
 					}
 

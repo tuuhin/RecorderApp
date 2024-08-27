@@ -33,6 +33,7 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.Rec
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsScreenTopBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RenameRecordingsNameDialog
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.SortOptionsSheetContent
+import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.requestReadStoragePermission
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RenameRecordingEvents
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RecordingsSortInfo
@@ -78,6 +79,9 @@ fun RecordingsScreen(
 	val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
 	val scope = rememberCoroutineScope()
+
+	// read storage permission
+	requestReadStoragePermission()
 
 	if (showSheet) {
 		ModalBottomSheet(

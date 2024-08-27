@@ -33,20 +33,20 @@ object PreviewFakes {
 
 	val FAKE_VOICE_RECORDING_MODEL = RecordedVoiceModel(
 		id = 0L,
-		title = "AUD_ANDROID",
-		displayName = "AUD_ANDROID",
+		title = "Voice_001",
+		displayName = "Voice_001.abc",
 		duration = 5.minutes,
 		sizeInBytes = 1024 * 20,
-		modifiedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-		recordedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+		modifiedAt = now,
+		recordedAt = now,
 		fileUri = "",
 		mimeType = "audio/mp3"
 	)
 
 	val FAKE_AUDIO_MODEL = AudioFileModel(
 		id = 0L,
-		title = "AUD_ANDROID",
-		displayName = "AUD_ANDROID",
+		title = "Voice_001",
+		displayName = "Voice_001.abc",
 		duration = 5.minutes,
 		fileUri = "",
 		bitRateInKbps = 0f,
@@ -62,8 +62,8 @@ object PreviewFakes {
 		title = "TRAHSED_001",
 		displayName = "TRASHED",
 		mimeType = "audio/mp3",
-		expiresAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-		recordedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+		expiresAt = now,
+		recordedAt = now,
 		fileUri = "",
 	)
 

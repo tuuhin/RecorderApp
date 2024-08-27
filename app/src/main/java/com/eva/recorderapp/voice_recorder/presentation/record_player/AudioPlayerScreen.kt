@@ -29,7 +29,7 @@ import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.AudioFileMetaDataSheetContent
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.AudioPlayerScreenTopBar
-import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ContentStateLoading
+import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ContentStateAnimatedContainer
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerActionsAndSlider
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerDurationText
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerGraphAndBookMarks
@@ -68,8 +68,8 @@ fun AudioPlayerScreen(
 			sheetState = metaDataBottomSheet,
 			onDismissRequest = { openMetaDataBottomSheet = false },
 		) {
-			loadState.OnContent { audioFile ->
-				AudioFileMetaDataSheetContent(audio = audioFile)
+			loadState.OnContent { audio ->
+				AudioFileMetaDataSheetContent(audio = audio)
 			}
 		}
 	}
@@ -90,7 +90,7 @@ fun AudioPlayerScreen(
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
 		modifier = modifier,
 	) { scPadding ->
-		ContentStateLoading(
+		ContentStateAnimatedContainer(
 			loadState = loadState,
 			modifier = Modifier
 				.padding(
@@ -107,7 +107,7 @@ fun AudioPlayerScreen(
 				)
 				PlayerGraphAndBookMarks(
 					trackData = playerState.trackData,
-					graphData = playerState.waveforms,
+					graphData = { playerState.waveforms },
 					isGraphMode = true,
 					onToggleListAndWave = { },
 					onAddBookMark = { },

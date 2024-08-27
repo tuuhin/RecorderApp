@@ -11,16 +11,17 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.util.Contro
 
 @Composable
 fun ControllerLifeCyleObserver(
+	audioId: Long,
 	onEvent: (ControllerEvents) -> Unit,
 ) {
 	val lifeCycleOwner = LocalLifecycleOwner.current
 	val updatedOnEvent by rememberUpdatedState(newValue = onEvent)
 
-	LaunchedEffect(key1 = lifeCycleOwner) {
+	LaunchedEffect(key1 = lifeCycleOwner, key2 = audioId) {
 		lifeCycleOwner.lifecycle.eventFlow.collect { event ->
 
 			if (event == Lifecycle.Event.ON_START) {
-				updatedOnEvent(ControllerEvents.OnAddController)
+				updatedOnEvent(ControllerEvents.OnAddController(audioId))
 			}
 
 			if (event == Lifecycle.Event.ON_STOP) {

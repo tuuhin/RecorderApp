@@ -28,14 +28,15 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
+import com.eva.recorderapp.voice_recorder.presentation.util.PlayerGraphData
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
-import kotlinx.collections.immutable.ImmutableList
 import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun PlayerAmplitudeGraph(
 	trackData: PlayerTrackData,
-	samples: ImmutableList<Float>,
+	graphData: PlayerGraphData,
 	modifier: Modifier = Modifier,
 	barColor: Color = MaterialTheme.colorScheme.secondary,
 	trackPointerColor: Color = MaterialTheme.colorScheme.tertiary,
@@ -44,7 +45,6 @@ fun PlayerAmplitudeGraph(
 ) {
 // TODO: Make it performat to show larger dataset's
 
-	var dragStart by remember { mutableStateOf(Offset.Zero) }
 	var isDragStarted by remember { mutableStateOf(false) }
 
 	Surface(
@@ -54,9 +54,9 @@ fun PlayerAmplitudeGraph(
 	) {
 		Spacer(
 			modifier = Modifier
-				.padding(all = dimensionResource(id = R.dimen.amplitudes_card_padding))
+				.padding(all = dimensionResource(id = R.dimen.graph_card_padding))
 				.defaultMinSize(minHeight = dimensionResource(id = R.dimen.line_graph_min_height))
-				.pointerInput(samples) {
+				.pointerInput(Unit) {
 					detectHorizontalDragGestures(
 						onDragStart = { isDragStarted = true },
 						onDragEnd = { isDragStarted = false },
@@ -75,7 +75,9 @@ fun PlayerAmplitudeGraph(
 					val spikes = mutableListOf<Pair<Offset, Offset>>()
 					val dots = mutableListOf<Offset>()
 
-					samples.forEachIndexed { idx, value ->
+					val samples = graphData()
+
+					samples.waves.forEachIndexed { idx, value ->
 						val sizeFactor = 0.75f * value
 						val xAxis = (spikesWidth + spikeSpace) * idx.toFloat()
 						val start = Offset(xAxis, centerYAxis * (1 - sizeFactor))
@@ -136,7 +138,7 @@ fun PlayerAmplitudeGraph(
 private fun PlayerAmplitudeGraphPreview() = RecorderAppTheme {
 	PlayerAmplitudeGraph(
 		trackData = PlayerTrackData(current = 5.minutes, total = 10.minutes),
-		samples = PreviewFakes.PREVIEW_RECORDER_AMPLITUDES,
+		graphData = { PlayerGraphInfo(waves = PreviewFakes.PREVIEW_RECORDER_AMPLITUDES) },
 		modifier = Modifier.fillMaxWidth()
 	)
 }

@@ -4,10 +4,7 @@ import android.os.PowerManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -100,18 +97,24 @@ fun AudioSettings(
 			)
 		}
 		item {
+			PauseRecorderOnCallTile(
+				canPause = settings.pauseRecordingOnCall,
+				onChange = { onEvent(AudioSettingsEvent.OnPauseRecorderOnCalls(it)) })
+		}
+		item {
 			SettingsItemWithSwitch(
-				isSelected = settings.blockCallsDuringRecording,
-				enabled = false,
-				title = stringResource(id = R.string.recording_settings_block_calls),
-				text = stringResource(id = R.string.recording_settings_block_calls_text),
+				isSelected = settings.useBluetoothMic,
+				title = stringResource(id = R.string.recording_settings_use_bt_mic),
+				text = stringResource(id = R.string.recording_settings_use_bt_mic_text),
 				leading = {
 					Icon(
-						imageVector = Icons.Outlined.Phone,
-						contentDescription = stringResource(id = R.string.recording_settings_block_calls),
+						painter = painterResource(id = R.drawable.ic_mic_headset),
+						contentDescription = stringResource(id = R.string.recording_settings_use_bt_mic),
 					)
 				},
-				onSelect = { onEvent(AudioSettingsEvent.OnSkipSilencesChange(it)) },
+				onSelect = {
+					onEvent(AudioSettingsEvent.OnUseBluetoothMicChanged(it))
+				},
 			)
 		}
 	}
@@ -124,7 +127,6 @@ private fun AudioSettingsPreview() = RecorderAppTheme {
 		AudioSettings(
 			settings = RecorderAudioSettings(),
 			onEvent = {},
-			modifier = Modifier.padding(12.dp)
 		)
 	}
 }

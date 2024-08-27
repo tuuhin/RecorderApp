@@ -97,7 +97,7 @@ class MediaControllerProvider(
 	}
 
 
-	suspend fun prepareController(audioId: Long) {
+	fun prepareController(audioId: Long) {
 		try {
 			val sessionExtras = bundleOf(
 				PlayerConstants.PLAYER_AUDIO_FILE_ID_KEY to audioId
