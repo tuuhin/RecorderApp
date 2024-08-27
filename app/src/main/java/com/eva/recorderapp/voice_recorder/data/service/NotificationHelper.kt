@@ -12,15 +12,18 @@ import androidx.core.content.getSystemService
 import com.eva.recorderapp.MainActivity
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.IntentRequestCodes
+import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.format
 
 class NotificationHelper(
 	private val context: Context
 ) {
 
-	private val manager by lazy { context.getSystemService<NotificationManager>() }
+	private val _notificationManager by lazy { context.getSystemService<NotificationManager>() }
 
 	private val recorderServiceIntent: Intent
 		get() = Intent(context, VoiceRecorderService::class.java)
@@ -153,39 +156,84 @@ class NotificationHelper(
 			.build()
 
 	val timerNotification: Notification
-		get() = _recorderNotifcation.build()
+		get() {
+			val updatedRemoteView = recorderCustomView.apply {
+				setTextViewText(
+					R.id.notification_text,
+					context.getString(R.string.recorder_notification_text_running)
+				)
+				setViewVisibility(R.id.pause_button, View.VISIBLE)
+				setViewVisibility(R.id.resume_button, View.GONE)
+			}
 
-
-	fun setPauseStopAction() {
-		val updatedRemoteView = recorderCustomView.apply {
-			setViewVisibility(R.id.pause_button, View.VISIBLE)
-			setViewVisibility(R.id.resume_button, View.GONE)
+			return _recorderNotifcation
+				.setCustomContentView(updatedRemoteView)
+				.build()
 		}
-		_recorderNotifcation.setCustomContentView(updatedRemoteView)
+
+
+	fun showNotificationDuringRecording(time: LocalTime) {
+		val readableTime = time.format(LocalTimeFormats.NOTIFICATION_TIMER_TIME_FORMAT)
+		val updatedRemoteView = recorderCustomView.apply {
+			setTextViewText(R.id.notification_title, readableTime)
+		}
+		// show the notification
+		_notificationManager?.notify(
+			NotificationConstants.RECORDER_NOTIFICATION_ID,
+			_recorderNotifcation
+				.setCustomContentView(updatedRemoteView)
+				.build()
+		)
 	}
 
+	fun setRecordingsCompletedNotifcation() {
+		_notificationManager?.notify(
+			NotificationConstants.RECORDER_NOTIFICATION_ID,
+			recordingCompleteNotification
+		)
+	}
 
-	fun setResumeStopAction() {
+	fun setRecordingCancelNotificaion() {
+		_notificationManager?.notify(
+			NotificationConstants.RECORDER_NOTIFICATION_ID,
+			recordingCancelNotificaiton
+		)
+	}
+
+	fun setOnPauseNotifcation() {
 		val updatedRemoteView = recorderCustomView.apply {
+			setTextViewText(
+				R.id.notification_text,
+				context.getString(R.string.recorder_notification_text_paused)
+			)
 			setViewVisibility(R.id.pause_button, View.GONE)
 			setViewVisibility(R.id.resume_button, View.VISIBLE)
 		}
-		_recorderNotifcation.setCustomContentView(updatedRemoteView)
+		// show the notification
+		_notificationManager?.notify(
+			NotificationConstants.RECORDER_NOTIFICATION_ID,
+			_recorderNotifcation
+				.setCustomContentView(updatedRemoteView)
+				.build()
+		)
 	}
 
-	fun setContentTitle(title: String) {
-
+	fun setOnResumeNotification() {
 		val updatedRemoteView = recorderCustomView.apply {
-			setTextViewText(R.id.notification_title, title)
+			setTextViewText(
+				R.id.notification_text,
+				context.getString(R.string.recorder_notification_text_running)
+			)
+			setViewVisibility(R.id.pause_button, View.VISIBLE)
+			setViewVisibility(R.id.resume_button, View.GONE)
 		}
-		_recorderNotifcation.setCustomContentView(updatedRemoteView)
-	}
-
-	fun setContentText(text: String) {
-		val updatedRemoteView = recorderCustomView.apply {
-			setTextViewText(R.id.notification_text, text)
-		}
-		_recorderNotifcation.setCustomContentView(updatedRemoteView)
+		// notification notify
+		_notificationManager?.notify(
+			NotificationConstants.RECORDER_NOTIFICATION_ID,
+			_recorderNotifcation
+				.setCustomContentView(updatedRemoteView)
+				.build()
+		)
 	}
 
 }

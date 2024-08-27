@@ -44,6 +44,9 @@ class VoiceRecorderImpl(
 	private val format: RecordEncoderAndFormat
 		get() = settings.audioSettings.encoders.recordFormat
 
+	private val channelCount: Int
+		get() = if (settings.audioSettings.enableStero) 2 else 1
+
 	// recorder quality
 	private val quality: RecordQuality
 		get() = settings.audioSettings.quality
@@ -129,8 +132,10 @@ class VoiceRecorderImpl(
 				setAudioSource(MediaRecorder.AudioSource.MIC)
 				// recorder format
 				setOutputFormat(format.outputFormat)
+				// formater channel and sampling
 				setAudioEncoder(format.encoder)
-				// recording qulaity
+				setAudioChannels(channelCount)
+				// recording quality
 				setAudioSamplingRate(quality.sampleRate)
 				setAudioEncodingBitRate(quality.bitRate)
 			}
@@ -138,6 +143,7 @@ class VoiceRecorderImpl(
 			Log.i(LOGGER_TAG, "SAMPLING RATE : ${quality.sampleRate}")
 			Log.i(LOGGER_TAG, "ENCODING BIT RATE : ${quality.bitRate}")
 			Log.i(LOGGER_TAG, "MIME TYPE: ${format.mimeType}")
+			Log.i(LOGGER_TAG, "CHANNEL COUNT :$channelCount")
 			true
 		}
 	}
