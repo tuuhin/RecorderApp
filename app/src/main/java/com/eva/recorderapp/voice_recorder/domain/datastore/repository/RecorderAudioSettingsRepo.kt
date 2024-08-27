@@ -18,4 +18,8 @@ interface RecorderAudioSettingsRepo {
 	suspend fun onStereoModeChange(mode: Boolean)
 
 	suspend fun onSkipSilencesChange(skipAllowed: Boolean)
+
+	suspend fun onUseBluetoothMicEnabled(isAllowed: Boolean)
+
+	suspend fun onPauseRecorderOnCallEnabled(isEnabled: Boolean)
 }

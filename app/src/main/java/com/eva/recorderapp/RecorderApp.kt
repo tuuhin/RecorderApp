@@ -9,7 +9,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.voice_recorder.data.worker.RemoveTrashRecordingWorker
-import com.eva.recorderapp.voice_recorder.presentation.util.AppShortCuts
+import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -20,6 +20,9 @@ class RecorderApp : Application(), Configuration.Provider {
 
 	@Inject
 	lateinit var workerFatory: HiltWorkerFactory
+
+	@Inject
+	lateinit var shortcutFacade: AppShortcutFacade
 
 	override val workManagerConfiguration: Configuration
 		get() = Configuration.Builder()
@@ -54,10 +57,11 @@ class RecorderApp : Application(), Configuration.Provider {
 
 		notificationManager?.createNotificationChannels(channels)
 
+		//shortcuts
+		shortcutFacade.createRecordingsShortCut()
+
 		//start wokers
 		RemoveTrashRecordingWorker.startRepeatWorker(applicationContext)
 
-		//shortcuts
-		AppShortCuts(this).attachShortcutsIfNotPresent()
 	}
 }

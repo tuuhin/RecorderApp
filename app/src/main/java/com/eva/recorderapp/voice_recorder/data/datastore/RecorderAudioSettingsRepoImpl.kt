@@ -58,6 +58,22 @@ class RecorderAudioSettingsRepoImpl(
 				.build()
 		}
 	}
+
+	override suspend fun onUseBluetoothMicEnabled(isAllowed: Boolean) {
+		context.recorderSettings.updateData { settings ->
+			settings.toBuilder()
+				.setUseBluetoothMic(isAllowed)
+				.build()
+		}
+	}
+
+	override suspend fun onPauseRecorderOnCallEnabled(isEnabled: Boolean) {
+		context.recorderSettings.updateData { settings ->
+			settings.toBuilder()
+				.setPauseDuringCalls(isEnabled)
+				.build()
+		}
+	}
 }
 
 

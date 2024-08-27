@@ -13,4 +13,8 @@ sealed interface AudioSettingsEvent {
 
 	data class OnSkipSilencesChange(val skipAllowed: Boolean) : AudioSettingsEvent
 
+	data class OnPauseRecorderOnCalls(val isAllowed: Boolean) : AudioSettingsEvent
+
+	data class OnUseBluetoothMicChanged(val isAllowed: Boolean) : AudioSettingsEvent
+
 }

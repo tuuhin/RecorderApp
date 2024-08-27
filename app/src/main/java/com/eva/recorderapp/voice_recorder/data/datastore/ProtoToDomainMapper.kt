@@ -9,9 +9,10 @@ import com.eva.recorderapp.voice_recorder.domain.datastore.models.RecorderFileSe
 fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderAudioSettings(
 	encoders = encoder.toDomain,
 	quality = quality.toDomain,
-	blockCallsDuringRecording = blockIncommingCalls,
+	pauseRecordingOnCall = pauseDuringCalls,
 	enableStero = isStereoMode,
-	skipSilences = skipSilences
+	skipSilences = skipSilences,
+	useBluetoothMic = useBluetoothMic
 )
 
 fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSettings(
