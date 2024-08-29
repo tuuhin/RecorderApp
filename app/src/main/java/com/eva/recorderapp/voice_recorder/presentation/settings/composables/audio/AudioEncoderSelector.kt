@@ -87,7 +87,7 @@ fun AudioEncoderSelector(
 private fun AudioEncoderSelectorPreview() = RecorderAppTheme {
 	Surface {
 		AudioEncoderSelector(
-			encoder = RecordingEncoders.MP3,
+			encoder = RecordingEncoders.ACC,
 			onEncoderChange = {}
 		)
 	}

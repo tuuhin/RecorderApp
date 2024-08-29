@@ -36,9 +36,9 @@ class BufferedAmplitudeReader(
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	fun readAmplitudeBuffered(state: RecorderState): Flow<FloatArray> {
-		return when (state) {
+		return when {
 			// show the amplitudes when its recording or paused
-			RecorderState.RECORDING, RecorderState.PAUSED -> readSampleAmplitude(state)
+			state.canReadAmplitudes -> readSampleAmplitude(state)
 				.flatMapLatest(::flowToFixedSizeCollection)
 				.mapLatest(::smoothen)
 				.map { it.normalize() }
@@ -82,6 +82,7 @@ class BufferedAmplitudeReader(
 			_buffer.clear()
 			ampsRange = AmpsRange()
 		}
+		emit(floatArrayOf())
 	}
 
 	/**

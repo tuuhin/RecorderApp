@@ -37,9 +37,9 @@ val NamingFormatProto.toDomain: AudioFileNamingFormat
 
 val RecorderEncodingFormatsProto.toDomain: RecordingEncoders
 	get() = when (this) {
-		RecorderEncodingFormatsProto.ENCODER_MP3 -> RecordingEncoders.MP3
-		RecorderEncodingFormatsProto.ENCODER_AMR_NB -> RecordingEncoders.THREE_GPP
-		RecorderEncodingFormatsProto.ENCODER_M4A -> RecordingEncoders.MP4
+		RecorderEncodingFormatsProto.ENCODER_AMR_NB -> RecordingEncoders.AMR_NB
 		RecorderEncodingFormatsProto.ENCODER_AMR_WB -> RecordingEncoders.AMR_WB
-		RecorderEncodingFormatsProto.UNRECOGNIZED -> RecordingEncoders.MP3
+		RecorderEncodingFormatsProto.ENCODER_ACC -> RecordingEncoders.ACC
+		RecorderEncodingFormatsProto.ENCODER_OPTUS -> RecordingEncoders.OPTUS
+		RecorderEncodingFormatsProto.UNRECOGNIZED -> RecordingEncoders.ACC
 	}

@@ -73,20 +73,14 @@ fun AudioSettingsScreen(
 				AudioSettings(
 					settings = audioSettings,
 					onEvent = onAudioSettingsChange,
-					contentPadding = PaddingValues(
-						horizontal = dimensionResource(R.dimen.sc_padding),
-						vertical = dimensionResource(R.dimen.sc_padding_secondary),
-					),
+					contentPadding = PaddingValues(all = dimensionResource(R.dimen.sc_padding)),
 				)
 			},
 			filesSettings = {
 				FileSettings(
 					settings = fileSettings,
 					onEvent = onFileSettingsChange,
-					contentPadding = PaddingValues(
-						horizontal = dimensionResource(R.dimen.sc_padding),
-						vertical = dimensionResource(R.dimen.sc_padding_secondary),
-					),
+					contentPadding = PaddingValues(all = dimensionResource(R.dimen.sc_padding)),
 				)
 			},
 			contentPadding = scPadding,

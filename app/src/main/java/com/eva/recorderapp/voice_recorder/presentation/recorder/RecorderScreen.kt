@@ -39,7 +39,7 @@ import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.NoRec
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderAmplitudeGraph
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTimerText
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTopBar
-import com.eva.recorderapp.voice_recorder.presentation.recorder.util.isRecording
+import com.eva.recorderapp.voice_recorder.presentation.recorder.util.showTopbarActions
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import com.eva.recorderapp.voice_recorder.presentation.util.RecordingAmplitudes
@@ -70,7 +70,7 @@ fun VoiceRecroderScreen(
 	}
 
 	val canShowActions by remember(recorderState) {
-		derivedStateOf(recorderState::isRecording)
+		derivedStateOf(recorderState::showTopbarActions)
 	}
 
 	Scaffold(

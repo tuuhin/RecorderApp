@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -100,6 +101,11 @@ fun RecordingsScreen(
 	RenameRecordingsNameDialog(
 		state = renameState,
 		onEvent = onRenameEvent
+	)
+
+	BackHandler(
+		enabled = isAnySelected,
+		onBack = { onScreenEvent(RecordingScreenEvent.OnUnSelectAllRecordings) },
 	)
 
 	Scaffold(

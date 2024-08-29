@@ -28,9 +28,10 @@ class RecorderFileProviderImpl(
 	private val settings: RecorderFileSettingsRepo,
 ) : RecordingsUtils(context), RecorderFileProvider {
 
-	override suspend fun createFileForRecoring(): File {
+
+	override suspend fun createFileForRecoring(extension: String?): File {
 		return withContext(Dispatchers.IO) {
-			val file = File.createTempFile("recording", ".tmp", context.cacheDir)
+			val file = File.createTempFile("recording", extension, context.cacheDir)
 			Log.d(LOGGER_TAG, "FILE CREATED FOR RECORDING NAME: ${file.name}")
 			file
 		}
@@ -98,11 +99,10 @@ class RecorderFileProviderImpl(
 			}
 
 			val metaData = ContentValues().apply {
-				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, musicDir)
+				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, PACKAGE_MUSIC_DIR)
 				put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileName)
 				put(MediaStore.Audio.AudioColumns.MIME_TYPE, format.mimeType)
 				put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
-				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
 				put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 					put(MediaStore.Audio.AudioColumns.IS_RECORDING, 1)
@@ -118,17 +118,16 @@ class RecorderFileProviderImpl(
 			Log.d(LOGGER_TAG, "URI CREATED , $contenUri")
 			contenUri
 		} catch (e: IllegalArgumentException) {
-			Log.e(LOGGER_TAG, "EXTRAS PROVIDED WRONG")
+			Log.e(LOGGER_TAG, "EXTRAS PROVIDED WRONG", e)
 			null
 		} catch (e: IOException) {
 			Log.e(LOGGER_TAG, "IO EXCEPTION", e)
 			e.printStackTrace()
 			null
-
 		}
 	}
 
-	suspend fun updateUriAfterRecording(file: Uri): Resource<Unit, Exception> {
+	suspend private fun updateUriAfterRecording(file: Uri): Resource<Unit, Exception> {
 		return try {
 			val updatedMetaData = ContentValues().apply {
 				put(MediaStore.Audio.AudioColumns.IS_PENDING, 0)

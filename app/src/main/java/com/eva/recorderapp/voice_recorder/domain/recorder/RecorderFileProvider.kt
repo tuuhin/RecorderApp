@@ -6,7 +6,7 @@ import java.io.File
 
 interface RecorderFileProvider {
 
-	suspend fun createFileForRecoring(): File
+	suspend fun createFileForRecoring(extension: String?): File
 
 	suspend fun transferFileDataToStorage(file: File, format: RecordEncoderAndFormat): Boolean
 

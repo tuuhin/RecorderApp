@@ -15,5 +15,5 @@ val RecorderState.toAction: RecorderActionMode
 		else -> RecorderActionMode.PREPARING
 	}
 
-val RecorderState.isRecording: Boolean
+val RecorderState.showTopbarActions: Boolean
 	get() = this in arrayOf(RecorderState.IDLE, RecorderState.COMPLETED, RecorderState.CANCELLED)

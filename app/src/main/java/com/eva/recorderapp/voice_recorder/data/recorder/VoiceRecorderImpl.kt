@@ -117,7 +117,10 @@ class VoiceRecorderImpl(
 			if (_recorder == null) createRecorder()
 
 			// ensures the file is being created in a differnt coroutine
-			val file = async { fileProvider.createFileForRecoring() }
+			val file = async(Dispatchers.IO) {
+				fileProvider.createFileForRecoring(format.fileExtension)
+			}
+
 			_recordingFile = file.await()
 
 			if (_recordingFile == null) {
@@ -142,7 +145,6 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "RECORDER CONFIGURED")
 			Log.i(LOGGER_TAG, "SAMPLING RATE : ${quality.sampleRate}")
 			Log.i(LOGGER_TAG, "ENCODING BIT RATE : ${quality.bitRate}")
-			Log.i(LOGGER_TAG, "MIME TYPE: ${format.mimeType}")
 			Log.i(LOGGER_TAG, "CHANNEL COUNT :$channelCount")
 			true
 		}
@@ -195,18 +197,18 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "CURRENT URI IS ALREDY SET")
 			return
 		}
-		// prepare the recording params
-		stopWatch.prepare()
-		Log.i(LOGGER_TAG, "PREPARING FILE FOR RECORDING")
-		val isOK = initiateRecorderParams()
-		if (!isOK) {
-			Log.d(LOGGER_TAG, "CANNOT INITATE RECORDER PARAMS")
-			val message = context.getString(R.string.cannot_create_file)
-			Toast.makeText(context, message, Toast.LENGTH_SHORT)
-				.show()
-			return
-		}
 		try {
+			// prepare the recording params
+			stopWatch.prepare()
+			Log.i(LOGGER_TAG, "PREPARING FILE FOR RECORDING")
+			val isOK = initiateRecorderParams()
+			if (!isOK) {
+				Log.d(LOGGER_TAG, "CANNOT INITATE RECORDER PARAMS")
+				val message = context.getString(R.string.cannot_create_file)
+				Toast.makeText(context, message, Toast.LENGTH_SHORT)
+					.show()
+				return
+			}
 			// prepare the recorder
 			_recorder?.prepare()
 			Log.d(LOGGER_TAG, "RECORDER PREPARED")

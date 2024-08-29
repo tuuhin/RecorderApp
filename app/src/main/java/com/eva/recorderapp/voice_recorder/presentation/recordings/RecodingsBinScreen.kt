@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -52,6 +53,12 @@ fun RecordingsBinScreen(
 			recordings.filter { it.isSelected }.count()
 		}
 	}
+
+	BackHandler(
+		enabled = isAnySelected,
+		onBack = { onScreenEvent(TrashRecordingScreenEvent.OnUnSelectTrashRecording) },
+	)
+
 
 	Scaffold(
 		topBar = {

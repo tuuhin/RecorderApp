@@ -101,12 +101,14 @@
   <string name="recording_settings_encoder_title">Audio Encoder</string>
   <string name="recording_settings_encoder_text">Select audio encoder,changing the encoding will vary the quality and size of the recording</string>
   <string name="recording_settings_encoder_mpeg">.mp3</string>
-  <string name="recording_settings_encoder_acc">.m4a</string>
-  <string name="recording_settings_encoder_three_gpp">.3gpp</string>
-  <string name="recording_settings_encoder_amr_wb">.awb</string>
-  <string name="recording_settings_encoder_amr_nb_text">Good for voice memos</string>
-  <string name="recording_settings_encoder_amr_wb_text">Large file size good for recording podcast</string>
-  <string name="recording_settings_encoder_acc_text">Universal format with wide compactivity</string>
+  <string name="recording_settings_encoder_acc">ACC (*.m4a, *.mp3)</string>
+  <string name="recording_settings_encoder_three_gpp">AMR NB (*.amr, .*.3gpp)</string>
+  <string name="recording_settings_encoder_amr_wb">AMR WB (*.awb)</string>
+  <string name="recording_settings_encoder_optus">OPUS (*.ogg)</string>
+  <string name="recording_settings_encoder_amr_nb_text">Offers smaller file sizes and is well suited for low-bitrate scenarios</string>
+  <string name="recording_settings_encoder_amr_wb_text">Suited for longer recordings with wider range of frequencies</string>
+  <string name="recording_settings_encoder_acc_text">Offers good quality audio and effiencent compression and widely supported</string>
+  <string name="recording_settings_encoder_optus_text">High quality compression and adaptibility to different bitrates</string>
   <string name="recording_settings_encoder_mpeg_text">Good quality at same bitrate with large file size</string>
   <string name="recording_settings_skip_silences_title">Skip Silences</string>
   <string name="recording_settings_skip_silences_text">Skip silences while recording</string>
@@ -144,4 +146,10 @@
   <string name="recording_settings_use_bt_mic">Bluetooth Mic</string>
   <string name="recording_settings_use_bt_mic_text">Use bluetooth mic when available</string>
   <string name="toast_incoming_call">Incoming call</string>
+  <string name="dialog_action_discard">Discard</string>
+  <string name="cancel_recording_dialog_title">Cancel Recording</string>
+  <string name="cancel_recording_dialog_text">Are you sure you want to discard this current recording</string>
+  <string name="dialog_action_done">Done</string>
+  <string name="save_recording_dialog_title">Save recording</string>
+  <string name="save_recording_dialog_text">Save this recording</string>
 </resources>
