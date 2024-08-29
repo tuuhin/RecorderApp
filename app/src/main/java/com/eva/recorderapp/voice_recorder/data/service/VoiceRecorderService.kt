@@ -16,27 +16,25 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
-import com.eva.recorderapp.voice_recorder.domain.use_cases.PauseRecordingOnCallUseCase
+import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
 import com.eva.recorderapp.voice_recorder.domain.util.enums.BtSCOChannelState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 
@@ -55,7 +53,7 @@ class VoiceRecorderService : LifecycleService() {
 	lateinit var bluetoothScoUseCase: BluetoothScoUseCase
 
 	@Inject
-	lateinit var phoneStateObserverUseCase: PauseRecordingOnCallUseCase
+	lateinit var phoneStateObserverUseCase: PhoneStateObserverUsecase
 
 	@Inject
 	lateinit var recorderSettings: RecorderAudioSettingsRepo
@@ -73,11 +71,11 @@ class VoiceRecorderService : LifecycleService() {
 	val recorderState: StateFlow<RecorderState>
 		get() = voiceRecorder.recorderState
 
+	@OptIn(FlowPreview::class)
 	private val notificationTimer: Flow<LocalTime>
-		get() = voiceRecorder.recorderTimer.buffer(1)
-			.map { time -> LocalTime.fromSecondOfDay(time.toSecondOfDay()) }
-			.distinctUntilChanged()
-			.flowOn(Dispatchers.Unconfined)
+		get() = voiceRecorder.recorderTimer
+			.distinctUntilChanged { old, new -> old.toSecondOfDay() == new.toSecondOfDay() }
+			.flowOn(Dispatchers.Default)
 
 
 	inner class LocalBinder : Binder() {
@@ -108,6 +106,8 @@ class VoiceRecorderService : LifecycleService() {
 			readAmplitudes()
 			// update the notification
 			readTimerAndUpdateNotification()
+
+			Log.i(LOGGER_TAG, "VOICE RECORDER SERVICE INFO READERS ADDED")
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
@@ -126,31 +126,32 @@ class VoiceRecorderService : LifecycleService() {
 
 
 	private fun readAmplitudes() {
-		Log.d(LOGGER_TAG, "READING AMPLITUDES")
-
 		voiceRecorder.maxAmplitudes.onEach { array ->
-			val immutableList = withContext(Dispatchers.Default) {
-				if (array.isEmpty()) return@withContext persistentListOf()
-				array.toList().toPersistentList()
-			}
+			// if array is empty then an empty list
+			// otherwise the converted one
+			val immutableList = if (array.isEmpty()) persistentListOf()
+			else array.toList().toPersistentList()
+
 			_amplitudes.update { immutableList }
-		}.launchIn(lifecycleScope)
+		}.flowOn(Dispatchers.Default)
+			.launchIn(lifecycleScope)
 	}
 
 
-	private fun showBluetoothConnectedToast() = bluetoothScoUseCase.connectionMode
-		.onEach { state ->
-			if (state == BtSCOChannelState.CONNECTED) {
-				applicationContext.showScoConnectToast()
-			}
-		}.launchIn(lifecycleScope)
-
+	private fun showBluetoothConnectedToast() {
+		bluetoothScoUseCase.connectionMode
+			.onEach { state ->
+				if (state == BtSCOChannelState.CONNECTED) {
+					showScoConnectToast()
+				}
+			}.launchIn(lifecycleScope)
+	}
 
 	private fun observeChangingPhoneState() {
 		phoneStateObserverUseCase.checkIfAllowedAndRinging(
 			scope = lifecycleScope,
 			onPhoneRinging = {
-				applicationContext.phoneRingingToast()
+				phoneRingingToast()
 				onPauseRecording()
 			},
 		)
@@ -158,8 +159,6 @@ class VoiceRecorderService : LifecycleService() {
 
 
 	private fun readTimerAndUpdateNotification() {
-		Log.d(LOGGER_TAG, "READING TIMER AND UPDATING NOTIFICAITONS")
-
 		combine(notificationTimer, recorderState) { time, state ->
 			when (state) {
 				RecorderState.RECORDING -> notificationHelper.showNotificationDuringRecording(time)
@@ -173,11 +172,13 @@ class VoiceRecorderService : LifecycleService() {
 	private fun onStartRecording() {
 		//start the recorder
 		lifecycleScope.launch { voiceRecorder.startRecording() }
-		// start foreground service
-		startForegroundServiceMicrophone(
-			NotificationConstants.RECORDER_NOTIFICATION_ID,
-			notificationHelper.timerNotification
-		)
+			.invokeOnCompletion {
+				// start foreground service
+				startForegroundServiceMicrophone(
+					NotificationConstants.RECORDER_NOTIFICATION_ID,
+					notificationHelper.timerNotification
+				)
+			}
 	}
 
 
@@ -200,7 +201,7 @@ class VoiceRecorderService : LifecycleService() {
 		lifecycleScope.launch { voiceRecorder.cancelRecording() }
 			.invokeOnCompletion {
 				// stop the foregound
-				stopForeground(Service.STOP_FOREGROUND_DETACH)
+				stopForeground(Service.STOP_FOREGROUND_REMOVE)
 			}
 	}
 
@@ -209,7 +210,7 @@ class VoiceRecorderService : LifecycleService() {
 		lifecycleScope.launch { voiceRecorder.stopRecording() }
 			.invokeOnCompletion {
 				// stop the foreground
-				stopForeground(Service.STOP_FOREGROUND_DETACH)
+				stopForeground(Service.STOP_FOREGROUND_REMOVE)
 			}
 	}
 
@@ -218,15 +219,15 @@ class VoiceRecorderService : LifecycleService() {
 		bluetoothScoUseCase.closeConnectionIfPresent()
 		// resources are cleared
 		voiceRecorder.releaseResources()
-		Log.d(LOGGER_TAG, "SERVICE DESTROYED")
+		Log.i(LOGGER_TAG, "RECORDER SERVICE DESTROYED")
 		super.onDestroy()
 	}
 }
 
 private fun Context.phoneRingingToast() =
-	Toast.makeText(this, R.string.toast_incoming_call, Toast.LENGTH_SHORT)
+	Toast.makeText(applicationContext, R.string.toast_incoming_call, Toast.LENGTH_SHORT)
 		.show()
 
 private fun Context.showScoConnectToast() =
-	Toast.makeText(this, R.string.toast_recording_bluetooth, Toast.LENGTH_LONG)
+	Toast.makeText(applicationContext, R.string.toast_recording_bluetooth, Toast.LENGTH_LONG)
 		.show()

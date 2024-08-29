@@ -3,6 +3,7 @@ package com.eva.recorderapp.common
 object NotificationConstants {
 
 	const val RECORDER_NOTIFICATION_ID = 1
+	const val RECORDER_NOTIFICATION_SECONDARY_ID = 2
 
 	const val DELETE_WORKER_NOTIFICATION_ID = 3
 

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.eva.recorderapp.voice_recorder.data.util
 
 import android.Manifest
@@ -67,7 +69,6 @@ class PhoneStateObserverImpl(
 		}
 	}
 
-	@Suppress("DEPRECATION")
 	fun phoneStateListener() = callbackFlow<PhoneState> {
 
 		if (!hasPhoneStatePermission) {

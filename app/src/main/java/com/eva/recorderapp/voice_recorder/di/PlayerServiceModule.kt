@@ -8,7 +8,11 @@ import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.extractor.DefaultExtractorsFactory
+import androidx.media3.extractor.amr.AmrExtractor
+import androidx.media3.extractor.mp3.Mp3Extractor
 import androidx.media3.session.MediaConstants
 import androidx.media3.session.MediaNotification
 import androidx.media3.session.MediaSession
@@ -41,7 +45,16 @@ object PlayerServiceModule {
 			.setSpatializationBehavior(C.SPATIALIZATION_BEHAVIOR_AUTO)
 			.build()
 
+		val extractor = DefaultExtractorsFactory().apply {
+			//set extractor flags later if there is some problem
+			setAmrExtractorFlags(AmrExtractor.FLAG_ENABLE_CONSTANT_BITRATE_SEEKING)
+			setMp3ExtractorFlags(Mp3Extractor.FLAG_ENABLE_CONSTANT_BITRATE_SEEKING)
+		}
+
+		val mediaSourceFactory = DefaultMediaSourceFactory(context, extractor)
+
 		return ExoPlayer.Builder(context)
+			.setMediaSourceFactory(mediaSourceFactory)
 			.setSkipSilenceEnabled(settings.audioSettings.skipSilences)
 			.setAudioAttributes(attibutes, true)
 			.setTrackSelector(DefaultTrackSelector(context))

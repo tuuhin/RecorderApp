@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.media.AudioAttributes
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
@@ -19,18 +18,16 @@ import com.eva.recorderapp.voice_recorder.domain.util.exception.BluetoothScoAlre
 import com.eva.recorderapp.voice_recorder.domain.util.exception.BluetoothScoDeviceNotFound
 import com.eva.recorderapp.voice_recorder.domain.util.exception.TelephonyFeatureNotException
 import com.eva.recorderapp.voice_recorder.domain.util.models.AudioDevice
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import java.util.concurrent.Executor
 
 private const val TAG = "BLUETOOTH_UTIL"
 
 class BluetoothScoConnectImpl(
 	private val context: Context
 ) : BluetoothScoConnect {
-
 
 	private val audioManager by lazy { context.getSystemService<AudioManager>() }
 
@@ -52,10 +49,8 @@ class BluetoothScoConnectImpl(
 				}
 
 				Log.d(TAG, "LISTENER FOR COMM DEVICE ADDED")
-				audioManager?.addOnCommunicationDeviceChangedListener(
-					Dispatchers.Main.asExecutor(),
-					listener
-				)
+				audioManager
+					?.addOnCommunicationDeviceChangedListener(context.mainExecutor, listener)
 
 				awaitClose {
 					Log.d(TAG, "LISTENER FOR COMM DEVICE REMOVED")
@@ -75,7 +70,6 @@ class BluetoothScoConnectImpl(
 
 			val intentFilter = IntentFilter().apply {
 				addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED)
-
 			}
 
 			ContextCompat.registerReceiver(
@@ -96,6 +90,7 @@ class BluetoothScoConnectImpl(
 	@Suppress("DEPRECATION")
 	override fun beginScoConnection(): Resource<Boolean, Exception> {
 		return try {
+			Log.i(TAG, "STARTING CONNECTION...")
 			if (audioManager?.isBluetoothScoAvailableOffCall == false) {
 				Log.i(TAG, "SCO NOT AVAILABLE")
 				return Resource.Error(TelephonyFeatureNotException())
@@ -110,16 +105,7 @@ class BluetoothScoConnectImpl(
 					return Resource.Error(BluetoothScoAlreadyConnected())
 				}
 
-				val inputDevices = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-					val attributes = AudioAttributes.Builder()
-						.setUsage(AudioAttributes.USAGE_MEDIA)
-						.setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-						.build()
-
-					audioManager?.getAudioDevicesForAttributes(attributes)
-				} else audioManager?.availableCommunicationDevices
-
-				val filterDevices = inputDevices
+				val filterDevices = audioManager?.availableCommunicationDevices
 					?.filter { it.isSink && it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO }
 
 				val device = filterDevices?.firstOrNull()
@@ -137,7 +123,7 @@ class BluetoothScoConnectImpl(
 					return Resource.Error(BluetoothScoAlreadyConnected())
 				}
 				// start bluetooth sco
-				val isOk = audioManager?.startBluetoothSco()
+				audioManager?.startBluetoothSco()
 				Log.d(TAG, "START BLUETOOTH SCO ")
 				Resource.Success(true)
 			}
@@ -191,3 +177,7 @@ private fun AudioDeviceInfo.toModel() = AudioDevice(
 	id = id,
 	productName = productName?.toString()
 )
+
+
+private val Context.mainExecutor: Executor
+	get() = ContextCompat.getMainExecutor(this)

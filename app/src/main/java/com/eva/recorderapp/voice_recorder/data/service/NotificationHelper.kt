@@ -134,25 +134,23 @@ class NotificationHelper(
 
 	val recordingCompleteNotification: Notification =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
-			.setSmallIcon(R.drawable.ic_microphone)
+			.setSmallIcon(R.drawable.ic_outlined_recording)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
 			.setContentTitle(context.getString(R.string.recorder_recording_completed))
 			.setContentText(context.getString(R.string.recorder_recording_completed_text))
 			.setAutoCancel(true)
-			.setOnlyAlertOnce(true)
 			.setContentIntent(recordingsScreenPendingIntent)
 			.build()
 
 	val recordingCancelNotificaiton: Notification =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
-			.setSmallIcon(R.drawable.ic_microphone)
+			.setSmallIcon(R.drawable.ic_outlined_recording)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
 			.setContentTitle(context.getString(R.string.recorder_recording_notificaiton_title_canceled))
 			.setContentText(context.getString(R.string.recorder_recording_notification_canceled_text))
 			.setAutoCancel(true)
-			.setOnlyAlertOnce(true)
 			.build()
 
 	val timerNotification: Notification
@@ -188,14 +186,14 @@ class NotificationHelper(
 
 	fun setRecordingsCompletedNotifcation() {
 		_notificationManager?.notify(
-			NotificationConstants.RECORDER_NOTIFICATION_ID,
+			NotificationConstants.RECORDER_NOTIFICATION_SECONDARY_ID,
 			recordingCompleteNotification
 		)
 	}
 
 	fun setRecordingCancelNotificaion() {
 		_notificationManager?.notify(
-			NotificationConstants.RECORDER_NOTIFICATION_ID,
+			NotificationConstants.RECORDER_NOTIFICATION_SECONDARY_ID,
 			recordingCancelNotificaiton
 		)
 	}
