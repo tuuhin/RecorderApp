@@ -62,12 +62,12 @@ fun NavGraphBuilder.recorderRoute(
 			if (isReady && service != null) {
 
 				val timer by service.recorderTime.collectAsStateWithLifecycle()
-				val recorderstate by service.recorderState.collectAsStateWithLifecycle()
-				val recorderAmplitude by service.amplitides.collectAsStateWithLifecycle()
+				val recorderState by service.recorderState.collectAsStateWithLifecycle()
+				val recorderAmplitude by service.amplitudes.collectAsStateWithLifecycle()
 
 				VoiceRecroderScreen(
 					stopWatch = timer,
-					recorderState = recorderstate,
+					recorderState = recorderState,
 					amplitudeCallback = { recorderAmplitude },
 					onRecorderAction = viewModel::onAction,
 					onShowRecordings = dropUnlessResumed {

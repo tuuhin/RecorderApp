@@ -42,10 +42,10 @@ fun AppDialogInfoContent(modifier: Modifier = Modifier) {
 	val inspectionMode = LocalInspectionMode.current
 	val context = LocalContext.current
 
-	val versioncode = remember {
+	val versioncode: String = remember {
 		if (inspectionMode) return@remember "0.0.0"
 		val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-		return@remember pInfo.versionName
+		return@remember pInfo?.versionName ?: "Unknown"
 	}
 
 	Surface(

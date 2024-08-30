@@ -9,9 +9,9 @@ import android.os.Build
 import android.util.Log
 
 
-private const val LOGGER_TAG = "MIC_FORGROUND_SERVICE"
+private const val LOGGER_TAG = "MIC_FOREGROUND_SERVICE"
 
-fun Service.startForegroundServiceMicrophone(id: Int, notification: Notification) {
+fun Service.startVoiceRecorderService(id: Int, notification: Notification) {
 	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 		try {
 			startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
@@ -30,13 +30,13 @@ fun Service.startForegroundServiceMicrophone(id: Int, notification: Notification
 		try {
 			startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
 		} catch (e: Exception) {
-			Log.e(LOGGER_TAG, "SOME EXCEPTION OCCURED", e)
+			Log.e(LOGGER_TAG, "SOME EXCEPTION OCCURRED", e)
 		}
 	} else {
 		try {
 			startForeground(id, notification)
 		} catch (e: Exception) {
-			Log.e(LOGGER_TAG, "SOME EXCEPTION OCCURED", e)
+			Log.e(LOGGER_TAG, "SOME EXCEPTION OCCURRED", e)
 		}
 	}
 }

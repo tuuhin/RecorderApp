@@ -8,7 +8,7 @@ import com.eva.recorderapp.voice_recorder.data.service.VoiceRecorderService
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderActionHandler
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 
-const private val LOGGER_TAG = "RECORDER_ACTION_HANDLER"
+private const val LOGGER_TAG = "RECORDER_ACTION_HANDLER"
 
 class RecorderActionHandlerImpl(
 	private val context: Context

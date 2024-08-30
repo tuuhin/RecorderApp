@@ -18,7 +18,7 @@ import com.google.common.collect.ImmutableList
 
 @OptIn(UnstableApi::class)
 class AudioPlayerNotification(
-	private val context: Context
+	context: Context
 ) : DefaultMediaNotificationProvider(
 	context,
 	NotificationIdProvider { NotificationConstants.PLAYER_NOTIFICATION_ID },
@@ -43,8 +43,7 @@ class AudioPlayerNotification(
 				PlayerSessionCommands.playPauseButton(
 					showPauseButton = showPauseButton,
 					extras = bundleOf(
-						DefaultMediaNotificationProvider.COMMAND_KEY_COMPACT_VIEW_INDEX to
-								C.INDEX_UNSET
+						COMMAND_KEY_COMPACT_VIEW_INDEX to C.INDEX_UNSET
 					),
 					displayName = if (showPauseButton) "Paused" else "Play"
 				)

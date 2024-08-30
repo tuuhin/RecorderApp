@@ -21,7 +21,6 @@ import com.eva.recorderapp.voice_recorder.domain.util.models.AudioDevice
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import java.util.concurrent.Executor
 
 private const val TAG = "BLUETOOTH_UTIL"
 
@@ -42,10 +41,8 @@ class BluetoothScoConnectImpl(
 					trySend(product.toModel())
 				}
 
-				val listener = object : AudioManager.OnCommunicationDeviceChangedListener {
-					override fun onCommunicationDeviceChanged(device: AudioDeviceInfo?) {
-						device?.toModel()?.let { aud -> trySend(aud) }
-					}
+				val listener = AudioManager.OnCommunicationDeviceChangedListener { device ->
+					device?.toModel()?.let { aud -> trySend(aud) }
 				}
 
 				Log.d(TAG, "LISTENER FOR COMM DEVICE ADDED")
@@ -65,7 +62,7 @@ class BluetoothScoConnectImpl(
 
 			val receiver = BluetoothScoReceiver { state ->
 				trySend(state)
-				Log.d(TAG, "BT STATE ${state.name}")
+				Log.d(TAG, "BT_SCO_STATE: ${state.name}")
 			}
 
 			val intentFilter = IntentFilter().apply {
@@ -78,7 +75,7 @@ class BluetoothScoConnectImpl(
 				intentFilter,
 				ContextCompat.RECEIVER_NOT_EXPORTED
 			)
-			Log.d(TAG, "RECIEVER REGISTERED")
+			Log.d(TAG, "RECEIVER REGISTERED")
 
 			awaitClose {
 				context.unregisterReceiver(receiver)
@@ -101,7 +98,7 @@ class BluetoothScoConnectImpl(
 					?: return Resource.Error(TelephonyFeatureNotException())
 
 				if (connected.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO && connected.isSink) {
-					Log.d(TAG, "DEVICE IS ALREDY CONNECTED :${connected.productName}")
+					Log.d(TAG, "DEVICE IS ALREADY CONNECTED :${connected.productName}")
 					return Resource.Error(BluetoothScoAlreadyConnected())
 				}
 
@@ -113,7 +110,7 @@ class BluetoothScoConnectImpl(
 
 				// set the communication device
 				val isOk = audioManager?.setCommunicationDevice(device)
-				Log.d(TAG, "COMMUNICATON DEVICE SET :${device.productName} ")
+				Log.d(TAG, "COMMUNICATION DEVICE SET :${device.productName} ")
 
 				Resource.Success(isOk == true)
 
@@ -177,7 +174,3 @@ private fun AudioDeviceInfo.toModel() = AudioDevice(
 	id = id,
 	productName = productName?.toString()
 )
-
-
-private val Context.mainExecutor: Executor
-	get() = ContextCompat.getMainExecutor(this)

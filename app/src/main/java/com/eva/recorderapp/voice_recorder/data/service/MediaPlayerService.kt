@@ -30,7 +30,7 @@ class MediaPlayerService : MediaSessionService() {
 	@Inject
 	lateinit var notification: MediaNotification.Provider
 
-	private val listener = object : MediaSessionService.Listener {
+	private val listener = object : Listener {
 		override fun onForegroundServiceStartNotAllowedException() {
 			Log.e(TAG, "CANNOT START FOREGROUND SERVICE")
 		}
@@ -40,7 +40,7 @@ class MediaPlayerService : MediaSessionService() {
 		super.onCreate()
 
 		setMediaNotificationProvider(notification)
-		Log.d(TAG, "MEDIA SESSION CONFIGURED AND NOTIFICATON SET")
+		Log.d(TAG, "MEDIA SESSION CONFIGURED AND NOTIFICATION SET")
 	}
 
 
@@ -54,7 +54,7 @@ class MediaPlayerService : MediaSessionService() {
 	}
 
 
-	override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
+	override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession {
 		Log.i(TAG, "SESSION SET")
 
 		audioId = controllerInfo.connectionHints

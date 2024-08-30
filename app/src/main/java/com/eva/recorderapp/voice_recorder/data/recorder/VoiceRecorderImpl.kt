@@ -55,13 +55,13 @@ class VoiceRecorderImpl(
 	private var _recorder: MediaRecorder? = null
 	private var _bufferReader: BufferedAmplitudeReader? = null
 
-	// recodings file related
+	// recordings file related
 	private var _recordingFile: File? = null
 
-	// locks ensures a operation complete before an other operation can start
-	val operationLock = Mutex(false)
+	// locks ensures an operation complete before another operation can start
+	private val operationLock = Mutex(false)
 
-	val _hasRecordPremission: Boolean
+	private val _hasRecordPermission: Boolean
 		get() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
 				PermissionChecker.PERMISSION_GRANTED
 
@@ -78,17 +78,14 @@ class VoiceRecorderImpl(
 				?: emptyFlow()
 		}
 
-
-	private val _errorListener = object : MediaRecorder.OnErrorListener {
-		override fun onError(mr: MediaRecorder?, what: Int, extra: Int) {
-			Log.e(LOGGER_TAG, "SOME ERROR OCCURED WITH RECORDER")
-		}
+	private val _errorListener = MediaRecorder.OnErrorListener { _, _, _ ->
+		Log.e(LOGGER_TAG, "SOME ERROR OCCURRED WITH RECORDER")
 	}
 
 	@Suppress("DEPRECATION")
 	override fun createRecorder() {
 		// no perms granted
-		if (!_hasRecordPremission) {
+		if (!_hasRecordPermission) {
 			Log.i(LOGGER_TAG, "NO RECORD PERMISSION FOUND")
 			return
 		}
@@ -116,17 +113,12 @@ class VoiceRecorderImpl(
 		return coroutineScope {
 			if (_recorder == null) createRecorder()
 
-			// ensures the file is being created in a differnt coroutine
+			// ensures the file is being created in a different coroutine
 			val file = async(Dispatchers.IO) {
 				fileProvider.createFileForRecoring(format.fileExtension)
 			}
 
 			_recordingFile = file.await()
-
-			if (_recordingFile == null) {
-				Log.i(LOGGER_TAG, "CANNOT CREATE FILE FOR RECORDING")
-				return@coroutineScope false
-			}
 
 			Log.d(LOGGER_TAG, "NEW_FILE_URI_CREATED")
 
@@ -142,16 +134,21 @@ class VoiceRecorderImpl(
 				setAudioSamplingRate(quality.sampleRate)
 				setAudioEncodingBitRate(quality.bitRate)
 			}
-			Log.d(LOGGER_TAG, "RECORDER CONFIGURED")
-			Log.i(LOGGER_TAG, "SAMPLING RATE : ${quality.sampleRate}")
-			Log.i(LOGGER_TAG, "ENCODING BIT RATE : ${quality.bitRate}")
-			Log.i(LOGGER_TAG, "CHANNEL COUNT :$channelCount")
+			_recorder?.metrics?.let { bundle ->
+				val bitrate = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_BITRATE)
+				val sampleRte = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_SAMPLERATE)
+				val channel = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_CHANNELS)
+				Log.i(LOGGER_TAG, "RECORDER METRICS AFTER CONFIGURATION")
+				Log.i(LOGGER_TAG, "SAMPLING RATE : $sampleRte")
+				Log.i(LOGGER_TAG, "ENCODING BIT RATE : $bitrate")
+				Log.i(LOGGER_TAG, "CHANNEL COUNT :$channel")
+			}
 			true
 		}
 	}
 
 	/**
-	 * Method to be called when recording has been finished and you update the file
+	 * Method to be called when recording has been finished, and you update the file
 	 * metadata
 	 */
 	private suspend fun updateFileDataToExternalStorage() {
@@ -165,7 +162,7 @@ class VoiceRecorderImpl(
 		// set recording uri to null and close the socket
 		_recordingFile = null
 		// resets the recorder for  next recording
-		Log.d(LOGGER_TAG, "RESETING THE RECORDER")
+		Log.d(LOGGER_TAG, "RESTING THE RECORDER")
 		_recorder?.reset()
 	}
 
@@ -180,12 +177,12 @@ class VoiceRecorderImpl(
 		// set recording uri to null and close the socket
 		_recordingFile = null
 		// resets the recorder for  next recording
-		Log.d(LOGGER_TAG, "RESETING THE RECORDER")
+		Log.d(LOGGER_TAG, "RESTING THE RECORDER")
 		_recorder?.reset()
 	}
 
 	override suspend fun startRecording() {
-		// if its holding the lock dont do anything
+		// if it's holding the lock don't do anything
 		if (operationLock.holdsLock(this)) {
 			Log.d(LOGGER_TAG, "CANNOT START RECORDING ITS LOCKED")
 			return
@@ -194,7 +191,7 @@ class VoiceRecorderImpl(
 		operationLock.lock(this)
 		// current uri is already set cannot set it again
 		if (_recordingFile != null) {
-			Log.d(LOGGER_TAG, "CURRENT URI IS ALREDY SET")
+			Log.d(LOGGER_TAG, "CURRENT URI IS ALREADY SET")
 			return
 		}
 		try {
@@ -203,7 +200,7 @@ class VoiceRecorderImpl(
 			Log.i(LOGGER_TAG, "PREPARING FILE FOR RECORDING")
 			val isOK = initiateRecorderParams()
 			if (!isOK) {
-				Log.d(LOGGER_TAG, "CANNOT INITATE RECORDER PARAMS")
+				Log.d(LOGGER_TAG, "CANNOT INITIATE RECORDER PARAMS")
 				val message = context.getString(R.string.cannot_create_file)
 				Toast.makeText(context, message, Toast.LENGTH_SHORT)
 					.show()
@@ -226,7 +223,7 @@ class VoiceRecorderImpl(
 	}
 
 	override suspend fun stopRecording() {
-		// if its holding the lock dont do anything
+		// if it's holding the lock don't do anything
 		if (operationLock.holdsLock(this)) {
 			Log.d(LOGGER_TAG, "CANNOT STOP RECORDING ITS LOCKED")
 			return
@@ -281,7 +278,7 @@ class VoiceRecorderImpl(
 	}
 
 	override suspend fun cancelRecording() {
-		// if its holding the lock dont do anything
+		// if it's holding the lock don't do anything
 		if (operationLock.holdsLock(this)) {
 			Log.d(LOGGER_TAG, "CANNOT CANCEL RECORDING ITS LOCKED")
 			return
@@ -317,14 +314,14 @@ class VoiceRecorderImpl(
 			}
 		}
 		//set recording file to null
-		_recordingFile == null
+		_recordingFile = null
 		//set buffer reader to null
 		_bufferReader = null
 		Log.d(LOGGER_TAG, "CLEARING THE BUFFER READER")
 		// clear the recorder resources
 		Log.d(LOGGER_TAG, "RELEASE RECORDER")
 		_recorder?.release()
-		_recorder == null
+		_recorder = null
 		// resetting the stopwatch
 		Log.d(LOGGER_TAG, "RESETTING STOPWATCH")
 		stopWatch.reset()

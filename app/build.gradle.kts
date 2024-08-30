@@ -11,13 +11,12 @@ plugins {
 
 android {
 	namespace = "com.eva.recorderapp"
-	compileSdk = 34
+	compileSdk = 35
 
 	defaultConfig {
 		applicationId = "com.eva.recorderapp"
 		minSdk = 29
-		//noinspection OldTargetApi
-		targetSdk = 34
+		targetSdk = 35
 		versionCode = 1
 		versionName = "1.0"
 
@@ -108,6 +107,7 @@ dependencies {
 	implementation(libs.androidx.media3.exoplayer)
 	implementation(libs.androidx.media3.ui)
 	implementation(libs.androidx.media3.session)
+	implementation(libs.androidx.media3.transformer)
 	//splash
 	implementation(libs.androidx.core.splashscreen)
 	//dynamic font

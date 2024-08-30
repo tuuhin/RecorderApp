@@ -18,15 +18,17 @@ class RecorderViewModel @Inject constructor(
 	private val handler: RecorderActionHandler
 ) : AppViewModel() {
 
-	val _uiEvents = MutableSharedFlow<UIEvents>()
+	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 
 	fun onAction(action: RecorderAction) {
 		when (val resource = handler.onRecorderAction(action)) {
 			is Resource.Error -> viewModelScope.launch {
-				_uiEvents.emit(UIEvents.ShowToast(resource.error.message ?: resource.message ?: ""))
+				val message = resource.error.message ?: resource.message ?: ""
+				_uiEvents.emit(UIEvents.ShowToast(message))
 			}
+
 			else -> {}
 		}
 	}

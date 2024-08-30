@@ -40,11 +40,6 @@ class NotificationHelper(
 			action = Intent.ACTION_VIEW
 		}
 
-	private fun buildNotificationAction(
-		title: String,
-		intent: PendingIntent? = null
-	) = NotificationCompat.Action.Builder(0, title, intent).build()
-
 	private fun buildServicePendingIntent(
 		context: Context,
 		requestCodes: IntentRequestCodes,
@@ -119,7 +114,7 @@ class NotificationHelper(
 		setOnClickPendingIntent(R.id.pause_button, pauseRecorderPendingIntent)
 	}
 
-	private val _recorderNotifcation =
+	private val _recorderNotification =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_microphone)
 			.setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -132,7 +127,7 @@ class NotificationHelper(
 			.setOngoing(true)
 			.setContentIntent(recorderScreenPendingIntent)
 
-	val recordingCompleteNotification: Notification =
+	private val recordingCompleteNotification: Notification =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_outlined_recording)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -143,7 +138,7 @@ class NotificationHelper(
 			.setContentIntent(recordingsScreenPendingIntent)
 			.build()
 
-	val recordingCancelNotificaiton: Notification =
+	private val recordingCancelNotification: Notification =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_outlined_recording)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -164,7 +159,7 @@ class NotificationHelper(
 				setViewVisibility(R.id.resume_button, View.GONE)
 			}
 
-			return _recorderNotifcation
+			return _recorderNotification
 				.setCustomContentView(updatedRemoteView)
 				.build()
 		}
@@ -178,27 +173,27 @@ class NotificationHelper(
 		// show the notification
 		_notificationManager?.notify(
 			NotificationConstants.RECORDER_NOTIFICATION_ID,
-			_recorderNotifcation
+			_recorderNotification
 				.setCustomContentView(updatedRemoteView)
 				.build()
 		)
 	}
 
-	fun setRecordingsCompletedNotifcation() {
+	fun setRecordingsCompletedNotification() {
 		_notificationManager?.notify(
 			NotificationConstants.RECORDER_NOTIFICATION_SECONDARY_ID,
 			recordingCompleteNotification
 		)
 	}
 
-	fun setRecordingCancelNotificaion() {
+	fun setRecordingCancelNotification() {
 		_notificationManager?.notify(
 			NotificationConstants.RECORDER_NOTIFICATION_SECONDARY_ID,
-			recordingCancelNotificaiton
+			recordingCancelNotification
 		)
 	}
 
-	fun setOnPauseNotifcation() {
+	fun setOnPauseNotification() {
 		val updatedRemoteView = recorderCustomView.apply {
 			setTextViewText(
 				R.id.notification_text,
@@ -210,7 +205,7 @@ class NotificationHelper(
 		// show the notification
 		_notificationManager?.notify(
 			NotificationConstants.RECORDER_NOTIFICATION_ID,
-			_recorderNotifcation
+			_recorderNotification
 				.setCustomContentView(updatedRemoteView)
 				.build()
 		)
@@ -228,7 +223,7 @@ class NotificationHelper(
 		// notification notify
 		_notificationManager?.notify(
 			NotificationConstants.RECORDER_NOTIFICATION_ID,
-			_recorderNotifcation
+			_recorderNotification
 				.setCustomContentView(updatedRemoteView)
 				.build()
 		)

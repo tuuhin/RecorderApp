@@ -19,11 +19,10 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 private const val LOGGER_TAG = "AMPLITUDE_READER"
-private val MAX_AMPLITUDE = 32_768
 
 class BufferedAmplitudeReader(
 	private val recorder: MediaRecorder?,
-	val samplingRate: Duration = 80.milliseconds
+	private val samplingRate: Duration = 80.milliseconds
 ) {
 
 	private val _buffer = ConcurrentLinkedQueue<Int>()
@@ -64,7 +63,7 @@ class BufferedAmplitudeReader(
 			}
 		} catch (e: CancellationException) {
 			// if the child flow is canceled while suspending in delay method
-			// throw cancelation exception
+			// throw cancellation exception
 			throw e
 		} catch (e: IllegalStateException) {
 			Log.e(LOGGER_TAG, "ILLEGAL STATE")
@@ -75,9 +74,9 @@ class BufferedAmplitudeReader(
 	}.flowOn(Dispatchers.IO)
 
 	/**
-	 * Clears the buffer if it contains any value and emit a end zero
+	 * Clears the buffer if it contains any value and emit an end zero
 	 */
-	private fun clearBufferAndEmptyFlow() = flow<FloatArray> {
+	private fun clearBufferAndEmptyFlow() = flow{
 		if (_buffer.isNotEmpty()) {
 			_buffer.clear()
 			ampsRange = AmpsRange()
@@ -87,7 +86,6 @@ class BufferedAmplitudeReader(
 
 	/**
 	 * Adds the new value to [_buffer] and compute a flow out of it
-	 * The flow will have a fix size [maxBufferSize].
 	 */
 	private fun flowToFixedSizeCollection(newValue: Int): Flow<List<Int>> {
 		return flow {
@@ -124,7 +122,7 @@ class BufferedAmplitudeReader(
 		if (range <= 0) return floatArrayOf()
 
 		val normalizedValue = map { amp ->
-			val normalizedValue = (amp - ampsRange.min).toFloat() / range
+			val normalizedValue = (amp - ampsRange.min) / range
 			normalizedValue.coerceIn(0f..1f)
 		}
 		return normalizedValue.toFloatArray()
@@ -135,7 +133,7 @@ class BufferedAmplitudeReader(
 		factor: Float = 0.3f
 	): List<Float> {
 		var prev = 0f
-		val out = buildList<Float> {
+		val out = buildList {
 			data.forEach { amplitude ->
 				val smooth = (prev * factor + amplitude * (1 - factor))
 				add(smooth)

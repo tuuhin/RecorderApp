@@ -1,6 +1,5 @@
 package com.eva.recorderapp.voice_recorder.data.service
 
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
@@ -11,19 +10,16 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.NotificationConstants
-import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
-import com.eva.recorderapp.voice_recorder.domain.util.enums.BtSCOChannelState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,14 +51,11 @@ class VoiceRecorderService : LifecycleService() {
 	@Inject
 	lateinit var phoneStateObserverUseCase: PhoneStateObserverUsecase
 
-	@Inject
-	lateinit var recorderSettings: RecorderAudioSettingsRepo
-
 	private val binder = LocalBinder()
 
 	private val _amplitudes = MutableStateFlow(persistentListOf<Float>())
 
-	val amplitides: StateFlow<ImmutableList<Float>>
+	val amplitudes: StateFlow<ImmutableList<Float>>
 		get() = _amplitudes.asStateFlow()
 
 	val recorderTime: StateFlow<LocalTime>
@@ -71,7 +64,6 @@ class VoiceRecorderService : LifecycleService() {
 	val recorderState: StateFlow<RecorderState>
 		get() = voiceRecorder.recorderState
 
-	@OptIn(FlowPreview::class)
 	private val notificationTimer: Flow<LocalTime>
 		get() = voiceRecorder.recorderTimer
 			.distinctUntilChanged { old, new -> old.toSecondOfDay() == new.toSecondOfDay() }
@@ -84,9 +76,9 @@ class VoiceRecorderService : LifecycleService() {
 			this@VoiceRecorderService
 	}
 
-	override fun onBind(intent: Intent): IBinder? {
+	override fun onBind(intent: Intent): IBinder {
 		super.onBind(intent)
-		Log.d(LOGGER_TAG, "SERVICE BINDED")
+		Log.d(LOGGER_TAG, "SERVICE BOUNDED")
 		return binder
 	}
 
@@ -96,7 +88,7 @@ class VoiceRecorderService : LifecycleService() {
 			// read phone states
 			// preparing the recorder
 			voiceRecorder.createRecorder()
-			// check usecase
+			// check use case
 			bluetoothScoUseCase.startConnectionIfAllowed()
 			// listen to changes
 			observeChangingPhoneState()
@@ -107,7 +99,7 @@ class VoiceRecorderService : LifecycleService() {
 			// update the notification
 			readTimerAndUpdateNotification()
 
-			Log.i(LOGGER_TAG, "VOICE RECORDER SERVICE INFO READERS ADDED")
+			Log.i(LOGGER_TAG, "SERVICE CREATED WITH OBSERVERS")
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
@@ -139,12 +131,10 @@ class VoiceRecorderService : LifecycleService() {
 
 
 	private fun showBluetoothConnectedToast() {
-		bluetoothScoUseCase.connectionMode
-			.onEach { state ->
-				if (state == BtSCOChannelState.CONNECTED) {
-					showScoConnectToast()
-				}
-			}.launchIn(lifecycleScope)
+		bluetoothScoUseCase.observeConnectedState(
+			scope = lifecycleScope,
+			onStateConnected = ::showScoConnectToast
+		)
 	}
 
 	private fun observeChangingPhoneState() {
@@ -162,8 +152,8 @@ class VoiceRecorderService : LifecycleService() {
 		combine(notificationTimer, recorderState) { time, state ->
 			when (state) {
 				RecorderState.RECORDING -> notificationHelper.showNotificationDuringRecording(time)
-				RecorderState.COMPLETED -> notificationHelper.setRecordingsCompletedNotifcation()
-				RecorderState.CANCELLED -> notificationHelper.setRecordingCancelNotificaion()
+				RecorderState.COMPLETED -> notificationHelper.setRecordingsCompletedNotification()
+				RecorderState.CANCELLED -> notificationHelper.setRecordingCancelNotification()
 				else -> {}
 			}
 		}.launchIn(lifecycleScope)
@@ -174,13 +164,18 @@ class VoiceRecorderService : LifecycleService() {
 		lifecycleScope.launch { voiceRecorder.startRecording() }
 			.invokeOnCompletion {
 				// start foreground service
-				startForegroundServiceMicrophone(
+				startVoiceRecorderService(
 					NotificationConstants.RECORDER_NOTIFICATION_ID,
 					notificationHelper.timerNotification
 				)
 			}
 	}
 
+	override fun onUnbind(intent: Intent?): Boolean {
+		// just a log.
+		Log.d(LOGGER_TAG, "SERVICE UN_BOUNDED")
+		return super.onUnbind(intent)
+	}
 
 	private fun onResumeRecording() {
 		//update the notification
@@ -191,7 +186,7 @@ class VoiceRecorderService : LifecycleService() {
 
 	private fun onPauseRecording() {
 		//update the notification
-		notificationHelper.setOnPauseNotifcation()
+		notificationHelper.setOnPauseNotification()
 		//pause recording
 		voiceRecorder.pauseRecording()
 	}
@@ -200,8 +195,10 @@ class VoiceRecorderService : LifecycleService() {
 		// cancel recording
 		lifecycleScope.launch { voiceRecorder.cancelRecording() }
 			.invokeOnCompletion {
-				// stop the foregound
-				stopForeground(Service.STOP_FOREGROUND_REMOVE)
+				// stop the foreground
+				stopForeground(STOP_FOREGROUND_REMOVE)
+				// stop the service
+				stopSelf()
 			}
 	}
 
@@ -210,13 +207,16 @@ class VoiceRecorderService : LifecycleService() {
 		lifecycleScope.launch { voiceRecorder.stopRecording() }
 			.invokeOnCompletion {
 				// stop the foreground
-				stopForeground(Service.STOP_FOREGROUND_REMOVE)
+				stopForeground(STOP_FOREGROUND_REMOVE)
+				// stop the service
+				stopSelf()
 			}
 	}
 
 	override fun onDestroy() {
 		// close sco connection
 		bluetoothScoUseCase.closeConnectionIfPresent()
+
 		// resources are cleared
 		voiceRecorder.releaseResources()
 		Log.i(LOGGER_TAG, "RECORDER SERVICE DESTROYED")

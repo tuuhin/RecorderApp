@@ -40,7 +40,7 @@ class PhoneStateObserverImpl(
 	}
 
 	@RequiresApi(Build.VERSION_CODES.S)
-	fun phoneStateListenerApi31() = callbackFlow<PhoneState> {
+	fun phoneStateListenerApi31() = callbackFlow {
 
 		if (!hasPhoneStatePermission) {
 			Log.i(TAG, "PERMISSION WAS NOT GRANTED")
@@ -64,12 +64,12 @@ class PhoneStateObserverImpl(
 		Log.d(TAG, "PHONE STATE CALLBACK ADDED")
 
 		awaitClose {
-			Log.d(TAG, "PHONE STATE CALLBACK REOMVED")
+			Log.d(TAG, "PHONE STATE CALLBACK REMOVED")
 			telephonyManager?.unregisterTelephonyCallback(listener)
 		}
 	}
 
-	fun phoneStateListener() = callbackFlow<PhoneState> {
+	private fun phoneStateListener() = callbackFlow {
 
 		if (!hasPhoneStatePermission) {
 			Log.i(TAG, "PERMISSION WAS NOT GRANTED")
@@ -95,7 +95,7 @@ class PhoneStateObserverImpl(
 		Log.d(TAG, "PHONE STATE CALLBACK ADDED")
 
 		awaitClose {
-			Log.d(TAG, "PHONE STATE CALLBACK REOMVED")
+			Log.d(TAG, "PHONE STATE CALLBACK REMOVED")
 			telephonyManager?.listen(listener, PhoneStateListener.LISTEN_NONE)
 		}
 	}
