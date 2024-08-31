@@ -1,33 +1,46 @@
-# 🎙️ RecorderApp
+# :studio_microphone: RecorderApp
 
-<img src="./screenshots/app_icon_rounded.png" align="left" alt="App Rounded Icon" hspace="20" vspace="20" width="100" height="100">
-
-`RecorderApp` is an android audio recorder app, designed to simplify the process of capturing and
-managing your sound recordings.
-
+An android audio recorder app, designed to simplify the process of capturing and managing your sound
+recordings.
 With a clean and intuitive interface, this app offers a seamless user experience.
 
 ## 💁 About
 
-## :building_construction: Features
+A fully functioned recorder app with an ability to record over multiple file formats like **acc**,*
+*amr**,**opus** over different quality. The app can continue its recording in the background, so
+you never miss a moment.
+Once the recording, you can easily manage your files within the app. There built-in player, you can
+listen to your recordings directly within the app or use the convenient media notification for
+playback control.
+
+### :building_construction: Features
 
 What are the features this app can provide, here's some:
 
 - :musical_keyboard: **Effortless Recording**: Start recording instantly with a single tap on the
-  big red button.
+  record button.
 - :medal_military: **Visualization**: Watch the amplitude levels fluctuate in real-time as you
   record.
 - :running_man: **Background Recording**: Keep recording even when you switch to other apps or lock
   your device.
-- :bellhop_bell: **Convenient Notifications**: Control your recordings directly from notifications,
-  without having to return to the app.
+- :bellhop_bell: **Convenient Notifications**: Control your recordings directly from
+  notifications,without having to return to the app.
 - :file_cabinet: **File Management**: Organize, delete, share, or rename your recordings with ease.
 - :record_button: **Built-in Player**: Listen to your recordings directly within the app, complete
   with a media notification for easy playback control.
 
 ## 📷 Screenshots
 
-These will be added later..
+Some sneak peaks of the app design
+
+<p align="center">
+   <img src="./screenshots/recorder_recording_framed.png" width="24%" />
+   <img src="./screenshots/recordings_framed.png" width="24%"/>
+   <img src="./screenshots/player_base_framed.png" width="24%"/>
+   <img src="./screenshots/app_settings.png" width="24%"/>
+</p>
+
+For more [screenshots](./screenshots).
 
 ## :safety_pin: Permissions
 
@@ -57,11 +70,25 @@ Here are the steps to get started with this app:
    Open the project in android studio
 
 3. **Build and Run**
-   Build and run on android device with api _29_ and above
+   Build and run on android device with api 29 and above
 
 You have your app running this is just simple as that.
 
+### :woman_cook: Contributing
+
+Contributions are always welcomed from the community
+
+- Fork the repository.
+- Create your feature branch (git checkout -b feature/YourFeature).
+- Commit your changes (git commit -am 'Add some feature').
+- Push to the branch (git push origin feature/YourFeature).
+- Create a new Pull Request.
+
 ### :curly_loop: Feedback and Support
 
-Yes, there maybe some issues regarding the app or some unwanted scenerio. Please add
+Yes, there maybe some issues regarding the app or some unwanted scenario. Please add
 an [issue](https://github.com/tuuhin/RecorderApp/issues) if you have one.
+
+### :next_track_button: What's next
+
+This app will in further development with few new features planned.
