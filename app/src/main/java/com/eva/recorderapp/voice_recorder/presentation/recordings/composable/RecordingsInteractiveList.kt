@@ -146,7 +146,7 @@ fun RecordingsInteractiveList(
 								contentDescription = stringResource(R.string.extras_info)
 							)
 							Text(
-								text = stringResource(R.string.recording_bin_explainantion),
+								text = stringResource(R.string.recording_bin_explain_text),
 								style = MaterialTheme.typography.labelLarge,
 								color = MaterialTheme.colorScheme.tertiary,
 							)

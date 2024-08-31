@@ -76,12 +76,12 @@ fun <T> RecordingsListDataCrossfade(
 					else painterResource(id = R.drawable.ic_recorder)
 					Image(
 						painter = binPainter,
-						contentDescription = stringResource(R.string.no_recodings),
+						contentDescription = stringResource(R.string.no_recordings),
 						colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary)
 					)
 					Spacer(modifier = Modifier.height(20.dp))
 					Text(
-						text = stringResource(id = R.string.no_recodings),
+						text = stringResource(id = R.string.no_recordings),
 						style = MaterialTheme.typography.titleMedium,
 						color = MaterialTheme.colorScheme.tertiary
 					)

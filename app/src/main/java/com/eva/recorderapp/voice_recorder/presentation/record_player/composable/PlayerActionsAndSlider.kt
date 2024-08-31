@@ -57,7 +57,7 @@ fun PlayerActionsAndSlider(
 				onSpeedSelected = { speed ->
 					onPlayerAction(PlayerEvents.OnPlayerSpeedChange(speed))
 				},
-				contentPadding = PaddingValues(dimensionResource(id = R.dimen.bottomsheet_padding_lg))
+				contentPadding = PaddingValues(all = dimensionResource(id = R.dimen.bottom_sheet_padding_lg))
 			)
 		}
 	}

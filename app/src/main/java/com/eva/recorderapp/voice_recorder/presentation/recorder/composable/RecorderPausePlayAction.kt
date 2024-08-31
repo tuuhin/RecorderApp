@@ -82,7 +82,7 @@ fun RecorderPausePlayAction(
 				) {
 					Icon(
 						painter = painterResource(id = R.drawable.ic_play),
-						contentDescription = stringResource(id = R.string.action_pasued)
+						contentDescription = stringResource(id = R.string.action_paused)
 					)
 				}
 			} else IconButton(
@@ -95,7 +95,7 @@ fun RecorderPausePlayAction(
 			) {
 				Icon(
 					painter = painterResource(id = R.drawable.ic_pause),
-					contentDescription = stringResource(id = R.string.action_pasued)
+					contentDescription = stringResource(id = R.string.action_paused)
 				)
 			}
 		}

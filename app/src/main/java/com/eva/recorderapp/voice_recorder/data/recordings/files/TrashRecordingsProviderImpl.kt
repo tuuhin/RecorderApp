@@ -96,7 +96,7 @@ class TrashRecordingsProviderImpl(
 					)
 				}
 				val models = contentResolver
-					.query(volumeUri, trashRecoringsProjection, queryArgs, null)
+					.query(volumeUri, trashRecordingsProjection, queryArgs, null)
 					?.use { cursor -> readTrashedRecordingsFromCursor(cursor) }
 					?: emptyList()
 
@@ -128,7 +128,7 @@ class TrashRecordingsProviderImpl(
 				} catch (e: Exception) {
 					e.printStackTrace()
 
-					val errorMessage = context.getString(R.string.recording_restore_request_falied)
+					val errorMessage = context.getString(R.string.recording_restore_request_failed)
 					Resource.Error(e, errorMessage)
 				}
 			}
@@ -154,7 +154,7 @@ class TrashRecordingsProviderImpl(
 					e.printStackTrace()
 					Resource.Error(
 						error = e,
-						message = context.getString(R.string.recording_trash_request_falied)
+						message = context.getString(R.string.recording_trash_request_failed)
 					)
 				}
 			}
@@ -178,7 +178,7 @@ class TrashRecordingsProviderImpl(
 					throw e
 				} catch (e: Exception) {
 					e.printStackTrace()
-					val errorMessage = context.getString(R.string.recording_delete_request_falied)
+					val errorMessage = context.getString(R.string.recording_delete_request_failed)
 					Resource.Error(e, errorMessage)
 				}
 			}

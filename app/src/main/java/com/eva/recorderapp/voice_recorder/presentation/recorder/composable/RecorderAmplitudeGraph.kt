@@ -25,8 +25,6 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import com.eva.recorderapp.voice_recorder.presentation.util.RecordingAmplitudes
 
-typealias Postitions = Pair<Offset, Offset>
-
 @Composable
 fun RecorderAmplitudeGraph(
 	amplitudeCallback: RecordingAmplitudes,
@@ -51,11 +49,11 @@ fun RecorderAmplitudeGraph(
 				.aspectRatio(1.78f)
 				.drawWithCache {
 
-					val spikesGap = 1.dp.toPx()
+					val centerYAxis = size.height / 2
+
+					val spikesGap = 2.dp.toPx()
 					val spikesWidth = size.width / VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
 
-					val centerYAxis = size.height / 2
-					val strokeWidth = spikesWidth - spikesGap
 
 					onDrawBehind {
 
@@ -65,7 +63,7 @@ fun RecorderAmplitudeGraph(
 
 						amplitudes.forEachIndexed { idx, value ->
 							val scaleValue = value * .85f
-							val xAxis = (spikesWidth + spikesGap) * idx.toFloat()
+							val xAxis = (spikesWidth) * idx.toFloat()
 							val start = Offset(xAxis, centerYAxis * (1 - scaleValue))
 							val end = Offset(xAxis, centerYAxis * (1 + scaleValue))
 							if (start.y != end.y) {
@@ -74,7 +72,7 @@ fun RecorderAmplitudeGraph(
 									color = barColor,
 									start = start,
 									end = end,
-									strokeWidth = strokeWidth,
+									strokeWidth = spikesGap,
 									cap = StrokeCap.Round
 								)
 							} else dots.add(start)
@@ -84,7 +82,7 @@ fun RecorderAmplitudeGraph(
 							points = dots,
 							pointMode = PointMode.Points,
 							color = barColor,
-							strokeWidth = strokeWidth
+							strokeWidth = spikesGap,
 						)
 					}
 				},

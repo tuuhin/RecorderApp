@@ -2,12 +2,13 @@
 <resources>
   <dimen name="sc_padding">12dp</dimen>
   <dimen name="card_padding">12dp</dimen>
-  <dimen name="amplitudes_card_padding">6dp</dimen>
+  <dimen name="graph_card_padding">6dp</dimen>
   <dimen name="sc_padding_secondary">6dp</dimen>
   <dimen name="recorder_button_size">56dp</dimen>
   <dimen name="recordings_action_offset">-36dp</dimen>
   <dimen name="graph_offset">-80dp</dimen>
   <dimen name="player_actions_padding">20dp</dimen>
-  <dimen name="bottomsheet_padding_lg">20dp</dimen>
+  <dimen name="bottom_sheet_padding_lg">20dp</dimen>
   <dimen name="line_graph_min_height">150dp</dimen>
+  <dimen name="play_button_min_size">72dp</dimen>
 </resources>

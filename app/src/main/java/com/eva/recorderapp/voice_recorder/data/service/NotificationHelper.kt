@@ -143,7 +143,7 @@ class NotificationHelper(
 			.setSmallIcon(R.drawable.ic_outlined_recording)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-			.setContentTitle(context.getString(R.string.recorder_recording_notificaiton_title_canceled))
+			.setContentTitle(context.getString(R.string.recorder_recording_notification_title_canceled))
 			.setContentText(context.getString(R.string.recorder_recording_notification_canceled_text))
 			.setAutoCancel(true)
 			.build()

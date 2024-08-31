@@ -78,7 +78,7 @@ class RecorderFileProviderImpl(
 		}
 	}
 
-	suspend fun createUriForRecording(format: RecordEncoderAndFormat): Uri? {
+	private suspend fun createUriForRecording(format: RecordEncoderAndFormat): Uri? {
 		return try {
 			val fileSettings = settings.fileSettings
 			val name = fileSettings.name
@@ -99,7 +99,7 @@ class RecorderFileProviderImpl(
 			}
 
 			val metaData = ContentValues().apply {
-				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, PACKAGE_MUSIC_DIR)
+				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, recordingsMusicDirPath)
 				put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileName)
 				put(MediaStore.Audio.AudioColumns.MIME_TYPE, format.mimeType)
 				put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
@@ -110,13 +110,13 @@ class RecorderFileProviderImpl(
 			}
 
 			Log.d(LOGGER_TAG, "CREATING FILE")
-			val contenUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			val contentUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 				contentResolver.insert(volumeUri, metaData, null)
 			} else {
 				contentResolver.insert(volumeUri, metaData)
 			}
-			Log.d(LOGGER_TAG, "URI CREATED , $contenUri")
-			contenUri
+			Log.d(LOGGER_TAG, "URI CREATED , $contentUri")
+			contentUri
 		} catch (e: IllegalArgumentException) {
 			Log.e(LOGGER_TAG, "EXTRAS PROVIDED WRONG", e)
 			null
@@ -127,13 +127,15 @@ class RecorderFileProviderImpl(
 		}
 	}
 
-	suspend private fun updateUriAfterRecording(file: Uri): Resource<Unit, Exception> {
+	private suspend fun updateUriAfterRecording(file: Uri): Resource<Unit, Exception> {
 		return try {
 			val updatedMetaData = ContentValues().apply {
 				put(MediaStore.Audio.AudioColumns.IS_PENDING, 0)
 				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
 			}
-			contentResolver.update(file, updatedMetaData, null, null)
+			withContext(Dispatchers.IO) {
+				contentResolver.update(file, updatedMetaData, null, null)
+			}
 			Log.d(LOGGER_TAG, "UPDATED URI AFTER RECORDING")
 			// single row affected i.e, the updated file
 			Resource.Success(Unit)
@@ -147,28 +149,10 @@ class RecorderFileProviderImpl(
 		}
 	}
 
-	suspend fun deleteUriIfNotPending(uri: Uri) = withContext(Dispatchers.IO) {
-		try {
-			val isPending = checkIfUriIsPending(uri)
-			// if its not pending don't do anything
-			if (!isPending) return@withContext
-			// otherwise delete the pending uri
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-				contentResolver.delete(uri, null)
-			else contentResolver.delete(uri, null, null)
-			Log.d(LOGGER_TAG, "URI :$uri DELETED")
-		} catch (e: SecurityException) {
-			Log.e(LOGGER_TAG, "THERE IS A SECURITY PROBLEM", e)
-		} catch (e: Exception) {
-			e.printStackTrace()
-		}
-	}
-
-
 	/**
 	 * Method used to get a unique no. to give the file name should be short
 	 */
-	suspend fun getItemNumber(): Int {
+	private suspend fun getItemNumber(): Int {
 		val projection = arrayOf(MediaStore.Audio.AudioColumns._ID)
 		val selection = "${MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME} = ?"
 		val selectionArgs = arrayOf(context.packageName)
@@ -178,9 +162,11 @@ class RecorderFileProviderImpl(
 			putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
 		}
 
-		return contentResolver.query(volumeUri, projection, bundle, null)
-			?.use { cursor -> cursor.count }
-			?: 0
+		return withContext(Dispatchers.IO) {
+			contentResolver.query(volumeUri, projection, bundle, null)
+				?.use { cursor -> cursor.count }
+				?: 0
+		}
 	}
 }
 

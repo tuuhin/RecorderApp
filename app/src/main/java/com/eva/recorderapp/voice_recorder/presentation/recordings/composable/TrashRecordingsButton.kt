@@ -61,7 +61,7 @@ fun TrashSelectedRecordingsButton(
 
 			val message = if (result.resultCode == Activity.RESULT_OK)
 				context.getString(R.string.recording_trash_request_success)
-			else context.getString(R.string.recording_trash_request_falied)
+			else context.getString(R.string.recording_trash_request_failed)
 
 			Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 		}

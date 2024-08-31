@@ -60,7 +60,7 @@ fun DeleteRecordingsButton(
 
 			val message = if (result.resultCode == Activity.RESULT_OK)
 				context.getString(R.string.recording_delete_request_success)
-			else context.getString(R.string.recording_delete_request_falied)
+			else context.getString(R.string.recording_delete_request_failed)
 
 			Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 		}

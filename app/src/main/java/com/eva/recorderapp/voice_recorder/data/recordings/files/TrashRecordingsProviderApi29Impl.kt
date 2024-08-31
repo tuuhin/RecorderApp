@@ -139,7 +139,7 @@ class TrashRecordingsProviderApi29Impl(
 					throw e
 				} catch (e: Exception) {
 					e.printStackTrace()
-					val errorMessage = context.getString(R.string.recording_delete_request_falied)
+					val errorMessage = context.getString(R.string.recording_delete_request_failed)
 					Resource.Error(e, errorMessage)
 				}
 			}
@@ -147,7 +147,7 @@ class TrashRecordingsProviderApi29Impl(
 	}
 
 
-	suspend private fun restoreRecordingsDataFromTableAndFile(entity: TrashFileEntity): Boolean {
+	private suspend fun restoreRecordingsDataFromTableAndFile(entity: TrashFileEntity): Boolean {
 		return withContext(Dispatchers.IO) {
 			try {
 
@@ -191,7 +191,7 @@ class TrashRecordingsProviderApi29Impl(
 		}
 	}
 
-	suspend fun deleteRecordingInfoFromFileAndTable(entity: TrashFileEntity): Boolean {
+	private suspend fun deleteRecordingInfoFromFileAndTable(entity: TrashFileEntity): Boolean {
 		return withContext(Dispatchers.IO) {
 			try {
 				val file = entity.file.toUri().toFile()
@@ -212,7 +212,7 @@ class TrashRecordingsProviderApi29Impl(
 		}
 	}
 
-	suspend private fun contentValuesFromTrashMetaData(
+	private fun contentValuesFromTrashMetaData(
 		trash: TrashFileEntity,
 		isNewId: Boolean = false
 	): ContentValues {
@@ -220,7 +220,7 @@ class TrashRecordingsProviderApi29Impl(
 			if (!isNewId) {
 				put(MediaStore.Audio.AudioColumns._ID, trash.id)
 			}
-			put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, musicDir)
+			put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, recordingsMusicDirPath)
 			put(MediaStore.Audio.AudioColumns.TITLE, trash.title)
 			put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, trash.displayName)
 			put(MediaStore.Audio.AudioColumns.MIME_TYPE, trash.mimeType)
@@ -238,7 +238,7 @@ class TrashRecordingsProviderApi29Impl(
 	}
 
 
-	suspend private fun createBackupFileForRecording(recording: RecordedVoiceModel): TrashFileEntity {
+	private suspend fun createBackupFileForRecording(recording: RecordedVoiceModel): TrashFileEntity {
 		return withContext(Dispatchers.IO) {
 
 			val recordingUri = recording.fileUri.toUri()
@@ -246,7 +246,7 @@ class TrashRecordingsProviderApi29Impl(
 
 			try {
 				val operation = async(Dispatchers.IO) {
-					// adding the bytes info to a seperate file
+					// adding the bytes info to a separate file
 					context.contentResolver.openInputStream(recordingUri)?.use { stream ->
 						val bytes = stream.readBytes()
 						// upload the contents to a new file
@@ -270,7 +270,7 @@ class TrashRecordingsProviderApi29Impl(
 		}
 	}
 
-	suspend private fun deleteCurrentRecordingFromStorage(recording: RecordedVoiceModel): Boolean {
+	private suspend fun deleteCurrentRecordingFromStorage(recording: RecordedVoiceModel): Boolean {
 		val uri = recording.fileUri.toUri()
 
 		val fileTrashed = checkIfUriAlreadyTrashedAndNotPending(uri)

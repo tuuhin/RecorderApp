@@ -26,7 +26,7 @@ object PreviewFakes {
 	private val nowTime: LocalTime
 		get() = now.time
 
-	val PREVIEW_RECORDER_AMPLITUDES = List(80) { Random(it).nextFloat() }.toImmutableList()
+	val PREVIEW_RECORDER_AMPLITUDES = List(80) { Random.nextFloat() }.toImmutableList()
 
 	val FAKE_AUDIO_INFORMATION =
 		AudioPlayerInformation(waveforms = PlayerGraphInfo(waves = PREVIEW_RECORDER_AMPLITUDES))

@@ -59,7 +59,7 @@ fun AudioFileMetaDataSheetContent(
 			text = audio.displayName
 		)
 		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_filesize_title),
+			title = stringResource(id = R.string.audio_metadata_file_size_title),
 			text = fileSize
 		)
 		FileMetaData(

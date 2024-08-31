@@ -167,7 +167,7 @@ class VoiceRecordingsProviderImpl(
 					throw e
 				} catch (e: Exception) {
 					e.printStackTrace()
-					val errorMessage = context.getString(R.string.recording_delete_request_falied)
+					val errorMessage = context.getString(R.string.recording_delete_request_failed)
 					Resource.Error(e, errorMessage)
 				}
 			}

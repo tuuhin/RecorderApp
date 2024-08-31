@@ -42,7 +42,7 @@ fun RecorderTopBar(
 	var showDropDown by remember { mutableStateOf(false) }
 
 	TopAppBar(
-		title = { Text(text = stringResource(id = R.string.recorder_topbar_title)) },
+		title = { Text(text = stringResource(id = R.string.recorder_top_bar_title)) },
 		navigationIcon = navigation,
 		actions = {
 			AnimatedVisibility(
