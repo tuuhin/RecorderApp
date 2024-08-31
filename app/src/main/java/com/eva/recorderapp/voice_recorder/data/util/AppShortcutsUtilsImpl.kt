@@ -2,9 +2,7 @@ package com.eva.recorderapp.voice_recorder.data.util
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ShortcutManager
 import android.util.Log
-import androidx.core.content.getSystemService
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -18,27 +16,24 @@ class AppShortcutsUtilsImpl(
 	private val context: Context
 ) : AppShortcutFacade {
 
-	private val shortcutManager by lazy { context.getSystemService<ShortcutManager>() }
-
-	private val RECORDING_SHORTCUT_ID = "recording_shortcut"
-	private val LAST_RECORDING_ID = "last_recording_shortcut"
-
+	private val recordingShortcutId = "recording_shortcut"
+	private val lastRecordingId = "last_recording_shortcut"
 
 	private val recordingsShortCut: ShortcutInfoCompat
-		get() = ShortcutInfoCompat.Builder(context, RECORDING_SHORTCUT_ID)
+		get() = ShortcutInfoCompat.Builder(context, recordingShortcutId)
 			.setRank(0)
 			.setShortLabel(context.getString(R.string.app_shortcuts_recordings))
 			.setLongLabel(context.getString(R.string.app_shortcuts_recordings_text))
-			.setIcon(IconCompat.createWithResource(context, R.drawable.ic_recorder))
+			.setIcon(IconCompat.createWithResource(context, R.drawable.ic_shortcut_recorder))
 			.setIntent(Intent(Intent.ACTION_VIEW, NavDeepLinks.recordingsDestinationUri))
 			.build()
 
 	private fun lastPlayedShortCut(audioId: Long): ShortcutInfoCompat {
-		return ShortcutInfoCompat.Builder(context, LAST_RECORDING_ID)
+		return ShortcutInfoCompat.Builder(context, lastRecordingId)
 			.setRank(1)
 			.setShortLabel(context.getString(R.string.app_shortcuts_open_last_played))
 			.setLongLabel(context.getString(R.string.app_shortcuts_open_last_played_text))
-			.setIcon(IconCompat.createWithResource(context, R.drawable.ic_play))
+			.setIcon(IconCompat.createWithResource(context, R.drawable.ic_shortcut_play))
 			.setIntent(Intent(Intent.ACTION_VIEW, NavDeepLinks.audioPlayerDestinationUri(audioId)))
 			.build()
 	}
@@ -50,7 +45,7 @@ class AppShortcutsUtilsImpl(
 
 		if (!shortcuts.contains(recordingsShortCut.id)) {
 			ShortcutManagerCompat.pushDynamicShortcut(context, recordingsShortCut)
-			Log.d(TAG, "SHOTCUTS ADDED..")
+			Log.d(TAG, "SHORTCUTS ADDED..")
 		}
 	}
 

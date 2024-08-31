@@ -3,14 +3,16 @@ package com.eva.recorderapp.voice_recorder.presentation.navigation.util
 import androidx.core.net.toUri
 
 object NavDeepLinks {
-	private val baseUri = "app://com.eva.recorderapp"
+	private const val BASE_URI = "app://com.eva.recorderapp"
 
-	val recorderDestinationPattern = baseUri
+	const val recorderDestinationPattern = BASE_URI
 	val recorderDestinationUri = recorderDestinationPattern.toUri()
 
-	val recordingsDestinationPattern = baseUri + "/recordings"
+	const val recordingsDestinationPattern = "$BASE_URI/recordings"
 	val recordingsDestinationUri = recordingsDestinationPattern.toUri()
 
-	val appPlayerDestinationPattern = baseUri + "/player/{audioId}"
-	fun audioPlayerDestinationUri(id: Long) = (baseUri + "/player" + "/${id}").toUri()
+	const val appPlayerDestinationPattern = "$BASE_URI/player/{audioId}"
+
+
+	fun audioPlayerDestinationUri(id: Long) = (BASE_URI + "/player" + "/${id}").toUri()
 }
