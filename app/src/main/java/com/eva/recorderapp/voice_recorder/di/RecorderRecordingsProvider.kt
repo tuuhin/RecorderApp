@@ -2,11 +2,11 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import android.os.Build
-import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileDao
-import com.eva.recorderapp.voice_recorder.data.recordings.files.RecordingsActionHelperImpl
-import com.eva.recorderapp.voice_recorder.data.recordings.files.TrashRecordingsProviderApi29Impl
-import com.eva.recorderapp.voice_recorder.data.recordings.files.TrashRecordingsProviderImpl
-import com.eva.recorderapp.voice_recorder.data.recordings.files.VoiceRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderApi29Impl
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.VoiceRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.data.util.RecordingsActionHelperImpl
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper

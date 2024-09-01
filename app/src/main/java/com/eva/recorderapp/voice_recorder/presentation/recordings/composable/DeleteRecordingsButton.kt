@@ -29,7 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.data.recordings.files.RecordingsUtils
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingsProvider
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import kotlinx.collections.immutable.ImmutableList
 
@@ -69,7 +69,7 @@ fun DeleteRecordingsButton(
 	val onButtonClick: () -> Unit = remember(selectedModels) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			{
-				val intentSender = RecordingsUtils.createDeleteRequest(
+				val intentSender = RecordingsProvider.createDeleteRequest(
 					context = context,
 					models = selectedModels
 				)

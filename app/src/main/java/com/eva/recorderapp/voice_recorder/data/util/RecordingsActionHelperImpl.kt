@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.files
+package com.eva.recorderapp.voice_recorder.data.util
 
 import android.content.ActivityNotFoundException
 import android.content.Context

@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.database
+package com.eva.recorderapp.voice_recorder.data.recordings.database.convertors
 
 import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
@@ -9,21 +9,19 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 @ProvidedTypeConverter
-class LocalDateTimeConvertors() {
+class LocalDateTimeConvertors {
 
 	private val timeZone: TimeZone
 		get() = TimeZone.currentSystemDefault()
 
 	@TypeConverter
 	fun fromLocalDateTime(dateTime: LocalDateTime): Long {
-		return dateTime.toInstant(timeZone)
-			.toEpochMilliseconds()
+		return dateTime.toInstant(timeZone).toEpochMilliseconds()
 	}
 
 	@TypeConverter
 	fun toLocalDateTime(seconds: Long): LocalDateTime {
-		return Instant.fromEpochMilliseconds(seconds)
-			.toLocalDateTime(timeZone)
+		return Instant.fromEpochMilliseconds(seconds).toLocalDateTime(timeZone)
 	}
 
 }

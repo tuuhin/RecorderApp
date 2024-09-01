@@ -1,10 +1,11 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.database
+package com.eva.recorderapp.voice_recorder.data.recordings.database.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.TrashFileEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

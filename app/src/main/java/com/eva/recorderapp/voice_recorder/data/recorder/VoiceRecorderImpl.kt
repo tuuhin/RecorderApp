@@ -115,7 +115,7 @@ class VoiceRecorderImpl(
 
 			// ensures the file is being created in a different coroutine
 			val file = async(Dispatchers.IO) {
-				fileProvider.createFileForRecoring(format.fileExtension)
+				fileProvider.createFileForRecording(format.fileExtension)
 			}
 
 			_recordingFile = file.await()

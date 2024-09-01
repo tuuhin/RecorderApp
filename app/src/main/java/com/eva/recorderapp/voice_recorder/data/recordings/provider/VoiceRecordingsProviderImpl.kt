@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.files
+package com.eva.recorderapp.voice_recorder.data.recordings.provider
 
 import android.content.ContentResolver
 import android.content.ContentValues
@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.net.toUri
+import androidx.core.os.bundleOf
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
@@ -34,14 +35,13 @@ import kotlinx.coroutines.withContext
 private const val LOGGER_TAG = "VOICE_RECORDINGS_PROVIDER"
 
 class VoiceRecordingsProviderImpl(
-	private val context: Context
-) : RecordingsUtils(context), VoiceRecordingsProvider {
+	private val context: Context,
+) : RecordingsProvider(context), VoiceRecordingsProvider {
 
 	override val voiceRecordingsFlow: Flow<ResourcedVoiceRecordingModels>
 		get() = callbackFlow {
 
 			val scope = CoroutineScope(Dispatchers.IO)
-
 			trySend(Resource.Loading)
 
 			scope.launch {
@@ -53,8 +53,6 @@ class VoiceRecordingsProviderImpl(
 				override fun onChange(selfChange: Boolean) {
 					super.onChange(selfChange)
 
-					Log.d(LOGGER_TAG, "RECORDINGS CONTENT CHANGED")
-					// if the content updated then resend the values
 					scope.launch {
 						val recordings = getVoiceRecordings()
 						send(recordings)
@@ -75,26 +73,20 @@ class VoiceRecordingsProviderImpl(
 	override suspend fun getVoiceRecordings(): ResourcedVoiceRecordingModels {
 		val selection = "${MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME} = ?"
 		val selectionArgs = arrayOf(context.packageName)
+		val sortColumns = arrayOf(MediaStore.Audio.AudioColumns.DATE_ADDED)
 
-		val queryArgs = Bundle().apply {
-			//selection
-			putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
-			putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
-			//sorting
-			putStringArray(
-				ContentResolver.QUERY_ARG_SORT_COLUMNS,
-				arrayOf(MediaStore.Audio.AudioColumns.DATE_ADDED)
-			)
-			putInt(
-				ContentResolver.QUERY_ARG_SORT_DIRECTION,
-				ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-			)
-		}
+		val queryArgs = bundleOf(
+			ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
+			ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
+			ContentResolver.QUERY_ARG_SORT_COLUMNS to sortColumns,
+			ContentResolver.QUERY_ARG_SORT_DIRECTION to ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+		)
 
 		return withContext(Dispatchers.IO) {
 			try {
-				val models = contentResolver.query(volumeUri, recordingsProjection, queryArgs, null)
-					?.use { cursor -> readNormalRecordingsFromCursor(cursor = cursor) }
+				val models = contentResolver
+					.query(volumeUri, recordingsProjection, queryArgs, null)
+					?.use { cursor -> readNormalRecordingsFromCursor(cursor) }
 					?: emptyList()
 
 				Resource.Success(models)
@@ -150,7 +142,9 @@ class VoiceRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun permanentlyDeleteRecordedVoices(recordings: Collection<RecordedVoiceModel>): Resource<Unit, Exception> {
+	override suspend fun permanentlyDeleteRecordedVoices(
+		recordings: Collection<RecordedVoiceModel>
+	): Resource<Unit, Exception> {
 		return withContext(Dispatchers.IO) {
 			supervisorScope {
 				try {
@@ -194,5 +188,4 @@ class VoiceRecordingsProviderImpl(
 			}
 		}.flowOn(Dispatchers.IO)
 	}
-
 }

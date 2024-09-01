@@ -1,15 +1,15 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.files
+package com.eva.recorderapp.voice_recorder.data.recordings.provider
 
 import android.content.ContentResolver
 import android.content.Context
 import android.database.ContentObserver
 import android.database.SQLException
 import android.os.Build
-import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
+import androidx.core.os.bundleOf
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
@@ -29,12 +29,12 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.cancellation.CancellationException
 
-private const val LOGGER_TAG = "TRASHED_RECORINGS_PROVIDER"
+private const val LOGGER_TAG = "TRASHED_RECORDINGS_PROVIDER"
 
 @RequiresApi(Build.VERSION_CODES.R)
 class TrashRecordingsProviderImpl(
 	private val context: Context
-) : RecordingsUtils(context), TrashRecordingsProvider {
+) : RecordingsProvider(context), TrashRecordingsProvider {
 
 	override val trashedRecordingsFlow: Flow<ResourcedTrashRecordingModels>
 		get() = callbackFlow {
@@ -51,9 +51,6 @@ class TrashRecordingsProviderImpl(
 			val observer = object : ContentObserver(null) {
 				override fun onChange(selfChange: Boolean) {
 					super.onChange(selfChange)
-
-					Log.d(LOGGER_TAG, "CONTENT CHANGED")
-					// if the content updated then resend the values
 					scope.launch {
 						val recordings = getTrashedVoiceRecordings()
 						send(recordings)
@@ -61,7 +58,7 @@ class TrashRecordingsProviderImpl(
 				}
 			}
 
-			Log.d(LOGGER_TAG, "ADDED OBSERVER FOR TRAHSED ITEMS")
+			Log.d(LOGGER_TAG, "ADDED OBSERVER FOR TRASHED ITEMS")
 			contentResolver.registerContentObserver(volumeUri, true, observer)
 
 			awaitClose {
@@ -73,31 +70,23 @@ class TrashRecordingsProviderImpl(
 
 	override suspend fun getTrashedVoiceRecordings(): ResourcedTrashRecordingModels {
 
+		val selection = "${MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME} = ? "
+		val selectionArgs = arrayOf(context.packageName)
+		val sortColumns = arrayOf(MediaStore.Audio.AudioColumns.DATE_MODIFIED)
+
 		return withContext(Dispatchers.IO) {
 			try {
+				val queryArgs = bundleOf(
+					ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
+					ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
+					MediaStore.QUERY_ARG_MATCH_TRASHED to MediaStore.MATCH_ONLY,
+					ContentResolver.QUERY_ARG_SORT_COLUMNS to sortColumns,
+					ContentResolver.QUERY_ARG_SORT_DIRECTION to ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+				)
 
-				val selection = "${MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME} = ? "
-				val selectionArgs = arrayOf(context.packageName)
-
-				val queryArgs = Bundle().apply {
-					//selection only this app file
-					putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
-					putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
-					// show only trashed items
-					putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_ONLY)
-					//sorting
-					putStringArray(
-						ContentResolver.QUERY_ARG_SORT_COLUMNS,
-						arrayOf(MediaStore.Audio.AudioColumns.DATE_MODIFIED)
-					)
-					putInt(
-						ContentResolver.QUERY_ARG_SORT_DIRECTION,
-						ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-					)
-				}
 				val models = contentResolver
 					.query(volumeUri, trashRecordingsProjection, queryArgs, null)
-					?.use { cursor -> readTrashedRecordingsFromCursor(cursor) }
+					?.use(::readTrashedRecordingsFromCursor)
 					?: emptyList()
 
 				Resource.Success(models)
@@ -110,11 +99,13 @@ class TrashRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun restoreRecordingsFromTrash(trashRecordings: Collection<TrashRecordingModel>): Resource<Unit, Exception> {
+	override suspend fun restoreRecordingsFromTrash(
+		recordings: Collection<TrashRecordingModel>
+	): Resource<Unit, Exception> {
 		return withContext(Dispatchers.IO) {
 			supervisorScope {
 				try {
-					val trashRequests = trashRecordings.map { model ->
+					val trashRequests = recordings.map { model ->
 						val uri = model.fileUri.toUri()
 						async { removeUriFromTrash(uri) }
 					}
@@ -135,7 +126,9 @@ class TrashRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun createTrashRecordings(recordings: Collection<RecordedVoiceModel>): Resource<Unit, Exception> {
+	override suspend fun createTrashRecordings(
+		recordings: Collection<RecordedVoiceModel>
+	): Resource<Unit, Exception> {
 		return withContext(Dispatchers.IO) {
 			supervisorScope {
 				try {
@@ -161,7 +154,9 @@ class TrashRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun permanentlyDeleteRecordedVoicesInTrash(trashRecordings: Collection<TrashRecordingModel>): Resource<Unit, Exception> {
+	override suspend fun permanentlyDeleteRecordedVoicesInTrash(
+		trashRecordings: Collection<TrashRecordingModel>
+	): Resource<Unit, Exception> {
 		return withContext(Dispatchers.IO) {
 			supervisorScope {
 				try {

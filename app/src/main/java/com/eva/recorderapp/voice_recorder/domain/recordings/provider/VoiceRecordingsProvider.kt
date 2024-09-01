@@ -13,7 +13,7 @@ interface VoiceRecordingsProvider {
 	/**
 	 * A flow version of [getVoiceRecordings]
 	 * @return a flow version of [ResourcedVoiceRecordingModels]
-	 * @see getVoiceRecordings its the base function which is only turned into a flow
+	 * @see getVoiceRecordings it's the base function which is only turned into a flow
 	 */
 	val voiceRecordingsFlow: Flow<ResourcedVoiceRecordingModels>
 
@@ -38,7 +38,7 @@ interface VoiceRecordingsProvider {
 	suspend fun deleteFileFromId(id: Long): Resource<Boolean, Exception>
 
 	/**
-	 * Permanently deletes recordings. Remember if these are deleted they cannot be recoverd any more
+	 * Permanently deletes recordings. Remember if these are deleted they cannot be recovered anymore
 	 * @param recordings a [Collection] of [RecordedVoiceModel] to be removed permanently
 	 * @return [Resource] indicating [recordings] are deleted successfully or there is any error
 	 */
@@ -46,9 +46,9 @@ interface VoiceRecordingsProvider {
 
 	/**
 	 * Renames the previous recording to a new name
-	 * @param recording Thre [RecordedVoiceModel] whoes name need to be changed
+	 * @param recording Three [RecordedVoiceModel] whose name need to be changed
 	 * @param newName New name for the file
-	 * @returna flow indicating everything performed well
+	 * @return a flow indicating everything performed well
 	 */
 	suspend fun renameRecording(
 		recording: RecordedVoiceModel,
