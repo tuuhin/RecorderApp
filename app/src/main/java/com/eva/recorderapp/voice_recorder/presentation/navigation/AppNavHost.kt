@@ -13,7 +13,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioEd
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioPlayerRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioSettingsRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recorderRoute
-import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingsroute
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingsRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.trashRecordingsRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
@@ -34,7 +34,7 @@ fun AppNavHost(
 			modifier = modifier
 		) {
 			recorderRoute(navController = navController)
-			recordingsroute(controller = navController)
+			recordingsRoute(controller = navController)
 			trashRecordingsRoute(controller = navController)
 			audioPlayerRoute(controller = navController)
 			audioEditorRoute(controller = navController)

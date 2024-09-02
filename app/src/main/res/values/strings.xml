@@ -150,4 +150,8 @@
   <string name="dialog_action_done">Done</string>
   <string name="save_recording_dialog_title">Save recording</string>
   <string name="save_recording_dialog_text">Save this recording</string>
+  <string name="rename_recording_success">Renamed Recording Successfully</string>
+  <string name="restore_recordings_success">Selected Recordings Restored</string>
+  <string name="recording_settings_file_allow_external_recordings">Allow External Recordings</string>
+  <string name="recording_settings_file_allow_external_recordings_text">Allow app to open external recordings on your device</string>
 </resources>

@@ -27,19 +27,18 @@ class AudioSettingsViewModel @Inject constructor(
 	val audioSettings = audioRepo.audioSettingsFlow
 		.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.Eagerly,
+			started = SharingStarted.Lazily,
 			initialValue = RecorderAudioSettings()
 		)
 
 	val fileSettings = fileRepo.fileSettingsFlow
 		.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.Eagerly,
+			started = SharingStarted.Lazily,
 			initialValue = RecorderFileSettings()
 		)
 
-	val _uiEvents = MutableSharedFlow<UIEvents>()
-
+	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 

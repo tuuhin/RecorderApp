@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -45,9 +44,8 @@ import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import com.eva.recorderapp.voice_recorder.presentation.util.RecordingAmplitudes
 import kotlinx.datetime.LocalTime
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VoiceRecroderScreen(
+fun VoiceRecorderScreen(
 	stopWatch: LocalTime,
 	recorderState: RecorderState,
 	amplitudeCallback: RecordingAmplitudes,
@@ -157,7 +155,7 @@ private fun VoiceRecorderScreenPreview(
 	@PreviewParameter(RecorderStatePreviewParams::class)
 	recorderState: RecorderState
 ) = RecorderAppTheme {
-	VoiceRecroderScreen(
+	VoiceRecorderScreen(
 		stopWatch = LocalTime(0, 10, 56, 0),
 		recorderState = recorderState,
 		amplitudeCallback = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES },

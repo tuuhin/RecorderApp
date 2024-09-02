@@ -168,7 +168,7 @@ class VoiceRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun renameRecording(recording: RecordedVoiceModel, newName: String)
+	override fun renameRecording(recording: RecordedVoiceModel, newName: String)
 			: Flow<Resource<Boolean, Exception>> {
 		return flow {
 			emit(Resource.Loading)
@@ -179,7 +179,12 @@ class VoiceRecordingsProviderImpl(
 					put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, System.currentTimeMillis())
 				}
 				val rowsModified = contentResolver.update(uri, contentValues, null, null)
-				emit(Resource.Success(rowsModified == 1))
+
+				val res = Resource.Success<Boolean, Exception>(
+					data = rowsModified == 1,
+					message = context.getString(R.string.rename_recording_success)
+				)
+				emit(res)
 			} catch (e: SQLException) {
 				emit(Resource.Error(e, "SQL EXCEPTION"))
 			} catch (e: Exception) {

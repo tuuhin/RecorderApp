@@ -50,9 +50,7 @@ interface VoiceRecordingsProvider {
 	 * @param newName New name for the file
 	 * @return a flow indicating everything performed well
 	 */
-	suspend fun renameRecording(
-		recording: RecordedVoiceModel,
-		newName: String
-	): Flow<Resource<Boolean, Exception>>
+	fun renameRecording(recording: RecordedVoiceModel, newName: String)
+			: Flow<Resource<Boolean, Exception>>
 
 }

@@ -27,9 +27,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
-import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
-import kotlinx.collections.immutable.ImmutableList
 
 
 private val bottomBarAnimationSpec = tween<IntOffset>(
@@ -40,7 +37,6 @@ private val bottomBarAnimationSpec = tween<IntOffset>(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordingsBottomBar(
-	recordings: ImmutableList<SelectableRecordings>,
 	onItemDelete: () -> Unit,
 	isVisible: Boolean,
 	modifier: Modifier = Modifier,
@@ -57,8 +53,8 @@ fun RecordingsBottomBar(
 			actions = {
 				AnimatedVisibility(
 					visible = showRename,
-					enter = slideInHorizontally(),
-					exit = slideOutHorizontally()
+					enter = slideInHorizontally(animationSpec = bottomBarAnimationSpec),
+					exit = slideOutHorizontally(animationSpec = bottomBarAnimationSpec)
 				) {
 					TooltipBox(
 						positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
@@ -96,8 +92,7 @@ fun RecordingsBottomBar(
 			},
 			floatingActionButton = {
 				TrashSelectedRecordingsButton(
-					recordings = recordings,
-					onLegacyDelete = onItemDelete
+					onDelete = onItemDelete
 				)
 			},
 			tonalElevation = 2.dp,
@@ -108,9 +103,8 @@ fun RecordingsBottomBar(
 
 @PreviewLightDark
 @Composable
-private fun RecorginsBottomBarPreview() = RecorderAppTheme {
+private fun RecordingsBottomBarPreview() = RecorderAppTheme {
 	RecordingsBottomBar(
-		recordings = PreviewFakes.FAKE_VOICE_RECORDING_MODELS,
 		isVisible = true,
 		onShareSelected = {},
 		onItemDelete = {}

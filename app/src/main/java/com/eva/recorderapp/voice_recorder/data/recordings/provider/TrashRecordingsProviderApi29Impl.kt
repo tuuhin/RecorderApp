@@ -89,7 +89,10 @@ class TrashRecordingsProviderApi29Impl(
 				// run all the operations together
 				val isAllGood = operations.awaitAll().all { it }
 				Log.d(TAG, "TRASHED ITEMS RECOVERED $isAllGood")
-				Resource.Success(Unit)
+				Resource.Success(
+					data = Unit,
+					message = context.getString(R.string.restore_recordings_success)
+				)
 			} catch (e: Exception) {
 				Resource.Error(e)
 			}

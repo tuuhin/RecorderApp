@@ -68,7 +68,7 @@ fun RecordingsScreen(
 
 	val selectedCount by remember(recordings) {
 		derivedStateOf {
-			recordings.filter(SelectableRecordings::isSelected).count()
+			recordings.count(SelectableRecordings::isSelected)
 		}
 	}
 
@@ -128,7 +128,6 @@ fun RecordingsScreen(
 		},
 		bottomBar = {
 			RecordingsBottomBar(
-				recordings = recordings,
 				showRename = showRenameOption,
 				isVisible = isAnySelected,
 				onShareSelected = { onScreenEvent(RecordingScreenEvent.ShareSelectedRecordings) },

@@ -45,12 +45,12 @@ fun RecordingsBinScreen(
 	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
 	val isAnySelected by remember(recordings) {
-		derivedStateOf { recordings.any { it.isSelected } }
+		derivedStateOf { recordings.any(SelectableTrashRecordings::isSelected) }
 	}
 
 	val selectedCount by remember(recordings) {
 		derivedStateOf {
-			recordings.filter { it.isSelected }.count()
+			recordings.count(SelectableTrashRecordings::isSelected)
 		}
 	}
 
@@ -58,7 +58,6 @@ fun RecordingsBinScreen(
 		enabled = isAnySelected,
 		onBack = { onScreenEvent(TrashRecordingScreenEvent.OnUnSelectTrashRecording) },
 	)
-
 
 	Scaffold(
 		topBar = {

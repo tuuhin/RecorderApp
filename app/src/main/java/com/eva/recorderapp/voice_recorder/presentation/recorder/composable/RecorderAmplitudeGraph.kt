@@ -30,7 +30,7 @@ fun RecorderAmplitudeGraph(
 	amplitudeCallback: RecordingAmplitudes,
 	modifier: Modifier = Modifier,
 	barColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-	backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+	backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
 	shape: Shape = MaterialTheme.shapes.medium,
 	contentPadding: PaddingValues = PaddingValues(12.dp)
 ) {

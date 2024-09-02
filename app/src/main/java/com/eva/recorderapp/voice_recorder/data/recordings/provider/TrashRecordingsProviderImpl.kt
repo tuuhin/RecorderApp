@@ -112,13 +112,12 @@ class TrashRecordingsProviderImpl(
 					trashRequests.awaitAll()
 					Resource.Success(
 						data = Unit,
-						message = context.getString(R.string.recording_restore_request)
+						message = context.getString(R.string.restore_recordings_success)
 					)
 				} catch (e: CancellationException) {
 					throw e
 				} catch (e: Exception) {
 					e.printStackTrace()
-
 					val errorMessage = context.getString(R.string.recording_restore_request_failed)
 					Resource.Error(e, errorMessage)
 				}

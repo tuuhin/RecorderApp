@@ -409,7 +409,7 @@ sealed class RecordingsProvider(private val context: Context) {
 
 		@RequiresApi(Build.VERSION_CODES.R)
 		fun createTrashRequest(
-			context: Context, models: List<RecordedVoiceModel>
+			context: Context, models: Collection<RecordedVoiceModel>
 		): IntentSenderRequest {
 
 			val uris = models.map(RecordedVoiceModel::fileUri).map(String::toUri)
@@ -421,7 +421,7 @@ sealed class RecordingsProvider(private val context: Context) {
 		@JvmName("create_delete_requests_from_trash_models")
 		@RequiresApi(Build.VERSION_CODES.R)
 		fun createDeleteRequest(
-			context: Context, models: List<TrashRecordingModel>
+			context: Context, models: Collection<TrashRecordingModel>
 		): IntentSenderRequest {
 			val uris = models.map(TrashRecordingModel::fileUri).map(String::toUri)
 			val pendingIntent = MediaStore.createDeleteRequest(context.contentResolver, uris)
