@@ -2,6 +2,8 @@ package com.eva.recorderapp.voice_recorder.presentation.recordings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,12 +31,12 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.MediaAccessPermissionWrapper
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsBottomBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsInteractiveList
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsScreenTopBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RenameRecordingsNameDialog
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.SortOptionsSheetContent
-import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.requestReadStoragePermission
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RenameRecordingEvents
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RecordingsSortInfo
@@ -80,9 +82,6 @@ fun RecordingsScreen(
 	val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
 	val scope = rememberCoroutineScope()
-
-	// read storage permission
-	requestReadStoragePermission()
 
 	if (showSheet) {
 		ModalBottomSheet(
@@ -138,20 +137,24 @@ fun RecordingsScreen(
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
 		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
-		RecordingsInteractiveList(
-			isRecordingsLoaded = isRecordingsLoaded,
-			recordings = recordings,
-			onItemClick = onRecordingSelect,
-			onItemSelect = { record ->
-				onScreenEvent(RecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
-			},
-			contentPadding = PaddingValues(
-				start = dimensionResource(id = R.dimen.sc_padding),
-				end = dimensionResource(R.dimen.sc_padding),
-				top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
-				bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
-			),
-		)
+		MediaAccessPermissionWrapper(
+			onLoadRecordings = { onScreenEvent(RecordingScreenEvent.PopulateRecordings) },
+			modifier = Modifier.padding(scPadding)
+		) {
+			RecordingsInteractiveList(
+				isRecordingsLoaded = isRecordingsLoaded,
+				recordings = recordings,
+				onItemClick = onRecordingSelect,
+				onItemSelect = { record ->
+					onScreenEvent(RecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
+				},
+				contentPadding = PaddingValues(
+					horizontal = dimensionResource(id = R.dimen.sc_padding),
+					vertical = dimensionResource(id = R.dimen.sc_padding_secondary)
+				),
+				modifier = Modifier.fillMaxSize(),
+			)
+		}
 	}
 }
 

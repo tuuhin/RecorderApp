@@ -188,7 +188,7 @@ private fun RecordingsInteractiveListRecordingsPreview() = RecorderAppTheme {
 
 @Preview
 @Composable
-private fun RecordingsInteractiveListTraeshRecordingsPreivew() = RecorderAppTheme {
+private fun RecordingsInteractiveListTrashRecordingsPreview() = RecorderAppTheme {
 	Surface {
 		RecordingsInteractiveList(
 			isRecordingsLoaded = true,

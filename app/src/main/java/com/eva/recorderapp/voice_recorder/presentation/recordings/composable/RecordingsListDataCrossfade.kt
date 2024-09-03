@@ -54,6 +54,7 @@ fun <T> RecordingsListDataCrossfade(
 	Crossfade(
 		targetState = listInfoState,
 		animationSpec = animationSpec,
+		label = "List information loading cross-fade",
 		modifier = modifier.padding(contentPadding),
 	) { state ->
 		when (state) {

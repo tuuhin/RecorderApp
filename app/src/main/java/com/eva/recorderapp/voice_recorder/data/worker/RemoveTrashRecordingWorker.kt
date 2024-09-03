@@ -56,12 +56,11 @@ class RemoveTrashRecordingWorker @AssistedInject constructor(
 		)
 
 		return withContext(Dispatchers.IO) {
-			val resource = trashRecorder.getTrashedVoiceRecordings()
-			when (resource) {
+			when (val resource = trashRecorder.getTrashedVoiceRecordings()) {
 				is Resource.Success -> {
 					val currentInstant = Clock.System.now()
-					// delete-now delete is alawys at future so
-					// delete-now is alawys postive except the case of
+					// delete-now delete is always at future so
+					// delete-now is always positive except the case of
 					// expires then delete-now is negative
 					val expiredByTime = resource.data.filter { model ->
 						val deleteInstant =
@@ -70,23 +69,23 @@ class RemoveTrashRecordingWorker @AssistedInject constructor(
 						diff.toLong(DurationUnit.MINUTES) < 0
 					}
 					// if mistakenly some files are deleted but the metadata already exits then
-					// delete then
+					// delete
 					val expiredByDelete = resource.data.filter { model ->
 						val fileUri = model.fileUri.toUri()
 						if (fileUri.scheme == "file") return@filter false
 						val file = fileUri.toFile()
-						// take if file and file dont exits or file is empty
+						// take if file and file don't exit or file is empty
 						file.isFile && (!file.exists() || file.length() != 0L)
 					}
 
 					Log.d(TAG, "DELETING THE FILES NOW...")
 					val trashModels = expiredByDelete union expiredByTime
-					val deleteRecording = trashRecorder
-						.permanentlyDeleteRecordedVoicesInTrash(trashModels)
+					val deleteRecording =
+						trashRecorder.permanentlyDeleteRecordingsInTrash(trashModels)
 					Log.d(TAG, "NO. OF FILES DELETED :${trashModels.size} ")
 
 					(deleteRecording as? Resource.Error)?.let { error ->
-						val errorMessage = "DELETE FAILED :${error.message ?: "UNKNONWN"}"
+						val errorMessage = "DELETE FAILED :${error.message ?: "UNKNOWN"}"
 						Log.d(TAG, "ERROR OCCCURED :$errorMessage ")
 						return@withContext Result.failure(
 							workDataOf(
@@ -104,7 +103,7 @@ class RemoveTrashRecordingWorker @AssistedInject constructor(
 				}
 
 				is Resource.Error -> {
-					val errorMessage = "DELETE FAILED :${resource.error.message ?: "UNKNONWN"}"
+					val errorMessage = "DELETE FAILED :${resource.error.message ?: "UNKNOWN"}"
 					Log.d(TAG, "ERROR OCCCURED :$errorMessage ")
 					Result.failure(
 						workDataOf(
@@ -112,7 +111,7 @@ class RemoveTrashRecordingWorker @AssistedInject constructor(
 						)
 					)
 				}
-				// its an invalid state so no need to check or attach some message
+				// it's an invalid state so no need to check or attach some message
 				Resource.Loading -> Result.failure()
 			}
 		}

@@ -49,8 +49,6 @@ interface TrashRecordingsProvider {
 	 * @param trashRecordings a [Collection] of [TrashRecordingModel] to be removed permanently
 	 * @return [Resource] indicating [trashRecordings] are deleted successfully otherwise [Exception]
 	 */
-	suspend fun permanentlyDeleteRecordedVoicesInTrash(
-		trashRecordings: Collection<TrashRecordingModel>
-	): Resource<Unit, Exception>
+	suspend fun permanentlyDeleteRecordingsInTrash(trashRecordings: Collection<TrashRecordingModel>): Resource<Unit, Exception>
 
 }

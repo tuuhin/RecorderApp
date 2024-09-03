@@ -6,6 +6,8 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.Sor
 
 sealed interface RecordingScreenEvent {
 
+	data object PopulateRecordings : RecordingScreenEvent
+
 	data class OnRecordingSelectOrUnSelect(val recording: RecordedVoiceModel) : RecordingScreenEvent
 
 	data object OnSelectAllRecordings : RecordingScreenEvent
@@ -19,4 +21,9 @@ sealed interface RecordingScreenEvent {
 	data class OnSortOrderChange(val order: SortOrder) : RecordingScreenEvent
 
 	data object ShareSelectedRecordings : RecordingScreenEvent
+
+	data class OnPostTrashRequestApi30(
+		val isSuccess: Boolean = false,
+		val message: String = "",
+	) : RecordingScreenEvent
 }

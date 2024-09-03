@@ -16,8 +16,7 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.Ren
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RecordingsSortInfo
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RenameRecordingState
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SortOptions
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.sortSelector
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.sortedResults
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
@@ -75,33 +74,35 @@ class RecordingsViewmodel @Inject constructor(
 		get() = _uiEvents.asSharedFlow()
 
 
-	init {
-		populateRecordings()
-	}
+	private fun populateRecordings() {
+		// recordings are already loaded no need to again add a collector
+		if (_isRecordingsLoaded.value) return
 
-	private fun populateRecordings() = recordingsProvider.voiceRecordingsFlow
-		.onEach { res ->
-			when (res) {
-				Resource.Loading -> _isRecordingsLoaded.update { false }
-				is Resource.Error -> {
-					val message = res.message ?: res.error.message ?: "SOME ERROR"
-					_uiEvents.emit(
-						UIEvents.ShowSnackBarWithActions(
-							message = message,
-							actionText = "Retry",
-							action = ::populateRecordings
+		// recordings flow collector
+		recordingsProvider.voiceRecordingsFlow
+			.onEach { res ->
+				when (res) {
+					Resource.Loading -> _isRecordingsLoaded.update { false }
+					is Resource.Error -> {
+						val message = res.message ?: res.error.message ?: "SOME ERROR"
+						_uiEvents.emit(
+							UIEvents.ShowSnackBarWithActions(
+								message = message,
+								actionText = "Retry",
+								action = ::populateRecordings
+							)
 						)
-					)
-					_isRecordingsLoaded.update { true }
-				}
+						_isRecordingsLoaded.update { true }
+					}
 
-				is Resource.Success -> {
-					val new = res.data.toSelectableRecordings()
-					_recordings.update { new }
-					_isRecordingsLoaded.update { true }
+					is Resource.Success -> {
+						val new = res.data.toSelectableRecordings()
+						_recordings.update { new }
+						_isRecordingsLoaded.update { true }
+					}
 				}
-			}
-		}.launchIn(viewModelScope)
+			}.launchIn(viewModelScope)
+	}
 
 
 	fun onScreenEvent(event: RecordingScreenEvent) {
@@ -113,6 +114,9 @@ class RecordingsViewmodel @Inject constructor(
 			is RecordingScreenEvent.OnSortOptionChange -> _sortInfo.update { it.copy(options = event.sort) }
 			is RecordingScreenEvent.OnSortOrderChange -> _sortInfo.update { it.copy(order = event.order) }
 			RecordingScreenEvent.ShareSelectedRecordings -> shareSelectedRecordings()
+			RecordingScreenEvent.PopulateRecordings -> populateRecordings()
+			is RecordingScreenEvent.OnPostTrashRequestApi30 ->
+				onPostTrashEvent(event.isSuccess, event.message)
 		}
 	}
 
@@ -144,17 +148,6 @@ class RecordingsViewmodel @Inject constructor(
 	}
 
 
-	private fun sortedResults(
-		recordings: List<SelectableRecordings>,
-		sortInfo: RecordingsSortInfo
-	): List<SelectableRecordings> = when (sortInfo.options) {
-		SortOptions.DATE_CREATED -> recordings.sortSelector(sortInfo.order) { it.recoding.recordedAt }
-		SortOptions.DURATION -> recordings.sortSelector(sortInfo.order) { it.recoding.duration }
-		SortOptions.NAME -> recordings.sortSelector(sortInfo.order) { it.recoding.displayName }
-		SortOptions.SIZE -> recordings.sortSelector(sortInfo.order) { it.recoding.sizeInBytes }
-	}
-
-
 	private fun onTrashSelectedRecordings() = viewModelScope.launch {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			// delete via intent
@@ -165,12 +158,12 @@ class RecordingsViewmodel @Inject constructor(
 			when (val result = trashProvider.createTrashRecordings(selectedRecordings)) {
 				is Resource.Error -> {
 					val message = result.message ?: "Cannot move items to trash"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+					onPostTrashEvent(false, message)
 				}
 
 				is Resource.Success -> {
 					val message = result.message ?: "Moved items to trash"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+					onPostTrashEvent(true, message)
 				}
 
 				else -> {}
@@ -178,6 +171,14 @@ class RecordingsViewmodel @Inject constructor(
 		}
 	}
 
+	private fun onPostTrashEvent(isSuccess: Boolean, message: String) {
+		viewModelScope.launch {
+			// show the toast its deleted
+			_uiEvents.emit(UIEvents.ShowToast(message))
+		}
+		// handle post delete events
+
+	}
 
 	private fun toggleRecordingSelection(recording: RecordedVoiceModel) {
 		_recordings.update { recordings ->

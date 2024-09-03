@@ -48,7 +48,7 @@ fun RecordingCard(
 	shape: Shape = MaterialTheme.shapes.large,
 ) {
 	val clickModifier = if (isSelectable)
-		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selcted")
+		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selected")
 	else Modifier.combinedClickable(
 		onClick = onItemClick,
 		onLongClick = onItemSelect,
@@ -77,6 +77,7 @@ fun RecordingCard(
 			Crossfade(
 				targetState = isSelectable,
 				animationSpec = tween(durationMillis = 400),
+				label = "Radio Button Animation",
 				modifier = Modifier.padding(8.dp)
 			) { showSelectOption ->
 				if (showSelectOption)

@@ -153,7 +153,7 @@ class TrashRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun permanentlyDeleteRecordedVoicesInTrash(
+	override suspend fun permanentlyDeleteRecordingsInTrash(
 		trashRecordings: Collection<TrashRecordingModel>
 	): Resource<Unit, Exception> {
 		return withContext(Dispatchers.IO) {

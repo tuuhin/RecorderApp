@@ -3,7 +3,6 @@ package com.eva.recorderapp.voice_recorder.presentation.navigation.routes
 import android.app.Activity
 import android.content.Intent
 import android.os.Build
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
@@ -32,6 +31,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedC
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsScreen
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsViewmodel
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.DeleteOrTrashRecordingsRequest
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
 
 fun NavGraphBuilder.recordingsRoute(
 	controller: NavController
@@ -44,21 +44,29 @@ fun NavGraphBuilder.recordingsRoute(
 	),
 ) {
 
-	val viewModel = hiltViewModel<RecordingsViewmodel>()
 	val context = LocalContext.current
 	val lifecycleOwner = LocalLifecycleOwner.current
 
-	val launcher = rememberLauncherForActivityResult(
-		ActivityResultContracts.StartIntentSenderForResult()
-	) { result ->
-		val message = if (result.resultCode == Activity.RESULT_OK)
-			context.getString(R.string.recording_delete_request_success)
-		else context.getString(R.string.recording_delete_request_failed)
+	val viewModel = hiltViewModel<RecordingsViewmodel>()
 
-		Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-	}
+	// TODO: Check if this can be put into a composable function
+	val trashRequestLauncher = rememberLauncherForActivityResult(
+		contract = ActivityResultContracts.StartIntentSenderForResult(),
+		onResult = { result ->
 
-	LaunchedEffect(viewModel, lifecycleOwner) {
+			val message = if (result.resultCode == Activity.RESULT_OK)
+				context.getString(R.string.recording_delete_request_success)
+			else context.getString(R.string.recording_delete_request_failed)
+
+			val isSuccess = result.resultCode == Activity.RESULT_OK
+			val event = RecordingScreenEvent.OnPostTrashRequestApi30(isSuccess, message)
+
+			viewModel.onScreenEvent(event)
+		}
+	)
+
+	// handle trash request for Api 30+
+	LaunchedEffect(key1 = lifecycleOwner) {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return@LaunchedEffect
 
 		lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -68,7 +76,7 @@ fun NavGraphBuilder.recordingsRoute(
 						val request = RecordingsProvider
 							.createTrashRequest(context, event.recordings)
 
-						launcher.launch(request)
+						trashRequestLauncher.launch(request)
 					}
 
 					else -> {}
@@ -84,6 +92,9 @@ fun NavGraphBuilder.recordingsRoute(
 	val sortInfo by viewModel.sortInfo.collectAsStateWithLifecycle()
 	val renameState by viewModel.renameState.collectAsStateWithLifecycle()
 
+	// lifeCycleState
+	val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+
 	RecordingsScreen(
 		isRecordingsLoaded = isRecordingsLoaded,
 		recordings = recordings,
@@ -95,8 +106,10 @@ fun NavGraphBuilder.recordingsRoute(
 			controller.navigate(NavRoutes.TrashRecordings)
 		},
 		onRecordingSelect = { record ->
-			val audioRoute = NavRoutes.AudioPlayer(record.id)
-			controller.navigate(audioRoute)
+			if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
+				val audioRoute = NavRoutes.AudioPlayer(record.id)
+				controller.navigate(audioRoute)
+			}
 		},
 		navigation = {
 			IconButton(

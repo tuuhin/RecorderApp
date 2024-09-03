@@ -39,8 +39,8 @@ fun RecordingBinScreenTopBar(
 ) {
 	AnimatedContent(
 		targetState = isSelectedMode,
-		transitionSpec = { animateTopbar() },
-		label = "Selectable Topbar animation",
+		transitionSpec = { animateTopBar() },
+		label = "Selectable Top bar animation",
 		contentAlignment = Alignment.TopCenter,
 		modifier = modifier,
 	) { isSelected ->

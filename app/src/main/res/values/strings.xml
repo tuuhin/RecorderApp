@@ -154,4 +154,7 @@
   <string name="restore_recordings_success">Selected Recordings Restored</string>
   <string name="recording_settings_file_allow_external_recordings">Allow External Recordings</string>
   <string name="recording_settings_file_allow_external_recordings_text">Allow app to open external recordings on your device</string>
+  <string name="recordings_permissions_not_found">Media Access Permission Required</string>
+  <string name="recordings_permissions_not_found_desc">To view your files, media access permission is required </string>
+  <string name="share_audio_extra_subject">Sharing recorded audio files</string>
 </resources>

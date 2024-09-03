@@ -44,7 +44,7 @@ fun RenameRecordingNameDialog(
 	onValueChange: (TextFieldValue) -> Unit,
 	onDismissRequest: () -> Unit,
 	modifier: Modifier = Modifier,
-	isReanaming: Boolean = false,
+	isRenaming: Boolean = false,
 	onCancel: () -> Unit = {},
 	onRename: () -> Unit = {},
 	error: Boolean = false,
@@ -103,7 +103,7 @@ fun RenameRecordingNameDialog(
 					TextButton(onClick = onCancel) {
 						Text(text = stringResource(id = R.string.action_cancel))
 					}
-					Button(onClick = onRename, enabled = !isReanaming) {
+					Button(onClick = onRename, enabled = !isRenaming) {
 						Text(text = stringResource(id = R.string.rename_recording_action))
 					}
 				}

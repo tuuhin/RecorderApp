@@ -1,7 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -68,8 +67,8 @@ fun RecordingsScreenTopBar(
 
 	AnimatedContent(
 		targetState = isSelectedMode,
-		transitionSpec = { animateTopbar() },
-		label = "Selectable Topbar animation",
+		transitionSpec = { animateTopBar() },
+		label = "Selectable Top bar animation",
 		contentAlignment = Alignment.TopCenter,
 		modifier = modifier,
 	) { isSelected ->
@@ -177,7 +176,7 @@ fun RecordingsScreenTopBar(
 	}
 }
 
-fun AnimatedContentTransitionScope<Boolean>.animateTopbar(): ContentTransform {
+fun animateTopBar(): ContentTransform {
 	val enterIn = expandIn(
 		animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
 		expandFrom = Alignment.TopCenter
@@ -196,7 +195,7 @@ fun AnimatedContentTransitionScope<Boolean>.animateTopbar(): ContentTransform {
 	return enterIn togetherWith exitOut
 }
 
-private class BooleanPreivewParams :
+private class BooleanPreviewParams :
 	CollectionPreviewParameterProvider<Boolean>(listOf(true, false))
 
 
@@ -204,7 +203,7 @@ private class BooleanPreivewParams :
 @PreviewLightDark
 @Composable
 private fun RecordingsTopBarSelectedPreview(
-	@PreviewParameter(BooleanPreivewParams::class)
+	@PreviewParameter(BooleanPreviewParams::class)
 	isSelectedMode: Boolean
 ) = RecorderAppTheme {
 	RecordingsScreenTopBar(

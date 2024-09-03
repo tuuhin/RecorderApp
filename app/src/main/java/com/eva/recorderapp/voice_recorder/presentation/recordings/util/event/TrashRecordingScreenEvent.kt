@@ -4,6 +4,8 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordin
 
 interface TrashRecordingScreenEvent {
 
+	data object PopulateTrashRecordings : TrashRecordingScreenEvent
+
 	data class OnRecordingSelectOrUnSelect(
 		val recording: TrashRecordingModel
 	) : TrashRecordingScreenEvent
@@ -15,4 +17,9 @@ interface TrashRecordingScreenEvent {
 	data object OnSelectItemRestore : TrashRecordingScreenEvent
 
 	data object OnSelectItemDeleteForeEver : TrashRecordingScreenEvent
+
+	data class OnPostDeleteRequestApi30(
+		val isSuccess: Boolean = false,
+		val message: String = "",
+	) : TrashRecordingScreenEvent
 }
