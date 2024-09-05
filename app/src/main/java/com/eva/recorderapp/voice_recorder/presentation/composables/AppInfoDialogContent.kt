@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.presentation.util.composable
+package com.eva.recorderapp.voice_recorder.presentation.composables
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -37,7 +37,9 @@ import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AppDialogInfoContent(modifier: Modifier = Modifier) {
+fun AppDialogInfoContent(
+	modifier: Modifier = Modifier
+) {
 
 	val inspectionMode = LocalInspectionMode.current
 	val context = LocalContext.current
@@ -45,7 +47,7 @@ fun AppDialogInfoContent(modifier: Modifier = Modifier) {
 	val versioncode: String = remember {
 		if (inspectionMode) return@remember "0.0.0"
 		val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-		return@remember pInfo?.versionName ?: "Unknown"
+		return@remember pInfo?.versionName ?: "0.0.0"
 	}
 
 	Surface(
@@ -66,7 +68,8 @@ fun AppDialogInfoContent(modifier: Modifier = Modifier) {
 				Icon(
 					painter = painterResource(id = R.drawable.ic_launcher_foreground),
 					contentDescription = stringResource(R.string.app_name),
-					modifier = Modifier.size(32.dp)
+					modifier = Modifier.size(32.dp),
+					tint = MaterialTheme.colorScheme.primary
 				)
 				Text(text = stringResource(id = R.string.app_name))
 				Badge(

@@ -105,6 +105,9 @@ fun NavGraphBuilder.recordingsRoute(
 		onNavigateToBin = dropUnlessResumed {
 			controller.navigate(NavRoutes.TrashRecordings)
 		},
+		onNavigationToCategories = dropUnlessResumed {
+			controller.navigate(NavRoutes.RecordingCategories)
+		},
 		onRecordingSelect = { record ->
 			if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
 				val audioRoute = NavRoutes.AudioPlayer(record.id)

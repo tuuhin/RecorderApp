@@ -14,6 +14,9 @@ sealed interface NavRoutes {
 	data object TrashRecordings : NavRoutes
 
 	@Serializable
+	data object RecordingCategories : NavRoutes
+
+	@Serializable
 	data class AudioPlayer(val audioId: Long) : NavRoutes
 
 	@Serializable

@@ -157,4 +157,13 @@
   <string name="recordings_permissions_not_found">Media Access Permission Required</string>
   <string name="recordings_permissions_not_found_desc">To view your files, media access permission is required </string>
   <string name="share_audio_extra_subject">Sharing recorded audio files</string>
+  <string name="manage_categories_top_bar_title">Manage Categories</string>
+  <string name="menu_option_create">Create</string>
+  <string name="no_categories_found">No Categories added</string>
+  <string name="create_new_category">Add Category</string>
+  <string name="create_new_category_text">Categories help you to keep your audio organized.</string>
+  <string name="delete_category_dialog_title">Remove Category</string>
+  <string name="delete_category_dialog_text">Removing a category will not remove a audio item, just the references are erased.</string>
+  <string name="menu_option_edit">Edit</string>
+  <string name="menu_option_categories">Category</string>
 </resources>

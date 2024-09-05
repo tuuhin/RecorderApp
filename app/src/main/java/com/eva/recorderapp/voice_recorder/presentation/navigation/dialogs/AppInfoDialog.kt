@@ -7,8 +7,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.dialog
+import com.eva.recorderapp.voice_recorder.presentation.composables.AppDialogInfoContent
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
-import com.eva.recorderapp.voice_recorder.presentation.util.composable.AppDialogInfoContent
 
 
 fun NavGraphBuilder.appInfoDialog() = dialog<NavRoutes.ApplicationInfo>(

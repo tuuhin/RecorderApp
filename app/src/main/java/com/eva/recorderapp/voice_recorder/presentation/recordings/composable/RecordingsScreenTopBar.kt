@@ -10,6 +10,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -60,6 +61,7 @@ fun RecordingsScreenTopBar(
 	navigation: @Composable () -> Unit = {},
 	onNavigateToBin: () -> Unit = {},
 	onSortItems: () -> Unit = {},
+	onManageCategories: () -> Unit = {},
 	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
 ) {
 
@@ -163,6 +165,17 @@ fun RecordingsScreenTopBar(
 								Icon(
 									painter = painterResource(id = R.drawable.ic_sort),
 									contentDescription = stringResource(id = R.string.menu_option_sort_order)
+								)
+							},
+						)
+						DropdownMenuItem(
+							text = { Text(text = stringResource(R.string.menu_option_categories)) },
+							onClick = onManageCategories,
+							leadingIcon = {
+								Icon(
+									painter = painterResource(id = R.drawable.ic_category),
+									contentDescription = stringResource(R.string.menu_option_categories),
+									modifier = Modifier.size(24.dp)
 								)
 							},
 						)

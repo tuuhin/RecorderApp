@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
+import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
@@ -46,8 +47,8 @@ class RecordingsBinViewmodel @Inject constructor(
 			.filter(SelectableTrashRecordings::isSelected)
 			.map(SelectableTrashRecordings::trashRecording)
 
-	private val areRecordingsLoaded = MutableStateFlow(false)
-	val isLoaded = areRecordingsLoaded.asStateFlow()
+	private val _isRecordingsLoaded = MutableStateFlow(false)
+	val isLoaded = _isRecordingsLoaded.asStateFlow()
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
@@ -58,36 +59,41 @@ class RecordingsBinViewmodel @Inject constructor(
 		get() = _deleteEvents.asSharedFlow()
 
 
-	init {
-		populateRecordings()
+	private fun populateRecordings() {
+		// recordings are already loaded no need to again add a collector
+		if (_isRecordingsLoaded.value) return
+
+		// recordings flow collector
+		provider.trashedRecordingsFlow
+			.onEach { res ->
+				when (res) {
+					is Resource.Error -> {
+						val message = res.message ?: res.error.message ?: "SOME ERROR"
+						_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
+						_isRecordingsLoaded.update { true }
+					}
+
+					Resource.Loading -> _isRecordingsLoaded.update { false }
+					is Resource.Success -> {
+						val new = res.data.toSelectableRecordings()
+
+						_trashedRecordings.update { new }
+						_isRecordingsLoaded.update { true }
+					}
+				}
+			}.launchIn(viewModelScope)
 	}
-
-	private fun populateRecordings() = provider.trashedRecordingsFlow
-		.onEach { res ->
-			when (res) {
-				is Resource.Error -> {
-					val message = res.message ?: res.error.message ?: "SOME ERROR"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
-					areRecordingsLoaded.update { true }
-				}
-
-				Resource.Loading -> areRecordingsLoaded.update { false }
-				is Resource.Success -> {
-					val new = res.data.toSelectableRecordings()
-
-					_trashedRecordings.update { new }
-					areRecordingsLoaded.update { true }
-				}
-			}
-		}.launchIn(viewModelScope)
 
 	fun onScreenEvent(event: TrashRecordingScreenEvent) {
 		when (event) {
-			is TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect -> onToggleSelection(event.recording)
+			TrashRecordingScreenEvent.PopulateTrashRecordings -> populateRecordings()
 			TrashRecordingScreenEvent.OnSelectTrashRecording -> onSelectOrUnSelectAll(true)
 			TrashRecordingScreenEvent.OnUnSelectTrashRecording -> onSelectOrUnSelectAll(false)
 			TrashRecordingScreenEvent.OnSelectItemDeleteForeEver -> onPermanentDelete()
 			TrashRecordingScreenEvent.OnSelectItemRestore -> onRecordingsRestore()
+			is TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect -> onToggleSelection(event.recording)
+			is TrashRecordingScreenEvent.OnPostDeleteRequestApi30 ->
+				onPostTrashEvent(event.isSuccess, event.message)
 		}
 	}
 
@@ -116,26 +122,33 @@ class RecordingsBinViewmodel @Inject constructor(
 	}
 
 	private fun onPermanentDelete() = viewModelScope.launch {
-		when (val result = provider.permanentlyDeleteRecordedVoicesInTrash(selectedRecordings)) {
-			is Resource.Error -> {
-				val message = result.message ?: "Cannot move items to trash"
-
-				if (result.error is SecurityException) {
-					// Check in case of android 10 not checked yet
-
-					val req = DeleteOrTrashRecordingsRequest.OnDeleteRequest(selectedRecordings)
-					_deleteEvents.emit(req)
-				} else {
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			// delete via intent
+			val req = DeleteOrTrashRecordingsRequest.OnDeleteRequest(selectedRecordings)
+			_deleteEvents.emit(req)
+		} else {
+			when (val result = provider.permanentlyDeleteRecordingsInTrash(selectedRecordings)) {
+				is Resource.Error -> {
+					val message = result.message ?: "Cannot move items to trash"
+					onPostTrashEvent(isSuccess = false, message = message)
 				}
+
+				is Resource.Success -> {
+					val message = result.message ?: "Items deleted successfully"
+					onPostTrashEvent(isSuccess = true, message = message)
+				}
+
+				else -> {}
 			}
-
-			is Resource.Success -> _uiEvents.emit(
-				UIEvents.ShowToast(message = result.message ?: "Items restored")
-			)
-
-			else -> {}
 		}
+	}
+
+	private fun onPostTrashEvent(isSuccess: Boolean, message: String) {
+		viewModelScope.launch {
+			// show the toast its deleted
+			_uiEvents.emit(UIEvents.ShowToast(message))
+		}
+		// handle post delete events
 	}
 
 

@@ -59,6 +59,7 @@ fun RecordingsScreen(
 	onRecordingSelect: (RecordedVoiceModel) -> Unit,
 	modifier: Modifier = Modifier,
 	onNavigateToBin: () -> Unit = {},
+	onNavigationToCategories: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
@@ -113,6 +114,7 @@ fun RecordingsScreen(
 				isSelectedMode = isAnySelected,
 				selectedCount = selectedCount,
 				navigation = navigation,
+				onManageCategories = onNavigationToCategories,
 				onUnSelectAll = { onScreenEvent(RecordingScreenEvent.OnUnSelectAllRecordings) },
 				onSelectAll = { onScreenEvent(RecordingScreenEvent.OnSelectAllRecordings) },
 				onSortItems = {

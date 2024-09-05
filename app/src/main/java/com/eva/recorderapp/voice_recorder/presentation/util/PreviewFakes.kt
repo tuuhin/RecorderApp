@@ -2,7 +2,9 @@ package com.eva.recorderapp.voice_recorder.presentation.util
 
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
+import com.eva.recorderapp.voice_recorder.presentation.categories.utils.toSelectableCategory
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
@@ -12,7 +14,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.random.Random
@@ -23,8 +24,6 @@ object PreviewFakes {
 	private val now: LocalDateTime
 		get() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
-	private val nowTime: LocalTime
-		get() = now.time
 
 	val PREVIEW_RECORDER_AMPLITUDES = List(80) { Random.nextFloat() }.toImmutableList()
 
@@ -52,14 +51,14 @@ object PreviewFakes {
 		bitRateInKbps = 0f,
 		lastModified = now,
 		samplingRatekHz = 0f,
-		path = "Somepath/file",
+		path = "this_is_a_path/file",
 		channel = 1,
 		size = 100L, mimeType = "This/that"
 	)
 
 	val FAKE_TRASH_RECORDINGS_MODEL = TrashRecordingModel(
 		id = 0L,
-		title = "TRAHSED_001",
+		title = "TRASHED_001",
 		displayName = "TRASHED",
 		mimeType = "audio/mp3",
 		expiresAt = now,
@@ -80,7 +79,20 @@ object PreviewFakes {
 
 	val FAKE_VOICE_RECORDINGS_SELECTED = List(10) { FAKE_VOICE_RECORDING_MODEL }
 		.toSelectableRecordings()
-		.mapIndexed { idx, record -> record.copy(isSelected = if (idx % 2 == 0) true else false) }
+		.map { record -> record.copy(isSelected = Random.nextBoolean()) }
+		.toImmutableList()
+
+	val FAKE_RECORDING_CATEGORY = RecordingCategoryModel(
+		id = 0L,
+		name = "Something",
+		createdAt = now
+	).toSelectableCategory()
+
+	val FAKE_RECORDING_CATEGORIES = List(10) { FAKE_RECORDING_CATEGORY }
+		.toImmutableList()
+
+	val FAKE_RECORDINGS_CATEGORIES_FEW_SELECTED = List(10) { FAKE_RECORDING_CATEGORY }
+		.map { category -> category.copy(isSelected = Random.nextBoolean()) }
 		.toImmutableList()
 
 }
