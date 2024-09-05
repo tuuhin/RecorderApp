@@ -2,11 +2,14 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import android.os.Build
+import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingsCategoryProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderApi29Impl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.VoiceRecordingsProviderImpl
-import com.eva.recorderapp.voice_recorder.data.util.RecordingsActionHelperImpl
+import com.eva.recorderapp.voice_recorder.data.util.ShareRecordingsUtilImpl
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
@@ -42,7 +45,14 @@ object RecorderRecordingsProvider {
 
 	@Provides
 	@Singleton
+	fun providesRecordingsCategoryProvider(
+		categoryDao: RecordingCategoryDao
+	): RecordingCategoryProvider = RecordingsCategoryProviderImpl(categoryDao)
+
+
+	@Provides
+	@Singleton
 	fun providesShareRecordingsActionHelper(
 		@ApplicationContext context: Context
-	): RecordingsActionHelper = RecordingsActionHelperImpl(context)
+	): RecordingsActionHelper = ShareRecordingsUtilImpl(context)
 }
