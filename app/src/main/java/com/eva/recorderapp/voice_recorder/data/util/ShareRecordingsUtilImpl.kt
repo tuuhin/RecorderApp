@@ -9,11 +9,11 @@ import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
+import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
 
-class RecordingsActionHelperImpl(
+class ShareRecordingsUtilImpl(
 	private val context: Context
-) : RecordingsActionHelper {
+) : ShareRecordingsUtil {
 
 	override fun shareAudioFiles(collection: List<RecordedVoiceModel>): Resource<Unit, Exception> {
 
@@ -22,7 +22,7 @@ class RecordingsActionHelperImpl(
 		extras.addAll(uris)
 		val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
 			type = "audio/*"
-			putExtra(Intent.EXTRA_SUBJECT, "Sending recorded audio files")
+			putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_audio_extra_subject))
 			putParcelableArrayListExtra(Intent.EXTRA_STREAM, extras)
 		}
 
@@ -48,7 +48,7 @@ class RecordingsActionHelperImpl(
 
 		val intent = Intent(Intent.ACTION_SEND).apply {
 			setDataAndType(uri, "audio/*")
-			putExtra(Intent.EXTRA_SUBJECT, "Sending recorded audio files")
+			putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_audio_extra_subject))
 		}
 
 		val intentChooser =

@@ -7,7 +7,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.eva.recorderapp.voice_recorder.data.recordings.database.convertors.LocalDateTimeConvertors
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.CategoryRecordingsDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
@@ -39,8 +38,6 @@ abstract class RecorderDataBase : RoomDatabase() {
 	abstract fun trashMetadataEntityDao(): TrashFileDao
 
 	abstract fun categoriesDao(): RecordingCategoryDao
-
-	abstract fun categoriesWithRecordingsDao(): CategoryRecordingsDao
 
 	abstract fun recordingMetaData(): RecordingsMetadataDao
 

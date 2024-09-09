@@ -5,5 +5,18 @@ import kotlinx.datetime.LocalDateTime
 data class RecordingCategoryModel(
 	val id: Long,
 	val name: String,
-	val createdAt: LocalDateTime ,
-)
+	val createdAt: LocalDateTime? = null,
+	val count: Long = 0L,
+) {
+
+	val hasCount: Boolean
+		get() = count > 0
+
+	companion object {
+		val ALL_CATEGORY = RecordingCategoryModel(
+			id = -1,
+			name = "All Recordings",
+			createdAt = null
+		)
+	}
+}

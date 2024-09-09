@@ -3,16 +3,15 @@ package com.eva.recorderapp.voice_recorder.di
 import android.content.Context
 import android.os.Build
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingsCategoryProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderApi29Impl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.VoiceRecordingsProviderImpl
-import com.eva.recorderapp.voice_recorder.data.util.ShareRecordingsUtilImpl
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
-import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,32 +26,31 @@ object RecorderRecordingsProvider {
 	@Provides
 	@Singleton
 	fun providesRecordingsProvider(
-		@ApplicationContext context: Context
+		@ApplicationContext context: Context,
 	): VoiceRecordingsProvider = VoiceRecordingsProviderImpl(context)
-
 
 	@Provides
 	@Singleton
 	fun providesTrashedRecordingsProvider(
 		@ApplicationContext context: Context,
-		trashMetaData: TrashFileDao
+		trashMetaData: TrashFileDao,
+		metadataDao: RecordingsMetadataDao,
 	): TrashRecordingsProvider =
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-			TrashRecordingsProviderImpl(context = context)
-		else
-			TrashRecordingsProviderApi29Impl(context = context, trashMediaDao = trashMetaData)
-
+			TrashRecordingsProviderImpl(context = context, recordingsDao = metadataDao)
+		else TrashRecordingsProviderApi29Impl(
+			context = context,
+			trashMediaDao = trashMetaData,
+			recordingsDao = metadataDao
+		)
 
 	@Provides
 	@Singleton
 	fun providesRecordingsCategoryProvider(
-		categoryDao: RecordingCategoryDao
-	): RecordingCategoryProvider = RecordingsCategoryProviderImpl(categoryDao)
-
-
-	@Provides
-	@Singleton
-	fun providesShareRecordingsActionHelper(
-		@ApplicationContext context: Context
-	): RecordingsActionHelper = ShareRecordingsUtilImpl(context)
+		categoryDao: RecordingCategoryDao,
+		recordingsMetadataDao: RecordingsMetadataDao,
+	): RecordingCategoryProvider = RecordingsCategoryProviderImpl(
+		categoryDao = categoryDao,
+		recordingsDao = recordingsMetadataDao
+	)
 }

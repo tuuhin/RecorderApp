@@ -12,6 +12,8 @@ import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
+import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedTrashRecordingModels
@@ -33,7 +35,8 @@ private const val LOGGER_TAG = "TRASHED_RECORDINGS_PROVIDER"
 
 @RequiresApi(Build.VERSION_CODES.R)
 class TrashRecordingsProviderImpl(
-	private val context: Context
+	private val context: Context,
+	private val recordingsDao: RecordingsMetadataDao,
 ) : RecordingsProvider(context), TrashRecordingsProvider {
 
 	override val trashedRecordingsFlow: Flow<ResourcedTrashRecordingModels>
@@ -109,6 +112,10 @@ class TrashRecordingsProviderImpl(
 						val uri = model.fileUri.toUri()
 						async { removeUriFromTrash(uri) }
 					}
+					// create secondary metadata
+					val entities = recordings.map { RecordingsMetaDataEntity(it.id) }
+					recordingsDao.addRecordingMetaDataBulk(entities)
+					// remove uri's from trash
 					trashRequests.awaitAll()
 					Resource.Success(
 						data = Unit,
@@ -150,6 +157,24 @@ class TrashRecordingsProviderImpl(
 					)
 				}
 			}
+		}
+	}
+
+	override suspend fun onPostTrashRecordings(
+		recordings: Collection<RecordedVoiceModel>
+	): Resource<Unit, Exception> {
+		return try {
+			withContext(Dispatchers.IO) {
+				// remove the secondary metadata
+				val ids = recordings.map { it.id }
+				// now remove secondary data
+				recordingsDao.deleteRecordingMetaDataFromIds(ids)
+			}
+			Resource.Success(Unit)
+		} catch (e: SQLException) {
+			Resource.Error(e)
+		} catch (e: Exception) {
+			Resource.Error(e)
 		}
 	}
 

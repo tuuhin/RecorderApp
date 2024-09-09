@@ -11,17 +11,30 @@ typealias ResourcedVoiceRecordingModels = Resource<List<RecordedVoiceModel>, Exc
 interface VoiceRecordingsProvider {
 
 	/**
-	 * A flow version of [getVoiceRecordings]
+	 * A flow of recorded voice models,
 	 * @return a flow version of [ResourcedVoiceRecordingModels]
-	 * @see getVoiceRecordings it's the base function which is only turned into a flow
+	 * @see getVoiceRecordings to fetch [VoiceRecordingModels] normally use this.
+	 * @throws Exception Make sure you check for any exceptions
 	 */
-	val voiceRecordingsFlow: Flow<ResourcedVoiceRecordingModels>
+	val voiceRecordingsFlow: Flow<VoiceRecordingModels>
+
+	/**
+	 * A resourced version of the [voiceRecordingsFlow].[Exception]'s are wrapped so no need
+	 * worry about exceptions
+	 */
+	val voiceRecordingFlowAsResource: Flow<ResourcedVoiceRecordingModels>
+
+
+	suspend fun getVoiceRecordings(): VoiceRecordingModels
 
 	/**
 	 * Gets the currently saved recordings from the storage
 	 * @return [Resource.Success] of [VoiceRecordingModels] if everything goes well otherwise [Resource.Error]
 	 */
-	suspend fun getVoiceRecordings(): ResourcedVoiceRecordingModels
+	suspend fun getVoiceRecordingsAsResource(): ResourcedVoiceRecordingModels
+
+
+	suspend fun getVoiceRecordingAsResourceFromId(recordingId: Long): Resource<RecordedVoiceModel, Exception>
 
 	/**
 	 * Deleted the current recording from the given uri, tries to delete

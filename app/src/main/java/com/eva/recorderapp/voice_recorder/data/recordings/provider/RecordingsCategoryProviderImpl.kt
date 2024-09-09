@@ -3,11 +3,15 @@ package com.eva.recorderapp.voice_recorder.data.recordings.provider
 import android.database.sqlite.SQLiteException
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingCategoryEntity
+import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.RecordingCategoryNotFound
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.ExtraRecordingMetadataModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ExtraRecordingMetaDataList
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -17,19 +21,20 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
+import java.time.LocalDateTime as JLocalDateTime
+
 
 class RecordingsCategoryProviderImpl(
-	private val categoryDao: RecordingCategoryDao
+	private val categoryDao: RecordingCategoryDao,
+	private val recordingsDao: RecordingsMetadataDao,
 ) : RecordingCategoryProvider {
 
 	private val localtimeNow: LocalDateTime
-		get() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+		get() = JLocalDateTime.now().toKotlinLocalDateTime()
 
-	override val recordingCategoryFlow: Flow<Resource<List<RecordingCategoryModel>, Exception>>
+	override val recordingCategoryAsResourceFlow: Flow<Resource<List<RecordingCategoryModel>, Exception>>
 		get() = flow {
 			try {
 				val result = categoryDao.getAllCategoryAsFlow()
@@ -38,6 +43,36 @@ class RecordingsCategoryProviderImpl(
 						val result = entries.map(RecordingCategoryEntity::toModel)
 						Resource.Success<List<RecordingCategoryModel>, Nothing>(result)
 					}
+				emitAll(result)
+			} catch (e: SQLiteException) {
+				emit(Resource.Error(e, "SQL EXCEPTION"))
+			} catch (e: Exception) {
+				e.printStackTrace()
+				emit(Resource.Error(e, e.message ?: ""))
+			}
+		}
+
+	override val providesRecordingMetaData: Flow<ExtraRecordingMetaDataList>
+		get() = recordingsDao.getAllRecordingsMetaDataAsFlow()
+			.flowOn(Dispatchers.IO)
+			.map { entries -> entries.map { it.toModel() } }
+
+	override fun recordingsFromCategory(category: RecordingCategoryModel): Flow<List<ExtraRecordingMetadataModel>> {
+		return recordingsDao.getRecordingsFromCategoryIdAsFlow(category.id)
+			.flowOn(Dispatchers.IO)
+			.map { entries -> entries.map(RecordingsMetaDataEntity::toModel) }
+	}
+
+	override val recordingCategoriesFlowWithItemCount: Flow<Resource<List<RecordingCategoryModel>, Exception>>
+		get() = flow {
+			try {
+				val result = categoryDao.getCategoriesAsFlowWithCount()
+					.flowOn(Dispatchers.IO)
+					.map { entries ->
+						val result = entries.map { (entity, count) -> entity.toModel(count) }
+						Resource.Success<List<RecordingCategoryModel>, Nothing>(result)
+					}
+
 				emitAll(result)
 			} catch (e: SQLiteException) {
 				emit(Resource.Error(e, "SQL EXCEPTION"))
@@ -56,10 +91,10 @@ class RecordingsCategoryProviderImpl(
 						createdAt = localtimeNow
 					)
 					// creates the entry
-					categoryDao.updateOrInsertCategory(entity)
+					categoryDao.insertOrUpdateCategory(entity)
 				}
 				//get the value
-				categoryDao.getEntityFromId(entityId.await())
+				categoryDao.getCategoryFromId(entityId.await())
 			}
 			return result?.let { entity -> Resource.Success(entity.toModel()) }
 				?: Resource.Error(RecordingCategoryNotFound())
@@ -74,10 +109,10 @@ class RecordingsCategoryProviderImpl(
 	override suspend fun updateCategory(category: RecordingCategoryModel): Resource<RecordingCategoryModel, Exception> {
 		return try {
 			val result = withContext(Dispatchers.IO) {
-				// update it
-				categoryDao.updateOrInsertCategory(entity = category.toEntity())
+				// update it or insert it
+				val id = categoryDao.insertOrUpdateCategory(entity = category.toEntity())
 				//get the value
-				categoryDao.getEntityFromId(id = category.id)
+				categoryDao.getCategoryFromId(id = id)
 			}
 			return result?.let { entity -> Resource.Success(entity.toModel()) }
 				?: Resource.Error(RecordingCategoryNotFound())
@@ -107,7 +142,7 @@ class RecordingsCategoryProviderImpl(
 		return try {
 			withContext(Dispatchers.IO) {
 				val entities = categories.map(RecordingCategoryModel::toEntity)
-				categoryDao.deleteCategories(entities = entities)
+				categoryDao.deleteCategoriesBulk(entities = entities)
 			}
 			Resource.Success(true)
 		} catch (e: SQLiteException) {

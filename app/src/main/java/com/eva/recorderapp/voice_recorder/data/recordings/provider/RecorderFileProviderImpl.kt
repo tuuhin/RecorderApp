@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.data.recordings.provider
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -9,6 +10,8 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import com.eva.recorderapp.common.Resource
+import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.AudioFileNamingFormat
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
@@ -17,6 +20,8 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.CannotCre
 import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.RecordingFileNotFoundException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
@@ -25,7 +30,8 @@ private const val LOGGER_TAG = "RECORDER_FILE_PROVIDE"
 
 class RecorderFileProviderImpl(
 	private val context: Context,
-	private val settings: RecorderFileSettingsRepo
+	private val recordingDao: RecordingsMetadataDao,
+	private val settings: RecorderFileSettingsRepo,
 ) : RecordingsProvider(context), RecorderFileProvider {
 
 	override suspend fun createFileForRecording(extension: String?): File {
@@ -36,10 +42,8 @@ class RecorderFileProviderImpl(
 		}
 	}
 
-	override suspend fun transferFileDataToStorage(
-		file: File,
-		format: RecordEncoderAndFormat
-	): Resource<String?, Exception> {
+	override suspend fun transferFileDataToStorage(file: File, format: RecordEncoderAndFormat)
+			: Resource<String?, Exception> {
 		return withContext(Dispatchers.IO) {
 
 			try {
@@ -52,15 +56,26 @@ class RecorderFileProviderImpl(
 					?: return@withContext Resource.Error(CannotCreateMetaDataException())
 
 				Log.d(LOGGER_TAG, "UPDATING THE FILE CONTENT..")
-				val updateContent = async(Dispatchers.IO) {
+				val job = launch(Dispatchers.IO) {
 					contentResolver.openOutputStream(contentUri, "w")?.use { stream ->
 						stream.write(file.readBytes())
 					}
 				}
 				// wait for the file data to be completely read
-				updateContent.await()
+				job.join()
 				// update the metadata for the file
-				updateUriAfterRecording(contentUri)
+				val mediaStoreUpdate = async(Dispatchers.IO) {
+					updateUriAfterRecording(contentUri)
+				}
+				// save the secondary metadata
+				val otherMetadataDataUpdate = async(Dispatchers.IO) {
+					val uriId = ContentUris.parseId(contentUri)
+					val entity = RecordingsMetaDataEntity(recordingId = uriId)
+					recordingDao.updateOrInsertRecordingMetadata(entity)
+				}
+				// execute them parallel
+				Log.d(LOGGER_TAG, "UPDATING METADATA")
+				awaitAll(mediaStoreUpdate, otherMetadataDataUpdate)
 
 				return@withContext Resource.Success(contentUri.toString())
 			} catch (e: IllegalArgumentException) {

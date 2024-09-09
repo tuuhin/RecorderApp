@@ -27,6 +27,6 @@ data class RecordingsMetaDataEntity(
 	@ColumnInfo(name = "IS_FAVOURITE")
 	val isFavourite: Boolean = false,
 
-	@ColumnInfo(name = "CATEGORY_ID", index = true)
+	@ColumnInfo(name = "CATEGORY_ID")
 	val categoryId: Long? = null
 )

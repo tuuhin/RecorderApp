@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.di
 import android.content.Context
 import com.eva.recorderapp.voice_recorder.data.recordings.database.RecorderDataBase
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
 import dagger.Module
 import dagger.Provides
@@ -32,4 +33,10 @@ object RecorderDataBaseModule {
 	fun providesCategoryDao(
 		dataBase: RecorderDataBase
 	): RecordingCategoryDao = dataBase.categoriesDao()
+
+	@Provides
+	@Singleton
+	fun providesRecordingsMetadataDao(
+		dataBase: RecorderDataBase
+	): RecordingsMetadataDao = dataBase.recordingMetaData()
 }

@@ -26,7 +26,7 @@ interface TrashRecordingsProvider {
 
 	/**
 	 * Restore the original [RecordedVoiceModel], from the trash for one to one mapping of [TrashRecordingModel]
-	 * on restore they are shown on [VoiceRecordingsProvider.getVoiceRecordings]
+	 * on restore they are shown on [VoiceRecordingsProvider.getVoiceRecordingsAsResource]
 	 * @param recordings a [Collection] of [TrashRecordingModel] to be recovered
 	 * @return [Resource] indicating [recordings] are recovered successfully otherwise [Exception]
 	 */
@@ -43,6 +43,11 @@ interface TrashRecordingsProvider {
 	suspend fun createTrashRecordings(
 		recordings: Collection<RecordedVoiceModel>
 	): Resource<Unit, Exception>
+
+	/**
+	 * Perform action after the recordings are being trashed
+	 */
+	suspend fun onPostTrashRecordings(recordings: Collection<RecordedVoiceModel>): Resource<Unit, Exception>
 
 	/**
 	 * Permanently deletes the trashed recordings. Remember if these are deleted they cannot be recovered anymore
