@@ -1,11 +1,9 @@
 package com.eva.recorderapp.voice_recorder.presentation.categories.composable
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -16,10 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
@@ -34,18 +33,19 @@ fun RecordingCategoryCard(
 	modifier: Modifier = Modifier,
 	isSelected: Boolean = false,
 	shape: Shape = MaterialTheme.shapes.large,
-	colors: CardColors = CardDefaults.elevatedCardColors()
+	colors: CardColors = CardDefaults.elevatedCardColors(),
 ) {
 	ElevatedCard(
 		colors = colors,
 		shape = shape,
 		elevation = CardDefaults.elevatedCardElevation(pressedElevation = 4.dp),
-		modifier = modifier
-			.clip(shape)
-			.clickable(role = Role.RadioButton, onClick = onItemClick),
+		onClick = onItemClick,
+		modifier = modifier.semantics {
+			role = Role.RadioButton
+		},
 	) {
 		Row(
-			horizontalArrangement = Arrangement.spacedBy(16.dp),
+			horizontalArrangement = Arrangement.spacedBy(4.dp),
 			verticalAlignment = Alignment.CenterVertically,
 			modifier = Modifier
 				.fillMaxWidth()
@@ -56,7 +56,6 @@ fun RecordingCategoryCard(
 				onClick = onItemClick,
 				colors = RadioButtonDefaults
 					.colors(selectedColor = MaterialTheme.colorScheme.secondary),
-				modifier = Modifier.size(24.dp)
 			)
 			Text(
 				text = category.category.name,

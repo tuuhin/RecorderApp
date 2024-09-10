@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.data.recordings.database.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.eva.recorderapp.voice_recorder.data.recordings.database.DataBaseConstants
 
@@ -17,6 +18,9 @@ import com.eva.recorderapp.voice_recorder.data.recordings.database.DataBaseConst
 			onDelete = ForeignKey.SET_NULL,
 		),
 	],
+	indices = [
+		Index("CATEGORY_ID")
+	],
 )
 data class RecordingsMetaDataEntity(
 
@@ -28,5 +32,5 @@ data class RecordingsMetaDataEntity(
 	val isFavourite: Boolean = false,
 
 	@ColumnInfo(name = "CATEGORY_ID")
-	val categoryId: Long? = null
+	val categoryId: Long? = null,
 )

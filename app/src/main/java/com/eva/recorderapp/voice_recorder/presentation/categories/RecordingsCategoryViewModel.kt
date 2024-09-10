@@ -31,7 +31,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RecordingsCategoryViewModel @Inject constructor(
-	private val provider: RecordingCategoryProvider
+	private val provider: RecordingCategoryProvider,
 ) : AppViewModel() {
 
 	private val _categories = MutableStateFlow(emptyList<SelectableCategory>())
@@ -50,8 +50,7 @@ class RecordingsCategoryViewModel @Inject constructor(
 	val isLoaded = _isLoaded.asStateFlow()
 
 	private val selectedCategories: List<RecordingCategoryModel>
-		get() = _categories.value
-			.filter(SelectableCategory::isSelected)
+		get() = _categories.value.filter(SelectableCategory::isSelected)
 			.map(SelectableCategory::category)
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
@@ -123,7 +122,7 @@ class RecordingsCategoryViewModel @Inject constructor(
 
 	private fun populateCategories() {
 
-		provider.recordingCategoryFlow.onEach { res ->
+		provider.recordingCategoryAsResourceFlow.onEach { res ->
 			when (res) {
 				is Resource.Error -> {
 					val message = res.message ?: res.error.message ?: "SOME ERROR"
@@ -159,29 +158,31 @@ class RecordingsCategoryViewModel @Inject constructor(
 	}
 
 
-	private fun createCategory() = viewModelScope.launch {
+	private fun createCategory()  {
 
 		val categoryName = _createState.value.textValue.text
 		if (categoryName.isBlank()) {
 			_createState.update { it.copy(error = "Cannot have empty values") }
-			return@launch
+			return
 		}
-		val result = provider.createCategory(categoryName)
-		// update to a new state
-		_createState.update { CreateOrEditCategoryState() }
-		// show context message
-		when (result) {
-			is Resource.Error -> {
-				val message = result.message ?: "Failed to create category"
-				_uiEvents.emit(UIEvents.ShowSnackBar(message))
-			}
+		viewModelScope.launch{
+			// show context message
+			when (val result = provider.createCategory(categoryName)) {
+				is Resource.Error -> {
+					val message = result.message ?: "Failed to create category"
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+				}
 
-			is Resource.Success -> {
-				val message = result.message ?: "Created new category $categoryName"
-				_uiEvents.emit(UIEvents.ShowToast(message))
-			}
+				is Resource.Success -> {
+					val message = result.message ?: "Created new category $categoryName"
+					_uiEvents.emit(UIEvents.ShowToast(message))
+				}
 
-			else -> {}
+				else -> {}
+			}
+		}.invokeOnCompletion {
+			// update to a new state
+			_createState.update { CreateOrEditCategoryState() }
 		}
 	}
 
@@ -200,10 +201,7 @@ class RecordingsCategoryViewModel @Inject constructor(
 		val updatedCategory = category.copy(name = updatedName)
 
 		viewModelScope.launch {
-			val result = provider.updateCategory(updatedCategory)
-			_createState.update { CreateOrEditCategoryState() }
-
-			when (result) {
+			when (val result = provider.updateCategory(updatedCategory)) {
 				is Resource.Error -> {
 					val message = result.message ?: result.error.message ?: ""
 					_uiEvents.emit(UIEvents.ShowSnackBar(message))
@@ -216,6 +214,8 @@ class RecordingsCategoryViewModel @Inject constructor(
 
 				else -> {}
 			}
+		}.invokeOnCompletion {
+			_createState.update { CreateOrEditCategoryState() }
 		}
 	}
 }

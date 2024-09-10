@@ -3,7 +3,7 @@ package com.eva.recorderapp.voice_recorder.domain.use_cases
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ExtraRecordingMetaDataList
-import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedVoiceRecordingModels
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingModels
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
@@ -12,13 +12,13 @@ import kotlinx.coroutines.flow.combine
 
 class RecordingsFromCategoriesUseCase(
 	private val recordings: VoiceRecordingsProvider,
-	private val categories: RecordingCategoryProvider,
+	private val secondaryRecordings: RecordingsSecondaryDataProvider,
 ) {
 	operator fun invoke(categoryModel: RecordingCategoryModel? = null): Flow<ResourcedVoiceRecordingModels> {
 		return if (categoryModel == null || categoryModel == RecordingCategoryModel.ALL_CATEGORY) {
 			combine(
 				flow = recordings.voiceRecordingsFlow,
-				flow2 = categories.providesRecordingMetaData
+				flow2 = secondaryRecordings.providesRecordingMetaData
 			) { originalMetaData, extraMetaData ->
 				try {
 					val result = mergePrimaryAndSecondaryMetadata(originalMetaData, extraMetaData)
@@ -29,7 +29,7 @@ class RecordingsFromCategoriesUseCase(
 				}
 			}
 		} else {
-			val extraMetaDataFlow = categories.recordingsFromCategory(categoryModel)
+			val extraMetaDataFlow = secondaryRecordings.recordingsFromCategory(categoryModel)
 			combine(
 				flow = recordings.voiceRecordingsFlow,
 				flow2 = extraMetaDataFlow
@@ -52,8 +52,13 @@ class RecordingsFromCategoriesUseCase(
 		otherMetadata: ExtraRecordingMetaDataList,
 	): VoiceRecordingModels {
 		return recordings.map { model ->
-			val hasExtraData = otherMetadata.find { it.recordingId == model.id } ?: return@map model
-			model.copy(isFavorite = hasExtraData.isFavourite)
+			otherMetadata.find { it.recordingId == model.id }
+				?.let { extraData ->
+					model.copy(
+						isFavorite = extraData.isFavourite,
+						categoryId = extraData.categoryId
+					)
+				} ?: model
 		}
 	}
 

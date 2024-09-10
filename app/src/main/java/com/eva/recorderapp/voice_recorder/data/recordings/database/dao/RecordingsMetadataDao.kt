@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import androidx.room.Upsert
 import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,9 @@ interface RecordingsMetadataDao {
 
 	@Upsert
 	suspend fun updateOrInsertRecordingMetadata(entity: RecordingsMetaDataEntity): Long
+
+	@Update
+	suspend fun updateOrInsertRecordingMetadataBulk(entities: Collection<RecordingsMetaDataEntity>)
 
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	suspend fun addRecordingMetaDataBulk(entities: Collection<RecordingsMetaDataEntity>)
@@ -26,6 +30,9 @@ interface RecordingsMetadataDao {
 
 	@Query("SELECT * from recording_meta_data WHERE RECORDING_ID=:id")
 	suspend fun getRecordingMetaDataFromId(id: Long): RecordingsMetaDataEntity?
+
+	@Query("SELECT * FROM RECORDING_META_DATA WHERE RECORDING_ID in (:recordingIds) ")
+	suspend fun getRecordingMetaDataFromIds(recordingIds: List<Long>): List<RecordingsMetaDataEntity>
 
 	@Query(
 		"""

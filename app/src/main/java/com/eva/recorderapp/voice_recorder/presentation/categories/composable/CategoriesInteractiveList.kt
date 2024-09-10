@@ -33,7 +33,8 @@ fun CategoriesInteractiveList(
 	isLoaded: Boolean,
 	onItemClick: (RecordingCategoryModel) -> Unit,
 	categories: ImmutableList<SelectableCategory>,
-	modifier: Modifier = Modifier, contentPadding: PaddingValues = PaddingValues()
+	modifier: Modifier = Modifier,
+	contentPadding: PaddingValues = PaddingValues(),
 ) {
 	val isLocalInspectionMode = LocalInspectionMode.current
 

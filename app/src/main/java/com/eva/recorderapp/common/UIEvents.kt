@@ -1,6 +1,6 @@
 package com.eva.recorderapp.common
 
-interface UIEvents {
+sealed interface UIEvents {
 
 	data class ShowSnackBarWithActions(
 		val message: String,

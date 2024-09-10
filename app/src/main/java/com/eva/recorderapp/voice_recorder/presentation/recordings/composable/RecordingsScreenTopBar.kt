@@ -16,7 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DoneAll
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -62,7 +61,7 @@ fun RecordingsScreenTopBar(
 	onNavigateToBin: () -> Unit = {},
 	onSortItems: () -> Unit = {},
 	onManageCategories: () -> Unit = {},
-	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
+	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
 ) {
 
 	var showDropDown by remember { mutableStateOf(false) }
@@ -123,8 +122,21 @@ fun RecordingsScreenTopBar(
 		} else MediumTopAppBar(
 			title = { Text(text = stringResource(id = R.string.recording_top_bar_title)) },
 			actions = {
-				IconButton(onClick = { }) {
-					Icon(imageVector = Icons.Outlined.Search, contentDescription = "")
+				TooltipBox(
+					positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+					tooltip = {
+						PlainTooltip {
+							Text(text = stringResource(id = R.string.menu_option_recycle_bin))
+						}
+					},
+					state = rememberTooltipState(),
+				) {
+					IconButton(onClick = onNavigateToBin) {
+						Icon(
+							painter = painterResource(id = R.drawable.ic_recycle),
+							contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
+						)
+					}
 				}
 
 				Box {
@@ -147,14 +159,16 @@ fun RecordingsScreenTopBar(
 					DropdownMenu(
 						expanded = showDropDown,
 						onDismissRequest = { showDropDown = false },
+						shape = MaterialTheme.shapes.large,
 					) {
 						DropdownMenuItem(
-							text = { Text(text = stringResource(id = R.string.menu_option_recycle_bin)) },
-							onClick = onNavigateToBin,
+							text = { Text(text = stringResource(R.string.menu_option_categories)) },
+							onClick = onManageCategories,
 							leadingIcon = {
 								Icon(
-									painter = painterResource(id = R.drawable.ic_recycle),
-									contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
+									painter = painterResource(id = R.drawable.ic_category),
+									contentDescription = stringResource(R.string.menu_option_categories),
+									modifier = Modifier.size(24.dp)
 								)
 							},
 						)
@@ -165,17 +179,6 @@ fun RecordingsScreenTopBar(
 								Icon(
 									painter = painterResource(id = R.drawable.ic_sort),
 									contentDescription = stringResource(id = R.string.menu_option_sort_order)
-								)
-							},
-						)
-						DropdownMenuItem(
-							text = { Text(text = stringResource(R.string.menu_option_categories)) },
-							onClick = onManageCategories,
-							leadingIcon = {
-								Icon(
-									painter = painterResource(id = R.drawable.ic_category),
-									contentDescription = stringResource(R.string.menu_option_categories),
-									modifier = Modifier.size(24.dp)
 								)
 							},
 						)
@@ -208,7 +211,7 @@ fun animateTopBar(): ContentTransform {
 	return enterIn togetherWith exitOut
 }
 
-private class BooleanPreviewParams :
+class BooleanPreviewParams :
 	CollectionPreviewParameterProvider<Boolean>(listOf(true, false))
 
 
@@ -217,7 +220,7 @@ private class BooleanPreviewParams :
 @Composable
 private fun RecordingsTopBarSelectedPreview(
 	@PreviewParameter(BooleanPreviewParams::class)
-	isSelectedMode: Boolean
+	isSelectedMode: Boolean,
 ) = RecorderAppTheme {
 	RecordingsScreenTopBar(
 		isSelectedMode = isSelectedMode,

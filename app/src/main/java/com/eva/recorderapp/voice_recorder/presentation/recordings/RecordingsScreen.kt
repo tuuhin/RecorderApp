@@ -31,16 +31,14 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.MediaAccessPermissionWrapper
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsBottomBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsInteractiveList
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsScreenTopBar
-import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RenameRecordingsNameDialog
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.SortOptionsSheetContent
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RenameRecordingEvents
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RecordingsSortInfo
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RenameRecordingState
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
@@ -51,14 +49,15 @@ import kotlinx.coroutines.launch
 @Composable
 fun RecordingsScreen(
 	isRecordingsLoaded: Boolean,
+	selectedCategory: RecordingCategoryModel,
 	sortInfo: RecordingsSortInfo,
 	recordings: ImmutableList<SelectableRecordings>,
-	renameState: RenameRecordingState,
-	onRenameEvent: (RenameRecordingEvents) -> Unit,
+	categories: ImmutableList<RecordingCategoryModel>,
 	onScreenEvent: (RecordingScreenEvent) -> Unit,
 	onRecordingSelect: (RecordedVoiceModel) -> Unit,
 	modifier: Modifier = Modifier,
 	onNavigateToBin: () -> Unit = {},
+	onShowRenameDialog: (RecordedVoiceModel?) -> Unit = {},
 	onNavigationToCategories: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 ) {
@@ -98,11 +97,6 @@ fun RecordingsScreen(
 		}
 	}
 
-	RenameRecordingsNameDialog(
-		state = renameState,
-		onEvent = onRenameEvent
-	)
-
 	BackHandler(
 		enabled = isAnySelected,
 		onBack = { onScreenEvent(RecordingScreenEvent.OnUnSelectAllRecordings) },
@@ -133,7 +127,16 @@ fun RecordingsScreen(
 				isVisible = isAnySelected,
 				onShareSelected = { onScreenEvent(RecordingScreenEvent.ShareSelectedRecordings) },
 				onItemDelete = { onScreenEvent(RecordingScreenEvent.OnSelectedItemTrashRequest) },
-				onRename = { onRenameEvent(RenameRecordingEvents.OnShowRenameDialog) }
+				onStarItem = { onScreenEvent(RecordingScreenEvent.OnToggleFavourites) },
+				onRename = {
+					// no rename option if option is not available
+					if (showRenameOption) {
+						val firstSelected = recordings.filter { it.isSelected }
+							.map { it.recoding }.firstOrNull()
+						// show the rename dialog
+						onShowRenameDialog(firstSelected)
+					}
+				}
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
@@ -145,8 +148,13 @@ fun RecordingsScreen(
 		) {
 			RecordingsInteractiveList(
 				isRecordingsLoaded = isRecordingsLoaded,
+				selectedCategory = selectedCategory,
 				recordings = recordings,
+				categories = categories,
 				onItemClick = onRecordingSelect,
+				onCategorySelect = { category ->
+					onScreenEvent(RecordingScreenEvent.OnCategoryChanged(category))
+				},
 				onItemSelect = { record ->
 					onScreenEvent(RecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
 				},
@@ -174,15 +182,15 @@ class SelectedRecordingsPreviewParams :
 @Composable
 private fun RecordingScreenPreview(
 	@PreviewParameter(SelectedRecordingsPreviewParams::class)
-	recordings: ImmutableList<SelectableRecordings>
+	recordings: ImmutableList<SelectableRecordings>,
 ) = RecorderAppTheme {
 	RecordingsScreen(
 		isRecordingsLoaded = true,
 		recordings = recordings,
+		selectedCategory = RecordingCategoryModel.ALL_CATEGORY,
+		categories = PreviewFakes.FAKE_CATEGORIES_WITH_ALL_OPTION,
 		sortInfo = RecordingsSortInfo(),
-		renameState = RenameRecordingState(),
 		onScreenEvent = {},
-		onRenameEvent = {},
 		onRecordingSelect = {},
 		navigation = {
 			Icon(

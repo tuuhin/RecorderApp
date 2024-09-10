@@ -25,6 +25,7 @@ import androidx.navigation.navDeepLink
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingsProvider
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDialogs
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
@@ -34,7 +35,7 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.Del
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
 
 fun NavGraphBuilder.recordingsRoute(
-	controller: NavController
+	controller: NavController,
 ) = animatedComposable<NavRoutes.VoiceRecordings>(
 	deepLinks = listOf(
 		navDeepLink {
@@ -67,16 +68,21 @@ fun NavGraphBuilder.recordingsRoute(
 
 	// handle trash request for Api 30+
 	LaunchedEffect(key1 = lifecycleOwner) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return@LaunchedEffect
 
 		lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 			viewModel.trashRequestEvent.collect { event ->
 				when (event) {
 					is DeleteOrTrashRecordingsRequest.OnTrashRequest -> {
-						val request = RecordingsProvider
-							.createTrashRequest(context, event.recordings)
 
-						trashRequestLauncher.launch(request)
+						if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+							val request = event.intentSenderRequest ?: return@collect
+							trashRequestLauncher.launch(request)
+
+						} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+							val request = RecordingsProvider
+								.createTrashRequest(context, event.recordings)
+							trashRequestLauncher.launch(request)
+						}
 					}
 
 					else -> {}
@@ -90,7 +96,8 @@ fun NavGraphBuilder.recordingsRoute(
 	val recordings by viewModel.recordings.collectAsStateWithLifecycle()
 	val isRecordingsLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
 	val sortInfo by viewModel.sortInfo.collectAsStateWithLifecycle()
-	val renameState by viewModel.renameState.collectAsStateWithLifecycle()
+	val categories by viewModel.categories.collectAsStateWithLifecycle()
+	val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
 
 	// lifeCycleState
 	val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
@@ -98,10 +105,10 @@ fun NavGraphBuilder.recordingsRoute(
 	RecordingsScreen(
 		isRecordingsLoaded = isRecordingsLoaded,
 		recordings = recordings,
+		categories = categories,
 		sortInfo = sortInfo,
-		renameState = renameState,
+		selectedCategory = selectedCategory,
 		onScreenEvent = viewModel::onScreenEvent,
-		onRenameEvent = viewModel::onRenameRecordingEvent,
 		onNavigateToBin = dropUnlessResumed {
 			controller.navigate(NavRoutes.TrashRecordings)
 		},
@@ -112,6 +119,12 @@ fun NavGraphBuilder.recordingsRoute(
 			if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
 				val audioRoute = NavRoutes.AudioPlayer(record.id)
 				controller.navigate(audioRoute)
+			}
+		},
+		onShowRenameDialog = { record ->
+			if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED) && record != null) {
+				val dialog = NavDialogs.RenameRecordingDialog(record.id)
+				controller.navigate(dialog)
 			}
 		},
 		navigation = {

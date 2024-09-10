@@ -10,12 +10,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
@@ -37,7 +35,6 @@ import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvide
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import com.eva.recorderapp.voice_recorder.presentation.util.SelectableCategoryImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,9 +51,6 @@ fun RecordingCategoriesScreen(
 	val snackBarProvider = LocalSnackBarProvider.current
 	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-	val sheetState = rememberModalBottomSheetState()
-	val scope = rememberCoroutineScope()
-
 	val isAnySelected by remember(categories) {
 		derivedStateOf { categories.any(SelectableCategory::isSelected) }
 	}
@@ -71,15 +65,13 @@ fun RecordingCategoriesScreen(
 		derivedStateOf { selectedCount == 1 }
 	}
 
-
 	BackHandler(
 		enabled = isAnySelected,
 		onBack = { onScreenEvent(CategoriesScreenEvent.OnUnSelectAll) },
 	)
 
 	CreateOrEditCategorySheet(
-		createOrEditState = createOrEditState,
-		sheetState = sheetState,
+		state = createOrEditState,
 		onEvent = onCreateOrEditEvent
 	)
 
@@ -88,27 +80,17 @@ fun RecordingCategoriesScreen(
 			CategoriesTopBar(
 				isCategorySelected = isAnySelected,
 				selectedCount = selectedCount,
-				onCreate = {
-					scope.launch { sheetState.show() }
-						.invokeOnCompletion {
-							onCreateOrEditEvent(CreateOrEditCategoryEvent.OnOpenSheetToCreate)
-						}
-				},
+				onCreate = { onCreateOrEditEvent(CreateOrEditCategoryEvent.OnOpenSheetToCreate) },
 				onSelectAll = { onScreenEvent(CategoriesScreenEvent.OnSelectAll) },
 				onUnSelectAll = { onScreenEvent(CategoriesScreenEvent.OnUnSelectAll) },
-				navigation = navigation
+				navigation = navigation,
 			)
 		},
 		bottomBar = {
 			CategoriesBottomBar(
 				isVisible = isAnySelected,
 				showRename = showRenameOption,
-				onRename = {
-					scope.launch { sheetState.show() }
-						.invokeOnCompletion {
-							onCreateOrEditEvent(CreateOrEditCategoryEvent.OnOpenSheetToEdit)
-						}
-				},
+				onRename = { onCreateOrEditEvent(CreateOrEditCategoryEvent.OnOpenSheetToEdit) },
 				onDelete = { onScreenEvent(CategoriesScreenEvent.OnDeleteSelected) },
 			)
 		},

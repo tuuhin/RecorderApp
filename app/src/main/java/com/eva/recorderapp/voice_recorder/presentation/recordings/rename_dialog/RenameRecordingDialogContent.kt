@@ -1,20 +1,21 @@
-package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
+package com.eva.recorderapp.voice_recorder.presentation.recordings.rename_dialog
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialogDefaults
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -30,32 +31,42 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RenameRecordingEvents
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RenameRecordingState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RenameRecordingNameDialog(
-	showDialog: Boolean,
-	value: TextFieldValue,
-	onValueChange: (TextFieldValue) -> Unit,
+fun RenameRecordingsDialogContent(
+	recordingId: Long,
+	state: RenameRecordingState,
+	onEvent: (RenameRecordingEvent) -> Unit,
 	onDismissRequest: () -> Unit,
 	modifier: Modifier = Modifier,
-	isRenaming: Boolean = false,
-	onCancel: () -> Unit = {},
-	onRename: () -> Unit = {},
-	error: Boolean = false,
-	properties: DialogProperties = DialogProperties()
 ) {
-	if (!showDialog) return
-
-	BasicAlertDialog(
-		onDismissRequest = onDismissRequest,
+	RenameRecordingDialogContent(
+		value = state.textFieldState,
+		errorMessage = state.errorString,
+		hasError = state.hasError,
+		onValueChange = { onEvent(RenameRecordingEvent.OnTextValueChange(it)) },
+		onRename = { onEvent(RenameRecordingEvent.OnRenameRecording(recordingId)) },
+		onCancel = onDismissRequest,
 		modifier = modifier,
-		properties = properties
+	)
+}
+
+@Composable
+private fun RenameRecordingDialogContent(
+	value: TextFieldValue,
+	onValueChange: (TextFieldValue) -> Unit,
+	onCancel: () -> Unit,
+	modifier: Modifier = Modifier,
+	isRenaming: Boolean = false,
+	onRename: () -> Unit = {},
+	errorMessage: String = "",
+	hasError: Boolean = false,
+) {
+	Box(
+		modifier = modifier.sizeIn(minWidth = 280.dp, maxWidth = 560.dp),
+		propagateMinConstraints = true
 	) {
 		Surface(
 			shape = AlertDialogDefaults.shape,
@@ -80,63 +91,52 @@ fun RenameRecordingNameDialog(
 					value = value,
 					onValueChange = onValueChange,
 					label = { Text(text = stringResource(id = R.string.rename_label_text)) },
-					isError = error,
-					shape = MaterialTheme.shapes.large,
+					isError = hasError,
+					shape = MaterialTheme.shapes.medium,
 					keyboardActions = KeyboardActions(onDone = { onRename() }),
 					keyboardOptions = KeyboardOptions(
 						keyboardType = KeyboardType.Text,
 						imeAction = ImeAction.Done
-					)
+					),
+					modifier = Modifier.fillMaxWidth()
 				)
 				AnimatedVisibility(
-					visible = error,
+					visible = hasError,
 					enter = slideInVertically(),
 					exit = slideOutVertically()
 				) {
-					Text(text = stringResource(id = R.string.rename_error_text))
+					Text(text = errorMessage)
 				}
 				Spacer(modifier = Modifier.height(12.dp))
 				Row(
 					modifier = Modifier.align(Alignment.End),
 					horizontalArrangement = Arrangement.spacedBy(6.dp)
 				) {
-					TextButton(onClick = onCancel) {
+					TextButton(
+						onClick = onCancel,
+						enabled = !isRenaming
+					) {
 						Text(text = stringResource(id = R.string.action_cancel))
 					}
-					Button(onClick = onRename, enabled = !isRenaming) {
+					Button(
+						onClick = onRename,
+						enabled = !isRenaming,
+						shape = MaterialTheme.shapes.large
+					) {
 						Text(text = stringResource(id = R.string.rename_recording_action))
 					}
 				}
-
 			}
 		}
 	}
 }
 
-@Composable
-fun RenameRecordingsNameDialog(
-	state: RenameRecordingState,
-	onEvent: (RenameRecordingEvents) -> Unit,
-	modifier: Modifier = Modifier
-) {
-	RenameRecordingNameDialog(
-		showDialog = state.showDialog,
-		value = state.textFieldState,
-		error = state.isBlank,
-		onValueChange = { onEvent(RenameRecordingEvents.OnTextValueChange(it)) },
-		onDismissRequest = { onEvent(RenameRecordingEvents.OnCancelRenameRecording) },
-		onCancel = { onEvent(RenameRecordingEvents.OnCancelRenameRecording) },
-		onRename = { onEvent(RenameRecordingEvents.OnRenameRecording) },
-		modifier = modifier
-	)
-}
-
 @PreviewLightDark
 @Composable
-private fun RenameRecordingsDialogPreview() = RecorderAppTheme {
-	RenameRecordingNameDialog(
-		showDialog = true,
+private fun RenameRecordingsDialogContentPreview() = RecorderAppTheme {
+	RenameRecordingDialogContent(
 		value = TextFieldValue(),
 		onValueChange = {},
-		onDismissRequest = { })
+		onCancel = {},
+	)
 }

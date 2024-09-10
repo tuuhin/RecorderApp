@@ -1,6 +1,8 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
+import android.app.RecoverableSecurityException
 import android.os.Build
+import androidx.activity.result.IntentSenderRequest
 import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
@@ -46,6 +48,7 @@ class RecordingsBinViewmodel @Inject constructor(
 		get() = _trashedRecordings.value
 			.filter(SelectableTrashRecordings::isSelected)
 			.map(SelectableTrashRecordings::trashRecording)
+
 
 	private val _isRecordingsLoaded = MutableStateFlow(false)
 	val isLoaded = _isRecordingsLoaded.asStateFlow()
@@ -93,7 +96,7 @@ class RecordingsBinViewmodel @Inject constructor(
 			TrashRecordingScreenEvent.OnSelectItemRestore -> onRecordingsRestore()
 			is TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect -> onToggleSelection(event.recording)
 			is TrashRecordingScreenEvent.OnPostDeleteRequestApi30 ->
-				onPostTrashEvent(event.isSuccess, event.message)
+				onPostTrashEvent(event.message)
 		}
 	}
 
@@ -122,33 +125,54 @@ class RecordingsBinViewmodel @Inject constructor(
 	}
 
 	private fun onPermanentDelete() = viewModelScope.launch {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-			// delete via intent
-			val req = DeleteOrTrashRecordingsRequest.OnDeleteRequest(selectedRecordings)
-			_deleteEvents.emit(req)
-		} else {
-			when (val result = provider.permanentlyDeleteRecordingsInTrash(selectedRecordings)) {
-				is Resource.Error -> {
-					val message = result.message ?: "Cannot move items to trash"
-					onPostTrashEvent(isSuccess = false, message = message)
+		when (val result = provider.permanentlyDeleteRecordingsInTrash(selectedRecordings)) {
+			is Resource.Error -> {
+				if (result.error is SecurityException) {
+					handleSecurityExceptionToDelete(result.error)
+					return@launch
 				}
+				val message = result.message ?: "Cannot move items to trash"
+				onPostTrashEvent(message)
+			}
 
-				is Resource.Success -> {
-					val message = result.message ?: "Items deleted successfully"
-					onPostTrashEvent(isSuccess = true, message = message)
+			is Resource.Success -> {
+				val message = result.message ?: "Items deleted successfully"
+				onPostTrashEvent(message = message)
+			}
+
+			else -> {}
+		}
+	}
+
+	private fun handleSecurityExceptionToDelete(error: SecurityException) {
+		viewModelScope.launch {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+
+				val request = DeleteOrTrashRecordingsRequest.OnDeleteRequest(selectedRecordings)
+				_deleteEvents.emit(request)
+
+			} else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+				// TODO: Check the workflow for android 10
+				(error as? RecoverableSecurityException)?.let { exp ->
+					val pendingIntent = exp.userAction.actionIntent
+					val request = IntentSenderRequest.Builder(pendingIntent)
+						.build()
+					val deleteRequest =
+						DeleteOrTrashRecordingsRequest.OnDeleteRequest(
+							trashRecordings = selectedRecordings,
+							intentSenderRequest = request
+						)
+					_deleteEvents.emit(deleteRequest)
 				}
-
-				else -> {}
 			}
 		}
 	}
 
-	private fun onPostTrashEvent(isSuccess: Boolean, message: String) {
+	private fun onPostTrashEvent(message: String) {
 		viewModelScope.launch {
 			// show the toast its deleted
 			_uiEvents.emit(UIEvents.ShowToast(message))
 		}
-		// handle post delete events
 	}
 
 

@@ -1,12 +1,11 @@
 package com.eva.recorderapp.voice_recorder.domain.recordings.provider
 
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.ExtraRecordingMetadataModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import kotlinx.coroutines.flow.Flow
 
 typealias RecordingCategoriesModels = List<RecordingCategoryModel>
-typealias ExtraRecordingMetaDataList = List<ExtraRecordingMetadataModel>
+
 
 interface RecordingCategoryProvider {
 
@@ -14,9 +13,7 @@ interface RecordingCategoryProvider {
 
 	val recordingCategoriesFlowWithItemCount: Flow<Resource<RecordingCategoriesModels, Exception>>
 
-	val providesRecordingMetaData: Flow<ExtraRecordingMetaDataList>
-
-	fun recordingsFromCategory(category: RecordingCategoryModel): Flow<ExtraRecordingMetaDataList>
+	suspend fun getCategoryFromId(id: Long): Resource<RecordingCategoryModel, Exception>
 
 	suspend fun createCategory(name: String): Resource<RecordingCategoryModel, Exception>
 

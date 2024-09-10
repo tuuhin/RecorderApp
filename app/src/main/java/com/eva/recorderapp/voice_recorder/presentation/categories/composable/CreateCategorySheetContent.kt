@@ -40,35 +40,35 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateOrEditCategorySheet(
-	createOrEditState: CreateOrEditCategoryState,
+	state: CreateOrEditCategoryState,
 	onEvent: (CreateOrEditCategoryEvent) -> Unit,
 	modifier: Modifier = Modifier,
-	sheetState: SheetState = rememberModalBottomSheetState()
+	sheetState: SheetState = rememberModalBottomSheetState(),
 ) {
+	if (!state.showSheet) return
+
 	val scope = rememberCoroutineScope()
 
-	if (createOrEditState.showSheet)
-		ModalBottomSheet(
-			onDismissRequest = { onEvent(CreateOrEditCategoryEvent.OnDismissSheet) },
-			sheetState = sheetState,
-			tonalElevation = 2.dp,
-			modifier = modifier,
-		) {
-			CreateOrEditCategorySheetContent(
-				value = createOrEditState.textValue,
-				error = createOrEditState.error,
-				hasError = createOrEditState.hasError,
-				isEditMode = createOrEditState.isEditMode,
-				onValueChange = { onEvent(CreateOrEditCategoryEvent.OnTextFieldValueChange(it)) },
-				onAcceptChanges = { onEvent(CreateOrEditCategoryEvent.OnAcceptChanges) },
-				onCancel = {
-					scope.launch { sheetState.hide() }
-						.invokeOnCompletion {
-							onEvent(CreateOrEditCategoryEvent.OnDismissSheet)
-						}
+	ModalBottomSheet(
+		onDismissRequest = { onEvent(CreateOrEditCategoryEvent.OnDismissSheet) },
+		sheetState = sheetState,
+		tonalElevation = 2.dp,
+		modifier = modifier,
+	) {
+		CreateOrEditCategorySheetContent(
+			value = state.textValue,
+			error = state.error,
+			hasError = state.hasError,
+			isEditMode = state.isEditMode,
+			onValueChange = { onEvent(CreateOrEditCategoryEvent.OnTextFieldValueChange(it)) },
+			onAcceptChanges = { onEvent(CreateOrEditCategoryEvent.OnAcceptChanges) },
+			onCancel = {
+				scope.launch { sheetState.hide() }.invokeOnCompletion {
+					onEvent(CreateOrEditCategoryEvent.OnDismissSheet)
 				}
-			)
-		}
+			}
+		)
+	}
 }
 
 
@@ -82,7 +82,7 @@ private fun CreateOrEditCategorySheetContent(
 	error: String = "",
 	hasError: Boolean = false,
 	isEditMode: Boolean = false,
-	padding: PaddingValues = PaddingValues(24.dp)
+	padding: PaddingValues = PaddingValues(24.dp),
 ) {
 	Column(
 		modifier = modifier.padding(padding)

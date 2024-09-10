@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,11 +33,11 @@ fun CategoriesBottomBar(
 	showRename: Boolean,
 	onRename: () -> Unit,
 	onDelete: () -> Unit,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 	AnimatedVisibility(
 		visible = isVisible,
-		modifier = modifier,
+		modifier = modifier.fillMaxWidth(),
 	) {
 		BottomAppBar(
 			actions = {

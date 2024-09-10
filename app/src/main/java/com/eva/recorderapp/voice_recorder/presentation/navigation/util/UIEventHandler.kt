@@ -9,7 +9,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavController
 import com.eva.recorderapp.common.AppViewModel
+import com.eva.recorderapp.common.DialogUIEvent
+import com.eva.recorderapp.common.DialogViewModel
 import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 
@@ -24,12 +27,10 @@ fun <T : AppViewModel> UiEventsSideEffect(viewModel: T) {
 		lifecyleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 			viewModel.uiEvent.collect { event ->
 				when (event) {
-					is UIEvents.ShowToast -> Toast.makeText(
-						context,
-						event.message,
-						Toast.LENGTH_SHORT
-					)
-						.show()
+					is UIEvents.ShowToast -> {
+						Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
+							.show()
+					}
 
 					is UIEvents.ShowSnackBarWithActions -> {
 						val result = snackBarState.showSnackbar(
@@ -47,6 +48,27 @@ fun <T : AppViewModel> UiEventsSideEffect(viewModel: T) {
 					is UIEvents.ShowSnackBar -> snackBarState.showSnackbar(message = event.message)
 				}
 
+			}
+		}
+	}
+}
+
+@Composable
+fun <T : DialogViewModel> DialogSideEffectHandler(viewModel: T, navController: NavController) {
+
+	val context = LocalContext.current
+	val lifecyleOwner = LocalLifecycleOwner.current
+
+	LaunchedEffect(key1 = lifecyleOwner) {
+		lifecyleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+			viewModel.uiEvent.collect { event ->
+				when (event) {
+					DialogUIEvent.CloseDialog -> navController.popBackStack()
+					is DialogUIEvent.ShowToast -> {
+						Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
+							.show()
+					}
+				}
 			}
 		}
 	}

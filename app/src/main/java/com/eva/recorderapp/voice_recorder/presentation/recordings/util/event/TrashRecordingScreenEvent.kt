@@ -18,8 +18,5 @@ interface TrashRecordingScreenEvent {
 
 	data object OnSelectItemDeleteForeEver : TrashRecordingScreenEvent
 
-	data class OnPostDeleteRequestApi30(
-		val isSuccess: Boolean = false,
-		val message: String = "",
-	) : TrashRecordingScreenEvent
+	data class OnPostDeleteRequestApi30(val message: String = "") : TrashRecordingScreenEvent
 }
