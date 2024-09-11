@@ -50,7 +50,7 @@ fun CreateOrEditCategorySheet(
 	val scope = rememberCoroutineScope()
 
 	ModalBottomSheet(
-		onDismissRequest = { onEvent(CreateOrEditCategoryEvent.OnDismissSheet) },
+		onDismissRequest = { onEvent(CreateOrEditCategoryEvent.OnCancel) },
 		sheetState = sheetState,
 		tonalElevation = 2.dp,
 		modifier = modifier,
@@ -61,10 +61,10 @@ fun CreateOrEditCategorySheet(
 			hasError = state.hasError,
 			isEditMode = state.isEditMode,
 			onValueChange = { onEvent(CreateOrEditCategoryEvent.OnTextFieldValueChange(it)) },
-			onAcceptChanges = { onEvent(CreateOrEditCategoryEvent.OnAcceptChanges) },
+			onAcceptChanges = { onEvent(CreateOrEditCategoryEvent.OnAccept) },
 			onCancel = {
 				scope.launch { sheetState.hide() }.invokeOnCompletion {
-					onEvent(CreateOrEditCategoryEvent.OnDismissSheet)
+					onEvent(CreateOrEditCategoryEvent.OnCancel)
 				}
 			}
 		)

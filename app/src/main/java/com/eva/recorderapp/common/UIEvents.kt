@@ -12,4 +12,6 @@ sealed interface UIEvents {
 	data class ShowSnackBar(val message: String) : UIEvents
 
 	data class ShowToast(val message: String) : UIEvents
+
+	data object PopScreen : UIEvents
 }

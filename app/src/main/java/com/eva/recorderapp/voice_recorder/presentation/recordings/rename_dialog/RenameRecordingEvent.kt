@@ -6,6 +6,6 @@ sealed interface RenameRecordingEvent {
 
 	data class OnTextValueChange(val textValue: TextFieldValue) : RenameRecordingEvent
 
-	data class OnRenameRecording(val recordingId:Long) : RenameRecordingEvent
+	data object OnRenameRecording : RenameRecordingEvent
 
 }

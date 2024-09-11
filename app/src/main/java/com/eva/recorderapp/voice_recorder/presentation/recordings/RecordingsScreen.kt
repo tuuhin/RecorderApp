@@ -58,6 +58,7 @@ fun RecordingsScreen(
 	modifier: Modifier = Modifier,
 	onNavigateToBin: () -> Unit = {},
 	onShowRenameDialog: (RecordedVoiceModel?) -> Unit = {},
+	onMoveToCategory: (Collection<RecordedVoiceModel>) -> Unit = {},
 	onNavigationToCategories: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 ) {
@@ -136,7 +137,12 @@ fun RecordingsScreen(
 						// show the rename dialog
 						onShowRenameDialog(firstSelected)
 					}
-				}
+				},
+				onMoveToCategory = {
+					val selectedOnes = recordings.filter { it.isSelected }
+						.map { it.recoding }
+					onMoveToCategory(selectedOnes)
+				},
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },

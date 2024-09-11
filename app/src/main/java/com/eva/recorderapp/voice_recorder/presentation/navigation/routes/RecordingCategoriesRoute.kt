@@ -12,26 +12,26 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.presentation.categories.RecordingCategoriesScreen
-import com.eva.recorderapp.voice_recorder.presentation.categories.RecordingsCategoryViewModel
+import com.eva.recorderapp.voice_recorder.presentation.categories.ManageCategoriesScreen
+import com.eva.recorderapp.voice_recorder.presentation.categories.ManageCategoryViewModel
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 
 
 fun NavGraphBuilder.recordingCategories(
-	controller: NavController
-) = animatedComposable<NavRoutes.RecordingCategories> {
+	controller: NavController,
+) = animatedComposable<NavRoutes.ManageCategories> {
 
-	val viewModel = hiltViewModel<RecordingsCategoryViewModel>()
+	val viewModel = hiltViewModel<ManageCategoryViewModel>()
 
 	val isLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
 	val categories by viewModel.categories.collectAsStateWithLifecycle()
 	val createState by viewModel.createState.collectAsStateWithLifecycle()
 
-	UiEventsSideEffect(viewModel)
+	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
 
-	RecordingCategoriesScreen(
+	ManageCategoriesScreen(
 		isLoaded = isLoaded,
 		categories = categories,
 		createOrEditState = createState,

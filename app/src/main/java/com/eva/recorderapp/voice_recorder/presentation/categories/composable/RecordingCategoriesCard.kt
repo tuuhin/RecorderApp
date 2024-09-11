@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -23,19 +23,19 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.presentation.categories.utils.SelectableCategory
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 
 @Composable
-fun RecordingCategoryCard(
-	category: SelectableCategory,
+fun RecordingsCategoryCard(
+	category: RecordingCategoryModel,
 	onItemClick: () -> Unit,
 	modifier: Modifier = Modifier,
 	isSelected: Boolean = false,
 	shape: Shape = MaterialTheme.shapes.large,
 	colors: CardColors = CardDefaults.elevatedCardColors(),
 ) {
-	ElevatedCard(
+	Card(
 		colors = colors,
 		shape = shape,
 		elevation = CardDefaults.elevatedCardElevation(pressedElevation = 4.dp),
@@ -58,7 +58,7 @@ fun RecordingCategoryCard(
 					.colors(selectedColor = MaterialTheme.colorScheme.secondary),
 			)
 			Text(
-				text = category.category.name,
+				text = category.name,
 				style = MaterialTheme.typography.titleMedium,
 				color = MaterialTheme.colorScheme.primary,
 				modifier = Modifier.weight(1f),
@@ -70,7 +70,8 @@ fun RecordingCategoryCard(
 @PreviewLightDark
 @Composable
 private fun RecordingCategoryCardPreview() = RecorderAppTheme {
-	RecordingCategoryCard(
-		category = PreviewFakes.FAKE_RECORDING_CATEGORY,
-		onItemClick = {})
+	RecordingsCategoryCard(
+		category = PreviewFakes.FAKE_RECORDING_CATEGORY.category,
+		onItemClick = {},
+	)
 }

@@ -29,7 +29,7 @@ import com.eva.recorderapp.voice_recorder.presentation.composables.ListLoadingAn
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-fun CategoriesInteractiveList(
+fun SelectableCategoriesList(
 	isLoaded: Boolean,
 	onItemClick: (RecordingCategoryModel) -> Unit,
 	categories: ImmutableList<SelectableCategory>,
@@ -62,7 +62,7 @@ fun CategoriesInteractiveList(
 					key = keys,
 					contentType = contentType
 				) { _, category ->
-					RecordingCategoryCard(
+					SelectableCategoryCard(
 						category = category,
 						isSelected = category.isSelected,
 						onItemClick = { onItemClick(category.category) },

@@ -1,10 +1,13 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.rename_dialog
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.eva.recorderapp.common.DialogUIEvent
-import com.eva.recorderapp.common.DialogViewModel
+import androidx.navigation.toRoute
+import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
+import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.domain.use_cases.RenameRecordingUseCase
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDialogs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,13 +22,20 @@ import javax.inject.Inject
 @HiltViewModel
 class RenameDialogViewModel @Inject constructor(
 	private val renameUseCase: RenameRecordingUseCase,
-) : DialogViewModel() {
+	private val savedStateHandle: SavedStateHandle,
+) : AppViewModel() {
+
+	private val route: NavDialogs.RenameRecordingDialog
+		get() = savedStateHandle.toRoute()
+
+	private val recordingId: Long
+		get() = route.recordingId
 
 	private val _state = MutableStateFlow(RenameRecordingState())
 	val renameState = _state.asStateFlow()
 
-	private val _uiEvents = MutableSharedFlow<DialogUIEvent>()
-	override val uiEvent: SharedFlow<DialogUIEvent>
+	private val _uiEvents = MutableSharedFlow<UIEvents>()
+	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 
 	fun onEvent(event: RenameRecordingEvent) {
@@ -33,11 +43,11 @@ class RenameDialogViewModel @Inject constructor(
 			is RenameRecordingEvent.OnTextValueChange ->
 				_state.update { state -> state.copy(textFieldState = event.textValue) }
 
-			is RenameRecordingEvent.OnRenameRecording -> renameRecording(event.recordingId)
+			RenameRecordingEvent.OnRenameRecording -> renameRecording()
 		}
 	}
 
-	private fun renameRecording(recordingId: Long) {
+	private fun renameRecording() {
 		val newName = _state.value.textFieldState.text.trim()
 
 		if (newName.isEmpty() || newName.isBlank()) {
@@ -56,8 +66,8 @@ class RenameDialogViewModel @Inject constructor(
 
 					is Resource.Success -> {
 						val message = result.message ?: "Renamed recording successfully"
-						_uiEvents.emit(DialogUIEvent.ShowToast(message))
-						_uiEvents.emit(DialogUIEvent.CloseDialog)
+						_uiEvents.emit(UIEvents.ShowToast(message))
+						_uiEvents.emit(UIEvents.PopScreen)
 					}
 				}
 			}

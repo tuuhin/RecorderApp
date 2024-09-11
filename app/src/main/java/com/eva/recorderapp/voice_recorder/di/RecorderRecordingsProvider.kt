@@ -49,8 +49,10 @@ object RecorderRecordingsProvider {
 	@Provides
 	@Singleton
 	fun providesRecordingsCategoryProvider(
+		@ApplicationContext context: Context,
 		categoryDao: RecordingCategoryDao,
 	): RecordingCategoryProvider = RecordingsCategoryProviderImpl(
+		context = context,
 		categoryDao = categoryDao,
 	)
 

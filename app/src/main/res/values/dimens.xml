@@ -11,4 +11,6 @@
   <dimen name="bottom_sheet_padding_lg">20dp</dimen>
   <dimen name="line_graph_min_height">150dp</dimen>
   <dimen name="play_button_min_size">72dp</dimen>
+  <dimen name="dialog_min_constraint_width">280dp</dimen>
+  <dimen name="dialog_min_constraint_height">560dp</dimen>
 </resources>

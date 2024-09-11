@@ -49,6 +49,7 @@ fun AudioPlayerScreen(
 	modifier: Modifier = Modifier,
 	navigation: @Composable () -> Unit = {},
 	onNavigateToEdit: () -> Unit = {},
+	onRenameItem: (Long) -> Unit = {},
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
 	val scope = rememberCoroutineScope()
@@ -80,6 +81,12 @@ fun AudioPlayerScreen(
 				state = loadState,
 				navigation = navigation,
 				onEdit = onNavigateToEdit,
+				onRenameOption = {
+					(loadState as? ContentLoadState.Content)?.let { state ->
+						val audioId = state.data.id
+						onRenameItem(audioId)
+					}
+				},
 				onDetailsOptions = {
 					scope.launch { metaDataBottomSheet.show() }
 						.invokeOnCompletion { openMetaDataBottomSheet = true }
@@ -114,7 +121,7 @@ fun AudioPlayerScreen(
 					modifier = Modifier
 						.fillMaxWidth()
 						.align(Alignment.Center)
-						.offset(y = -80.dp)
+						.offset(y = (-80).dp)
 				)
 				PlayerActionsAndSlider(
 					metaData = playerState.playerMetaData,

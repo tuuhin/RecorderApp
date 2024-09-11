@@ -49,7 +49,7 @@ fun NavGraphBuilder.recorderRoute(
 
 	val viewModel = hiltViewModel<RecorderViewModel>()
 
-	UiEventsSideEffect(viewModel = viewModel)
+	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
 
 	RecorderServiceBinder { isBounded, service ->
 		AnimatedContent(
@@ -97,7 +97,7 @@ fun recorderServiceBinderTransition(
 		dampingRatio = Spring.DampingRatioLowBouncy,
 		stiffness = Spring.StiffnessMedium
 	),
-	fadeTransition: FiniteAnimationSpec<Float> = tween(durationMillis = 200, easing = EaseInCubic)
+	fadeTransition: FiniteAnimationSpec<Float> = tween(durationMillis = 200, easing = EaseInCubic),
 ): ContentTransform {
 	return scaleIn(scaleTransition) + fadeIn(fadeTransition) togetherWith
 			scaleOut(scaleTransition) + fadeOut(fadeTransition)

@@ -6,9 +6,9 @@ sealed interface CreateOrEditCategoryEvent {
 
 	data class OnTextFieldValueChange(val value: TextFieldValue) : CreateOrEditCategoryEvent
 
-	data object OnAcceptChanges : CreateOrEditCategoryEvent
+	data object OnAccept : CreateOrEditCategoryEvent
 
-	data object OnDismissSheet : CreateOrEditCategoryEvent
+	data object OnCancel : CreateOrEditCategoryEvent
 
 	data object OnOpenSheetToCreate : CreateOrEditCategoryEvent
 

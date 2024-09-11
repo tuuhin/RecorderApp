@@ -21,7 +21,7 @@ interface RecordingsSecondaryDataProvider {
 	suspend fun updateRecordingMetaData(model: RecordedVoiceModel): Resource<ExtraRecordingMetadataModel, Exception>
 
 	suspend fun updateRecordingCategoryBulk(
-		models: VoiceRecordingModels,
+		recordingIds: List<Long>,
 		category: RecordingCategoryModel,
 	): Resource<Boolean, Exception>
 

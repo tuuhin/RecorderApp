@@ -5,27 +5,33 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.NavController
-import com.eva.recorderapp.common.AppViewModel
-import com.eva.recorderapp.common.DialogUIEvent
-import com.eva.recorderapp.common.DialogViewModel
 import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
+import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
-fun <T : AppViewModel> UiEventsSideEffect(viewModel: T) {
+fun UiEventsSideEffect(
+	eventsFlow: () -> SharedFlow<UIEvents>,
+	onPopScreenEvent: () -> Unit = {},
+) {
 
 	val context = LocalContext.current
 	val lifecyleOwner = LocalLifecycleOwner.current
 	val snackBarState = LocalSnackBarProvider.current
 
+	val uiEvents by rememberUpdatedState(newValue = eventsFlow)
+	val updatedPopScreenEvent by rememberUpdatedState(newValue = onPopScreenEvent)
+
 	LaunchedEffect(key1 = lifecyleOwner) {
 		lifecyleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-			viewModel.uiEvent.collect { event ->
+			val flow = uiEvents()
+			flow.collect { event ->
 				when (event) {
 					is UIEvents.ShowToast -> {
 						Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
@@ -46,30 +52,10 @@ fun <T : AppViewModel> UiEventsSideEffect(viewModel: T) {
 					}
 
 					is UIEvents.ShowSnackBar -> snackBarState.showSnackbar(message = event.message)
-				}
-
-			}
-		}
-	}
-}
-
-@Composable
-fun <T : DialogViewModel> DialogSideEffectHandler(viewModel: T, navController: NavController) {
-
-	val context = LocalContext.current
-	val lifecyleOwner = LocalLifecycleOwner.current
-
-	LaunchedEffect(key1 = lifecyleOwner) {
-		lifecyleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-			viewModel.uiEvent.collect { event ->
-				when (event) {
-					DialogUIEvent.CloseDialog -> navController.popBackStack()
-					is DialogUIEvent.ShowToast -> {
-						Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
-							.show()
-					}
+					UIEvents.PopScreen -> updatedPopScreenEvent()
 				}
 			}
 		}
 	}
 }
+

@@ -1,12 +1,15 @@
 package com.eva.recorderapp.voice_recorder.data.recordings.provider
 
+import android.content.Context
 import android.database.sqlite.SQLiteException
+import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingCategoryEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.RecordingCategoryNotFound
+import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.UnmodifiableRecordingCategory
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
 import kotlinx.coroutines.Dispatchers
@@ -21,8 +24,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import java.time.LocalDateTime as JLocalDateTime
 
-
 class RecordingsCategoryProviderImpl(
+	private val context: Context,
 	private val categoryDao: RecordingCategoryDao,
 ) : RecordingCategoryProvider {
 
@@ -35,7 +38,10 @@ class RecordingsCategoryProviderImpl(
 				val result = categoryDao.getAllCategoryAsFlow()
 					.flowOn(Dispatchers.IO)
 					.map { entries ->
-						val result = entries.map(RecordingCategoryEntity::toModel)
+						val result = buildList {
+							add(RecordingCategoryModel.ALL_CATEGORY)
+							addAll(entries.map(RecordingCategoryEntity::toModel))
+						}
 						Resource.Success<List<RecordingCategoryModel>, Nothing>(result)
 					}
 				emitAll(result)
@@ -69,7 +75,11 @@ class RecordingsCategoryProviderImpl(
 				val result = categoryDao.getCategoriesAsFlowWithCount()
 					.flowOn(Dispatchers.IO)
 					.map { entries ->
-						val result = entries.map { (entity, count) -> entity.toModel(count) }
+						val models = entries.map { (entity, count) -> entity.toModel(count) }
+						val result = buildList {
+							add(RecordingCategoryModel.ALL_CATEGORY)
+							addAll(models)
+						}
 						Resource.Success<List<RecordingCategoryModel>, Nothing>(result)
 					}
 
@@ -96,7 +106,8 @@ class RecordingsCategoryProviderImpl(
 				//get the value
 				categoryDao.getCategoryFromId(entityId.await())
 			}
-			return result?.let { entity -> Resource.Success(entity.toModel()) }
+			val message = context.getString(R.string.categories_create_success)
+			return result?.let { entity -> Resource.Success(entity.toModel(), message = message) }
 				?: Resource.Error(RecordingCategoryNotFound())
 		} catch (e: SQLiteException) {
 			Resource.Error(e, "SQL EXCEPTION")
@@ -108,13 +119,16 @@ class RecordingsCategoryProviderImpl(
 
 	override suspend fun updateCategory(category: RecordingCategoryModel): Resource<RecordingCategoryModel, Exception> {
 		return try {
+			if (category == RecordingCategoryModel.ALL_CATEGORY)
+				return Resource.Error(UnmodifiableRecordingCategory())
 			val result = withContext(Dispatchers.IO) {
 				// update it or insert it
-				val id = categoryDao.insertOrUpdateCategory(entity = category.toEntity())
+				val id = async { categoryDao.insertOrUpdateCategory(entity = category.toEntity()) }
 				//get the value
-				categoryDao.getCategoryFromId(id = id)
+				categoryDao.getCategoryFromId(id = id.await())
 			}
-			return result?.let { entity -> Resource.Success(entity.toModel()) }
+			val message = context.getString(R.string.categories_updated)
+			return result?.let { entity -> Resource.Success(entity.toModel(), message) }
 				?: Resource.Error(RecordingCategoryNotFound())
 		} catch (e: SQLiteException) {
 			Resource.Error(e, "SQL EXCEPTION")
@@ -126,10 +140,13 @@ class RecordingsCategoryProviderImpl(
 
 	override suspend fun deleteCategory(category: RecordingCategoryModel): Resource<Boolean, Exception> {
 		return try {
+			if (category == RecordingCategoryModel.ALL_CATEGORY)
+				return Resource.Error(UnmodifiableRecordingCategory())
 			withContext(Dispatchers.IO) {
 				categoryDao.deleteCategory(entity = category.toEntity())
 			}
-			Resource.Success(true)
+			val message = context.getString(R.string.categories_deleted)
+			Resource.Success(true, message = message)
 		} catch (e: SQLiteException) {
 			Resource.Error(e, "SQL EXCEPTION")
 		} catch (e: Exception) {
@@ -141,10 +158,15 @@ class RecordingsCategoryProviderImpl(
 	override suspend fun deleteCategories(categories: Collection<RecordingCategoryModel>): Resource<Boolean, Exception> {
 		return try {
 			withContext(Dispatchers.IO) {
-				val entities = categories.map(RecordingCategoryModel::toEntity)
+
+				val entities = categories
+					.filter { it != RecordingCategoryModel.ALL_CATEGORY }
+					.map(RecordingCategoryModel::toEntity)
+
 				categoryDao.deleteCategoriesBulk(entities = entities)
 			}
-			Resource.Success(true)
+			val message = context.getString(R.string.categories_deleted)
+			Resource.Success(true, message = message)
 		} catch (e: SQLiteException) {
 			Resource.Error(e, "SQL EXCEPTION")
 		} catch (e: Exception) {

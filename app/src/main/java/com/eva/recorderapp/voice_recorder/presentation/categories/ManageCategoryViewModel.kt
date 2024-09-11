@@ -30,13 +30,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RecordingsCategoryViewModel @Inject constructor(
+class ManageCategoryViewModel @Inject constructor(
 	private val provider: RecordingCategoryProvider,
 ) : AppViewModel() {
 
 	private val _categories = MutableStateFlow(emptyList<SelectableCategory>())
 	val categories = _categories
-		.map { it.toImmutableList() }
+		.map {
+			it.filter { category -> category.category != RecordingCategoryModel.ALL_CATEGORY }
+				.toImmutableList()
+		}
 		.stateIn(
 			scope = viewModelScope,
 			started = SharingStarted.WhileSubscribed(3000),
@@ -77,10 +80,10 @@ class RecordingsCategoryViewModel @Inject constructor(
 			is CreateOrEditCategoryEvent.OnTextFieldValueChange ->
 				_createState.update { it.copy(textValue = event.value) }
 
-			CreateOrEditCategoryEvent.OnDismissSheet ->
+			CreateOrEditCategoryEvent.OnCancel ->
 				_createState.update { it.copy(showSheet = false, isEditMode = false) }
 
-			CreateOrEditCategoryEvent.OnAcceptChanges -> {
+			CreateOrEditCategoryEvent.OnAccept -> {
 				val createOrEditState = _createState.value
 				if (createOrEditState.isEditMode) renameCategory()
 				else createCategory()
@@ -158,14 +161,14 @@ class RecordingsCategoryViewModel @Inject constructor(
 	}
 
 
-	private fun createCategory()  {
+	private fun createCategory() {
 
 		val categoryName = _createState.value.textValue.text
 		if (categoryName.isBlank()) {
 			_createState.update { it.copy(error = "Cannot have empty values") }
 			return
 		}
-		viewModelScope.launch{
+		viewModelScope.launch {
 			// show context message
 			when (val result = provider.createCategory(categoryName)) {
 				is Resource.Error -> {
@@ -175,7 +178,7 @@ class RecordingsCategoryViewModel @Inject constructor(
 
 				is Resource.Success -> {
 					val message = result.message ?: "Created new category $categoryName"
-					_uiEvents.emit(UIEvents.ShowToast(message))
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
 				}
 
 				else -> {}
@@ -204,12 +207,12 @@ class RecordingsCategoryViewModel @Inject constructor(
 			when (val result = provider.updateCategory(updatedCategory)) {
 				is Resource.Error -> {
 					val message = result.message ?: result.error.message ?: ""
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+					_uiEvents.emit(UIEvents.ShowToast(message))
 				}
 
 				is Resource.Success -> {
 					val message = result.message ?: "Renamed recording successfully"
-					_uiEvents.emit(UIEvents.ShowToast(message))
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
 				}
 
 				else -> {}

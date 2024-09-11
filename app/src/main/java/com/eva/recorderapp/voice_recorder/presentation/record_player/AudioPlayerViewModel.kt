@@ -1,7 +1,9 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
@@ -11,18 +13,16 @@ import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
-import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
+import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ControllerEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerSliderControl
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -37,22 +37,27 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val TAG = "PLAYER_VIEWMODEL"
 
-@HiltViewModel(
-	assistedFactory = AudioPlayerViewModelFactory::class
-)
-class AudioPlayerViewModel @AssistedInject constructor(
-	@Assisted private val audioId: Long,
+@HiltViewModel
+class AudioPlayerViewModel @Inject constructor(
 	private val controller: MediaControllerProvider,
 	private val fileProvider: PlayerFileProvider,
-	private val actionHelper: RecordingsActionHelper,
+	private val actionHelper: ShareRecordingsUtil,
 	private val samplesReader: AudioAmplitudeReader,
-	private val shortcutsUtil: AppShortcutFacade
+	shortcutsUtil: AppShortcutFacade,
+	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
-	// audio player instance for calling the underlying api's
+	private val route: NavRoutes.AudioPlayer
+		get() = savedStateHandle.toRoute<NavRoutes.AudioPlayer>()
+
+	private val audioId: Long
+		get() = route.audioId
+
+	// audio player instance for calling the underlying app's
 	private val audioPlayer: AudioFilePlayer?
 		get() = controller.player
 
@@ -62,7 +67,6 @@ class AudioPlayerViewModel @AssistedInject constructor(
 	private val _currentAudio = MutableStateFlow<AudioFileModel?>(null)
 	private val _isAudioLoaded = MutableStateFlow(false)
 
-	@OptIn(ExperimentalCoroutinesApi::class)
 	private val samplesToImmutableList = samplesReader.samples
 		.map { data ->
 			val builder = persistentListOf<Float>().builder()
@@ -179,10 +183,10 @@ class AudioPlayerViewModel @AssistedInject constructor(
 	private fun prepareLoadState(
 		isLoaded: Boolean,
 		audio: AudioFileModel?,
-		isControllerConnected: Boolean
+		isControllerConnected: Boolean,
 	): ContentLoadState = when {
 		!isLoaded || !isControllerConnected -> ContentLoadState.Loading
-		isLoaded && audio != null -> ContentLoadState.Content(audio)
+		audio != null -> ContentLoadState.Content(audio)
 		else -> ContentLoadState.Unknown
 	}
 
@@ -193,9 +197,7 @@ class AudioPlayerViewModel @AssistedInject constructor(
 		combine(controller.playerFlow, currentAudio) { player, file ->
 
 			Log.d(TAG, "PREPARING PLAYER")
-			val result = player.preparePlayer(file)
-
-			when (result) {
+			when (val result = player.preparePlayer(file)) {
 				is Resource.Error -> _uiEvents.emit(UIEvents.ShowSnackBar(result.message ?: ""))
 				else -> {}
 			}

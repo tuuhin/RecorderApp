@@ -12,33 +12,32 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.eva.recorderapp.R
+import com.eva.recorderapp.voice_recorder.presentation.categories.SelectRecordingCategoryViewModel
+import com.eva.recorderapp.voice_recorder.presentation.categories.SelectRecordingsCategoryScreen
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
-import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinScreen
-import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinViewmodel
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.handlers.DeleteRecordingRequestHandler
 
-fun NavGraphBuilder.trashRecordingsRoute(
+fun NavGraphBuilder.selectRecordingCategoryRoute(
 	controller: NavController,
-) = animatedComposable<NavRoutes.TrashRecordings> {
+) = animatedComposable<NavRoutes.SelectRecordingCategoryRoute> {
 
-	val viewModel = hiltViewModel<RecordingsBinViewmodel>()
+	val viewModel = hiltViewModel<SelectRecordingCategoryViewModel>()
 
-	DeleteRecordingRequestHandler(
-		eventsFlow = viewModel::deleteRequestEvent,
-		onResult = viewModel::onScreenEvent
+	UiEventsSideEffect(
+		eventsFlow = viewModel::uiEvent,
+		onPopScreenEvent = dropUnlessResumed(block = controller::popBackStack)
 	)
 
-	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
-
-	val recordings by viewModel.trashRecordings.collectAsStateWithLifecycle()
 	val isLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
+	val categories by viewModel.categories.collectAsStateWithLifecycle()
+	val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
 
-	RecordingsBinScreen(
-		isRecordingsLoaded = isLoaded,
-		recordings = recordings,
-		onScreenEvent = viewModel::onScreenEvent,
+	SelectRecordingsCategoryScreen(
+		isLoaded = isLoaded,
+		categories = categories,
+		selectedCategory = selectedCategory,
+		onEvent = viewModel::onEvent,
 		navigation = {
 			IconButton(
 				onClick = dropUnlessResumed(block = controller::popBackStack)

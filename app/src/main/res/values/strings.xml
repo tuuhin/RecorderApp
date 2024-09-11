@@ -169,8 +169,14 @@
   <string name="menu_option_favourite">Favourite</string>
   <string name="rename_category_dialog_title">Rename Category</string>
   <string name="rename_category_dialog_text">Rename category</string>
-  <string name="recordings_categories_set_successfully">Recordings moved to %s category.</string>
+  <string name="categories_updated">Recordings moved to %s category.</string>
   <string name="recordings_add_to_favourite_success">Favourites marked</string>
   <string name="recordings_remove_favourite_failed">Favourites removed</string>
+  <string name="edit_category_title">Edit Category</string>
+  <string name="select_category_screen">Select Category</string>
+  <string name="categories_not_found">No Recording found</string>
+  <string name="categories_create_success">Category Created Successfully</string>
+  <string name="set_recording_category_action">Set</string>
+  <string name="categories_deleted">Deleted Categories</string>
 
 </resources>

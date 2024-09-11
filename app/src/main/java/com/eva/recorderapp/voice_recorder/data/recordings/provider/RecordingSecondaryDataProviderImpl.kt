@@ -39,6 +39,7 @@ class RecordingSecondaryDataProviderImpl(
 			.map { entries -> entries.map(RecordingsMetaDataEntity::toModel) }
 	}
 
+
 	override suspend fun insertRecordingMetaData(recordingId: Long): Resource<ExtraRecordingMetadataModel, Exception> {
 		return try {
 			val result = withContext(Dispatchers.IO) {
@@ -94,7 +95,7 @@ class RecordingSecondaryDataProviderImpl(
 			result?.let { entity ->
 				Resource.Success(
 					data = entity.toModel(),
-					message = context.getString(R.string.recordings_categories_set_successfully)
+					message = context.getString(R.string.categories_updated)
 				)
 			} ?: Resource.Error(InvalidRecordingIdException())
 		} catch (e: SQLiteException) {
@@ -106,25 +107,31 @@ class RecordingSecondaryDataProviderImpl(
 	}
 
 	override suspend fun updateRecordingCategoryBulk(
-		models: VoiceRecordingModels,
+		recordingIds: List<Long>,
 		category: RecordingCategoryModel,
 	): Resource<Boolean, Exception> {
 		return try {
-			val recordingIds = models.map { it.id }
 			withContext(Dispatchers.IO) {
 				// fetch the entities from ids
 				val entities = recordingsDao.getRecordingMetaDataFromIds(recordingIds)
+
+				if (entities.isEmpty()) {
+					val message = context.getString(R.string.categories_not_found)
+					return@withContext Resource.Success(false, message = message)
+				}
+
 				//update the contents
 				val updatedEntities = entities.map { entity ->
-					entity.copy(categoryId = category.id)
+					if (category != RecordingCategoryModel.ALL_CATEGORY)
+						entity.copy(categoryId = category.id)
+					else entity.copy(categoryId = null)
 				}
 				// update the entities
 				recordingsDao.updateOrInsertRecordingMetadataBulk(updatedEntities)
-			}
 
-			val message =
-				context.getString(R.string.recordings_categories_set_successfully, category.name)
-			Resource.Success(data = true, message = message)
+				val message = context.getString(R.string.categories_updated, category.name)
+				Resource.Success(data = true, message = message)
+			}
 		} catch (e: SQLiteException) {
 			Resource.Error(e, "SQL EXCEPTION")
 		} catch (e: Exception) {

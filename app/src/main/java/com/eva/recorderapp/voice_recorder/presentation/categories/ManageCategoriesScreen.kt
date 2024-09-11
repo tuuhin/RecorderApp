@@ -24,9 +24,9 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.presentation.categories.composable.CategoriesBottomBar
-import com.eva.recorderapp.voice_recorder.presentation.categories.composable.CategoriesInteractiveList
 import com.eva.recorderapp.voice_recorder.presentation.categories.composable.CategoriesTopBar
 import com.eva.recorderapp.voice_recorder.presentation.categories.composable.CreateOrEditCategorySheet
+import com.eva.recorderapp.voice_recorder.presentation.categories.composable.SelectableCategoriesList
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CategoriesScreenEvent
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CreateOrEditCategoryEvent
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CreateOrEditCategoryState
@@ -39,7 +39,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecordingCategoriesScreen(
+fun ManageCategoriesScreen(
 	isLoaded: Boolean,
 	categories: SelectableCategoryImmutableList,
 	createOrEditState: CreateOrEditCategoryState,
@@ -97,7 +97,7 @@ fun RecordingCategoriesScreen(
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
 		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
-		CategoriesInteractiveList(
+		SelectableCategoriesList(
 			isLoaded = isLoaded,
 			categories = categories,
 			onItemClick = { onScreenEvent(CategoriesScreenEvent.OnToggleSelection(it)) },
@@ -123,11 +123,11 @@ class RecordingsCategoriesPreviewParams :
 
 @PreviewLightDark
 @Composable
-private fun RecordingCategoriesScreenPreview(
+private fun ManageCategoriesScreenPreview(
 	@PreviewParameter(RecordingsCategoriesPreviewParams::class)
 	categories: SelectableCategoryImmutableList,
 ) = RecorderAppTheme {
-	RecordingCategoriesScreen(
+	ManageCategoriesScreen(
 		isLoaded = true,
 		categories = categories,
 		createOrEditState = CreateOrEditCategoryState(),

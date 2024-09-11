@@ -25,6 +25,7 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,22 +37,30 @@ import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
 @Composable
 fun RenameRecordingsDialogContent(
-	recordingId: Long,
 	state: RenameRecordingState,
 	onEvent: (RenameRecordingEvent) -> Unit,
 	onDismissRequest: () -> Unit,
 	modifier: Modifier = Modifier,
 ) {
-	RenameRecordingDialogContent(
-		value = state.textFieldState,
-		errorMessage = state.errorString,
-		hasError = state.hasError,
-		onValueChange = { onEvent(RenameRecordingEvent.OnTextValueChange(it)) },
-		onRename = { onEvent(RenameRecordingEvent.OnRenameRecording(recordingId)) },
-		onCancel = onDismissRequest,
-		modifier = modifier,
-	)
+	Box(
+		modifier = modifier.sizeIn(
+			minWidth = dimensionResource(R.dimen.dialog_min_constraint_width),
+			maxWidth = dimensionResource(R.dimen.dialog_min_constraint_height)
+		),
+		propagateMinConstraints = true,
+	) {
+		RenameRecordingDialogContent(
+			value = state.textFieldState,
+			errorMessage = state.errorString,
+			hasError = state.hasError,
+			onValueChange = { onEvent(RenameRecordingEvent.OnTextValueChange(it)) },
+			onRename = { onEvent(RenameRecordingEvent.OnRenameRecording) },
+			onCancel = onDismissRequest,
+			modifier = modifier,
+		)
+	}
 }
+
 
 @Composable
 private fun RenameRecordingDialogContent(
@@ -64,67 +73,65 @@ private fun RenameRecordingDialogContent(
 	errorMessage: String = "",
 	hasError: Boolean = false,
 ) {
-	Box(
-		modifier = modifier.sizeIn(minWidth = 280.dp, maxWidth = 560.dp),
-		propagateMinConstraints = true
+	Surface(
+		shape = AlertDialogDefaults.shape,
+		tonalElevation = AlertDialogDefaults.TonalElevation,
+		color = AlertDialogDefaults.containerColor,
+		contentColor = contentColorFor(AlertDialogDefaults.containerColor),
+		modifier = modifier
 	) {
-		Surface(
-			shape = AlertDialogDefaults.shape,
-			tonalElevation = AlertDialogDefaults.TonalElevation,
-			color = AlertDialogDefaults.containerColor,
-			contentColor = contentColorFor(AlertDialogDefaults.containerColor)
+		Column(
+			modifier = Modifier.padding(24.dp)
 		) {
-			Column(modifier = Modifier.padding(24.dp)) {
-				Text(
-					text = stringResource(id = R.string.rename_recording_dialog_title),
-					style = MaterialTheme.typography.headlineSmall,
-					color = AlertDialogDefaults.titleContentColor,
-					modifier = Modifier.padding(12.dp)
-				)
-				Text(
-					text = stringResource(id = R.string.rename_recording_dialog_text),
-					color = AlertDialogDefaults.textContentColor,
-					style = MaterialTheme.typography.bodyMedium,
-					modifier = Modifier.padding(vertical = 6.dp),
-				)
-				OutlinedTextField(
-					value = value,
-					onValueChange = onValueChange,
-					label = { Text(text = stringResource(id = R.string.rename_label_text)) },
-					isError = hasError,
-					shape = MaterialTheme.shapes.medium,
-					keyboardActions = KeyboardActions(onDone = { onRename() }),
-					keyboardOptions = KeyboardOptions(
-						keyboardType = KeyboardType.Text,
-						imeAction = ImeAction.Done
-					),
-					modifier = Modifier.fillMaxWidth()
-				)
-				AnimatedVisibility(
-					visible = hasError,
-					enter = slideInVertically(),
-					exit = slideOutVertically()
+			Text(
+				text = stringResource(id = R.string.rename_recording_dialog_title),
+				style = MaterialTheme.typography.headlineSmall,
+				color = AlertDialogDefaults.titleContentColor,
+				modifier = Modifier.padding(12.dp)
+			)
+			Text(
+				text = stringResource(id = R.string.rename_recording_dialog_text),
+				color = AlertDialogDefaults.textContentColor,
+				style = MaterialTheme.typography.bodyMedium,
+				modifier = Modifier.padding(vertical = 6.dp),
+			)
+			OutlinedTextField(
+				value = value,
+				onValueChange = onValueChange,
+				label = { Text(text = stringResource(id = R.string.rename_label_text)) },
+				isError = hasError,
+				shape = MaterialTheme.shapes.medium,
+				keyboardActions = KeyboardActions(onDone = { onRename() }),
+				keyboardOptions = KeyboardOptions(
+					keyboardType = KeyboardType.Text,
+					imeAction = ImeAction.Done
+				),
+				modifier = Modifier.fillMaxWidth()
+			)
+			AnimatedVisibility(
+				visible = hasError,
+				enter = slideInVertically(),
+				exit = slideOutVertically()
+			) {
+				Text(text = errorMessage)
+			}
+			Spacer(modifier = Modifier.height(12.dp))
+			Row(
+				modifier = Modifier.align(Alignment.End),
+				horizontalArrangement = Arrangement.spacedBy(6.dp)
+			) {
+				TextButton(
+					onClick = onCancel,
+					enabled = !isRenaming
 				) {
-					Text(text = errorMessage)
+					Text(text = stringResource(id = R.string.action_cancel))
 				}
-				Spacer(modifier = Modifier.height(12.dp))
-				Row(
-					modifier = Modifier.align(Alignment.End),
-					horizontalArrangement = Arrangement.spacedBy(6.dp)
+				Button(
+					onClick = onRename,
+					enabled = !isRenaming,
+					shape = MaterialTheme.shapes.large
 				) {
-					TextButton(
-						onClick = onCancel,
-						enabled = !isRenaming
-					) {
-						Text(text = stringResource(id = R.string.action_cancel))
-					}
-					Button(
-						onClick = onRename,
-						enabled = !isRenaming,
-						shape = MaterialTheme.shapes.large
-					) {
-						Text(text = stringResource(id = R.string.rename_recording_action))
-					}
+					Text(text = stringResource(id = R.string.rename_recording_action))
 				}
 			}
 		}

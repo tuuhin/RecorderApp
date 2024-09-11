@@ -155,8 +155,7 @@ class RecordingsViewmodel @Inject constructor(
 
 					Resource.Loading -> _isCategoriesLoaded.update { false }
 					is Resource.Success -> {
-						val data = res.data + RecordingCategoryModel.ALL_CATEGORY
-						_categories.update { data.reversed() }
+						_categories.update { res.data }
 						_isCategoriesLoaded.update { true }
 					}
 				}
