@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider

@@ -1,7 +1,7 @@
 package com.eva.recorderapp.voice_recorder.domain.use_cases
 
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ExtraRecordingMetaDataList
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedVoiceRecordingModels

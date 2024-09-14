@@ -1,7 +1,9 @@
 package com.eva.recorderapp.voice_recorder.domain.recordings.provider
 
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
+import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import kotlinx.coroutines.flow.Flow
 
 typealias RecordingCategoriesModels = List<RecordingCategoryModel>
@@ -16,6 +18,12 @@ interface RecordingCategoryProvider {
 	suspend fun getCategoryFromId(id: Long): Resource<RecordingCategoryModel, Exception>
 
 	suspend fun createCategory(name: String): Resource<RecordingCategoryModel, Exception>
+
+	suspend fun createCategory(
+		name: String,
+		color: CategoryColor,
+		type: CategoryType,
+	): Resource<RecordingCategoryModel, Exception>
 
 	suspend fun updateCategory(category: RecordingCategoryModel): Resource<RecordingCategoryModel, Exception>
 

@@ -8,10 +8,10 @@ import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.Recording
 import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toMetadataEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toModel
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.InvalidRecordingIdException
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.ExtraRecordingMetadataModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ExtraRecordingMetaDataList
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingModels

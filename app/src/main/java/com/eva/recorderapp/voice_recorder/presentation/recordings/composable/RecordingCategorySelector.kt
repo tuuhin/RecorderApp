@@ -1,9 +1,11 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -16,9 +18,11 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
+import com.eva.recorderapp.voice_recorder.presentation.util.colorRes
+import com.eva.recorderapp.voice_recorder.presentation.util.imageVector
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -55,13 +59,36 @@ fun RecordingsCategorySelector(
 				onClick = { onCategorySelect(category) },
 				label = { Text(text = category.name) },
 				shape = MaterialTheme.shapes.medium,
-				trailingIcon = {
-					if (category.hasCount) Text(text = "(${category.count})")
+				leadingIcon = {
+					AnimatedVisibility(
+						visible = selected == category
+					) {
+						Icon(
+							painter = category.categoryType.imageVector,
+							contentDescription = null,
+							tint = category.categoryColor.colorRes
+								?: MaterialTheme.colorScheme.onSurface
+						)
+					}
 				},
+				trailingIcon = {
+					AnimatedVisibility(
+						visible = category.hasCount
+					) {
+						Text(text = "(${category.count})")
+					}
+				},
+				border = InputChipDefaults.inputChipBorder(
+					enabled = true,
+					selected = selected == category,
+					borderColor = MaterialTheme.colorScheme.outline,
+					selectedBorderColor = category.categoryColor.colorRes
+						?: MaterialTheme.colorScheme.outline
+				),
 				colors = InputChipDefaults.inputChipColors(
-					selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-					selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-					trailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer
+					selectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+					selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+					trailingIconColor = MaterialTheme.colorScheme.onSurface,
 				),
 				modifier = Modifier.animateItem(),
 			)

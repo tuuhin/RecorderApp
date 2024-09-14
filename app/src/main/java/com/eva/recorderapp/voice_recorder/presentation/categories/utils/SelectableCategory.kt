@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.categories.utils
 
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 
 data class SelectableCategory(
 	val category: RecordingCategoryModel,

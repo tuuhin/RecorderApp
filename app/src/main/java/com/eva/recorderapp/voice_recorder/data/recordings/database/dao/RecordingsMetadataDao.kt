@@ -34,15 +34,7 @@ interface RecordingsMetadataDao {
 	@Query("SELECT * FROM RECORDING_META_DATA WHERE RECORDING_ID in (:recordingIds) ")
 	suspend fun getRecordingMetaDataFromIds(recordingIds: List<Long>): List<RecordingsMetaDataEntity>
 
-	@Query(
-		"""
-		SELECT RECORDING_META_DATA.* FROM RECORDING_META_DATA   
-		INNER JOIN RECORDINGS_CATEGORY
-		ON RECORDINGS_CATEGORY.CATEGORY_ID = RECORDING_META_DATA.CATEGORY_ID
-		WHERE RECORDINGS_CATEGORY.CATEGORY_ID=:categoryId
-		GROUP BY RECORDINGS_CATEGORY.CATEGORY_ID
-		"""
-	)
+	@Query("SELECT * FROM RECORDING_META_DATA WHERE CATEGORY_ID=:categoryId")
 	fun getRecordingsFromCategoryIdAsFlow(categoryId: Long): Flow<List<RecordingsMetaDataEntity>>
 
 	@Delete

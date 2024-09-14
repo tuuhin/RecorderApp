@@ -23,13 +23,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.presentation.categories.composable.CategoriesBottomBar
 import com.eva.recorderapp.voice_recorder.presentation.categories.composable.CategoriesTopBar
-import com.eva.recorderapp.voice_recorder.presentation.categories.composable.CreateOrEditCategorySheet
 import com.eva.recorderapp.voice_recorder.presentation.categories.composable.SelectableCategoriesList
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CategoriesScreenEvent
-import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CreateOrEditCategoryEvent
-import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CreateOrEditCategoryState
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.SelectableCategory
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
@@ -42,11 +40,11 @@ import kotlinx.collections.immutable.persistentListOf
 fun ManageCategoriesScreen(
 	isLoaded: Boolean,
 	categories: SelectableCategoryImmutableList,
-	createOrEditState: CreateOrEditCategoryState,
 	onScreenEvent: (CategoriesScreenEvent) -> Unit,
-	onCreateOrEditEvent: (CreateOrEditCategoryEvent) -> Unit,
 	modifier: Modifier = Modifier,
 	navigation: @Composable () -> Unit = {},
+	onNavigateToCreateCategory: () -> Unit = {},
+	onNavigateToEditCategory: (RecordingCategoryModel) -> Unit = {},
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
 	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -70,17 +68,13 @@ fun ManageCategoriesScreen(
 		onBack = { onScreenEvent(CategoriesScreenEvent.OnUnSelectAll) },
 	)
 
-	CreateOrEditCategorySheet(
-		state = createOrEditState,
-		onEvent = onCreateOrEditEvent
-	)
 
 	Scaffold(
 		topBar = {
 			CategoriesTopBar(
 				isCategorySelected = isAnySelected,
 				selectedCount = selectedCount,
-				onCreate = { onCreateOrEditEvent(CreateOrEditCategoryEvent.OnOpenSheetToCreate) },
+				onCreate = onNavigateToCreateCategory,
 				onSelectAll = { onScreenEvent(CategoriesScreenEvent.OnSelectAll) },
 				onUnSelectAll = { onScreenEvent(CategoriesScreenEvent.OnUnSelectAll) },
 				navigation = navigation,
@@ -90,7 +84,11 @@ fun ManageCategoriesScreen(
 			CategoriesBottomBar(
 				isVisible = isAnySelected,
 				showRename = showRenameOption,
-				onRename = { onCreateOrEditEvent(CreateOrEditCategoryEvent.OnOpenSheetToEdit) },
+				onRename = {
+					categories.firstOrNull { it.isSelected }?.let { category ->
+						onNavigateToEditCategory(category.category)
+					}
+				},
 				onDelete = { onScreenEvent(CategoriesScreenEvent.OnDeleteSelected) },
 			)
 		},
@@ -130,9 +128,7 @@ private fun ManageCategoriesScreenPreview(
 	ManageCategoriesScreen(
 		isLoaded = true,
 		categories = categories,
-		createOrEditState = CreateOrEditCategoryState(),
 		onScreenEvent = {},
-		onCreateOrEditEvent = {},
 		navigation = {
 			Icon(
 				imageVector = Icons.AutoMirrored.Default.ArrowBack,

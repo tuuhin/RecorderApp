@@ -1,15 +1,12 @@
 package com.eva.recorderapp.voice_recorder.presentation.categories
 
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CategoriesScreenEvent
-import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CreateOrEditCategoryEvent
-import com.eva.recorderapp.voice_recorder.presentation.categories.utils.CreateOrEditCategoryState
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.SelectableCategory
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.toSelectableCategories
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,8 +43,6 @@ class ManageCategoryViewModel @Inject constructor(
 			initialValue = persistentListOf()
 		)
 
-	private val _createState = MutableStateFlow(CreateOrEditCategoryState())
-	val createState = _createState.asStateFlow()
 
 	private val _isLoaded = MutableStateFlow(false)
 	val isLoaded = _isLoaded.asStateFlow()
@@ -65,47 +60,15 @@ class ManageCategoryViewModel @Inject constructor(
 		populateCategories()
 	}
 
-
 	fun onScreenEvent(event: CategoriesScreenEvent) {
 		when (event) {
 			CategoriesScreenEvent.OnSelectAll -> onSelectOrUnselectAll(true)
 			CategoriesScreenEvent.OnUnSelectAll -> onSelectOrUnselectAll(false)
 			CategoriesScreenEvent.OnDeleteSelected -> deleteCategories()
-			is CategoriesScreenEvent.OnToggleSelection -> onToggleSelection(event.model)
+			is CategoriesScreenEvent.OnToggleSelection -> onToggleSelection(event.category)
 		}
 	}
 
-	fun onCreateOrEdit(event: CreateOrEditCategoryEvent) {
-		when (event) {
-			is CreateOrEditCategoryEvent.OnTextFieldValueChange ->
-				_createState.update { it.copy(textValue = event.value) }
-
-			CreateOrEditCategoryEvent.OnCancel ->
-				_createState.update { it.copy(showSheet = false, isEditMode = false) }
-
-			CreateOrEditCategoryEvent.OnAccept -> {
-				val createOrEditState = _createState.value
-				if (createOrEditState.isEditMode) renameCategory()
-				else createCategory()
-			}
-
-			CreateOrEditCategoryEvent.OnOpenSheetToCreate -> {
-				_createState.update { it.copy(showSheet = true, isEditMode = false) }
-			}
-
-			CreateOrEditCategoryEvent.OnOpenSheetToEdit -> {
-				val categoryToEdit = selectedCategories.firstOrNull() ?: return
-
-				_createState.update { state ->
-					state.copy(
-						showSheet = true,
-						isEditMode = true,
-						textValue = TextFieldValue(categoryToEdit.name)
-					)
-				}
-			}
-		}
-	}
 
 	private fun onSelectOrUnselectAll(isSelected: Boolean) {
 		_categories.update { categories ->
@@ -157,68 +120,6 @@ class ManageCategoryViewModel @Inject constructor(
 			}
 
 			else -> {}
-		}
-	}
-
-
-	private fun createCategory() {
-
-		val categoryName = _createState.value.textValue.text
-		if (categoryName.isBlank()) {
-			_createState.update { it.copy(error = "Cannot have empty values") }
-			return
-		}
-		viewModelScope.launch {
-			// show context message
-			when (val result = provider.createCategory(categoryName)) {
-				is Resource.Error -> {
-					val message = result.message ?: "Failed to create category"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
-				}
-
-				is Resource.Success -> {
-					val message = result.message ?: "Created new category $categoryName"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
-				}
-
-				else -> {}
-			}
-		}.invokeOnCompletion {
-			// update to a new state
-			_createState.update { CreateOrEditCategoryState() }
-		}
-	}
-
-	private fun renameCategory() {
-		if (selectedCategories.size > 1) {
-			// only one category can be renamed
-			return
-		}
-		val category = selectedCategories.firstOrNull() ?: return
-		val updatedName = _createState.value.textValue.text
-
-		if (updatedName.isEmpty() || updatedName.isBlank()) {
-			_createState.update { state -> state.copy(error = "New name cannot be blank") }
-			return
-		}
-		val updatedCategory = category.copy(name = updatedName)
-
-		viewModelScope.launch {
-			when (val result = provider.updateCategory(updatedCategory)) {
-				is Resource.Error -> {
-					val message = result.message ?: result.error.message ?: ""
-					_uiEvents.emit(UIEvents.ShowToast(message))
-				}
-
-				is Resource.Success -> {
-					val message = result.message ?: "Renamed recording successfully"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
-				}
-
-				else -> {}
-			}
-		}.invokeOnCompletion {
-			_createState.update { CreateOrEditCategoryState() }
 		}
 	}
 }

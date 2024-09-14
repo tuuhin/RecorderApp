@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,8 +24,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.SelectableCategory
 import com.eva.recorderapp.voice_recorder.presentation.composables.ListLoadingAnimation
 import kotlinx.collections.immutable.ImmutableList
@@ -47,6 +49,10 @@ fun SelectableCategoriesList(
 		{ _, _ -> RecordedVoiceModel::class.simpleName }
 	}
 
+	val isAnySelected by remember(categories) {
+		derivedStateOf { categories.any { it.isSelected } }
+	}
+
 	ListLoadingAnimation(
 		isLoaded = isLoaded,
 		items = categories,
@@ -65,6 +71,7 @@ fun SelectableCategoriesList(
 					SelectableCategoryCard(
 						category = category,
 						isSelected = category.isSelected,
+						isSelectable = isAnySelected,
 						onItemClick = { onItemClick(category.category) },
 						modifier = Modifier
 							.fillMaxWidth()
@@ -79,7 +86,6 @@ fun SelectableCategoriesList(
 				verticalArrangement = Arrangement.Center,
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
-
 				Image(
 					painter = painterResource(id = R.drawable.ic_category),
 					contentDescription = stringResource(R.string.no_categories_found),

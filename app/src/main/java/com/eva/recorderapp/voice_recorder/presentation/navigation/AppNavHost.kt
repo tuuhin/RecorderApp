@@ -13,6 +13,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.dialogs.rename
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioEditorRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioPlayerRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioSettingsRoute
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.createOrUpdateCategoryRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recorderRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingCategories
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingsRoute
@@ -45,6 +46,7 @@ fun AppNavHost(
 			audioEditorRoute(controller = navController)
 			audioSettingsRoute(controller = navController)
 			selectRecordingCategoryRoute(controller = navController)
+			createOrUpdateCategoryRoute(controller = navController)
 			//dialogs
 			appInfoDialog()
 			renameRecordingDialog(controller = navController)

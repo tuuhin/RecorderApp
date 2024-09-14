@@ -1,9 +1,9 @@
 package com.eva.recorderapp.voice_recorder.domain.recordings.provider
 
 import com.eva.recorderapp.common.Resource
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.ExtraRecordingMetadataModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import kotlinx.coroutines.flow.Flow
 
 typealias ExtraRecordingMetaDataList = Collection<ExtraRecordingMetadataModel>

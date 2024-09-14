@@ -1,8 +1,10 @@
 package com.eva.recorderapp.voice_recorder.presentation.util
 
+import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
+import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.toSelectableCategory
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
@@ -17,7 +19,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
-import  java.time.LocalDateTime as JLocalDateTime
+import java.time.LocalDateTime as JLocalDateTime
 
 object PreviewFakes {
 
@@ -81,7 +83,7 @@ object PreviewFakes {
 		List(10) { FAKE_VOICE_RECORDING_MODEL }.toSelectableRecordings()
 			.map { record -> record.copy(isSelected = Random.nextBoolean()) }.toImmutableList()
 
-	val FAKE_RECORDING_CATEGORY = RecordingCategoryModel(
+	private val FAKE_RECORDING_CATEGORY = RecordingCategoryModel(
 		id = 0L, name = "Something", createdAt = now
 	).toSelectableCategory()
 
@@ -92,9 +94,20 @@ object PreviewFakes {
 			.toImmutableList()
 
 	val FAKE_CATEGORIES_WITH_ALL_OPTION: ImmutableList<RecordingCategoryModel>
-		get() = (List(2) { FAKE_RECORDING_CATEGORY }.map {
-			it.category.copy(count = 10)
-		} + RecordingCategoryModel.ALL_CATEGORY).reversed()
-			.toImmutableList()
+		get() = (List(4) {
+			RecordingCategoryModel(
+				id = 0L,
+				name = "Android",
+				categoryType = CategoryType.entries.random(),
+				categoryColor = CategoryColor.entries.random()
+			)
+		} + RecordingCategoryModel.ALL_CATEGORY).reversed().toImmutableList()
+
+	val FAKE_CATEGORY_WITH_COLOR_AND_TYPE = RecordingCategoryModel(
+		id = 0L,
+		name = "Android",
+		categoryType = CategoryType.CATEGORY_SONG,
+		categoryColor = CategoryColor.COLOR_BLUE
+	)
 
 }

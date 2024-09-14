@@ -26,6 +26,9 @@ sealed interface NavRoutes {
 	data object AudioSettings : NavRoutes
 
 	@Serializable
+	data class CreateOrUpdateCategory(val categoryId: Long? = null) : NavRoutes
+
+	@Serializable
 	data class SelectRecordingCategoryRoute(
 		val recordingIds: Collection<Long> = emptyList(),
 	) : NavRoutes

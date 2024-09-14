@@ -1,7 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.util.event
 
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SortOptions
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SortOrder
 

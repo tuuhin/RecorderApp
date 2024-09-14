@@ -38,6 +38,9 @@ fun NavGraphBuilder.selectRecordingCategoryRoute(
 		categories = categories,
 		selectedCategory = selectedCategory,
 		onEvent = viewModel::onEvent,
+		onNavigateToCreateNew = dropUnlessResumed {
+			controller.navigate(NavRoutes.CreateOrUpdateCategory())
+		},
 		navigation = {
 			IconButton(
 				onClick = dropUnlessResumed(block = controller::popBackStack)

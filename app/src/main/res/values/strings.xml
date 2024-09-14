@@ -160,8 +160,8 @@
   <string name="manage_categories_top_bar_title">Manage Categories</string>
   <string name="menu_option_create">Create</string>
   <string name="no_categories_found">No Categories added</string>
-  <string name="create_new_category">Add Category</string>
-  <string name="create_new_category_text">Categories help you to keep your audio organized.</string>
+  <string name="create_category_title">Create Category</string>
+  <string name="create_new_category_text">Categories, help recordings to be grouped together.</string>
   <string name="delete_category_dialog_title">Remove Category</string>
   <string name="delete_category_dialog_text">Removing a category will not remove a audio item, just the references are erased.</string>
   <string name="menu_option_edit">Edit</string>
@@ -176,7 +176,13 @@
   <string name="select_category_screen">Select Category</string>
   <string name="categories_not_found">No Recording found</string>
   <string name="categories_create_success">Category Created Successfully</string>
-  <string name="set_recording_category_action">Set</string>
+  <string name="set_recording_category_action">Set Category</string>
   <string name="categories_deleted">Deleted Categories</string>
+  <string name="create_category_action">Create</string>
+  <string name="edit_category_action">Edit</string>
+  <string name="add_new_category">New Category</string>
+  <string name="category_type_title">Category Type</string>
+  <string name="category_color_title">Category Color</string>
+  <string name="category_icon_category">Category Icon for %s</string>
 
 </resources>

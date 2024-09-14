@@ -12,34 +12,29 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.presentation.categories.ManageCategoriesScreen
-import com.eva.recorderapp.voice_recorder.presentation.categories.ManageCategoryViewModel
+import com.eva.recorderapp.voice_recorder.presentation.categories.create_category.CreateOrEditCategoryScreen
+import com.eva.recorderapp.voice_recorder.presentation.categories.create_category.CreateOrUpdateCategoryViewModel
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 
-
-fun NavGraphBuilder.recordingCategories(
+fun NavGraphBuilder.createOrUpdateCategoryRoute(
 	controller: NavController,
-) = animatedComposable<NavRoutes.ManageCategories> {
+) = animatedComposable<NavRoutes.CreateOrUpdateCategory>(
+) {
 
-	val viewModel = hiltViewModel<ManageCategoryViewModel>()
+	val viewModel = hiltViewModel<CreateOrUpdateCategoryViewModel>()
 
-	val isLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
-	val categories by viewModel.categories.collectAsStateWithLifecycle()
+	UiEventsSideEffect(
+		eventsFlow = viewModel::uiEvent,
+		onPopScreenEvent = dropUnlessResumed(block = controller::popBackStack)
+	)
 
-	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
+	val state by viewModel.createState.collectAsStateWithLifecycle()
 
-	ManageCategoriesScreen(
-		isLoaded = isLoaded,
-		categories = categories,
-		onScreenEvent = viewModel::onScreenEvent,
-		onNavigateToCreateCategory = dropUnlessResumed {
-			controller.navigate(NavRoutes.CreateOrUpdateCategory())
-		},
-		onNavigateToEditCategory = { category ->
-			controller.navigate(NavRoutes.CreateOrUpdateCategory(category.id))
-		},
+	CreateOrEditCategoryScreen(
+		state = state,
+		onEvent = viewModel::onEvent,
 		navigation = {
 			IconButton(
 				onClick = dropUnlessResumed(block = controller::popBackStack)
@@ -49,6 +44,6 @@ fun NavGraphBuilder.recordingCategories(
 					contentDescription = stringResource(R.string.back_arrow)
 				)
 			}
-		},
+		}
 	)
 }

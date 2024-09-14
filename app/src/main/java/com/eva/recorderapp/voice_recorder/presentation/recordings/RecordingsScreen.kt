@@ -30,8 +30,8 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.MediaAccessPermissionWrapper
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsBottomBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsInteractiveList
