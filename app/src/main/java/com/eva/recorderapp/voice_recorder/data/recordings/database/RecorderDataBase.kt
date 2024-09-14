@@ -6,6 +6,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.eva.recorderapp.voice_recorder.data.recordings.database.convertors.CategoriesEnumConvertors
 import com.eva.recorderapp.voice_recorder.data.recordings.database.convertors.LocalDateTimeConvertors
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
 import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
@@ -22,15 +23,17 @@ import kotlinx.coroutines.asExecutor
 		RecordingsMetaDataEntity::class,
 		RecordingCategoryEntity::class,
 	],
-	version = 2,
+	version = 3,
 	exportSchema = true,
 	autoMigrations = [
-		AutoMigration(from = 1, to = 2)
+		AutoMigration(from = 1, to = 2),
+		AutoMigration(from = 2, to = 3)
 	]
 )
 @TypeConverters(
 	value = [
-		LocalDateTimeConvertors::class
+		LocalDateTimeConvertors::class,
+		CategoriesEnumConvertors::class
 	]
 )
 abstract class RecorderDataBase : RoomDatabase() {
@@ -55,6 +58,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 						DataBaseConstants.DATABASE_NAME
 					)
 						.addTypeConverter(LocalDateTimeConvertors())
+						.addTypeConverter(CategoriesEnumConvertors())
 						.setQueryExecutor(Dispatchers.IO.asExecutor())
 						.build()
 				}

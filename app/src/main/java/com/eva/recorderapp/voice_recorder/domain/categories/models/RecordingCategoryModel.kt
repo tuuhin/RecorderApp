@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.domain.recordings.models
+package com.eva.recorderapp.voice_recorder.domain.categories.models
 
 import kotlinx.datetime.LocalDateTime
 
@@ -7,6 +7,8 @@ data class RecordingCategoryModel(
 	val name: String,
 	val createdAt: LocalDateTime? = null,
 	val count: Long = 0L,
+	val categoryType: CategoryType = CategoryType.CATEGORY_NONE,
+	val categoryColor: CategoryColor = CategoryColor.COLOR_UNKNOWN,
 ) {
 
 	val hasCount: Boolean

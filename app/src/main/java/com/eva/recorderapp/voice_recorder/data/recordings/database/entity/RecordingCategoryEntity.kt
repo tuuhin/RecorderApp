@@ -5,6 +5,8 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.eva.recorderapp.voice_recorder.data.recordings.database.DataBaseConstants
+import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
+import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import kotlinx.datetime.LocalDateTime
 
 @Entity(
@@ -23,5 +25,11 @@ data class RecordingCategoryEntity(
 	val categoryName: String,
 
 	@ColumnInfo(name = "CREATED_AT")
-	val createdAt: LocalDateTime ,
+	val createdAt: LocalDateTime,
+
+	@ColumnInfo(name = "COLOR")
+	val color: CategoryColor? = null,
+
+	@ColumnInfo(name = "type")
+	val type: CategoryType? = null,
 )
