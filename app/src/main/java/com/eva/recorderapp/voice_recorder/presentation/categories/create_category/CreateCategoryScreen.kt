@@ -21,10 +21,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -33,6 +36,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +46,9 @@ fun CreateOrEditCategoryScreen(
 	modifier: Modifier = Modifier,
 	navigation: @Composable () -> Unit = {},
 ) {
+	val snackBarProvider = LocalSnackBarProvider.current
+	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
 	Scaffold(
 		topBar = {
 			MediumTopAppBar(
@@ -49,7 +56,6 @@ fun CreateOrEditCategoryScreen(
 					if (state.isEditMode) Text(text = stringResource(R.string.edit_category_title))
 					else Text(text = stringResource(id = R.string.create_category_title))
 				},
-				navigationIcon = navigation,
 				actions = {
 					TextButton(
 						onClick = { onEvent(CreateCategoryScreenEvents.OnCreateOrEditCategory) }
@@ -58,9 +64,12 @@ fun CreateOrEditCategoryScreen(
 						else Text(text = stringResource(R.string.create_category_action))
 					}
 				},
+				navigationIcon = navigation,
+				scrollBehavior = scrollBehavior
 			)
 		},
-		modifier = modifier,
+		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
+		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
 		Column(
 			modifier = Modifier

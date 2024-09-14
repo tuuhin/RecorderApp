@@ -68,7 +68,6 @@ fun ManageCategoriesScreen(
 		onBack = { onScreenEvent(CategoriesScreenEvent.OnUnSelectAll) },
 	)
 
-
 	Scaffold(
 		topBar = {
 			CategoriesTopBar(
@@ -78,6 +77,7 @@ fun ManageCategoriesScreen(
 				onSelectAll = { onScreenEvent(CategoriesScreenEvent.OnSelectAll) },
 				onUnSelectAll = { onScreenEvent(CategoriesScreenEvent.OnUnSelectAll) },
 				navigation = navigation,
+				scrollBehavior = scrollBehavior
 			)
 		},
 		bottomBar = {

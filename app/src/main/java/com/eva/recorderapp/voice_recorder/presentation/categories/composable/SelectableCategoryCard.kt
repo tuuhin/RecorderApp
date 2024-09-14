@@ -7,9 +7,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -50,7 +52,10 @@ fun SelectableCategoryCard(
 	ElevatedCard(
 		colors = colors,
 		shape = shape,
-		elevation = CardDefaults.elevatedCardElevation(pressedElevation = 4.dp),
+		elevation = CardDefaults.cardElevation(
+			pressedElevation = 4.dp,
+			defaultElevation = 0.dp
+		),
 		onClick = onItemClick,
 		modifier = modifier.semantics { role = Role.RadioButton },
 	) {
@@ -70,23 +75,22 @@ fun SelectableCategoryCard(
 				if (showSelectOption)
 					RadioButton(
 						selected = isSelected,
-						onClick = { onItemClick() },
+						onClick = onItemClick,
 						colors = RadioButtonDefaults
 							.colors(selectedColor = MaterialTheme.colorScheme.secondary),
-						modifier = Modifier.size(24.dp)
-
+						modifier = Modifier.size(32.dp)
 					)
-				else
-					Icon(
-						painter = category.category.categoryType.imageVector,
-						contentDescription = stringResource(
-							R.string.category_icon_category,
-							category.category.name
-						),
-						modifier = Modifier.size(32.dp),
-						tint = MaterialTheme.colorScheme.primary,
-					)
+				else Icon(
+					painter = category.category.categoryType.imageVector,
+					contentDescription = stringResource(
+						R.string.category_icon_category,
+						category.category.name
+					),
+					modifier = Modifier.size(32.dp),
+					tint = MaterialTheme.colorScheme.secondary,
+				)
 			}
+			Spacer(modifier = Modifier.width(2.dp))
 			Text(
 				text = category.category.name,
 				style = MaterialTheme.typography.titleMedium,
@@ -99,7 +103,7 @@ fun SelectableCategoryCard(
 						.size(32.dp)
 						.background(color = color, shape = CircleShape)
 						.border(
-							width = 1.dp,
+							width = 1.5.dp,
 							color = MaterialTheme.colorScheme.secondary,
 							shape = CircleShape
 						)
@@ -109,11 +113,23 @@ fun SelectableCategoryCard(
 	}
 }
 
+
 @PreviewLightDark
 @Composable
-private fun RecordingCategoryCardPreview() = RecorderAppTheme {
+private fun RecordingCategoryCardNotSelectablePreview() = RecorderAppTheme {
 	SelectableCategoryCard(
 		category = SelectableCategory(category = PreviewFakes.FAKE_CATEGORY_WITH_COLOR_AND_TYPE),
 		onItemClick = {},
+		isSelectable = false,
+	)
+}
+
+@PreviewLightDark
+@Composable
+private fun RecordingCategoryCardSelectablePreview() = RecorderAppTheme {
+	SelectableCategoryCard(
+		category = SelectableCategory(category = PreviewFakes.FAKE_CATEGORY_WITH_COLOR_AND_TYPE),
+		onItemClick = {},
+		isSelectable = true,
 	)
 }

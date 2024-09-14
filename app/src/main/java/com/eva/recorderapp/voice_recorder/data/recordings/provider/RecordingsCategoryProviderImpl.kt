@@ -154,9 +154,9 @@ class RecordingsCategoryProviderImpl(
 				return Resource.Error(UnmodifiableRecordingCategoryException())
 			val result = withContext(Dispatchers.IO) {
 				// update it or insert it
-				val id = async { categoryDao.insertOrUpdateCategory(entity = category.toEntity()) }
+				categoryDao.insertOrUpdateCategory(entity = category.toEntity())
 				//get the value
-				categoryDao.getCategoryFromId(id = id.await())
+				categoryDao.getCategoryFromId(id = category.id)
 			}
 			val message = context.getString(R.string.categories_updated)
 			return result?.let { entity -> Resource.Success(entity.toModel(), message) }
@@ -165,7 +165,7 @@ class RecordingsCategoryProviderImpl(
 			Resource.Error(e, "SQL EXCEPTION")
 		} catch (e: Exception) {
 			e.printStackTrace()
-			Resource.Error(e, message = e.message ?: "Some Excetpion")
+			Resource.Error(e, message = e.message ?: "Some Exception")
 		}
 	}
 

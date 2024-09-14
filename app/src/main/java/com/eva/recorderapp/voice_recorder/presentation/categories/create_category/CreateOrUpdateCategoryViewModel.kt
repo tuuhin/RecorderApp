@@ -108,10 +108,11 @@ class CreateOrUpdateCategoryViewModel @Inject constructor(
 			// show context message
 			when (val result = categoryProvider.updateCategory(model)) {
 				is Resource.Error -> {
-					val message = result.message ?: "Failed to update category"
+
+					val message = result.message ?: "Cannot perform edit"
+					val snackBarMessage = result.error.message ?: "Cannot update category"
+
 					_createState.update { it.copy(error = message) }
-					val snackBarMessage =
-						result.message ?: result.error.message ?: "Cannot update category"
 					_uiEvents.emit(UIEvents.ShowSnackBar(snackBarMessage))
 				}
 

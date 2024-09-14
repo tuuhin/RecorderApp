@@ -93,6 +93,13 @@ object PreviewFakes {
 		List(10) { FAKE_RECORDING_CATEGORY }.map { category -> category.copy(isSelected = Random.nextBoolean()) }
 			.toImmutableList()
 
+	val FAKE_CATEGORY_WITH_COLOR_AND_TYPE = RecordingCategoryModel(
+		id = 0L,
+		name = "Android",
+		categoryType = CategoryType.CATEGORY_SONG,
+		categoryColor = CategoryColor.COLOR_BLUE
+	)
+
 	val FAKE_CATEGORIES_WITH_ALL_OPTION: ImmutableList<RecordingCategoryModel>
 		get() = (List(4) {
 			RecordingCategoryModel(
@@ -101,13 +108,8 @@ object PreviewFakes {
 				categoryType = CategoryType.entries.random(),
 				categoryColor = CategoryColor.entries.random()
 			)
-		} + RecordingCategoryModel.ALL_CATEGORY).reversed().toImmutableList()
+		} + FAKE_CATEGORY_WITH_COLOR_AND_TYPE + RecordingCategoryModel.ALL_CATEGORY).reversed()
+			.toImmutableList()
 
-	val FAKE_CATEGORY_WITH_COLOR_AND_TYPE = RecordingCategoryModel(
-		id = 0L,
-		name = "Android",
-		categoryType = CategoryType.CATEGORY_SONG,
-		categoryColor = CategoryColor.COLOR_BLUE
-	)
 
 }

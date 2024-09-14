@@ -11,9 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
@@ -27,6 +28,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
@@ -55,14 +58,13 @@ fun SelectRecordingsCategoryScreen(
 		topBar = {
 			MediumTopAppBar(
 				title = { Text(text = stringResource(R.string.select_category_screen)) },
-				navigationIcon = navigation,
 				actions = {
-					TextButton(
-						onClick = onNavigateToCreateNew,
-					) {
+					TextButton(onClick = onNavigateToCreateNew) {
 						Text(text = stringResource(R.string.add_new_category))
 					}
 				},
+				navigationIcon = navigation,
+				scrollBehavior = scrollBehavior,
 			)
 		},
 		floatingActionButton = {
@@ -72,11 +74,15 @@ fun SelectRecordingsCategoryScreen(
 				exit = slideOutVertically() + fadeOut()
 			) {
 				ExtendedFloatingActionButton(
-					onClick = { onEvent(RecordingCategoryEvent.OnSetRecordingCategory) }
+					onClick = { onEvent(RecordingCategoryEvent.OnSetRecordingCategory) },
+					elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp)
 				) {
-					Icon(imageVector = Icons.Default.Add, contentDescription = null)
-					Spacer(modifier = Modifier.width(2.dp))
-					Text(text = stringResource(R.string.add_new_category))
+					Icon(
+						imageVector = Icons.Default.Check,
+						contentDescription = stringResource(R.string.set_recording_category_action)
+					)
+					Spacer(modifier = Modifier.width(4.dp))
+					Text(text = stringResource(R.string.set_recording_category_action))
 				}
 			}
 		},
@@ -99,13 +105,25 @@ fun SelectRecordingsCategoryScreen(
 	}
 }
 
+class RecordingCategoryNullAblePreviewParams :
+	CollectionPreviewParameterProvider<RecordingCategoryModel?>(
+		listOf(
+			null,
+			PreviewFakes.FAKE_CATEGORY_WITH_COLOR_AND_TYPE
+		)
+	)
+
 @PreviewLightDark
 @Composable
-private fun SelectedRecordingsCategoryModel() = RecorderAppTheme {
+private fun SelectedRecordingsCategoryModel(
+	@PreviewParameter(RecordingCategoryNullAblePreviewParams::class)
+	selectedCategory: RecordingCategoryModel?,
+) = RecorderAppTheme {
 	SelectRecordingsCategoryScreen(
 		isLoaded = true,
 		categories = PreviewFakes.FAKE_CATEGORIES_WITH_ALL_OPTION,
 		onEvent = {},
+		selectedCategory = selectedCategory,
 		navigation = {
 			Icon(
 				imageVector = Icons.AutoMirrored.Default.ArrowBack,
