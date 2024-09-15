@@ -32,7 +32,6 @@
   <string name="recording_delete_request_failed">Delete request failed</string>
   <string name="recordings_restore_action">Restore</string>
   <string name="menu_option_sort_order">Sort Order</string>
-  <string name="recording_restore_request">Restoring</string>
   <string name="recording_restore_request_failed">Restore failed</string>
   <string name="recording_bin_explain_text">Trash files will be automatically deleted after a grace period of 30 days.</string>
   <string name="sort_option_date_created">Date Created</string>
@@ -53,7 +52,6 @@
   <string name="rename_recording_dialog_text">Change name of the currently selected recording</string>
   <string name="rename_label_text">New Name</string>
   <string name="rename_recording_action">Rename</string>
-  <string name="rename_error_text">Enter least a character</string>
   <string name="recorder_action_start">Record</string>
   <string name="recorder_action_cancel">Cancel</string>
   <string name="recorder_recording_notification_title_canceled">Recording Cancelled</string>
@@ -149,11 +147,9 @@
   <string name="cancel_recording_dialog_text">Are you sure you want to discard this current recording</string>
   <string name="dialog_action_done">Done</string>
   <string name="save_recording_dialog_title">Save recording</string>
-  <string name="save_recording_dialog_text">Save this recording</string>
+  <string name="save_recording_dialog_text">Sure you are done with your recording</string>
   <string name="rename_recording_success">Renamed Recording Successfully</string>
   <string name="restore_recordings_success">Selected Recordings Restored</string>
-  <string name="recording_settings_file_allow_external_recordings">Allow External Recordings</string>
-  <string name="recording_settings_file_allow_external_recordings_text">Allow app to open external recordings on your device</string>
   <string name="recordings_permissions_not_found">Media Access Permission Required</string>
   <string name="recordings_permissions_not_found_desc">To view your files, media access permission is required </string>
   <string name="share_audio_extra_subject">Sharing recorded audio files</string>
@@ -164,17 +160,13 @@
   <string name="create_new_category_text">Categories, help recordings to be grouped together.</string>
   <string name="delete_category_dialog_title">Remove Category</string>
   <string name="delete_category_dialog_text">Removing a category will not remove a audio item, just the references are erased.</string>
-  <string name="menu_option_edit">Edit</string>
   <string name="menu_option_categories">Category</string>
   <string name="menu_option_favourite">Favourite</string>
-  <string name="rename_category_dialog_title">Rename Category</string>
-  <string name="rename_category_dialog_text">Rename category</string>
   <string name="categories_updated">Recordings moved to %s category.</string>
   <string name="recordings_add_to_favourite_success">Favourites marked</string>
   <string name="recordings_remove_favourite_failed">Favourites removed</string>
   <string name="edit_category_title">Edit Category</string>
   <string name="select_category_screen">Select Category</string>
-  <string name="categories_not_found">No Recording found</string>
   <string name="categories_create_success">Category Created Successfully</string>
   <string name="set_recording_category_action">Set Category</string>
   <string name="categories_deleted">Deleted Categories</string>

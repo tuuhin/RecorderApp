@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import androidx.room.Upsert
 import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +15,7 @@ interface RecordingsMetadataDao {
 	@Upsert
 	suspend fun updateOrInsertRecordingMetadata(entity: RecordingsMetaDataEntity): Long
 
-	@Update
+	@Upsert
 	suspend fun updateOrInsertRecordingMetadataBulk(entities: Collection<RecordingsMetaDataEntity>)
 
 	@Insert(onConflict = OnConflictStrategy.IGNORE)

@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -108,7 +107,7 @@ fun RecordingsScreenTopBar(
 					) {
 						IconButton(onClick = onSelectAll) {
 							Icon(
-								imageVector = Icons.Outlined.DoneAll,
+								painter = painterResource(R.drawable.ic_done_all),
 								contentDescription = stringResource(id = R.string.select_all_action)
 							)
 						}

@@ -112,22 +112,24 @@ class RecordingSecondaryDataProviderImpl(
 	): Resource<Boolean, Exception> {
 		return try {
 			withContext(Dispatchers.IO) {
+				val categoryId = if (category != RecordingCategoryModel.ALL_CATEGORY)
+					category.id else null
+
 				// fetch the entities from ids
 				val entities = recordingsDao.getRecordingMetaDataFromIds(recordingIds)
-
-				if (entities.isEmpty()) {
-					val message = context.getString(R.string.categories_not_found)
-					return@withContext Resource.Success(false, message = message)
-				}
-
 				//update the contents
 				val updatedEntities = entities.map { entity ->
-					if (category != RecordingCategoryModel.ALL_CATEGORY)
-						entity.copy(categoryId = category.id)
-					else entity.copy(categoryId = null)
+					entity.copy(categoryId = categoryId)
+				}
+
+				val entitiesId = entities.map { it.recordingId }
+				// create new metadata as entry was not preset
+				val notFoundIds = recordingIds.filterNot { it in entitiesId }
+				val newlyAdded = notFoundIds.map { id ->
+					RecordingsMetaDataEntity(recordingId = id, categoryId = categoryId)
 				}
 				// update the entities
-				recordingsDao.updateOrInsertRecordingMetadataBulk(updatedEntities)
+				recordingsDao.updateOrInsertRecordingMetadataBulk(updatedEntities + newlyAdded)
 
 				val message = context.getString(R.string.categories_updated, category.name)
 				Resource.Success(data = true, message = message)
@@ -151,10 +153,17 @@ class RecordingSecondaryDataProviderImpl(
 				// fetch the entities from ids
 				val entitiesFromIds = recordingsDao.getRecordingMetaDataFromIds(recordingIds)
 				//update the contents
-				val entities =
-					entitiesFromIds.map { entity -> entity.copy(isFavourite = isFavourite) }
+				val entities = entitiesFromIds.map { entity ->
+					entity.copy(isFavourite = isFavourite)
+				}
+				val entitiesId = entities.map { it.recordingId }
+				// create new metadata as entry was not preset
+				val notFoundIds = recordingIds.filterNot { it in entitiesId }
+				val newlyAdded = notFoundIds.map { id ->
+					RecordingsMetaDataEntity(recordingId = id, isFavourite = isFavourite)
+				}
 				// update the entities
-				recordingsDao.updateOrInsertRecordingMetadataBulk(entities)
+				recordingsDao.updateOrInsertRecordingMetadataBulk(entities + newlyAdded)
 			}
 
 			val message = if (isFavourite)
