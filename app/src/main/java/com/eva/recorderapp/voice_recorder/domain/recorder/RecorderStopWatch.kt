@@ -20,9 +20,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalTime
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
-class RecorderStopWatch {
+class RecorderStopWatch(
+	private val delayTime: Duration = 80.milliseconds,
+) {
 
 	private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -61,7 +64,7 @@ class RecorderStopWatch {
 				emit(diffNano)
 			}
 			previous = Clock.System.now()
-			delay(50.milliseconds)
+			delay(delayTime)
 		}
 	}.flowOn(Dispatchers.Default)
 
@@ -73,7 +76,7 @@ class RecorderStopWatch {
 	fun prepare() = _state.update { RecorderState.PREPARING }
 
 	fun stop() {
-		// completes the timer and reset the elpased time
+		// completes the timer and reset the elapsed time
 		_state.update { RecorderState.COMPLETED }
 		_elapsedTime.update { 0L }
 	}

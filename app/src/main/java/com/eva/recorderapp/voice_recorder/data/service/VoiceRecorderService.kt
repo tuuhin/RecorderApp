@@ -20,19 +20,21 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val LOGGER_TAG = "RECORDER_SERVICE"
 
@@ -64,11 +66,9 @@ class VoiceRecorderService : LifecycleService() {
 	val recorderState: StateFlow<RecorderState>
 		get() = voiceRecorder.recorderState
 
+	@OptIn(FlowPreview::class)
 	private val notificationTimer: Flow<LocalTime>
-		get() = voiceRecorder.recorderTimer
-			.distinctUntilChanged { old, new -> old.toSecondOfDay() == new.toSecondOfDay() }
-			.flowOn(Dispatchers.Default)
-
+		get() = voiceRecorder.recorderTimer.sample(800.milliseconds)
 
 	inner class LocalBinder : Binder() {
 

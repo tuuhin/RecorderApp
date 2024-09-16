@@ -6,13 +6,16 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
@@ -22,13 +25,12 @@ private const val LOGGER_TAG = "AMPLITUDE_READER"
 
 class BufferedAmplitudeReader(
 	private val recorder: MediaRecorder?,
-	private val samplingRate: Duration = 80.milliseconds
+	private val delayRate: Duration = 80.milliseconds,
+	private val bufferSize: Int = VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE,
 ) {
-
 	private val _buffer = ConcurrentLinkedQueue<Int>()
 
-	@Volatile
-	private var ampsRange = AmpsRange()
+	private val ampsRange = MutableStateFlow(AmpsRange())
 
 	private val _isAudioSourceNull: Boolean
 		get() = recorder?.activeRecordingConfiguration?.audioSource == null
@@ -39,9 +41,10 @@ class BufferedAmplitudeReader(
 			// show the amplitudes when its recording or paused
 			state.canReadAmplitudes -> readSampleAmplitude(state)
 				.flatMapLatest(::flowToFixedSizeCollection)
-				.mapLatest(::smoothen)
+				.map(::smoothen)
 				.map { it.normalize() }
 				.flowOn(Dispatchers.Default)
+
 
 			else -> clearBufferAndEmptyFlow()
 		}
@@ -58,8 +61,11 @@ class BufferedAmplitudeReader(
 				// record the max amplitude of the sample
 				// multiply with 0.707 to get the rms value
 				val amplitude = recorder.maxAmplitude
+				// ensure the current coroutine is active
+				if (!currentCoroutineContext().isActive) break
+				// emit and delay
 				emit(amplitude)
-				delay(samplingRate)
+				delay(delayRate)
 			}
 		} catch (e: CancellationException) {
 			// if the child flow is canceled while suspending in delay method
@@ -70,16 +76,16 @@ class BufferedAmplitudeReader(
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
-
 	}.flowOn(Dispatchers.IO)
+
 
 	/**
 	 * Clears the buffer if it contains any value and emit an end zero
 	 */
-	private fun clearBufferAndEmptyFlow() = flow{
+	private fun clearBufferAndEmptyFlow() = flow {
 		if (_buffer.isNotEmpty()) {
 			_buffer.clear()
-			ampsRange = AmpsRange()
+			ampsRange.update { AmpsRange() }
 		}
 		emit(floatArrayOf())
 	}
@@ -87,68 +93,64 @@ class BufferedAmplitudeReader(
 	/**
 	 * Adds the new value to [_buffer] and compute a flow out of it
 	 */
-	private fun flowToFixedSizeCollection(newValue: Int): Flow<List<Int>> {
-		return flow {
+	private fun flowToFixedSizeCollection(newValue: Int): Flow<List<Int>> =
+		flow {
 			try {
-				if (_buffer.size >= VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE)
-					_buffer.poll()
-
+				// remove the items from the queue if the size exceeds
+				if (_buffer.size >= bufferSize * 2) _buffer.poll()
+				// add the new one
 				_buffer.offer(newValue)
 
-				val maxValue = _buffer.maxOrNull() ?: 0
-				val minValue = _buffer.minOrNull() ?: 0
-				if (maxValue > ampsRange.max) {
-					Log.d(LOGGER_TAG, "NEW MAX VALUE SET $maxValue")
-					ampsRange = ampsRange.copy(max = maxValue)
+				// change the max value
+				if (newValue > ampsRange.value.max) {
+					Log.d(LOGGER_TAG, "NEW MAX VALUE SET $newValue")
+					ampsRange.update { range -> range.copy(max = newValue) }
 				}
-				if (minValue < ampsRange.min) {
-					Log.d(LOGGER_TAG, "NEW MIN VALUE SET $minValue")
-					ampsRange = ampsRange.copy(min = minValue)
+				// change the min value
+				if (newValue < ampsRange.value.min) {
+					Log.d(LOGGER_TAG, "NEW MIN VALUE SET $newValue")
+					ampsRange.update { range -> range.copy(min = newValue) }
 				}
 				emit(_buffer.toList())
-			} catch (e: CancellationException) {
-				throw e
 			} catch (e: Exception) {
 				e.printStackTrace()
 			}
 		}.flowOn(Dispatchers.Default)
-	}
 
-	private fun List<Float>.normalize(): FloatArray {
 
-		val range = ampsRange.range
+	private fun FloatArray.normalize(): FloatArray {
+		val ampRangeValue = ampsRange.value
+		val range = ampRangeValue.range
 		// if range is zero  return empty
 		// that's probably the empty case
 		if (range <= 0) return floatArrayOf()
 
-		val normalizedValue = map { amp ->
-			val normalizedValue = (amp - ampsRange.min) / range
-			normalizedValue.coerceIn(0f..1f)
-		}
-		return normalizedValue.toFloatArray()
+		return map { amp ->
+			val normal = (amp - ampRangeValue.min) / range
+			normal.coerceIn(0f..1f)
+		}.toFloatArray()
 	}
 
-	private fun smoothen(
-		data: List<Int>,
-		factor: Float = 0.3f
-	): List<Float> {
+	private fun smoothen(data: List<Int>, factor: Float = 0.3f): FloatArray {
 		var prev = 0f
-		val out = buildList {
+		return buildList {
 			data.forEach { amplitude ->
-				val smooth = (prev * factor + amplitude * (1 - factor))
+				val smooth = lerp(prev, amplitude.toFloat(), factor)
 				add(smooth)
 				prev = smooth
 			}
-		}
-		return out
+		}.toFloatArray()
 	}
 
-	private data class AmpsRange(
-		val max: Int = 0,
-		val min: Int = 0
-	) {
-		val range: Int
-			get() = max - min
+	private fun lerp(v0: Float, v1: Float, t: Float): Float {
+		return (1 - t) * v1 + t * v0
 	}
+}
 
+private data class AmpsRange(
+	val max: Int = 0,
+	val min: Int = 0,
+) {
+	val range: Int
+		get() = max - min
 }

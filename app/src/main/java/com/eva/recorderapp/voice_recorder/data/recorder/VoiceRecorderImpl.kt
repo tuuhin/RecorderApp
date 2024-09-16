@@ -5,10 +5,8 @@ import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
@@ -30,15 +28,19 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
 import java.io.File
 import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val LOGGER_TAG = "VOICE_RECORDER"
 
 class VoiceRecorderImpl(
 	private val context: Context,
 	private val fileProvider: RecorderFileProvider,
-	private val stopWatch: RecorderStopWatch,
 	private val settings: RecorderAudioSettingsRepo,
 ) : VoiceRecorder {
+
+	private val delayRate = 80.milliseconds
+
+	private val stopWatch: RecorderStopWatch = RecorderStopWatch(delayRate)
 
 	// recording format and encoder
 	private val format: RecordEncoderAndFormat
@@ -101,7 +103,7 @@ class VoiceRecorderImpl(
 
 		_recorder?.setOnErrorListener(_errorListener)
 
-		_bufferReader = BufferedAmplitudeReader(recorder = _recorder)
+		_bufferReader = BufferedAmplitudeReader(recorder = _recorder, delayRate = delayRate)
 		Log.d(LOGGER_TAG, "CREATED RECORDER AND AMPLITUDE SUCCESSFULLY")
 	}
 
@@ -109,7 +111,7 @@ class VoiceRecorderImpl(
 	 * Creates the file uri in which the audio to be recorded and initiate
 	 * the recorder parameters
 	 */
-	private suspend fun initiateRecorderParams(): Boolean {
+	private suspend fun initiateRecorderParams() {
 		return coroutineScope {
 			if (_recorder == null) createRecorder()
 
@@ -143,7 +145,6 @@ class VoiceRecorderImpl(
 				Log.i(LOGGER_TAG, "ENCODING BIT RATE : $bitrate")
 				Log.i(LOGGER_TAG, "CHANNEL COUNT :$channel")
 			}
-			true
 		}
 	}
 
@@ -187,25 +188,18 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "CANNOT START RECORDING ITS LOCKED")
 			return
 		}
-		// staring an operation lock it
-		operationLock.lock(this)
 		// current uri is already set cannot set it again
 		if (_recordingFile != null) {
 			Log.d(LOGGER_TAG, "CURRENT URI IS ALREADY SET")
 			return
 		}
+		// staring an operation lock it
+		operationLock.lock(this)
 		try {
 			// prepare the recording params
 			stopWatch.prepare()
 			Log.i(LOGGER_TAG, "PREPARING FILE FOR RECORDING")
-			val isOK = initiateRecorderParams()
-			if (!isOK) {
-				Log.d(LOGGER_TAG, "CANNOT INITIATE RECORDER PARAMS")
-				val message = context.getString(R.string.cannot_create_file)
-				Toast.makeText(context, message, Toast.LENGTH_SHORT)
-					.show()
-				return
-			}
+			initiateRecorderParams()
 			// prepare the recorder
 			_recorder?.prepare()
 			Log.d(LOGGER_TAG, "RECORDER PREPARED")
@@ -327,5 +321,4 @@ class VoiceRecorderImpl(
 		stopWatch.reset()
 
 	}
-
 }

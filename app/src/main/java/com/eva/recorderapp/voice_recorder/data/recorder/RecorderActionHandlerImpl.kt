@@ -61,7 +61,7 @@ class RecorderActionHandlerImpl(
 				RecorderAction.STOP_RECORDER -> stopRecorder()
 				RecorderAction.CANCEL_RECORDER -> cancelRecording()
 			}
-			Resource.Success<Unit, Exception>(data = Unit)
+			Resource.Success(data = Unit)
 		} catch (e: SecurityException) {
 			Log.d(LOGGER_TAG, "SECURITY EXCEPTION", e)
 			Resource.Error<Unit, Exception>(e)
@@ -70,7 +70,7 @@ class RecorderActionHandlerImpl(
 			Resource.Error<Unit, Exception>(e)
 		} catch (e: Exception) {
 			e.printStackTrace()
-			Resource.Error<Unit, Exception>(e)
+			Resource.Error(e)
 		}
 	}
 }
