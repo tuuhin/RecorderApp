@@ -1,10 +1,10 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.database.entity
+package com.eva.recorderapp.voice_recorder.data.database.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.eva.recorderapp.voice_recorder.data.recordings.database.DataBaseConstants
+import com.eva.recorderapp.voice_recorder.data.database.DataBaseConstants
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import kotlinx.datetime.LocalDateTime

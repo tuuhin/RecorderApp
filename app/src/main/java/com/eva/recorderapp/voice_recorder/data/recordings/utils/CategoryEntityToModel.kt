@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.data.recordings.utils
 
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingCategoryEntity
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingCategoryEntity
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel

@@ -10,8 +10,8 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.AudioFileNamingFormat
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider

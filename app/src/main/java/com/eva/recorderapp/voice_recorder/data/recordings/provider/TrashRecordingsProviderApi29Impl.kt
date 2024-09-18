@@ -9,10 +9,10 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.TrashFileEntity
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDataEntity
+import com.eva.recorderapp.voice_recorder.data.database.entity.TrashFileEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toModel
 import com.eva.recorderapp.voice_recorder.data.util.toMillis

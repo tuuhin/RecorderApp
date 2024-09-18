@@ -12,8 +12,8 @@ import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedTrashRecordingModels

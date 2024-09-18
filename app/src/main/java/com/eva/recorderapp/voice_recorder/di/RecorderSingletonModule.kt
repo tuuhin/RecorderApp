@@ -1,8 +1,8 @@
 package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.recorder.RecorderActionHandlerImpl
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecorderFileProviderImpl
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderActionHandler

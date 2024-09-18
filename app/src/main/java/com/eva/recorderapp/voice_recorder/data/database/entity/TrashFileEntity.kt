@@ -1,9 +1,9 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.database.entity
+package com.eva.recorderapp.voice_recorder.data.database.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.eva.recorderapp.voice_recorder.data.recordings.database.DataBaseConstants
+import com.eva.recorderapp.voice_recorder.data.database.DataBaseConstants
 import kotlinx.datetime.LocalDateTime
 
 @Entity(tableName = DataBaseConstants.TRASH_FILES_TABLE)

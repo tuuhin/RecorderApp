@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.database
+package com.eva.recorderapp.voice_recorder.data.database
 
 import android.content.Context
 import androidx.room.AutoMigration
@@ -6,14 +6,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.eva.recorderapp.voice_recorder.data.recordings.database.convertors.CategoriesEnumConvertors
-import com.eva.recorderapp.voice_recorder.data.recordings.database.convertors.LocalDateTimeConvertors
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingCategoryEntity
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.TrashFileEntity
+import com.eva.recorderapp.voice_recorder.data.database.convertors.CategoriesEnumConvertors
+import com.eva.recorderapp.voice_recorder.data.database.convertors.LocalDateTimeConvertors
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingCategoryEntity
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDataEntity
+import com.eva.recorderapp.voice_recorder.data.database.entity.TrashFileEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
 

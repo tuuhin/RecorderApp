@@ -4,8 +4,8 @@ import android.content.Context
 import android.database.sqlite.SQLiteException
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingCategoryEntity
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingCategoryEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toModel
 import com.eva.recorderapp.voice_recorder.domain.categories.exceptions.RecordingCategoryNotFoundException

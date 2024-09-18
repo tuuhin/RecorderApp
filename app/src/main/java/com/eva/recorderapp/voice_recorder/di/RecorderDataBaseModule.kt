@@ -1,10 +1,10 @@
 package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
-import com.eva.recorderapp.voice_recorder.data.recordings.database.RecorderDataBase
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.database.RecorderDataBase
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.TrashFileDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

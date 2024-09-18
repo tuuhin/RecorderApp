@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.database.dao
+package com.eva.recorderapp.voice_recorder.data.database.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
-import com.eva.recorderapp.voice_recorder.data.recordings.database.entity.RecordingsMetaDataEntity
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDataEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

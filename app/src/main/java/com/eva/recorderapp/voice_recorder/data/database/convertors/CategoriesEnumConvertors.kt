@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.database.convertors
+package com.eva.recorderapp.voice_recorder.data.database.convertors
 
 import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter

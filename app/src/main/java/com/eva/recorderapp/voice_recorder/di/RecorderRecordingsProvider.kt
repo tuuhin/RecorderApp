@@ -2,9 +2,9 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import android.os.Build
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingCategoryDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.RecordingsMetadataDao
-import com.eva.recorderapp.voice_recorder.data.recordings.database.dao.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.TrashFileDao
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingSecondaryDataProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingsCategoryProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderApi29Impl
