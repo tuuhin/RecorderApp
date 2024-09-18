@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -27,11 +26,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.DeveloperInformation
@@ -41,6 +43,12 @@ import com.eva.recorderapp.ui.theme.RecorderAppTheme
 @Composable
 fun AppDialogInfoContent(
 	modifier: Modifier = Modifier,
+	shape: Shape = AlertDialogDefaults.shape,
+	tonalElevation: Dp = AlertDialogDefaults.TonalElevation,
+	titleColor: Color = AlertDialogDefaults.titleContentColor,
+	iconColor: Color = AlertDialogDefaults.iconContentColor,
+	color: Color = AlertDialogDefaults.containerColor,
+	contentColor: Color = contentColorFor(color),
 ) {
 
 	val inspectionMode = LocalInspectionMode.current
@@ -57,44 +65,57 @@ fun AppDialogInfoContent(
 		propagateMinConstraints = true
 	) {
 		Surface(
-			shape = AlertDialogDefaults.shape,
-			tonalElevation = AlertDialogDefaults.TonalElevation,
-			color = AlertDialogDefaults.containerColor,
-			contentColor = contentColorFor(AlertDialogDefaults.containerColor),
+			shape = shape,
+			tonalElevation = tonalElevation,
+			color = color,
+			contentColor = contentColor
 		) {
 			Column(
-				modifier = Modifier.padding(24.dp),
-				verticalArrangement = Arrangement.spacedBy(8.dp)
+				modifier = Modifier.padding(20.dp),
+				verticalArrangement = Arrangement.spacedBy(4.dp),
+				horizontalAlignment = Alignment.CenterHorizontally
 			) {
+				Icon(
+					painter = painterResource(id = R.drawable.ic_launcher_foreground),
+					contentDescription = stringResource(R.string.app_name),
+					modifier = Modifier.size(40.dp),
+					tint = iconColor
+				)
+				Text(
+					text = stringResource(id = R.string.app_name),
+					style = MaterialTheme.typography.titleLarge,
+					color = titleColor
+				)
 				Row(
-					horizontalArrangement = Arrangement.spacedBy(12.dp),
+					horizontalArrangement = Arrangement.spacedBy(6.dp),
 					verticalAlignment = Alignment.CenterVertically
 				) {
-					Icon(
-						painter = painterResource(id = R.drawable.ic_launcher_foreground),
-						contentDescription = stringResource(R.string.app_name),
-						modifier = Modifier.size(32.dp),
-						tint = MaterialTheme.colorScheme.primary
+					Text(
+						text = stringResource(id = R.string.app_version_title),
+						style = MaterialTheme.typography.labelLarge
 					)
-					Text(text = stringResource(id = R.string.app_name))
 					Badge(
 						containerColor = MaterialTheme.colorScheme.tertiaryContainer,
 						contentColor = MaterialTheme.colorScheme.onTertiaryContainer
 					) {
-						Text(text = versioncode, style = MaterialTheme.typography.labelMedium)
+						Text(
+							text = versioncode,
+							style = MaterialTheme.typography.labelMedium,
+							modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)
+						)
 					}
 				}
 				FlowRow(
-					modifier = Modifier.fillMaxWidth(),
 					horizontalArrangement = Arrangement.spacedBy(12.dp),
-					verticalArrangement = Arrangement.Center
+					verticalArrangement = Arrangement.Center,
+					modifier = Modifier.align(Alignment.CenterHorizontally),
 				) {
 					SuggestionChip(
 						onClick = {
 							context.viewAppProfile()
 						},
 						label = { Text(text = stringResource(id = R.string.app_info_source_code)) },
-						shape = MaterialTheme.shapes.medium,
+						shape = MaterialTheme.shapes.small,
 						icon = {
 							Icon(
 								painter = painterResource(id = R.drawable.ic_code),
@@ -111,7 +132,7 @@ fun AppDialogInfoContent(
 							context.viewGithubProfile()
 						},
 						label = { Text(text = stringResource(id = R.string.app_info_author)) },
-						shape = MaterialTheme.shapes.medium,
+						shape = MaterialTheme.shapes.small,
 						icon = {
 							Icon(
 								painter = painterResource(id = R.drawable.ic_author),

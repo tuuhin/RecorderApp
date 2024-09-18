@@ -74,8 +74,8 @@ class NotificationHelper(
 			context = context,
 			requestCodes = IntentRequestCodes.STOP_VOICE_RECORDER,
 			intent = recorderServiceIntent.apply {
-				action = RecorderAction.STOP_RECORDER.action
-			}
+				action = RecorderAction.StopRecorderAction.action
+			},
 		)
 
 	private val cancelRecorderPendingIntent: PendingIntent
@@ -83,8 +83,8 @@ class NotificationHelper(
 			context = context,
 			requestCodes = IntentRequestCodes.CANCEL_VOICE_RECORDER,
 			intent = recorderServiceIntent.apply {
-				action = RecorderAction.CANCEL_RECORDER.action
-			}
+				action = RecorderAction.CancelRecorderAction.action
+			},
 		)
 
 	private val pauseRecorderPendingIntent: PendingIntent
@@ -92,8 +92,8 @@ class NotificationHelper(
 			context = context,
 			requestCodes = IntentRequestCodes.PAUSE_VOICE_RECORDER,
 			intent = recorderServiceIntent.apply {
-				action = RecorderAction.PAUSE_RECORDER.action
-			}
+				action = RecorderAction.PauseRecorderAction.action
+			},
 		)
 
 	private val resumeRecorderPendingIntent: PendingIntent
@@ -101,8 +101,8 @@ class NotificationHelper(
 			context = context,
 			requestCodes = IntentRequestCodes.RESUME_VOICE_RECORDER,
 			intent = recorderServiceIntent.apply {
-				action = RecorderAction.RESUME_RECORDER.action
-			}
+				action = RecorderAction.ResumeRecorderAction.action
+			},
 		)
 
 	private val recorderCustomView = RemoteViews(

@@ -4,6 +4,7 @@ import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.toSelectableCategory
@@ -16,6 +17,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
@@ -27,7 +29,15 @@ object PreviewFakes {
 		get() = JLocalDateTime.now().toKotlinLocalDateTime()
 
 
-	val PREVIEW_RECORDER_AMPLITUDES = List(80) { Random.nextFloat() }.toImmutableList()
+	val PREVIEW_RECORDER_AMPLITUDES = List(100) { Random.nextFloat() }.toImmutableList()
+
+	val PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY =
+		PREVIEW_RECORDER_AMPLITUDES.mapIndexed { idx, amp ->
+			val duration = VoiceRecorder.AMPS_READ_DELAY_RATE.times(idx)
+			val time = LocalTime.fromMillisecondOfDay(duration.inWholeMilliseconds.toInt())
+			time to amp
+		}
+
 
 	val FAKE_AUDIO_INFORMATION =
 		AudioPlayerInformation(waveforms = PlayerGraphInfo(waves = PREVIEW_RECORDER_AMPLITUDES))

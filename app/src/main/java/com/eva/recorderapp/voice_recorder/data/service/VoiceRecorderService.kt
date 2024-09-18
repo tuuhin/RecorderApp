@@ -16,25 +16,30 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.Dispatchers
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.sample
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private const val LOGGER_TAG = "RECORDER_SERVICE"
 
@@ -55,9 +60,25 @@ class VoiceRecorderService : LifecycleService() {
 
 	private val binder = LocalBinder()
 
-	private val _amplitudes = MutableStateFlow(persistentListOf<Float>())
+	private val _bookMarks = MutableStateFlow(emptySet<LocalTime>())
 
-	val amplitudes: StateFlow<ImmutableList<Float>>
+	@OptIn(ExperimentalCoroutinesApi::class)
+	val bookMarks = _bookMarks.mapLatest { bookMarks ->
+		bookMarks.map {
+			// need to convert it into multiples of 100ms
+			// though its already converted its lik-a recheck
+			val millis = (it.toMillisecondOfDay() / 100) * 100
+			LocalTime.fromMillisecondOfDay(millis)
+		}.toSet().toImmutableList()
+	}.stateIn(
+		scope = lifecycleScope,
+		started = SharingStarted.Lazily,
+		initialValue = persistentListOf()
+	)
+
+	private val _amplitudes = MutableStateFlow(emptyList<Pair<LocalTime, Float>>())
+
+	val amplitudes: StateFlow<List<Pair<LocalTime, Float>>>
 		get() = _amplitudes.asStateFlow()
 
 	val recorderTime: StateFlow<LocalTime>
@@ -107,28 +128,27 @@ class VoiceRecorderService : LifecycleService() {
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 		when (intent?.action) {
-			RecorderAction.START_RECORDER.action -> onStartRecording()
-			RecorderAction.RESUME_RECORDER.action -> onResumeRecording()
-			RecorderAction.PAUSE_RECORDER.action -> onPauseRecording()
-			RecorderAction.STOP_RECORDER.action -> onStopRecording()
-			RecorderAction.CANCEL_RECORDER.action -> onCancelRecording()
+			RecorderAction.StartRecorderAction.action -> onStartRecording()
+			RecorderAction.ResumeRecorderAction.action -> onResumeRecording()
+			RecorderAction.PauseRecorderAction.action -> onPauseRecording()
+			RecorderAction.StopRecorderAction.action -> onStopRecording()
+			RecorderAction.CancelRecorderAction.action -> onCancelRecording()
+			RecorderAction.AddBookMarkAction.action -> addBookMark()
 		}
 		return super.onStartCommand(intent, flags, startId)
 	}
 
 
-	private fun readAmplitudes() {
-		voiceRecorder.maxAmplitudes.onEach { array ->
-			// if array is empty then an empty list
-			// otherwise the converted one
-			val immutableList = if (array.isEmpty()) persistentListOf()
-			else array.toList().toPersistentList()
-
-			_amplitudes.update { immutableList }
-		}.flowOn(Dispatchers.Default)
-			.launchIn(lifecycleScope)
+	private fun readAmplitudes() = lifecycleScope.launch {
+		voiceRecorder.dataPoints.collectLatest { array ->
+			val updated = array.map { (idx, amp) ->
+				val duration = VoiceRecorder.AMPS_READ_DELAY_RATE.times(idx.toInt())
+				val time = LocalTime.fromMillisecondOfDay(duration.inWholeMilliseconds.toInt())
+				time to amp
+			}
+			_amplitudes.update { updated }
+		}
 	}
-
 
 	private fun showBluetoothConnectedToast() {
 		bluetoothScoUseCase.observeConnectedState(
@@ -195,6 +215,8 @@ class VoiceRecorderService : LifecycleService() {
 		// cancel recording
 		lifecycleScope.launch { voiceRecorder.cancelRecording() }
 			.invokeOnCompletion {
+				//clear bookmarks
+				clearBookMarks()
 				// stop the foreground
 				stopForeground(STOP_FOREGROUND_REMOVE)
 				// stop the service
@@ -204,13 +226,40 @@ class VoiceRecorderService : LifecycleService() {
 
 	private fun onStopRecording() {
 		// stop the recording
-		lifecycleScope.launch { voiceRecorder.stopRecording() }
-			.invokeOnCompletion {
-				// stop the foreground
-				stopForeground(STOP_FOREGROUND_REMOVE)
-				// stop the service
-				stopSelf()
-			}
+		lifecycleScope.launch {
+			val stopDeferred = async { voiceRecorder.stopRecording() }
+			val saveDeferred = async { clearAndSaveBookMarks() }
+			// running them concurrently
+			awaitAll(stopDeferred, saveDeferred)
+
+		}.invokeOnCompletion {
+			//clear and save bookmarks
+			// stop the foreground
+			stopForeground(STOP_FOREGROUND_REMOVE)
+			// stop the service
+			stopSelf()
+		}
+	}
+
+	private fun addBookMark() {
+		//should be a multiple of 100
+		val closeMillis = (recorderTime.value.toMillisecondOfDay() / 100) * 100
+		val time = LocalTime.fromMillisecondOfDay(closeMillis)
+		// add it to bookmarks
+		Log.d(LOGGER_TAG, "BOOKMARKS ADDED :$time")
+		_bookMarks.update { it + time }
+	}
+
+	private suspend fun clearAndSaveBookMarks() {
+		delay(1.seconds)
+		// add logic to save bookmarks
+		Log.d(LOGGER_TAG, "BOOKMARKS CLEARED")
+		_bookMarks.update { emptySet() }
+	}
+
+	private fun clearBookMarks() {
+		Log.d(LOGGER_TAG, "BOOKMARKS CLEARED")
+		_bookMarks.update { emptySet() }
 	}
 
 	override fun onDestroy() {

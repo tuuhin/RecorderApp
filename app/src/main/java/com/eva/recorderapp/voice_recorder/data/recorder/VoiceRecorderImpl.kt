@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.recorder.MicrophoneDataPoint
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
@@ -38,9 +39,7 @@ class VoiceRecorderImpl(
 	private val settings: RecorderAudioSettingsRepo,
 ) : VoiceRecorder {
 
-	private val delayRate = 80.milliseconds
-
-	private val stopWatch: RecorderStopWatch = RecorderStopWatch(delayRate)
+	private val stopWatch = RecorderStopWatch(delayTime = 60.milliseconds)
 
 	// recording format and encoder
 	private val format: RecordEncoderAndFormat
@@ -74,7 +73,7 @@ class VoiceRecorderImpl(
 		get() = stopWatch.elapsedTime
 
 	@OptIn(ExperimentalCoroutinesApi::class)
-	override val maxAmplitudes: Flow<FloatArray>
+	override val dataPoints: Flow<List<MicrophoneDataPoint>>
 		get() = recorderState.flatMapLatest { state ->
 			_bufferReader?.readAmplitudeBuffered(state)
 				?: emptyFlow()
@@ -103,7 +102,10 @@ class VoiceRecorderImpl(
 
 		_recorder?.setOnErrorListener(_errorListener)
 
-		_bufferReader = BufferedAmplitudeReader(recorder = _recorder, delayRate = delayRate)
+		_bufferReader = BufferedAmplitudeReader(
+			recorder = _recorder,
+			delayRate = VoiceRecorder.AMPS_READ_DELAY_RATE
+		)
 		Log.d(LOGGER_TAG, "CREATED RECORDER AND AMPLITUDE SUCCESSFULLY")
 	}
 

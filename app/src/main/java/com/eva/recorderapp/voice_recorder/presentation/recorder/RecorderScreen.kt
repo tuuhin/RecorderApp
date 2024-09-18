@@ -5,11 +5,11 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -38,17 +38,21 @@ import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.NoRec
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderAmplitudeGraph
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTimerText
 import com.eva.recorderapp.voice_recorder.presentation.recorder.composable.RecorderTopBar
-import com.eva.recorderapp.voice_recorder.presentation.recorder.util.showTopbarActions
+import com.eva.recorderapp.voice_recorder.presentation.recorder.util.showTopBarActions
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
-import com.eva.recorderapp.voice_recorder.presentation.util.RecordingAmplitudes
+import com.eva.recorderapp.voice_recorder.presentation.util.RecordingDataPointCallback
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.LocalTime
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VoiceRecorderScreen(
-	stopWatch: LocalTime,
+	stopWatchTime: LocalTime,
 	recorderState: RecorderState,
-	amplitudeCallback: RecordingAmplitudes,
+	bookMarks: ImmutableList<LocalTime>,
+	amplitudeCallback: RecordingDataPointCallback,
 	onRecorderAction: (RecorderAction) -> Unit,
 	onShowRecordings: () -> Unit,
 	onNavigateToSettings: () -> Unit,
@@ -68,16 +72,17 @@ fun VoiceRecorderScreen(
 	}
 
 	val canShowActions by remember(recorderState) {
-		derivedStateOf(recorderState::showTopbarActions)
+		derivedStateOf(recorderState::showTopBarActions)
 	}
 
 	Scaffold(
 		topBar = {
 			RecorderTopBar(
 				showActions = canShowActions,
-				onShowRecordings = onShowRecordings,
+				onNavigateToRecordings = onShowRecordings,
 				onNavigateToSettings = onNavigateToSettings,
 				onNavigateToBin = onNavigateToBin,
+				onAddBookMark = { onRecorderAction(RecorderAction.AddBookMarkAction) },
 				navigation = navigation
 			)
 		},
@@ -106,14 +111,13 @@ fun VoiceRecorderScreen(
 						verticalArrangement = Arrangement.spacedBy(40.dp),
 						modifier = Modifier.offset(y = dimensionResource(id = R.dimen.graph_offset))
 					) {
-						RecorderTimerText(time = stopWatch)
+						RecorderTimerText(time = stopWatchTime)
 						RecorderAmplitudeGraph(
-							amplitudeCallback = amplitudeCallback,
+							dataPointCallback = amplitudeCallback,
+							bookMarks = bookMarks,
+							shape = MaterialTheme.shapes.small,
 							barColor = MaterialTheme.colorScheme.onSecondaryContainer,
-							backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
-							shape = MaterialTheme.shapes.medium,
 							modifier = Modifier.fillMaxWidth(),
-							contentPadding = PaddingValues(all = dimensionResource(id = R.dimen.graph_card_padding))
 						)
 					}
 					AnimatedRecorderActionTray(
@@ -131,7 +135,7 @@ fun VoiceRecorderScreen(
 					contentAlignment = Alignment.Center
 				) {
 					NoRecordPermissionBox(
-						onPermsChanged = { perms -> hasRecordPermission = perms },
+						onPermissionChanged = { perms -> hasRecordPermission = perms },
 						modifier = Modifier.padding(12.dp)
 					)
 				}
@@ -153,12 +157,13 @@ private class RecorderStatePreviewParams :
 @Composable
 private fun VoiceRecorderScreenPreview(
 	@PreviewParameter(RecorderStatePreviewParams::class)
-	recorderState: RecorderState
+	recorderState: RecorderState,
 ) = RecorderAppTheme {
 	VoiceRecorderScreen(
-		stopWatch = LocalTime(0, 10, 56, 0),
+		stopWatchTime = LocalTime(0, 10, 56, 0),
 		recorderState = recorderState,
-		amplitudeCallback = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
+		bookMarks = persistentListOf(),
+		amplitudeCallback = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY },
 		onRecorderAction = {},
 		onShowRecordings = {},
 		onNavigateToSettings = {},

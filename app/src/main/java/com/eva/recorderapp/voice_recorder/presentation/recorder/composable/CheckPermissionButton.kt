@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
 import android.Manifest
+import android.content.Context
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,21 +38,11 @@ fun CheckPermissionButton(
 	val context = LocalContext.current
 
 	var hasRecordAudioPermission by remember {
-		mutableStateOf(
-			ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
-					PermissionChecker.PERMISSION_GRANTED
-		)
+		mutableStateOf(context.hasRecordAudioPermission)
 	}
 
 	var hasNotificationPermission by remember {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-			mutableStateOf(
-				ContextCompat.checkSelfPermission(
-					context,
-					Manifest.permission.POST_NOTIFICATIONS
-				) == PermissionChecker.PERMISSION_GRANTED
-			)
-		else mutableStateOf(true)
+		mutableStateOf(context.hasNotificationPermission)
 	}
 
 	val launcher = rememberLauncherForActivityResult(
@@ -85,3 +76,13 @@ fun CheckPermissionButton(
 		Text(text = stringResource(id = R.string.allow_permissions))
 	}
 }
+
+private val Context.hasRecordAudioPermission: Boolean
+	get() = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
+			PermissionChecker.PERMISSION_GRANTED
+
+private val Context.hasNotificationPermission: Boolean
+	get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+		ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+				PermissionChecker.PERMISSION_GRANTED
+	} else true

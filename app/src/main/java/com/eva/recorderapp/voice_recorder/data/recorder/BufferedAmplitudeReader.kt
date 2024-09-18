@@ -2,6 +2,7 @@ package com.eva.recorderapp.voice_recorder.data.recorder
 
 import android.media.MediaRecorder
 import android.util.Log
+import com.eva.recorderapp.voice_recorder.domain.recorder.MicrophoneDataPoint
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.Dispatchers
@@ -14,9 +15,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -28,7 +31,8 @@ class BufferedAmplitudeReader(
 	private val delayRate: Duration = 80.milliseconds,
 	private val bufferSize: Int = VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE,
 ) {
-	private val _buffer = ConcurrentLinkedQueue<Int>()
+	private val _buffer = ConcurrentLinkedQueue<Pair<Long, Int>>()
+	private val _ampIdx = AtomicLong(0)
 
 	private val ampsRange = MutableStateFlow(AmpsRange())
 
@@ -36,15 +40,14 @@ class BufferedAmplitudeReader(
 		get() = recorder?.activeRecordingConfiguration?.audioSource == null
 
 	@OptIn(ExperimentalCoroutinesApi::class)
-	fun readAmplitudeBuffered(state: RecorderState): Flow<FloatArray> {
+	fun readAmplitudeBuffered(state: RecorderState): Flow<List<MicrophoneDataPoint>> {
 		return when {
 			// show the amplitudes when its recording or paused
 			state.canReadAmplitudes -> readSampleAmplitude(state)
 				.flatMapLatest(::flowToFixedSizeCollection)
-				.map(::smoothen)
+				.mapLatest(::smoothen)
 				.map { it.normalize() }
 				.flowOn(Dispatchers.Default)
-
 
 			else -> clearBufferAndEmptyFlow()
 		}
@@ -82,24 +85,33 @@ class BufferedAmplitudeReader(
 	/**
 	 * Clears the buffer if it contains any value and emit an end zero
 	 */
-	private fun clearBufferAndEmptyFlow() = flow {
+	private fun clearBufferAndEmptyFlow() = flow<List<MicrophoneDataPoint>> {
 		if (_buffer.isNotEmpty()) {
+			Log.d(LOGGER_TAG, "RE_INIT THE VALUES")
 			_buffer.clear()
 			ampsRange.update { AmpsRange() }
+			_ampIdx.set(0)
 		}
-		emit(floatArrayOf())
+		emit(emptyList())
 	}
 
 	/**
 	 * Adds the new value to [_buffer] and compute a flow out of it
 	 */
-	private fun flowToFixedSizeCollection(newValue: Int): Flow<List<Int>> =
+	private fun flowToFixedSizeCollection(newValue: Int): Flow<List<Pair<Long, Int>>> =
 		flow {
 			try {
 				// remove the items from the queue if the size exceeds
-				if (_buffer.size >= bufferSize * 2) _buffer.poll()
+				if (_buffer.size >= bufferSize * 3) {
+					// remove the first pair
+					Log.d(LOGGER_TAG, "REMOVING SOME ITEMS FROM FRONT")
+					repeat(bufferSize) {
+						_buffer.poll()
+					}
+					Log.d(LOGGER_TAG, "REMOVING ITEMS DONE")
+				}
 				// add the new one
-				_buffer.offer(newValue)
+				_buffer.offer(_ampIdx.getAndIncrement() to newValue)
 
 				// change the max value
 				if (newValue > ampsRange.value.max) {
@@ -118,28 +130,31 @@ class BufferedAmplitudeReader(
 		}.flowOn(Dispatchers.Default)
 
 
-	private fun FloatArray.normalize(): FloatArray {
+	private fun List<MicrophoneDataPoint>.normalize(): List<MicrophoneDataPoint> {
 		val ampRangeValue = ampsRange.value
 		val range = ampRangeValue.range
 		// if range is zero  return empty
 		// that's probably the empty case
-		if (range <= 0) return floatArrayOf()
+		if (range <= 0) return emptyList()
 
-		return map { amp ->
+		return map { (idx, amp) ->
 			val normal = (amp - ampRangeValue.min) / range
-			normal.coerceIn(0f..1f)
-		}.toFloatArray()
+			idx to normal.coerceIn(0f..1f)
+		}
 	}
 
-	private fun smoothen(data: List<Int>, factor: Float = 0.3f): FloatArray {
+	private fun smoothen(
+		data: List<Pair<Long, Int>>,
+		factor: Float = 0.3f,
+	): List<MicrophoneDataPoint> {
 		var prev = 0f
 		return buildList {
-			data.forEach { amplitude ->
+			data.forEach { (idx, amplitude) ->
 				val smooth = lerp(prev, amplitude.toFloat(), factor)
-				add(smooth)
+				add(idx to smooth)
 				prev = smooth
 			}
-		}.toFloatArray()
+		}
 	}
 
 	private fun lerp(v0: Float, v1: Float, t: Float): Float {

@@ -15,8 +15,8 @@
   <string name="menu_option_recycle_bin">Recycle Bin</string>
   <string name="menu_more_option">More Options</string>
   <string name="recorder_top_bar_title">Voice Recorder</string>
-  <string name="recorder_recording_completed">Recording finished</string>
-  <string name="recorder_recording_completed_text">Saving file to external storage</string>
+  <string name="recorder_recording_completed">Recording Completed</string>
+  <string name="recorder_recording_completed_text">Saved to external storage</string>
   <string name="recording_action_delete">Delete</string>
   <string name="selected_recording_count">%d selected</string>
   <string name="cancel_selection">Close Action</string>
@@ -55,7 +55,7 @@
   <string name="recorder_action_start">Record</string>
   <string name="recorder_action_cancel">Cancel</string>
   <string name="recorder_recording_notification_title_canceled">Recording Cancelled</string>
-  <string name="recorder_recording_notification_canceled_text">Recording was canceled by the user</string>
+  <string name="recorder_recording_notification_canceled_text">Recording canceled by the user</string>
   <string name="recording_action_restore">Restore</string>
   <string name="recording_restore_dialog_title">Restore Recordings?</string>
   <string name="recording_restore_dialog_text">Restore the given set of selected recordings</string>
@@ -117,7 +117,7 @@
   <string name="recording_settings_file_format_text">Pick a naming strategy file names, for now it can be either the current time or a count</string>
   <string name="recording_settings_name_format_date_time">%s_2022–12–31–00:00:00</string>
   <string name="recording_settings_name_format_count">%s_001</string>
-  <string name="recording_settings_pase_recorder_on_calls">Pause Recorder</string>
+  <string name="recording_settings_pause_recorder_on_calls">Pause Recorder</string>
   <string name="recording_settings_pause_recorder_on_call_text">Pause recorder on incomming call</string>
   <string name="storage_statistics">Storage</string>
   <string name="storage_statistics_total">Total</string>
@@ -131,7 +131,7 @@
   <string name="rename_recording_prefix_title">Rename Prefix</string>
   <string name="rename_recording_prefix_text">Changing the prefix will add this text as prefix to each of the recording</string>
   <string name="recording_settings_change_name_prefix">Naming Prefix</string>
-  <string name="app_info_source_code">Source Code</string>
+  <string name="app_info_source_code">Code</string>
   <string name="app_info_author">Author</string>
   <string name="preparing_recorder">Preparing Recorder…</string>
   <string name="app_shortcuts_open_last_played">Last Played Item</string>
@@ -144,7 +144,7 @@
   <string name="toast_incoming_call">Incoming call</string>
   <string name="dialog_action_discard">Discard</string>
   <string name="cancel_recording_dialog_title">Cancel Recording</string>
-  <string name="cancel_recording_dialog_text">Are you sure you want to discard this current recording</string>
+  <string name="cancel_recording_dialog_text">Are you sure you want to cancel this recording. Discarded one\'s are not recoverable</string>
   <string name="dialog_action_done">Done</string>
   <string name="save_recording_dialog_title">Save recording</string>
   <string name="save_recording_dialog_text">Sure you are done with your recording</string>
@@ -176,5 +176,7 @@
   <string name="category_type_title">Category Type</string>
   <string name="category_color_title">Category Color</string>
   <string name="category_icon_category">Category Icon for %s</string>
+  <string name="app_version_title">Version:</string>
+  <string name="add_recording_bookmark">Bookmark</string>
 
 </resources>

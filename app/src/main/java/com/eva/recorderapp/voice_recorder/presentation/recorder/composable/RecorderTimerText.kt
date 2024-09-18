@@ -22,7 +22,7 @@ fun RecorderTimerText(
 	time: LocalTime,
 	modifier: Modifier = Modifier,
 	style: TextStyle = MaterialTheme.typography.displayMedium,
-	color: Color = MaterialTheme.colorScheme.primary
+	color: Color = MaterialTheme.colorScheme.primary,
 ) {
 	val timeText by remember(time) {
 		derivedStateOf {

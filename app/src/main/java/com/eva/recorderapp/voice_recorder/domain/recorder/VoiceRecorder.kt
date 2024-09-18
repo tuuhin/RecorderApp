@@ -4,6 +4,9 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalTime
+import kotlin.time.Duration.Companion.milliseconds
+
+typealias MicrophoneDataPoint = Pair<Long, Float>
 
 interface VoiceRecorder {
 
@@ -15,9 +18,9 @@ interface VoiceRecorder {
 	val recorderState: StateFlow<RecorderState>
 
 	/**
-	 * A series of amplitudes of the current sampled audio record
+	 * A series of data-points for the current recording.
 	 */
-	val maxAmplitudes: Flow<FloatArray>
+	val dataPoints: Flow<List<MicrophoneDataPoint>>
 
 	/**
 	 * A flow determining how long the recording has been started
@@ -54,11 +57,14 @@ interface VoiceRecorder {
 	suspend fun cancelRecording()
 
 	/**
-	 * Clean up funtion to clean all the allocated resources with the recorder
+	 * Clears all the native allocation and other, should be called when you are done
+	 * with the recorder
 	 */
 	fun releaseResources()
 
 	companion object {
+		// don't change the values
 		const val RECORDER_AMPLITUDES_BUFFER_SIZE = 100
+		val AMPS_READ_DELAY_RATE = 100.milliseconds
 	}
 }

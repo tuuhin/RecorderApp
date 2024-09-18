@@ -37,7 +37,7 @@ import com.eva.recorderapp.voice_recorder.presentation.recorder.RecorderViewMode
 import com.eva.recorderapp.voice_recorder.presentation.recorder.VoiceRecorderScreen
 
 fun NavGraphBuilder.recorderRoute(
-	navController: NavHostController
+	navController: NavHostController,
 ) = animatedComposable<NavRoutes.VoiceRecorder>(
 	deepLinks = listOf(
 		navDeepLink {
@@ -63,10 +63,12 @@ fun NavGraphBuilder.recorderRoute(
 				val timer by service.recorderTime.collectAsStateWithLifecycle()
 				val recorderState by service.recorderState.collectAsStateWithLifecycle()
 				val recorderAmplitude by service.amplitudes.collectAsStateWithLifecycle()
+				val bookMarks by service.bookMarks.collectAsStateWithLifecycle()
 
 				VoiceRecorderScreen(
-					stopWatch = timer,
+					stopWatchTime = timer,
 					recorderState = recorderState,
+					bookMarks = bookMarks,
 					amplitudeCallback = { recorderAmplitude },
 					onRecorderAction = viewModel::onAction,
 					onShowRecordings = dropUnlessResumed {

@@ -48,20 +48,21 @@ fun AnimatedRecorderActionTray(
 ) {
 	val mode by remember(recorderState) {
 		derivedStateOf(recorderState::toAction)
-	}
+	} 
 
 	AnimatedContent(
 		targetState = mode,
 		transitionSpec = { recorderStateAnimation() },
 		modifier = modifier.defaultMinSize(minHeight = 120.dp),
-		contentAlignment = Alignment.Center
+		contentAlignment = Alignment.Center,
+		label = "Recorder Action Animation"
 	) { state ->
 
 		when (state) {
 			RecorderActionMode.INIT -> {
 				Box(contentAlignment = Alignment.Center) {
 					RecordButton(
-						onClick = { onRecorderAction(RecorderAction.START_RECORDER) },
+						onClick = { onRecorderAction(RecorderAction.StartRecorderAction) },
 					)
 				}
 			}
@@ -69,10 +70,10 @@ fun AnimatedRecorderActionTray(
 			RecorderActionMode.RECORDING -> {
 				RecorderPausePlayAction(
 					showPausedAction = recorderState == RecorderState.PAUSED,
-					onResume = { onRecorderAction(RecorderAction.RESUME_RECORDER) },
-					onPause = { onRecorderAction(RecorderAction.PAUSE_RECORDER) },
-					onCancel = { onRecorderAction(RecorderAction.CANCEL_RECORDER) },
-					onStop = { onRecorderAction(RecorderAction.STOP_RECORDER) },
+					onResume = { onRecorderAction(RecorderAction.ResumeRecorderAction) },
+					onPause = { onRecorderAction(RecorderAction.PauseRecorderAction) },
+					onCancel = { onRecorderAction(RecorderAction.CancelRecorderAction) },
+					onStop = { onRecorderAction(RecorderAction.StopRecorderAction) },
 					modifier = Modifier.fillMaxWidth()
 				)
 			}

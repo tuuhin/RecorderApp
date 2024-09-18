@@ -14,7 +14,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -31,7 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.eva.recorderapp.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecorderPausePlayAction(
 	showPausedAction: Boolean,
@@ -39,27 +37,24 @@ fun RecorderPausePlayAction(
 	onPause: () -> Unit,
 	onCancel: () -> Unit,
 	onStop: () -> Unit,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 
 	var showCancelDialog by remember { mutableStateOf(false) }
 	var showSaveDialog by remember { mutableStateOf(false) }
 
-	if (showCancelDialog) {
-		CancelRecordingDialog(
-			showDialog = showCancelDialog,
-			onDismiss = { showCancelDialog = false },
-			onDiscard = onCancel,
-		)
-	}
 
-	if (showSaveDialog) {
-		SaveRecordingDialog(
-			showDialog = showSaveDialog,
-			onDismiss = { showSaveDialog = false },
-			onSave = onStop
-		)
-	}
+	CancelRecordingDialog(
+		showDialog = showCancelDialog,
+		onDismiss = { showCancelDialog = false },
+		onDiscard = onCancel,
+	)
+
+	SaveRecordingDialog(
+		showDialog = showSaveDialog,
+		onDismiss = { showSaveDialog = false },
+		onSave = onStop
+	)
 
 	Box(
 		modifier = modifier,
@@ -69,6 +64,7 @@ fun RecorderPausePlayAction(
 			targetState = showPausedAction,
 			transitionSpec = { recorderStateAnimation() },
 			modifier = Modifier.align(Alignment.CenterStart),
+			label = "Pause Play Action Animation",
 		) { isPaused ->
 
 			if (isPaused) {
@@ -85,18 +81,20 @@ fun RecorderPausePlayAction(
 						contentDescription = stringResource(id = R.string.action_paused)
 					)
 				}
-			} else IconButton(
-				onClick = onPause,
-				colors = IconButtonDefaults.iconButtonColors(
-					containerColor = MaterialTheme.colorScheme.tertiary,
-					contentColor = MaterialTheme.colorScheme.onTertiary
-				),
-				modifier = Modifier.size(dimensionResource(id = R.dimen.recorder_button_size))
-			) {
-				Icon(
-					painter = painterResource(id = R.drawable.ic_pause),
-					contentDescription = stringResource(id = R.string.action_paused)
-				)
+			} else {
+				IconButton(
+					onClick = onPause,
+					colors = IconButtonDefaults.iconButtonColors(
+						containerColor = MaterialTheme.colorScheme.tertiary,
+						contentColor = MaterialTheme.colorScheme.onTertiary
+					),
+					modifier = Modifier.size(dimensionResource(id = R.dimen.recorder_button_size))
+				) {
+					Icon(
+						painter = painterResource(id = R.drawable.ic_pause),
+						contentDescription = stringResource(id = R.string.action_paused)
+					)
+				}
 			}
 		}
 

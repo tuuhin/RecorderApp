@@ -2,7 +2,7 @@
 <resources>
   <dimen name="sc_padding">12dp</dimen>
   <dimen name="card_padding">12dp</dimen>
-  <dimen name="graph_card_padding">6dp</dimen>
+  <dimen name="graph_card_padding">20dp</dimen>
   <dimen name="sc_padding_secondary">6dp</dimen>
   <dimen name="recorder_button_size">56dp</dimen>
   <dimen name="recordings_action_offset">-36dp</dimen>

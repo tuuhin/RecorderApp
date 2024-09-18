@@ -20,7 +20,7 @@ fun SaveRecordingDialog(
 	onDismiss: () -> Unit,
 	onSave: () -> Unit,
 	modifier: Modifier = Modifier,
-	properties: DialogProperties = DialogProperties(dismissOnClickOutside = false)
+	properties: DialogProperties = DialogProperties(dismissOnClickOutside = false),
 ) {
 	if (!showDialog) return
 
@@ -35,7 +35,6 @@ fun SaveRecordingDialog(
 			) {
 				Text(text = stringResource(id = R.string.dialog_action_done))
 			}
-
 		},
 		dismissButton = {
 			TextButton(onClick = onDismiss) {
@@ -43,9 +42,7 @@ fun SaveRecordingDialog(
 			}
 		},
 		title = { Text(text = stringResource(id = R.string.save_recording_dialog_title)) },
-		text = {
-			Text(text = stringResource(id = R.string.save_recording_dialog_text))
-		},
+		text = { Text(text = stringResource(id = R.string.save_recording_dialog_text)) },
 		icon = {
 			Icon(
 				painter = painterResource(id = R.drawable.ic_record_player),
@@ -54,7 +51,7 @@ fun SaveRecordingDialog(
 		},
 		modifier = modifier,
 		shape = MaterialTheme.shapes.large,
-		properties = properties
+		properties = properties,
 	)
 }
 

@@ -1,10 +1,11 @@
 package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -17,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,17 +29,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.eva.recorderapp.R
+import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecorderTopBar(
 	showActions: Boolean,
-	onShowRecordings: () -> Unit,
-	onNavigateToSettings: () -> Unit,
-	onNavigateToBin: () -> Unit,
 	modifier: Modifier = Modifier,
+	onNavigateToBin: () -> Unit = {},
+	onNavigateToSettings: () -> Unit = {},
+	onNavigateToRecordings: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
+	onAddBookMark: () -> Unit = {},
+	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
 ) {
 	var showDropDown by remember { mutableStateOf(false) }
 
@@ -45,22 +53,30 @@ fun RecorderTopBar(
 		title = { Text(text = stringResource(id = R.string.recorder_top_bar_title)) },
 		navigationIcon = navigation,
 		actions = {
-			AnimatedVisibility(
-				visible = showActions,
-				enter = fadeIn() + slideInVertically(),
-				exit = slideOutVertically() + fadeOut()
-			) {
-				TextButton(onClick = onShowRecordings) {
-					Text(
-						text = stringResource(id = R.string.show_recordings_list),
-						fontWeight = FontWeight.SemiBold
-					)
+			AnimatedContent(
+				targetState = showActions,
+				label = "Is normal action visible"
+			) { isNormal ->
+				if (isNormal) {
+					TextButton(onClick = onNavigateToRecordings) {
+						Text(
+							text = stringResource(id = R.string.show_recordings_list),
+							fontWeight = FontWeight.SemiBold
+						)
+					}
+				} else {
+					TextButton(onClick = onAddBookMark) {
+						Text(
+							text = stringResource(id = R.string.add_recording_bookmark),
+							fontWeight = FontWeight.SemiBold
+						)
+					}
 				}
 			}
 			AnimatedVisibility(
 				visible = showActions,
-				enter = fadeIn() + slideInVertically(),
-				exit = slideOutVertically() + fadeOut()
+				enter = slideInHorizontally() + fadeIn(),
+				exit = slideOutHorizontally() + fadeOut()
 			) {
 				Box {
 					IconButton(onClick = { showDropDown = !showDropDown }) {
@@ -71,7 +87,8 @@ fun RecorderTopBar(
 					}
 					DropdownMenu(
 						expanded = showDropDown,
-						onDismissRequest = { showDropDown = false }
+						onDismissRequest = { showDropDown = false },
+						shape = MaterialTheme.shapes.medium
 					) {
 						DropdownMenuItem(
 							text = { Text(text = stringResource(id = R.string.menu_option_recycle_bin)) },
@@ -96,10 +113,21 @@ fun RecorderTopBar(
 					}
 				}
 			}
-
 		},
-		colors = TopAppBarDefaults
-			.topAppBarColors(actionIconContentColor = MaterialTheme.colorScheme.primary),
+		colors = colors,
 		modifier = modifier,
 	)
+}
+
+private class BooleanPreviewParams :
+	CollectionPreviewParameterProvider<Boolean>(listOf(true, false))
+
+@OptIn(ExperimentalMaterial3Api::class)
+@PreviewLightDark
+@Composable
+private fun RecorderTopBarPreview(
+	@PreviewParameter(BooleanPreviewParams::class)
+	showActions: Boolean,
+) = RecorderAppTheme {
+	RecorderTopBar(showActions = showActions)
 }
