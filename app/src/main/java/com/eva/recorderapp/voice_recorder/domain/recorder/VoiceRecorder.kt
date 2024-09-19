@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.domain.recorder
 
+import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +41,7 @@ interface VoiceRecorder {
 	/**
 	 * Stop the running recording
 	 */
-	suspend fun stopRecording()
+	suspend fun stopRecording(): Resource<Long?, Exception>
 
 	/**
 	 * Pause the ongoing recording

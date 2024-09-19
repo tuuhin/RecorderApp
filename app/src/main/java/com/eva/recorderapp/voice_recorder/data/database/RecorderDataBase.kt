@@ -8,9 +8,12 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.eva.recorderapp.voice_recorder.data.database.convertors.CategoriesEnumConvertors
 import com.eva.recorderapp.voice_recorder.data.database.convertors.LocalDateTimeConvertors
+import com.eva.recorderapp.voice_recorder.data.database.convertors.LocalTimeConvertors
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsBookmarkDao
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.database.dao.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingBookMarkEntity
 import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingCategoryEntity
 import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.data.database.entity.TrashFileEntity
@@ -22,19 +25,22 @@ import kotlinx.coroutines.asExecutor
 		TrashFileEntity::class,
 		RecordingsMetaDataEntity::class,
 		RecordingCategoryEntity::class,
+		RecordingBookMarkEntity::class,
 	],
-	version = 3,
+	version = 4,
 	exportSchema = true,
 	autoMigrations = [
 		AutoMigration(from = 1, to = 2),
-		AutoMigration(from = 2, to = 3)
+		AutoMigration(from = 2, to = 3),
+		AutoMigration(from = 3, to = 4)
 	]
 )
 @TypeConverters(
 	value = [
 		LocalDateTimeConvertors::class,
+		LocalTimeConvertors::class,
 		CategoriesEnumConvertors::class
-	]
+	],
 )
 abstract class RecorderDataBase : RoomDatabase() {
 
@@ -44,10 +50,16 @@ abstract class RecorderDataBase : RoomDatabase() {
 
 	abstract fun recordingMetaData(): RecordingsMetadataDao
 
+	abstract fun recordingBookMarkDao(): RecordingsBookmarkDao
+
 	companion object {
 
 		@Volatile
 		private var instance: RecorderDataBase? = null
+
+		private val localDateTimeConvertor = LocalDateTimeConvertors()
+		private val localtimeConvertor = LocalTimeConvertors()
+		private val categoryEnumConvertor = CategoriesEnumConvertors()
 
 		fun createDataBase(context: Context): RecorderDataBase {
 			return synchronized(this) {
@@ -57,8 +69,9 @@ abstract class RecorderDataBase : RoomDatabase() {
 						RecorderDataBase::class.java,
 						DataBaseConstants.DATABASE_NAME
 					)
-						.addTypeConverter(LocalDateTimeConvertors())
-						.addTypeConverter(CategoriesEnumConvertors())
+						.addTypeConverter(localtimeConvertor)
+						.addTypeConverter(localDateTimeConvertor)
+						.addTypeConverter(categoryEnumConvertor)
 						.setQueryExecutor(Dispatchers.IO.asExecutor())
 						.build()
 				}

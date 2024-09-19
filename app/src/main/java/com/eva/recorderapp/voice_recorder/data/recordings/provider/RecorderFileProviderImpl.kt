@@ -9,15 +9,11 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.AudioFileNamingFormat
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
-import com.eva.recorderapp.voice_recorder.domain.recorder.models.RecordEncoderAndFormat
-import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.CannotCreateMetaDataException
-import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.RecordingFileNotFoundException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -34,26 +30,29 @@ class RecorderFileProviderImpl(
 	private val settings: RecorderFileSettingsRepo,
 ) : RecordingsProvider(context), RecorderFileProvider {
 
+	private val tempPrefix = "RECORDING"
+
 	override suspend fun createFileForRecording(extension: String?): File {
 		return withContext(Dispatchers.IO) {
-			val file = File.createTempFile("recording", extension, context.cacheDir)
+			val file = File.createTempFile(tempPrefix, extension, context.cacheDir)
 			Log.d(LOGGER_TAG, "FILE CREATED FOR RECORDING NAME: ${file.name}")
 			file
 		}
 	}
 
-	override suspend fun transferFileDataToStorage(file: File, format: RecordEncoderAndFormat)
-			: Resource<String?, Exception> {
+	override suspend fun transferFileDataToStorage(file: File, mimeType: String): Long? {
 		return withContext(Dispatchers.IO) {
-
 			try {
 				// file don't exits
 				if (!file.exists()) {
-					return@withContext Resource.Error(RecordingFileNotFoundException())
+					Log.d(LOGGER_TAG, "FILE DON'T EXIT'S")
+					return@withContext null
 				}
 				// content uri cannot be created
-				val contentUri = createUriForRecording(format)
-					?: return@withContext Resource.Error(CannotCreateMetaDataException())
+				val contentUri = createUriForRecording(mimeType) ?: run {
+					Log.d(LOGGER_TAG, "CANNOT CREATE URI FOR RECORDING")
+					return@withContext null
+				}
 
 				Log.d(LOGGER_TAG, "UPDATING THE FILE CONTENT..")
 				val job = launch(Dispatchers.IO) {
@@ -63,41 +62,43 @@ class RecorderFileProviderImpl(
 				}
 				// wait for the file data to be completely read
 				job.join()
+				val uriId = ContentUris.parseId(contentUri)
 				// update the metadata for the file
 				val mediaStoreUpdate = async(Dispatchers.IO) {
 					updateUriAfterRecording(contentUri)
 				}
+				val delTempFile = async(Dispatchers.IO) {
+					deleteCreatedFile(file)
+				}
 				// save the secondary metadata
 				val otherMetadataDataUpdate = async(Dispatchers.IO) {
-					val uriId = ContentUris.parseId(contentUri)
 					val entity = RecordingsMetaDataEntity(recordingId = uriId)
 					recordingDao.updateOrInsertRecordingMetadata(entity)
 				}
 				// execute them parallel
 				Log.d(LOGGER_TAG, "UPDATING METADATA")
-				awaitAll(mediaStoreUpdate, otherMetadataDataUpdate)
-
-				return@withContext Resource.Success(contentUri.toString())
+				awaitAll(mediaStoreUpdate, otherMetadataDataUpdate, delTempFile)
+				return@withContext uriId
 			} catch (e: IllegalArgumentException) {
 				Log.e(LOGGER_TAG, "EXTRAS PROVIDED WRONG")
-				Resource.Error(e)
 			} catch (e: IOException) {
 				e.printStackTrace()
-				Resource.Error(e)
 			}
+			return@withContext null
 		}
 	}
 
 	override suspend fun deleteCreatedFile(file: File): Boolean {
 		return withContext(Dispatchers.IO) {
-			if (!file.exists()) return@withContext false
+			// ensure the file exits  and starts with the tempPrefix
+			if (!file.exists() && !file.name.startsWith(tempPrefix, true)) return@withContext false
 			val result = file.delete()
 			Log.d(LOGGER_TAG, "TEMP FILE DELETED : $result")
 			result
 		}
 	}
 
-	private suspend fun createUriForRecording(format: RecordEncoderAndFormat): Uri? {
+	private suspend fun createUriForRecording(mimeType: String): Uri? {
 
 		val fileSettings = settings.fileSettings
 		val name = fileSettings.name
@@ -120,14 +121,13 @@ class RecorderFileProviderImpl(
 		val metaData = ContentValues().apply {
 			put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, recordingsMusicDirPath)
 			put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileName)
-			put(MediaStore.Audio.AudioColumns.MIME_TYPE, format.mimeType)
+			put(MediaStore.Audio.AudioColumns.MIME_TYPE, mimeType)
 			put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
 			put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 				put(MediaStore.Audio.AudioColumns.IS_RECORDING, 1)
 			}
 		}
-
 
 		Log.d(LOGGER_TAG, "CREATING FILE")
 		val contentUri = withContext(Dispatchers.IO) {
