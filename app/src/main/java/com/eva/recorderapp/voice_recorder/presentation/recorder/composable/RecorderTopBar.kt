@@ -14,12 +14,17 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,11 +70,21 @@ fun RecorderTopBar(
 						)
 					}
 				} else {
-					TextButton(onClick = onAddBookMark) {
-						Text(
-							text = stringResource(id = R.string.add_recording_bookmark),
-							fontWeight = FontWeight.SemiBold
-						)
+					TooltipBox(
+						positionProvider = TooltipDefaults.rememberRichTooltipPositionProvider(),
+						tooltip = {
+							RichTooltip {
+								Text(text = stringResource(R.string.bookmark_tooltip_text))
+							}
+						},
+						state = rememberTooltipState()
+					) {
+						TextButton(onClick = onAddBookMark) {
+							Text(
+								text = stringResource(id = R.string.add_recording_bookmark),
+								fontWeight = FontWeight.SemiBold
+							)
+						}
 					}
 				}
 			}
@@ -79,7 +94,10 @@ fun RecorderTopBar(
 				exit = slideOutHorizontally() + fadeOut()
 			) {
 				Box {
-					IconButton(onClick = { showDropDown = !showDropDown }) {
+					IconButton(
+						onClick = { showDropDown = !showDropDown },
+						colors = IconButtonDefaults.iconButtonColors(contentColor = colors.actionIconContentColor)
+					) {
 						Icon(
 							imageVector = Icons.Default.MoreVert,
 							contentDescription = stringResource(id = R.string.menu_more_option)

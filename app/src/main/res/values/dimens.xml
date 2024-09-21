@@ -13,4 +13,5 @@
   <dimen name="play_button_min_size">72dp</dimen>
   <dimen name="dialog_min_constraint_width">280dp</dimen>
   <dimen name="dialog_min_constraint_height">560dp</dimen>
+  <dimen name="graph_card_padding_other">24dp</dimen>
 </resources>

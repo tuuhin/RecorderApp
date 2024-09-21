@@ -116,7 +116,7 @@ fun VoiceRecorderScreen(
 							dataPointCallback = amplitudeCallback,
 							bookMarks = bookMarks,
 							shape = MaterialTheme.shapes.small,
-							barColor = MaterialTheme.colorScheme.onSecondaryContainer,
+							plotColor = MaterialTheme.colorScheme.onSecondaryContainer,
 							modifier = Modifier.fillMaxWidth(),
 						)
 					}

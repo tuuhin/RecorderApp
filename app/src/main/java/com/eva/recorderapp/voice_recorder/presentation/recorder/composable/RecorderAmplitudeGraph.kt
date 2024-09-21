@@ -12,12 +12,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -34,30 +38,32 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
-import kotlinx.datetime.toJavaLocalTime
-import kotlinx.datetime.toKotlinLocalTime
 
 @Composable
 fun RecorderAmplitudeGraph(
 	dataPointCallback: RecordingDataPointCallback,
 	bookMarks: ImmutableList<LocalTime>,
 	modifier: Modifier = Modifier,
-	barColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-	bookMarkColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
-	axisColor: Color = MaterialTheme.colorScheme.outline,
-	axisColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
-	textStyle: TextStyle = MaterialTheme.typography.labelSmall,
-	textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-	backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	plotColor: Color = MaterialTheme.colorScheme.secondary,
+	bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
+	timelineColor: Color = MaterialTheme.colorScheme.outline,
+	timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
+	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
+	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 	shape: Shape = MaterialTheme.shapes.small,
-	contentPadding: PaddingValues = PaddingValues(all = dimensionResource(id = R.dimen.graph_card_padding)),
+	contentPadding: PaddingValues = PaddingValues(
+		horizontal = dimensionResource(id = R.dimen.graph_card_padding),
+		vertical = dimensionResource(R.dimen.graph_card_padding_other)
+	),
 ) {
 	val textMeasurer = rememberTextMeasurer()
+	val tag = painterResource(R.drawable.ic_bookmark)
 
 	Surface(
 		shape = shape,
-		color = backgroundColor,
-		modifier = modifier.aspectRatio(1.65f),
+		color = containerColor,
+		modifier = modifier.aspectRatio(1.6f),
 	) {
 		Spacer(
 			modifier = Modifier
@@ -67,40 +73,50 @@ fun RecorderAmplitudeGraph(
 					val blockSize = VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
 					val centerYAxis = size.height / 2
 
-					val spikesGap = 2.dp.toPx()
 					val spikesWidth = size.width / VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
+					val spikesGap = (spikesWidth - 1.5.dp.toPx()).let { amt ->
+						if (amt > 0f) amt else 2.dp.toPx()
+					}
 
 					onDrawBehind {
 						val result = dataPointCallback()
 
 						val amplitudes = result.map { it.second }
-						val timeLine = result
-							.map { it.first }
-							.padWithTime(blockSize)
 
-						val translateAmount = if (result.size <= blockSize) 0f
+						val timeline = result.map { it.first }
+						val paddedTimeline = timeline.padWithTime(blockSize)
+
+						val translateLeft = if (result.size <= blockSize) 0f
 						else (blockSize - result.size) * spikesWidth
 
-						translate(left = translateAmount) {
+						val bookmarksToDraw = if (timeline.isNotEmpty())
+						// min is required not to draw extra lines and max ensures it doesn't
+						// cross the line
+							bookMarks.filter { time -> time > timeline.min() && time < timeline.max() }
+						// otherwise its empty
+						else emptyList()
+
+						translate(left = translateLeft) {
 							drawGraph(
 								amplitudes = amplitudes,
 								spikesGap = spikesGap,
 								centerYAxis = centerYAxis,
 								spikesWidth = spikesWidth,
-								barColor = barColor,
+								barColor = plotColor,
 							)
 							drawTimeLine(
-								timeLine = timeLine,
-								bookMarks = bookMarks,
+								image = tag,
+								timeline = paddedTimeline,
+								bookMarks = bookmarksToDraw,
 								textMeasurer = textMeasurer,
 								spikesWidth = spikesWidth,
-								strokeWidthThick = spikesGap,
-								strokeWidthLight = 1.5.dp.toPx(),
+								strokeWidthThick = 2.dp.toPx(),
+								strokeWidthLight = 1.25.dp.toPx(),
 								bookMarkColor = bookMarkColor,
-								outlineColor = axisColor,
-								outlineVariant = axisColorVariant,
-								textStyle = textStyle,
-								textColor = textColor
+								outlineColor = timelineColor,
+								outlineVariant = timelineColorVariant,
+								textStyle = timelineTextStyle,
+								textColor = timelineTextColor
 							)
 						}
 					}
@@ -135,7 +151,8 @@ private fun DrawScope.drawGraph(
 }
 
 private fun DrawScope.drawTimeLine(
-	timeLine: List<LocalTime>,
+	image: Painter,
+	timeline: List<LocalTime>,
 	bookMarks: List<LocalTime>,
 	textMeasurer: TextMeasurer,
 	outlineColor: Color = Color.Gray,
@@ -147,18 +164,20 @@ private fun DrawScope.drawTimeLine(
 	textStyle: TextStyle = TextStyle(),
 	textColor: Color = Color.Black,
 ) {
-	timeLine.forEachIndexed { idx, time ->
+	timeline.forEachIndexed { idx, time ->
 		val xAxis = spikesWidth * idx.toFloat()
 
 		if (idx.mod(20) == 0) {
 
 			val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
-			val result = textMeasurer.measure(readable, style = textStyle, skipCache = true)
-			val negativeOffset = Offset(x = result.size.width / 2f, y = result.size.height / 2f)
+			val layoutResult = textMeasurer.measure(readable, style = textStyle)
+			val textOffset = with(layoutResult) {
+				Offset(size.width / 2f, size.height / 2f)
+			}
 
 			drawText(
-				textLayoutResult = result,
-				topLeft = Offset(xAxis, -1 * 8.dp.toPx()) - negativeOffset,
+				textLayoutResult = layoutResult,
+				topLeft = Offset(xAxis, -1 * 8.dp.toPx()) - textOffset,
 				color = textColor,
 			)
 
@@ -193,23 +212,34 @@ private fun DrawScope.drawTimeLine(
 		}
 
 		if (time in bookMarks) {
+
 			drawLine(
 				color = bookMarkColor,
-				start = Offset(xAxis, 0f),
-				end = Offset(xAxis, size.height),
+				start = Offset(xAxis, 2.dp.toPx()),
+				end = Offset(xAxis, size.height - 2.dp.toPx()),
 				strokeWidth = strokeWidthThick,
 				cap = StrokeCap.Round
 			)
+
 			drawCircle(
 				color = bookMarkColor,
 				radius = 3.dp.toPx(),
-				center = Offset(xAxis, 0f)
+				center = Offset(xAxis, 2.dp.toPx())
 			)
-			drawCircle(
-				color = bookMarkColor,
-				radius = 3.dp.toPx(),
-				center = Offset(xAxis, size.height)
-			)
+
+			val imageSize = 12.dp
+
+			translate(
+				left = xAxis - (imageSize.toPx() / 2f),
+				top = size.height + 4.dp.toPx()
+			) {
+				with(image) {
+					draw(
+						size = Size(imageSize.toPx(), imageSize.toPx()),
+						colorFilter = ColorFilter.tint(bookMarkColor)
+					)
+				}
+			}
 		}
 	}
 }
@@ -220,9 +250,8 @@ private fun List<LocalTime>.padWithTime(blockSize: Int, extra: Int = 10): List<L
 	// extra will create the translation effect properly
 	val amount = if (sizeDiff >= 0) sizeDiff else 0
 	return this + List(amount + extra) {
-		lastValue.toJavaLocalTime()
-			.plusNanos((it + 1) * 100_000_000L)
-			.toKotlinLocalTime()
+		val millis = lastValue.toMillisecondOfDay() + ((it + 1) * 100)
+		LocalTime.fromMillisecondOfDay(millis)
 	}
 }
 
