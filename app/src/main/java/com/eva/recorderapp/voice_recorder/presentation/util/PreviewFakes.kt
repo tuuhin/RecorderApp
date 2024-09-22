@@ -3,13 +3,13 @@ package com.eva.recorderapp.voice_recorder.presentation.util
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.toSelectableCategory
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
-import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
@@ -21,6 +21,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import java.time.LocalDateTime as JLocalDateTime
 
 object PreviewFakes {
@@ -44,7 +45,10 @@ object PreviewFakes {
 		PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE.take(100)
 
 	val FAKE_AUDIO_INFORMATION =
-		AudioPlayerInformation(waveforms = PlayerGraphInfo(waves = PREVIEW_RECORDER_AMPLITUDES))
+		AudioPlayerInformation(
+			waveforms = PREVIEW_RECORDER_AMPLITUDES,
+			trackData = PlayerTrackData(current = 4.seconds, total = 10.seconds)
+		)
 
 	val FAKE_VOICE_RECORDING_MODEL = RecordedVoiceModel(
 		id = 0L,
@@ -66,11 +70,12 @@ object PreviewFakes {
 		fileUri = "",
 		bitRateInKbps = 0f,
 		lastModified = now,
-		samplingRatekHz = 0f,
+		samplingRateKHz = 0f,
 		path = "this_is_a_path/file",
 		channel = 1,
 		size = 100L,
-		mimeType = "This/that"
+		mimeType = "This/that",
+		isFavourite = true
 	)
 
 	val FAKE_TRASH_RECORDINGS_MODEL = TrashRecordingModel(

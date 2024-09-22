@@ -210,7 +210,7 @@ sealed class RecordingsProvider(private val context: Context) {
 				channel = extractor?.channelCount ?: 0,
 				path = relPath,
 				mimeType = mimeType,
-				samplingRatekHz = (extractor?.sampleRate ?: 0) / 1000f
+				samplingRateKHz = (extractor?.sampleRate ?: 0) / 1000f
 			)
 		}
 	}

@@ -9,6 +9,7 @@ import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDat
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toMetadataEntity
 import com.eva.recorderapp.voice_recorder.data.recordings.utils.toModel
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.InvalidRecordingIdException
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.ExtraRecordingMetadataModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
@@ -18,6 +19,7 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -30,7 +32,7 @@ class RecordingSecondaryDataProviderImpl(
 	override val providesRecordingMetaData: Flow<ExtraRecordingMetaDataList>
 		get() = recordingsDao.getAllRecordingsMetaDataAsFlow()
 			.flowOn(Dispatchers.IO)
-			.map { entries -> entries.map { it.toModel() } }
+			.map { entries -> entries.map(RecordingsMetaDataEntity::toModel) }
 
 
 	override fun recordingsFromCategory(category: RecordingCategoryModel): Flow<List<ExtraRecordingMetadataModel>> {
@@ -39,6 +41,12 @@ class RecordingSecondaryDataProviderImpl(
 			.map { entries -> entries.map(RecordingsMetaDataEntity::toModel) }
 	}
 
+	override fun getRecordingFromIdAsFlow(recordingId: Long): Flow<ExtraRecordingMetadataModel?> {
+		return recordingsDao.getRecordingMetaDataFromIdAsFlow(recordingId)
+			.flowOn(Dispatchers.IO)
+			.filterNotNull()
+			.map(RecordingsMetaDataEntity::toModel)
+	}
 
 	override suspend fun insertRecordingMetaData(recordingId: Long): Resource<ExtraRecordingMetadataModel, Exception> {
 		return try {
@@ -186,6 +194,29 @@ class RecordingSecondaryDataProviderImpl(
 				recordingsDao.deleteRecordingsMetaDataBulk(entities)
 			}
 			Resource.Success(false)
+		} catch (e: SQLiteException) {
+			Resource.Error(e, "SQL EXCEPTION")
+		} catch (e: Exception) {
+			e.printStackTrace()
+			Resource.Error(e, e.message ?: "")
+		}
+	}
+
+	override suspend fun favouriteAudioFile(
+		file: AudioFileModel,
+		isFav: Boolean,
+	): Resource<Unit, Exception> {
+		return try {
+			val recordingId = file.id
+
+			withContext(Dispatchers.IO) {
+				val entity = recordingsDao.getRecordingMetaDataFromId(recordingId)
+					?: RecordingsMetaDataEntity(recordingId = recordingId)
+
+				val updated = entity.copy(isFavourite = isFav)
+				recordingsDao.updateOrInsertRecordingMetadata(updated)
+			}
+			Resource.Success(Unit)
 		} catch (e: SQLiteException) {
 			Resource.Error(e, "SQL EXCEPTION")
 		} catch (e: Exception) {

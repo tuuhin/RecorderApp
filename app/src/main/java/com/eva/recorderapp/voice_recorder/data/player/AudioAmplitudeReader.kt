@@ -10,12 +10,12 @@ import android.util.Log
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.exceptions.InvalidMimeTypeException
+import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -27,19 +27,21 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.microseconds
+import kotlin.time.DurationUnit
 
 private const val TAG = "AMPLITUDE_READER"
 typealias RMSValues = List<Float>
 
 private const val TWO_POWER_15 = 32_768f
-private const val TWO_POWER_31 = 2_14_74_83_648f
+private const val TWO_POWER_31 = 2_147_483_648L
 private const val TWO_POWER_7 = 128f
 
 class AudioAmplitudeReader(
 	private val context: Context,
 	private val fileProvider: PlayerFileProvider,
 ) {
-	private val PER_SAMPLE_POINTS = 3_000
 
 	private var extractor: MediaExtractor? = null
 	private var mediaCodec: MediaCodec? = null
@@ -47,9 +49,19 @@ class AudioAmplitudeReader(
 	private var _channels = 1
 	private var _pcmEncodingBit = 16
 
+	// rms sum
 	private var squaredSum = 0.0f
-	private var selectedAudioDurationInUs = 0L
+
+	// selected audio duration
+	private var audioDuration = 0.microseconds
+
+	// how many samples are read
 	private var sampleCount = AtomicInteger(0)
+
+	// how many sample points will be taken as 1
+	private var _perSamplePoints = 0
+
+	// total no. of expected point
 	private var _expectedPoints = 0
 
 	/**
@@ -60,19 +72,17 @@ class AudioAmplitudeReader(
 	val state = _codecState.asStateFlow()
 
 	private val _sampleData = MutableStateFlow<RMSValues>(emptyList())
-	private val filterSamples = _sampleData.filter(RMSValues::isNotEmpty)
 
 	@OptIn(ExperimentalCoroutinesApi::class)
-	val samples: Flow<FloatArray>
-		get() = filterSamples
+	val samples: Flow<RMSValues>
+		get() = _sampleData.filter(RMSValues::isNotEmpty)
 			.mapLatest { samples -> samples.paddedList(_expectedPoints) }
 			.distinctUntilChanged()
 			.map { it.normalize() }
 
 	private val _isEofReached = MutableStateFlow(false)
-	val isLoadingCompleted = _isEofReached.asSharedFlow()
 
-	suspend fun evaluteSamplesGraphFromAudioId(audioId: Long): Resource<Unit, Exception> {
+	suspend fun evaluateSamplesGraphFromAudioId(audioId: Long): Resource<Unit, Exception> {
 		return coroutineScope {
 			try {
 				// clearing the values
@@ -80,7 +90,7 @@ class AudioAmplitudeReader(
 				_isEofReached.update { false }
 				// get the audio uri
 				val audioUri = fileProvider.providesAudioFileUri(audioId)
-				Log.d(TAG, "EVALUTATING FOR URI: $audioUri")
+				Log.d(TAG, "EVALUATING FOR URI: $audioUri")
 				// start media codec
 				startMediaDecoder(audioUri)
 				Resource.Success(Unit)
@@ -116,7 +126,7 @@ class AudioAmplitudeReader(
 					_codecState.update { MediaCodecState.END }
 					_isEofReached.update { true }
 				} else {
-					// enque the buffer with the buffer info
+					// enqueue the buffer with the buffer info
 					codec.queueInputBuffer(
 						index, 0, sampleSize, extrac.sampleTime, 0
 					)
@@ -133,7 +143,7 @@ class AudioAmplitudeReader(
 		}
 
 		override fun onOutputBufferAvailable(
-			codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo
+			codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo,
 		) {
 			if (_codecState.value != MediaCodecState.EXEC) {
 				Log.d(TAG, "STATE SHOULD BE EXECUTING FOUND ${_codecState.value}")
@@ -173,68 +183,72 @@ class AudioAmplitudeReader(
 
 		override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
 			Log.d(TAG, "CHECKING METADATA FOR THE MEDIA")
-			_channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
-			_pcmEncodingBit = if (format.containsKey(MediaFormat.KEY_PCM_ENCODING)) {
-				when (format.getInteger(MediaFormat.KEY_PCM_ENCODING)) {
-					AudioFormat.ENCODING_PCM_8BIT -> 8
-					AudioFormat.ENCODING_PCM_16BIT -> 16
-					AudioFormat.ENCODING_PCM_32BIT -> 32
-					else -> 16
-				}
-			} else 16
-			val sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 
-			val totalNoOfPoints = sampleRate * (selectedAudioDurationInUs / 10_00_000)
-			val expectedPoints = (totalNoOfPoints / PER_SAMPLE_POINTS).toInt()
+			_channels = format.channels
+			_pcmEncodingBit = format.pcmEncoding
+			val sampleRate = format.sampleRate
 
-			_expectedPoints = expectedPoints
-			Log.d(TAG, "NO OF POINTS EXPECTED ARE :$expectedPoints")
+			val durationInSeconds = audioDuration.toInt(DurationUnit.SECONDS)
+
+			val totalPoints = sampleRate * durationInSeconds
+			if (_expectedPoints == 0) return
+			// TODO: Fix the hardcoded value 2 later
+			_perSamplePoints = totalPoints / (_expectedPoints * 2)
+			Log.d(TAG, "POINTS :$_expectedPoints ,DATA OF  :$_perSamplePoints")
 		}
 	}
 
 
-	private suspend fun startMediaDecoder(uri: Uri) = withContext(Dispatchers.Default) {
-		extractor = MediaExtractor().apply {
-			setDataSource(context, uri, null)
-		}
-		val format = extractor?.getTrackFormat(0) ?: return@withContext
-
-		val mimeType = format.getString(MediaFormat.KEY_MIME)
-		selectedAudioDurationInUs = format.getLong(MediaFormat.KEY_DURATION)
-		Log.d(TAG, "MIME TYPE SELECTED $mimeType")
-		if (mimeType == null) {
-			Log.d(TAG, "AMPLITUDE READER")
-			throw InvalidMimeTypeException()
-		}
-		// track seleted
-		extractor?.selectTrack(0)
-		Log.d(TAG, "TRACK SELECTED")
-		// creates the decorder
-		try {
-			// preparing the media codec
-			_codecState.update { MediaCodecState.STOP }
-			// configure the decoder
-			mediaCodec = MediaCodec.createDecoderByType(mimeType).apply {
-				configure(format, null, null, 0)
-				setCallback(codecCallback)
+	private suspend fun startMediaDecoder(uri: Uri) {
+		withContext(Dispatchers.Default) {
+			extractor = MediaExtractor().apply {
+				setDataSource(context, uri, null)
 			}
-			//start the decorder
-			mediaCodec?.start()
-			_codecState.update { MediaCodecState.EXEC }
-			Log.d(TAG, "MEDIA CODEC STARTED SUCCESSFULLY")
-		} catch (e: IllegalStateException) {
-			Log.e(TAG, "ILLEGAL STATE FOUND PLEASE CHECK", e)
-		} catch (e: Exception) {
-			e.printStackTrace()
+			val format = extractor?.getTrackFormat(0) ?: return@withContext
+
+			val mimeType = format.mimeType
+			audioDuration = format.duration
+
+			if (mimeType == null) {
+				Log.d(TAG, "AMPLITUDE READER")
+				throw InvalidMimeTypeException()
+			}
+
+			_expectedPoints = audioDuration.toInt(DurationUnit.MILLISECONDS)
+				.div(VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE)
+
+			Log.d(TAG, "MIME TYPE : $mimeType, DURATION: $audioDuration")
+			// track selected
+			extractor?.selectTrack(0)
+			Log.d(TAG, "TRACK SELECTED")
+			// creates the decoder
+			try {
+				// preparing the media codec
+				_codecState.update { MediaCodecState.STOP }
+				// configure the decoder
+				mediaCodec = MediaCodec.createDecoderByType(mimeType).apply {
+					configure(format, null, null, 0)
+					setCallback(codecCallback)
+				}
+				//start the decoder
+				mediaCodec?.start()
+				_codecState.update { MediaCodecState.EXEC }
+				Log.d(TAG, "MEDIA CODEC STARTED SUCCESSFULLY")
+			} catch (e: IllegalStateException) {
+				Log.e(TAG, "ILLEGAL STATE FOUND PLEASE CHECK", e)
+			} catch (e: Exception) {
+				e.printStackTrace()
+			}
 		}
 	}
 
 	@Synchronized
-	private fun evaluate_rms(value: Float) {
+	private fun evaluateRms(value: Float) {
+
 		val count = sampleCount.getAndIncrement()
-		if (count == PER_SAMPLE_POINTS) {
-			// the root mean square value of the sample points
-			val rms: Float = sqrt(squaredSum / PER_SAMPLE_POINTS)
+		if (count == _perSamplePoints) {
+			// the root-mean-square value of the sample points
+			val rms: Float = sqrt(squaredSum / _perSamplePoints)
 			_sampleData.update { it + rms }
 			sampleCount.set(0)
 			squaredSum = 0.0f
@@ -251,7 +265,7 @@ class AudioAmplitudeReader(
 				// skip the next value
 				get()
 			}
-			evaluate_rms(result)
+			evaluateRms(result)
 		}
 	}
 
@@ -262,10 +276,10 @@ class AudioAmplitudeReader(
 			val second = get().toInt() shl 8
 			val value = (first or second) / TWO_POWER_15
 			if (_channels == 2) {
-				//skipping the next 3 values
+				//skipping the next 2 values
 				repeat(2) { get() }
 			}
-			evaluate_rms(value)
+			evaluateRms(value)
 		}
 	}
 
@@ -282,29 +296,31 @@ class AudioAmplitudeReader(
 				//skipping the next 4 values
 				repeat(4) { get() }
 			}
-			evaluate_rms(value)
+			evaluateRms(value.toFloat())
 		}
 	}
 
-	private suspend fun List<Float>.normalize(): FloatArray {
-		return withContext(Dispatchers.Default) {
-			val max = maxOrNull() ?: 0f
-			val min = minOrNull() ?: 0f
-			val range = max - min
-			if (range <= 0) return@withContext floatArrayOf()
+	private fun RMSValues.normalize(): RMSValues {
 
-			map { amt ->
-				((amt - min) / range).coerceIn(0f..1f)
-			}.toFloatArray()
+		val max = maxOrNull() ?: 0f
+		val min = minOrNull() ?: 0f
+		val range = max - min
+		return if (range <= 0) emptyList()
+		else map { amt ->
+			((amt - min) / range).coerceIn(0f..1f)
 		}
+
 	}
 
 	private fun RMSValues.paddedList(
-		minSize: Int = 1,
-		builder: (Int) -> Float = { 0f }
+		length: Int = 1,
+		builder: (Int) -> Float = { 0f },
 	): RMSValues {
-		val extraSize = minSize - size
-		return if (extraSize <= 0) this
+		// FIXME: Fix the take amount later
+		// for the meantime we are taking the size sized list
+		val extraSize = length - this.size
+		return if (extraSize == 0) this
+		else if (extraSize > 0) this.take(length)
 		else this + List(extraSize, builder)
 	}
 
@@ -318,31 +334,32 @@ class AudioAmplitudeReader(
 		mediaCodec?.release()
 		mediaCodec = null
 		_codecState.update { MediaCodecState.END }
-		// reinititating the fields
+		// reinstituting the fields
 		squaredSum = 0f
-		selectedAudioDurationInUs = 0L
-		_expectedPoints = 0
+		audioDuration = 0.microseconds
+		_perSamplePoints = 0
 		sampleCount.set(0)
-	}
-
-	enum class MediaCodecState {
-		/**
-		 * [MediaCodec] stopped, its either started or configured
-		 */
-		STOP,
-
-		/**
-		 * [MediaCodec] state executing mediacodec is running
-		 */
-		EXEC,
-
-		/**
-		 * [MediaCodec] state released
-		 */
-		END
 	}
 }
 
+private val MediaFormat.pcmEncoding: Int
+	get() = if (containsKey(MediaFormat.KEY_PCM_ENCODING)) {
+		when (getInteger(MediaFormat.KEY_PCM_ENCODING)) {
+			AudioFormat.ENCODING_PCM_8BIT -> 8
+			AudioFormat.ENCODING_PCM_16BIT -> 16
+			AudioFormat.ENCODING_PCM_32BIT -> 32
+			else -> 16
+		}
+	} else 16
 
-private val MediaCodec.BufferInfo.isEof: Boolean
-	get() = flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
+private val MediaFormat.channels: Int
+	get() = getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+
+private val MediaFormat.sampleRate: Int
+	get() = getInteger(MediaFormat.KEY_SAMPLE_RATE)
+
+private val MediaFormat.duration: Duration
+	get() = getLong(MediaFormat.KEY_DURATION).microseconds
+
+private val MediaFormat.mimeType: String?
+	get() = getString(MediaFormat.KEY_MIME)

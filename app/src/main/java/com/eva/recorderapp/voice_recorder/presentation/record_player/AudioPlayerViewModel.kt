@@ -10,8 +10,9 @@ import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.data.player.AudioAmplitudeReader
 import com.eva.recorderapp.voice_recorder.data.player.MediaControllerProvider
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
+import com.eva.recorderapp.voice_recorder.domain.use_cases.PlayerFileProviderFromIdUseCase
 import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
 import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
@@ -19,20 +20,16 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioP
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ControllerEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
-import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerSliderControl
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -44,7 +41,8 @@ private const val TAG = "PLAYER_VIEWMODEL"
 @HiltViewModel
 class AudioPlayerViewModel @Inject constructor(
 	private val controller: MediaControllerProvider,
-	private val fileProvider: PlayerFileProvider,
+	private val fileProviderUseCase: PlayerFileProviderFromIdUseCase,
+	private val secondaryRecordingsData: RecordingsSecondaryDataProvider,
 	private val actionHelper: ShareRecordingsUtil,
 	private val samplesReader: AudioAmplitudeReader,
 	shortcutsUtil: AppShortcutFacade,
@@ -67,24 +65,6 @@ class AudioPlayerViewModel @Inject constructor(
 	private val _currentAudio = MutableStateFlow<AudioFileModel?>(null)
 	private val _isAudioLoaded = MutableStateFlow(false)
 
-	private val samplesToImmutableList = samplesReader.samples
-		.map { data ->
-			val builder = persistentListOf<Float>().builder()
-			data.forEach(builder::add)
-			builder.build()
-		}.distinctUntilChanged()
-
-	// graph data
-	private val graphData = combine(
-		samplesToImmutableList,
-		samplesReader.isLoadingCompleted
-	) { waves, isLoaded ->
-		PlayerGraphInfo(
-			isLoaded = isLoaded,
-			waves = waves
-		)
-	}
-
 	// media load state
 	val loadState = combine(
 		flow = _isAudioLoaded,
@@ -93,15 +73,15 @@ class AudioPlayerViewModel @Inject constructor(
 		transform = ::prepareLoadState
 	).stateIn(
 		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(3000),
+		started = SharingStarted.Eagerly,
 		initialValue = ContentLoadState.Loading
 	)
 
 	// player information
-	val playerInfo = combine(
+	val currentAudioState = combine(
 		playerSliderControls.trackData,
 		controller.playerMetaDataFlow,
-		graphData,
+		samplesReader.samples,
 	) { trackData, metadata, graph ->
 		AudioPlayerInformation(
 			trackData = trackData,
@@ -110,7 +90,7 @@ class AudioPlayerViewModel @Inject constructor(
 		)
 	}.stateIn(
 		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(2000),
+		started = SharingStarted.Eagerly,
 		initialValue = AudioPlayerInformation()
 	)
 
@@ -151,6 +131,7 @@ class AudioPlayerViewModel @Inject constructor(
 			PlayerEvents.OnMutePlayer -> audioPlayer?.onMuteDevice()
 			is PlayerEvents.OnSeekPlayer -> playerSliderControls.onSliderSlide(event.amount)
 			PlayerEvents.OnSeekComplete -> playerSliderControls.onSliderSlideComplete()
+			is PlayerEvents.ToggleIsFavourite -> toggleIsFavourite(event.file)
 		}
 	}
 
@@ -160,25 +141,45 @@ class AudioPlayerViewModel @Inject constructor(
 		}
 	}
 
-	private fun prepareCurrentRecording(audioId: Long) {
-		fileProvider
-			.getAudioFileInfo(id = audioId)
-			.onEach { res ->
-				when (res) {
-					Resource.Loading -> _isAudioLoaded.update { false }
-					is Resource.Error -> {
-						_isAudioLoaded.update { true }
-						val message = res.message ?: res.error.message ?: ""
-						_uiEvents.emit(UIEvents.ShowSnackBar(message))
-					}
+	private fun toggleIsFavourite(fileModel: AudioFileModel) = viewModelScope.launch {
+		val contentState = (loadState.value as? ContentLoadState.Content) ?: return@launch
+		val isAlreadyFav = contentState.data.isFavourite
 
-					is Resource.Success -> {
-						_isAudioLoaded.update { true }
-						_currentAudio.update { res.data }
-					}
-				}
-			}.launchIn(viewModelScope)
+		when (
+			val result = secondaryRecordingsData.favouriteAudioFile(fileModel, !isAlreadyFav)
+		) {
+			is Resource.Error -> {
+				val message =
+					result.message ?: result.error.message ?: "Favourites cannot be updated"
+				_uiEvents.emit(UIEvents.ShowSnackBar(message))
+			}
+
+			is Resource.Success -> {
+				val message = result.message ?: "Favourites updated"
+				_uiEvents.emit(UIEvents.ShowSnackBar(message))
+			}
+
+			else -> {}
+		}
 	}
+
+	private fun prepareCurrentRecording(audioId: Long) = fileProviderUseCase.invoke(audioId)
+		.onEach { res ->
+			when (res) {
+				Resource.Loading -> _isAudioLoaded.update { false }
+				is Resource.Error -> {
+					_isAudioLoaded.update { true }
+					val message = res.message ?: res.error.message ?: ""
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+				}
+
+				is Resource.Success -> {
+					_isAudioLoaded.update { true }
+					_currentAudio.update { res.data }
+				}
+			}
+		}.launchIn(viewModelScope)
+
 
 	private fun prepareLoadState(
 		isLoaded: Boolean,
@@ -195,8 +196,6 @@ class AudioPlayerViewModel @Inject constructor(
 		val currentAudio = _currentAudio.filterNotNull()
 
 		combine(controller.playerFlow, currentAudio) { player, file ->
-
-			Log.d(TAG, "PREPARING PLAYER")
 			when (val result = player.preparePlayer(file)) {
 				is Resource.Error -> _uiEvents.emit(UIEvents.ShowSnackBar(result.message ?: ""))
 				else -> {}
@@ -209,10 +208,11 @@ class AudioPlayerViewModel @Inject constructor(
 
 		Log.d(TAG, "STARTING TO COMPUTE SAMPLES")
 
-		val result = samplesReader.evaluteSamplesGraphFromAudioId(audioId)
+		val result = samplesReader.evaluateSamplesGraphFromAudioId(audioId)
 		// if there is an error show the error
-		(result as? Resource.Error)?.let {
-			_uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: ""))
+		(result as? Resource.Error)?.let { err ->
+			val message = err.message ?: err.error.message ?: ""
+			_uiEvents.emit(UIEvents.ShowSnackBar(message))
 		}
 	}
 

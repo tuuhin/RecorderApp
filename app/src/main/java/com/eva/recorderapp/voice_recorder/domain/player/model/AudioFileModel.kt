@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.domain.player.model
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 data class AudioFileModel(
 	val id: Long,
@@ -13,12 +14,13 @@ data class AudioFileModel(
 	val lastModified: LocalDateTime,
 	val channel: Int,
 	val bitRateInKbps: Float,
-	val samplingRatekHz: Float,
+	val samplingRateKHz: Float,
 	val path: String,
 	val fileUri: String,
 	val mimeType: String,
+	val isFavourite: Boolean = false,
 ) {
 	val durationAsLocaltime: LocalTime
-		get() = LocalTime.fromSecondOfDay(duration.inWholeSeconds.toInt())
+		get() = LocalTime.fromSecondOfDay(duration.toInt(DurationUnit.SECONDS))
 
 }

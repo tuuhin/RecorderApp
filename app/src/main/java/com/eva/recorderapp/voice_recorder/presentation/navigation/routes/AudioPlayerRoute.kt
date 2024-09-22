@@ -43,7 +43,7 @@ fun NavGraphBuilder.audioPlayerRoute(
 	val viewModel = hiltViewModel<AudioPlayerViewModel>()
 
 	val contentState by viewModel.loadState.collectAsStateWithLifecycle()
-	val playerState by viewModel.playerInfo.collectAsStateWithLifecycle()
+	val playerState by viewModel.currentAudioState.collectAsStateWithLifecycle()
 
 	// lifeCycleState
 	val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()

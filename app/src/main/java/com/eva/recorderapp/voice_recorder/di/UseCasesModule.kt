@@ -1,7 +1,9 @@
 package com.eva.recorderapp.voice_recorder.di
 
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
+import com.eva.recorderapp.voice_recorder.domain.use_cases.PlayerFileProviderFromIdUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.RecordingsFromCategoriesUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.RenameRecordingUseCase
 import dagger.Module
@@ -16,7 +18,7 @@ object UseCasesModule {
 
 	@Provides
 	@ViewModelScoped
-	fun bindsRecordingsUseCase(
+	fun providesRecordingWithCategoriesUseCase(
 		recordings: VoiceRecordingsProvider,
 		secondaryRecordingsData: RecordingsSecondaryDataProvider,
 	): RecordingsFromCategoriesUseCase = RecordingsFromCategoriesUseCase(
@@ -29,4 +31,15 @@ object UseCasesModule {
 	fun providesRenameUseCase(
 		recordings: VoiceRecordingsProvider,
 	): RenameRecordingUseCase = RenameRecordingUseCase(recordings)
+
+
+	@Provides
+	@ViewModelScoped
+	fun providesRecordingWithMetadataUseCase(
+		fileProvider: PlayerFileProvider,
+		secondaryRecordingsData: RecordingsSecondaryDataProvider,
+	): PlayerFileProviderFromIdUseCase = PlayerFileProviderFromIdUseCase(
+		playerFileProvider = fileProvider,
+		metadataProvider = secondaryRecordingsData
+	)
 }

@@ -30,6 +30,9 @@ interface RecordingsMetadataDao {
 	@Query("SELECT * from recording_meta_data WHERE RECORDING_ID=:id")
 	suspend fun getRecordingMetaDataFromId(id: Long): RecordingsMetaDataEntity?
 
+	@Query("SELECT * from recording_meta_data WHERE RECORDING_ID=:id")
+	fun getRecordingMetaDataFromIdAsFlow(id: Long): Flow<RecordingsMetaDataEntity?>
+
 	@Query("SELECT * FROM RECORDING_META_DATA WHERE RECORDING_ID in (:recordingIds) ")
 	suspend fun getRecordingMetaDataFromIds(recordingIds: List<Long>): List<RecordingsMetaDataEntity>
 
