@@ -14,7 +14,7 @@ interface AudioFilePlayer {
 	fun onMuteDevice()
 
 	/**
-	 * Contols the  playback speed of the player
+	 * Controls the  playback speed of the player
 	 * @param playBackSpeed Playback speed for the current player
 	 * @see PlayerPlayBackSpeed
 	 */
@@ -28,7 +28,7 @@ interface AudioFilePlayer {
 
 	/**
 	 * Seek the player to a certain duration on the timeline
-	 * @param duration Amount of [Duration] to be seeked on the player
+	 * @param duration Amount of [Duration] to be sought on the player
 	 */
 	fun onSeekDuration(duration: Duration)
 
@@ -41,7 +41,7 @@ interface AudioFilePlayer {
 
 	/**
 	 * Seeks the player by n [duration] forward or backward
-	 * @param rewind If player is to be rewind set [rewind] to [true]
+	 * @param rewind If player is to be rewind set [rewind]
 	 * @param duration The amount of duration to seek forward
 	 */
 	fun seekPlayerByNDuration(duration: Duration = 2.seconds, rewind: Boolean = false)
@@ -63,7 +63,7 @@ interface AudioFilePlayer {
 	suspend fun stopPlayer()
 
 	/**
-	 * Remove callbacks and resouces associated with the player
+	 * Remove callbacks and resources associated with the player
 	 */
 	fun cleanUp()
 }

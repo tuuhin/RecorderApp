@@ -13,10 +13,10 @@ import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.data.util.asLocalTime
 import com.eva.recorderapp.voice_recorder.data.util.roundToClosestSeconds
-import com.eva.recorderapp.voice_recorder.domain.recorder.CreateRecordingBookmarkRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
 import dagger.hilt.android.AndroidEntryPoint
@@ -59,7 +59,7 @@ class VoiceRecorderService : LifecycleService() {
 	lateinit var phoneStateObserverUseCase: PhoneStateObserverUsecase
 
 	@Inject
-	lateinit var createBookMarksFacade: CreateRecordingBookmarkRepo
+	lateinit var bookmarksProvider: RecordingBookmarksProvider
 
 
 	private val binder = LocalBinder()
@@ -262,7 +262,7 @@ class VoiceRecorderService : LifecycleService() {
 		val job = lifecycleScope.launch {
 			// bookmarks should be lesser than recorderTime
 			val bookmarks = bookMarks.value.filter { it <= recorderTime.value }
-			val result = createBookMarksFacade.createBookMarks(recordingId, bookmarks)
+			val result = bookmarksProvider.createBookMarks(recordingId, bookmarks)
 
 			//show save toast
 			(result as? Resource.Success)?.let {

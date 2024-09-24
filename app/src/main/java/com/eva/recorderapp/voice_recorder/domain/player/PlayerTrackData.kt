@@ -2,6 +2,7 @@ package com.eva.recorderapp.voice_recorder.domain.player
 
 import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
@@ -34,15 +35,21 @@ data class PlayerTrackData(
 			return ratio.coerceIn(0f, 1f)
 		}
 
-	fun calculateSeekAmount(seek: Float): Double {
+	fun calculateSeekAmount(seek: Float): Duration {
+		try {
+			require(value = seek in 0f..1f)
 
-		require(value = seek in 0f..1f)
+			val amount = if (total.isPositive() && total.isFinite()) {
+				val totalInFloat = total.toDouble(DurationUnit.MILLISECONDS)
+				val seekAmount = seek * totalInFloat
+				seekAmount.coerceIn(0.0, totalInFloat)
+			} else 0.0
+			return amount.milliseconds
 
-		return if (total.isPositive() && total.isFinite()) {
-			val totalInFloat = total.toDouble(DurationUnit.MILLISECONDS)
-			val seekAmount = seek * totalInFloat
-			val amt = seekAmount.coerceIn(0.0, totalInFloat)
-			return amt
-		} else 0.0
+		} catch (e: Exception) {
+			e.printStackTrace()
+			return 0.milliseconds
+		}
+
 	}
 }

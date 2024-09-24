@@ -1,12 +1,9 @@
 package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
-import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsBookmarkDao
-import com.eva.recorderapp.voice_recorder.data.recorder.CreateRecordingBookmarkRepoImpl
 import com.eva.recorderapp.voice_recorder.data.recorder.VoiceRecorderImpl
 import com.eva.recorderapp.voice_recorder.data.service.NotificationHelper
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
-import com.eva.recorderapp.voice_recorder.domain.recorder.CreateRecordingBookmarkRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
@@ -63,10 +60,4 @@ object RecorderServiceModule {
 		observer = phoneStateObserver,
 		voiceRecorder = voiceRecorder
 	)
-
-	@Provides
-	@ServiceScoped
-	fun providesCreateRecordingBookMarkRepo(
-		dao: RecordingsBookmarkDao,
-	): CreateRecordingBookmarkRepo = CreateRecordingBookmarkRepoImpl(dao)
 }

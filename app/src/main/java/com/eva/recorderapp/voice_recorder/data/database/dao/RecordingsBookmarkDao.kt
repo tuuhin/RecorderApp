@@ -11,13 +11,16 @@ import kotlinx.coroutines.flow.Flow
 interface RecordingsBookmarkDao {
 
 	@Upsert
-	suspend fun addBookMark(bookmark: RecordingBookMarkEntity): Long
+	suspend fun insertOrUpdateBookmark(bookmark: RecordingBookMarkEntity): Long
 
 	@Upsert
-	suspend fun addBookMarks(bookmarks: Collection<RecordingBookMarkEntity>)
+	suspend fun insertOrUpdateBookmarks(bookmarks: Collection<RecordingBookMarkEntity>)
 
 	@Query("SELECT * FROM RECORDING_BOOKMARK_TABLE WHERE RECORDING_ID=:recordId")
 	fun getBookMarksFromRecordingIdAsFlow(recordId: Long): Flow<List<RecordingBookMarkEntity>>
+
+	@Query("SELECT * FROM RECORDING_BOOKMARK_TABLE WHERE BOOKMARK_ID=:bookmarkId")
+	suspend fun getBookMarkFromBookMarkId(bookmarkId: Long): RecordingBookMarkEntity?
 
 	@Query("DELETE FROM RECORDING_BOOKMARK_TABLE WHERE RECORDING_ID=:recordId")
 	suspend fun deleteBookMarksByRecordingId(recordId: Long)

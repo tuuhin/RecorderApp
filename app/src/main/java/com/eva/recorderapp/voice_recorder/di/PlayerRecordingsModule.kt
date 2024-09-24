@@ -5,6 +5,7 @@ import com.eva.recorderapp.voice_recorder.data.player.AudioAmplitudeReader
 import com.eva.recorderapp.voice_recorder.data.player.MediaControllerProvider
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.PlayerFileProviderImpl
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
+import com.eva.recorderapp.voice_recorder.domain.player.WaveformsReader
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,14 +25,14 @@ object PlayerRecordingsModule {
 
 	@Provides
 	@Singleton
-	fun providesVisualizer(
+	fun providesWaveformsReader(
 		@ApplicationContext context: Context,
 		fileProvider: PlayerFileProvider,
-	): AudioAmplitudeReader = AudioAmplitudeReader(context, fileProvider)
+	): WaveformsReader = AudioAmplitudeReader(context, fileProvider)
 
 	@Provides
 	@Singleton
 	fun providesMediaController(
-		@ApplicationContext context: Context
+		@ApplicationContext context: Context,
 	): MediaControllerProvider = MediaControllerProvider(context)
 }

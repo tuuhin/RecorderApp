@@ -207,16 +207,19 @@ class RecordingSecondaryDataProviderImpl(
 		isFav: Boolean,
 	): Resource<Unit, Exception> {
 		return try {
-			val recordingId = file.id
-
 			withContext(Dispatchers.IO) {
+				val recordingId = file.id
 				val entity = recordingsDao.getRecordingMetaDataFromId(recordingId)
 					?: RecordingsMetaDataEntity(recordingId = recordingId)
 
 				val updated = entity.copy(isFavourite = isFav)
 				recordingsDao.updateOrInsertRecordingMetadata(updated)
 			}
-			Resource.Success(Unit)
+			val message = if (isFav)
+				context.getString(R.string.recordings_add_to_favourite_success)
+			else context.getString(R.string.recordings_remove_favourite_failed)
+
+			Resource.Success(Unit, message = message)
 		} catch (e: SQLiteException) {
 			Resource.Error(e, "SQL EXCEPTION")
 		} catch (e: Exception) {
