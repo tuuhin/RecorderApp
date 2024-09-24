@@ -2,15 +2,24 @@ package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,14 +28,16 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerMetaData
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerPlayBackSpeed
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerState
 import com.eva.recorderapp.voice_recorder.presentation.composables.IconButtonWithText
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioPlayerActions(
 	playerMetaData: PlayerMetaData,
@@ -35,22 +46,36 @@ fun AudioPlayerActions(
 	modifier: Modifier = Modifier,
 	onRepeatModeChange: (Boolean) -> Unit = {},
 	onMutePlayer: () -> Unit = {},
-	onSpeedChange: () -> Unit = {},
 	onForward: () -> Unit = {},
 	onRewind: () -> Unit = {},
+	onSpeedSelected: (PlayerPlayBackSpeed) -> Unit = {},
 	shape: Shape = MaterialTheme.shapes.large,
 	color: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
 	contentColor: Color = contentColorFor(backgroundColor = color),
-	shadowElevation: Dp = 2.dp,
-	tonalElevation:Dp = 2.dp,
 ) {
+	val playBackSpeedBottomSheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+	val scope = rememberCoroutineScope()
+
+	var openPlayBackSpeedBottomSheet by remember { mutableStateOf(false) }
+
+	if (openPlayBackSpeedBottomSheet) {
+		ModalBottomSheet(
+			sheetState = playBackSpeedBottomSheet,
+			onDismissRequest = { openPlayBackSpeedBottomSheet = false },
+		) {
+			PlayBackSpeedSelector(
+				selectedSpeed = playerMetaData.playBackSpeed,
+				onSpeedSelected = onSpeedSelected,
+				contentPadding = PaddingValues(all = dimensionResource(id = R.dimen.bottom_sheet_padding_lg))
+			)
+		}
+	}
+
 	Surface(
 		modifier = modifier,
 		shape = shape,
 		color = color,
 		contentColor = contentColor,
-		shadowElevation = shadowElevation,
-		tonalElevation = tonalElevation
 	) {
 		Column(
 			modifier = Modifier
@@ -96,7 +121,10 @@ fun AudioPlayerActions(
 						)
 					},
 					text = stringResource(id = R.string.player_action_speed),
-					onClick = onSpeedChange,
+					onClick = {
+						scope.launch { playBackSpeedBottomSheet.show() }
+							.invokeOnCompletion { openPlayBackSpeedBottomSheet = true }
+					},
 				)
 			}
 			Row(

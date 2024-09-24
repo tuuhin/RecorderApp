@@ -35,7 +35,9 @@ fun RecordingBinScreenTopBar(
 	modifier: Modifier = Modifier,
 	scrollBehavior: TopAppBarScrollBehavior? = null,
 	navigation: @Composable () -> Unit = {},
-	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(
+		actionIconContentColor = MaterialTheme.colorScheme.primary
+	),
 ) {
 	AnimatedContent(
 		targetState = isSelectedMode,

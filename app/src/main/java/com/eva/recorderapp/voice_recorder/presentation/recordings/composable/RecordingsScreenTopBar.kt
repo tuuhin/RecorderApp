@@ -60,7 +60,10 @@ fun RecordingsScreenTopBar(
 	onNavigateToBin: () -> Unit = {},
 	onSortItems: () -> Unit = {},
 	onManageCategories: () -> Unit = {},
-	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(
+		actionIconContentColor = MaterialTheme.colorScheme.primary,
+		navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+	),
 ) {
 
 	var showDropDown by remember { mutableStateOf(false) }

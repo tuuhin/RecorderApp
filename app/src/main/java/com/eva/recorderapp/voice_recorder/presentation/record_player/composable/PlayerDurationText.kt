@@ -21,7 +21,7 @@ import kotlinx.datetime.format
 fun PlayerDurationText(
 	playedDuration: LocalTime,
 	totalDuration: LocalTime,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 	val totalDurationText by remember(totalDuration) {
 		derivedStateOf {
@@ -45,13 +45,13 @@ fun PlayerDurationText(
 			text = playedDurationText,
 			modifier = modifier,
 			style = MaterialTheme.typography.displayMedium,
-			color = MaterialTheme.colorScheme.secondary,
+			color = MaterialTheme.colorScheme.primary,
 			fontFamily = DownloadableFonts.CLOCK_FACE,
 		)
 		Text(
 			text = totalDurationText,
-			style = MaterialTheme.typography.headlineMedium,
-			color = MaterialTheme.colorScheme.primary,
+			style = MaterialTheme.typography.headlineSmall,
+			color = MaterialTheme.colorScheme.secondary,
 			fontFamily = DownloadableFonts.NOVA_MONO_FONT_FAMILY
 		)
 	}
@@ -60,7 +60,7 @@ fun PlayerDurationText(
 @Composable
 fun PlayerDurationText(
 	track: PlayerTrackData,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 	PlayerDurationText(
 		playedDuration = track.currentAsLocalTime,

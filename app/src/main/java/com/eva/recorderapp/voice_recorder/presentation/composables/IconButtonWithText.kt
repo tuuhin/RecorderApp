@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Key
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
@@ -23,11 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
 @Composable
@@ -41,7 +41,7 @@ fun IconButtonWithText(
 	shape: Shape = MaterialTheme.shapes.medium,
 	textStyle: TextStyle = MaterialTheme.typography.labelMedium,
 	colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
-	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
 
 	val indication = LocalIndication.current
@@ -83,7 +83,12 @@ fun IconButtonWithText(
 private fun IconButtonWithTextPreview() = RecorderAppTheme {
 	Surface {
 		IconButtonWithText(
-			icon = { Icon(imageVector = Icons.Default.Key, contentDescription = "Key") },
+			icon = {
+				Icon(
+					painter = painterResource(R.drawable.ic_category_label),
+					contentDescription = "Key"
+				)
+			},
 			text = "Icon key",
 			onClick = {}
 		)

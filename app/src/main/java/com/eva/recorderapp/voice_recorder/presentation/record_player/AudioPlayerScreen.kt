@@ -1,5 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -31,22 +33,31 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.AudioPlayerScreenTopBar
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ContentStateAnimatedContainer
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerActionsAndSlider
+import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerAmplitudeGraph
+import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerBookMarks
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerDurationText
-import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.PlayerGraphAndBookMarks
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioFileEvent
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.BookMarkEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.CreateOrEditBookMarkState
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
+import com.eva.recorderapp.voice_recorder.presentation.util.PlayerGraphData
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioPlayerScreen(
+	waveforms: PlayerGraphData,
+	bookMarkState: CreateOrEditBookMarkState,
 	playerState: AudioPlayerInformation,
 	loadState: ContentLoadState,
 	onPlayerEvents: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
+	onFileEvent: (AudioFileEvent) -> Unit = {},
+	onBookmarkEvent: (BookMarkEvents) -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 	onNavigateToEdit: () -> Unit = {},
 	onRenameItem: (Long) -> Unit = {},
@@ -81,17 +92,13 @@ fun AudioPlayerScreen(
 				state = loadState,
 				navigation = navigation,
 				onEdit = onNavigateToEdit,
-				onRenameOption = {
-					(loadState as? ContentLoadState.Content)?.let { state ->
-						val audioId = state.data.id
-						onRenameItem(audioId)
-					}
-				},
 				onDetailsOptions = {
 					scope.launch { metaDataBottomSheet.show() }
 						.invokeOnCompletion { openMetaDataBottomSheet = true }
 				},
-				onShareOption = { onPlayerEvents(PlayerEvents.ShareCurrentAudioFile) },
+				onShareOption = { onFileEvent(AudioFileEvent.ShareCurrentAudioFile) },
+				onRenameOption = { model -> onRenameItem(model.id) },
+				onToggleFavourite = { model -> onFileEvent(AudioFileEvent.ToggleIsFavourite(model)) }
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
@@ -103,26 +110,36 @@ fun AudioPlayerScreen(
 				.padding(
 					start = dimensionResource(id = R.dimen.sc_padding),
 					end = dimensionResource(R.dimen.sc_padding),
-					top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
-					bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
+					top = dimensionResource(R.dimen.sc_padding) + scPadding.calculateTopPadding(),
+					bottom = dimensionResource(R.dimen.sc_padding) + scPadding.calculateBottomPadding()
 				)
 				.fillMaxSize(),
-			onSuccess = { _ ->
+			onSuccess = {
 				PlayerDurationText(
 					track = playerState.trackData,
 					modifier = Modifier.align(Alignment.TopCenter)
 				)
-				PlayerGraphAndBookMarks(
-					trackData = playerState.trackData,
-					graphData = { playerState.waveforms },
-					isGraphMode = true,
-					onToggleListAndWave = { },
-					onAddBookMark = { },
+				Column(
 					modifier = Modifier
 						.fillMaxWidth()
 						.align(Alignment.Center)
-						.offset(y = (-80).dp)
-				)
+						.offset(y = (-80).dp),
+					horizontalAlignment = Alignment.CenterHorizontally,
+					verticalArrangement = Arrangement.spacedBy(4.dp),
+				) {
+					PlayerAmplitudeGraph(
+						trackData = playerState.trackData,
+						graphData = waveforms,
+						bookMarks = playerState.bookmarksTimestamps,
+						modifier = Modifier.fillMaxWidth()
+					)
+					PlayerBookMarks(
+						playerState = playerState,
+						createOrEditState = bookMarkState,
+						onBookmarkEvent = onBookmarkEvent,
+						modifier = Modifier.fillMaxWidth()
+					)
+				}
 				PlayerActionsAndSlider(
 					metaData = playerState.playerMetaData,
 					trackData = playerState.trackData,
@@ -140,7 +157,9 @@ fun AudioPlayerScreen(
 @Composable
 private fun AudioPlayerScreenPreview() = RecorderAppTheme {
 	AudioPlayerScreen(
+		waveforms = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
 		playerState = PreviewFakes.FAKE_AUDIO_INFORMATION,
+		bookMarkState = CreateOrEditBookMarkState(),
 		loadState = ContentLoadState.Content(data = PreviewFakes.FAKE_AUDIO_MODEL),
 		onPlayerEvents = {},
 		navigation = {

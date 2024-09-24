@@ -24,6 +24,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsS
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerScreen
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerViewModel
+import com.eva.recorderapp.voice_recorder.presentation.record_player.CreateBookMarksViewModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ControllerLifeCyleObserver
 
 fun NavGraphBuilder.audioPlayerRoute(
@@ -41,21 +42,31 @@ fun NavGraphBuilder.audioPlayerRoute(
 	val lifecycleOwner = LocalLifecycleOwner.current
 
 	val viewModel = hiltViewModel<AudioPlayerViewModel>()
+	val bookMarksViewmodel = hiltViewModel<CreateBookMarksViewModel>()
 
 	val contentState by viewModel.loadState.collectAsStateWithLifecycle()
+	val createOrEditBookMarkState by bookMarksViewmodel.bookmarkState.collectAsStateWithLifecycle()
 	val playerState by viewModel.currentAudioState.collectAsStateWithLifecycle()
+	val waveforms by viewModel.waveforms.collectAsStateWithLifecycle()
 
 	// lifeCycleState
 	val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
-	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
+	// ui handler for player viewmodel
+	UiEventsSideEffect(eventsFlow = viewModel::uiEvent, onPopScreenEvent = controller::popBackStack)
+	// ui handler for bookmarks viewmodel
+	UiEventsSideEffect(eventsFlow = bookMarksViewmodel::uiEvent)
 
 	ControllerLifeCyleObserver(audioId = route.audioId, onEvent = viewModel::onControllerEvents)
 
 	AudioPlayerScreen(
+		waveforms = { waveforms },
 		loadState = contentState,
 		playerState = playerState,
+		bookMarkState = createOrEditBookMarkState,
 		onPlayerEvents = viewModel::onPlayerEvents,
+		onBookmarkEvent = bookMarksViewmodel::onBookMarkEvent,
+		onFileEvent = viewModel::onFileEvents,
 		onNavigateToEdit = dropUnlessResumed {
 			controller.navigate(NavRoutes.AudioEditor)
 		},
@@ -78,5 +89,4 @@ fun NavGraphBuilder.audioPlayerRoute(
 			}
 		},
 	)
-
 }

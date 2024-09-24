@@ -80,7 +80,6 @@ fun AudioFileMetaDataSheetContent(
 				id = if (audio.channel == 1) R.string.audio_metadata_channel_mono
 				else R.string.audio_metadata_channel_stereo
 			)
-
 		)
 		FileMetaData(
 			title = stringResource(id = R.string.audio_metadata_bitrate_title),
@@ -88,7 +87,7 @@ fun AudioFileMetaDataSheetContent(
 		)
 		FileMetaData(
 			title = stringResource(id = R.string.audio_metadata_sample_rate_title),
-			text = stringResource(id = R.string.audio_metadata_sample_rate, audio.samplingRatekHz)
+			text = stringResource(id = R.string.audio_metadata_sample_rate, audio.samplingRateKHz)
 		)
 		FileMetaData(
 			title = stringResource(id = R.string.audio_metadata_path_title),

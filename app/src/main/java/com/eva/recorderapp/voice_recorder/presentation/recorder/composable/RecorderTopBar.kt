@@ -8,13 +8,13 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Text
@@ -50,7 +50,8 @@ fun RecorderTopBar(
 	onNavigateToRecordings: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 	onAddBookMark: () -> Unit = {},
-	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+	colors: TopAppBarColors = TopAppBarDefaults
+		.topAppBarColors(actionIconContentColor = MaterialTheme.colorScheme.primary),
 ) {
 	var showDropDown by remember { mutableStateOf(false) }
 
@@ -96,7 +97,6 @@ fun RecorderTopBar(
 				Box {
 					IconButton(
 						onClick = { showDropDown = !showDropDown },
-						colors = IconButtonDefaults.iconButtonColors(contentColor = colors.actionIconContentColor)
 					) {
 						Icon(
 							imageVector = Icons.Default.MoreVert,
@@ -147,5 +147,13 @@ private fun RecorderTopBarPreview(
 	@PreviewParameter(BooleanPreviewParams::class)
 	showActions: Boolean,
 ) = RecorderAppTheme {
-	RecorderTopBar(showActions = showActions)
+	RecorderTopBar(
+		showActions = showActions,
+		navigation = {
+			Icon(
+				imageVector = Icons.AutoMirrored.Default.ArrowBack,
+				contentDescription = stringResource(R.string.back_arrow)
+			)
+		},
+	)
 }

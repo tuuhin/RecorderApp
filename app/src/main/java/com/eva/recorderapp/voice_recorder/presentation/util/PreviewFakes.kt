@@ -4,6 +4,7 @@ import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
@@ -16,6 +17,7 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toS
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -44,11 +46,9 @@ object PreviewFakes {
 	val PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY =
 		PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE.take(100)
 
-	val FAKE_AUDIO_INFORMATION =
-		AudioPlayerInformation(
-			waveforms = PREVIEW_RECORDER_AMPLITUDES,
-			trackData = PlayerTrackData(current = 4.seconds, total = 10.seconds)
-		)
+	val FAKE_AUDIO_INFORMATION = AudioPlayerInformation(
+		trackData = PlayerTrackData(current = 4.seconds, total = 10.seconds)
+	)
 
 	val FAKE_VOICE_RECORDING_MODEL = RecordedVoiceModel(
 		id = 0L,
@@ -130,5 +130,20 @@ object PreviewFakes {
 		} + FAKE_CATEGORY_WITH_COLOR_AND_TYPE + RecordingCategoryModel.ALL_CATEGORY).reversed()
 			.toImmutableList()
 
+	val FAKE_BOOKMARK_MODEL = AudioBookmarkModel(
+		bookMarkId = 0L,
+		text = "Android",
+		timeStamp = now.time,
+		recordingId = 0L
+	)
+
+	val FAKE_BOOKMARKS_LIST = List(20) {
+		AudioBookmarkModel(
+			bookMarkId = it.toLong(),
+			text = "Hello world",
+			timeStamp = LocalTime.fromSecondOfDay(400),
+			recordingId = 0L
+		)
+	}.toPersistentList()
 
 }

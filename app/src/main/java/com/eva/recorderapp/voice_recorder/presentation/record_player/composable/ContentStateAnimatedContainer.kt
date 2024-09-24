@@ -34,6 +34,7 @@ fun ContentStateAnimatedContainer(
 		targetState = loadState,
 		modifier = modifier,
 		transitionSpec = { animateLoadState() },
+		label = "Animating content state",
 		contentAlignment = Alignment.Center
 	) { state ->
 		Box(
@@ -59,7 +60,7 @@ private fun AnimatedContentTransitionScope<ContentLoadState>.animateLoadState(
 		durationMillis = 800,
 		easing = FastOutSlowInEasing
 	),
-	normalTrasnsition: FiniteAnimationSpec<Float> = tween(
+	normalTransition: FiniteAnimationSpec<Float> = tween(
 		durationMillis = 200,
 		delayMillis = 60,
 		easing = FastOutLinearInEasing
@@ -80,5 +81,5 @@ private fun AnimatedContentTransitionScope<ContentLoadState>.animateLoadState(
 			),
 			shrinkTowards = Alignment.CenterVertically,
 		)
-	} else fadeIn(normalTrasnsition) togetherWith fadeOut(normalTrasnsition)
+	} else fadeIn(normalTransition) togetherWith fadeOut(normalTransition)
 }

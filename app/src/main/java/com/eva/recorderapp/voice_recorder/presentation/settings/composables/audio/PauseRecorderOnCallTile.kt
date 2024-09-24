@@ -47,12 +47,12 @@ fun PauseRecorderOnCallTile(
 
 	SettingsItemWithSwitch(
 		isSelected = isSelected,
-		title = stringResource(id = R.string.recording_settings_pase_recorder_on_calls),
+		title = stringResource(id = R.string.recording_settings_pause_recorder_on_calls),
 		text = stringResource(id = R.string.recording_settings_pause_recorder_on_call_text),
 		leading = {
 			Icon(
 				painter = painterResource(id = R.drawable.ic_call),
-				contentDescription = stringResource(id = R.string.recording_settings_pase_recorder_on_calls),
+				contentDescription = stringResource(id = R.string.recording_settings_pause_recorder_on_calls),
 			)
 		},
 		modifier = modifier,
