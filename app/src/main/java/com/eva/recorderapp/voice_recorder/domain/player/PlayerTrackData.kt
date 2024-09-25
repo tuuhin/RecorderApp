@@ -7,24 +7,14 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
 data class PlayerTrackData(
-	val current: Duration = 0.seconds,
-	val total: Duration = 0.seconds,
+	private val current: Duration = 0.seconds,
+	private val total: Duration = 0.seconds,
 ) {
 	val currentAsLocalTime: LocalTime
 		get() = LocalTime.fromMillisecondOfDay(current.toInt(DurationUnit.MILLISECONDS))
 
 	val totalAsLocalTime: LocalTime
-		get() = LocalTime.fromSecondOfDay(total.inWholeSeconds.toInt())
-
-	private val leftDuration: Duration
-		get() {
-			val newDuration = total.minus(current)
-			return if (newDuration.isPositive()) newDuration
-			else 0.seconds
-		}
-
-	val leftDurationAsLocalTime: LocalTime
-		get() = LocalTime.fromSecondOfDay(leftDuration.inWholeSeconds.toInt())
+		get() = LocalTime.fromSecondOfDay(total.toInt(DurationUnit.SECONDS))
 
 	val playRatio: Float
 		get() {

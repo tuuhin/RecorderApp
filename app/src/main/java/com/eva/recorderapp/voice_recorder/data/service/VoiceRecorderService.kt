@@ -223,6 +223,7 @@ class VoiceRecorderService : LifecycleService() {
 	private fun onStopRecording() {
 		// stop the recording
 		lifecycleScope.launch {
+			val timeBeforeSave = recorderTime.value
 			when (val result = voiceRecorder.stopRecording()) {
 				// show an error toast
 				is Resource.Error -> {
@@ -230,8 +231,10 @@ class VoiceRecorderService : LifecycleService() {
 					showSaveRecordingErrorMessage(message)
 				}
 				// save it to bookmarks
-				is Resource.Success -> result.data
-					?.let { id -> clearAndSaveBookMarks(id) }
+				is Resource.Success -> {
+					val recordingId = result.data ?: return@launch
+					clearAndSaveBookMarks(recordingId, timeBeforeSave)
+				}
 
 				else -> {}
 			}
@@ -255,18 +258,30 @@ class VoiceRecorderService : LifecycleService() {
 		}
 	}
 
-	private suspend fun clearAndSaveBookMarks(recordingId: Long) {
+	private suspend fun clearAndSaveBookMarks(
+		recordingId: Long,
+		lastRecordedTime: LocalTime,
+	) {
 		// no need to perform any actions if bookmarks is empty
-		if (_bookMarks.value.isEmpty() || _amplitudes.value.isEmpty()) return
+		if (_bookMarks.value.isEmpty()) return
 		// add the coroutines on a different coroutine
 		val job = lifecycleScope.launch {
-			// bookmarks should be lesser than recorderTime
-			val bookmarks = bookMarks.value.filter { it <= recorderTime.value }
-			val result = bookmarksProvider.createBookMarks(recordingId, bookmarks)
+			// filter the bookmarks
+			val bookmarks = bookMarks.value.filter { it <= lastRecordedTime }.toSet()
+			Log.d(LOGGER_TAG, "SAVING ${bookmarks.size} BOOKMARKS ")
 
-			//show save toast
-			(result as? Resource.Success)?.let {
-				showBookmarksSavedMessage()
+			val result = bookmarksProvider.createBookMarks(
+				recordingId = recordingId,
+				points = bookmarks
+			)
+			when (result) {
+				is Resource.Error -> {
+					val message = result.message ?: result.error.message ?: "ERROR"
+					Log.wtf(LOGGER_TAG, message)
+				}
+
+				is Resource.Success -> showBookmarksSavedMessage()
+				else -> {}
 			}
 		}
 		Log.d(LOGGER_TAG, "BOOKMARKS SAVED")

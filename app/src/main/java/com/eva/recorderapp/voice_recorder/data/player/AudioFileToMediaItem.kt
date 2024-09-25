@@ -6,7 +6,7 @@ import androidx.media3.common.MediaMetadata
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 
 internal fun AudioFileModel.toMediaItem(): MediaItem {
-	// adding much of the metadata available from audiofile
+	// adding much of the metadata available from the given AudioFileModel
 	val metaData = MediaMetadata.Builder()
 		.setTitle(title)
 		.setDisplayTitle(displayName)
@@ -18,9 +18,10 @@ internal fun AudioFileModel.toMediaItem(): MediaItem {
 		.build()
 
 	val fileUri = fileUri.toUri()
+	val mediaId = "$id"
 	return MediaItem.Builder()
 		.setUri(fileUri)
-		.setMediaId("${id}")
+		.setMediaId(mediaId)
 		.setMimeType(mimeType)
 		.setMediaMetadata(metaData)
 		.build()

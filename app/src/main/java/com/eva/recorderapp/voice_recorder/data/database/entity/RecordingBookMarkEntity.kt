@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.data.database.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.eva.recorderapp.voice_recorder.data.database.DataBaseConstants
 import kotlinx.datetime.LocalTime
@@ -17,6 +18,9 @@ import kotlinx.datetime.LocalTime
 			onUpdate = ForeignKey.CASCADE,
 			onDelete = ForeignKey.CASCADE,
 		),
+	],
+	indices = [
+		Index("RECORDING_ID")
 	],
 )
 data class RecordingBookMarkEntity(

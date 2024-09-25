@@ -15,8 +15,6 @@ import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
 import com.eva.recorderapp.voice_recorder.domain.util.PhoneStateObserver
 import com.eva.recorderapp.voice_recorder.domain.util.enums.PhoneState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -60,7 +58,7 @@ class PhoneStateObserverImpl(
 			}
 		}
 
-		telephonyManager?.registerTelephonyCallback(Dispatchers.IO.asExecutor(), listener)
+		telephonyManager?.registerTelephonyCallback(context.mainExecutor, listener)
 		Log.d(TAG, "PHONE STATE CALLBACK ADDED")
 
 		awaitClose {

@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.milliseconds
 private const val TAG = "AUDIO_PLAYER_LISTENER"
 
 class AudioFilePlayerListener(
-	private val player: Player
+	private val player: Player,
 ) : Player.Listener {
 
 	private val _playerState = MutableStateFlow(PlayerState.IDLE)
@@ -91,11 +91,11 @@ class AudioFilePlayerListener(
 			)
 		}
 
-	fun computeMusicTrackInfo(state: PlayerState): Flow<PlayerTrackData> {
+	private fun computeMusicTrackInfo(state: PlayerState): Flow<PlayerTrackData> {
 		return flow {
 			Log.d(TAG, "CURRENT PLAYER STATE: $state")
 
-			// If the player can advertise postions ie, its ready or play or paused
+			// If the player can advertise positions ie, its ready or play or paused
 			// then continue the loop
 			while (state.canAdvertiseCurrentPosition) {
 				val trackData = PlayerTrackData(
@@ -119,10 +119,10 @@ class AudioFilePlayerListener(
 		}
 		// update the player state
 		_playerState.update {
-			when {
-				player.playbackState == Player.STATE_IDLE -> PlayerState.IDLE
-				player.playbackState == Player.STATE_ENDED -> PlayerState.COMPLETED
-				player.playbackState == Player.STATE_READY -> PlayerState.PLAYER_READY
+			when (player.playbackState) {
+				Player.STATE_IDLE -> PlayerState.IDLE
+				Player.STATE_ENDED -> PlayerState.COMPLETED
+				Player.STATE_READY -> PlayerState.PLAYER_READY
 				else -> return@update it
 			}
 		}
