@@ -54,7 +54,6 @@ fun AudioPlayerScreenTopBar(
 	onEdit: () -> Unit,
 	navigation: @Composable () -> Unit = {},
 	onRenameOption: (AudioFileModel) -> Unit = {},
-	onDeleteOption: () -> Unit = {},
 	onShareOption: () -> Unit = {},
 	onDetailsOptions: () -> Unit = {},
 	onToggleFavourite: (AudioFileModel) -> Unit = {},
@@ -151,6 +150,7 @@ fun AudioPlayerScreenTopBar(
 					DropdownMenu(
 						expanded = showDropDown,
 						onDismissRequest = { showDropDown = false },
+						shape = MaterialTheme.shapes.large,
 					) {
 						DropdownMenuItem(
 							text = { Text(text = stringResource(id = R.string.menu_more_rename)) },
@@ -158,14 +158,6 @@ fun AudioPlayerScreenTopBar(
 							onClick = {
 								showDropDown = false
 								onRenameOption(audioModel)
-							}
-						)
-						DropdownMenuItem(
-							text = { Text(text = stringResource(id = R.string.menu_option_delete)) },
-							enabled = isActionEnabled,
-							onClick = {
-								showDropDown = false
-								onDeleteOption()
 							}
 						)
 						DropdownMenuItem(

@@ -134,8 +134,9 @@ fun AudioPlayerScreen(
 						modifier = Modifier.fillMaxWidth()
 					)
 					PlayerBookMarks(
-						playerState = playerState,
-						createOrEditState = bookMarkState,
+						trackData = playerState.trackData,
+						bookmarks = playerState.bookmarks,
+						bookMarkState = bookMarkState,
 						onBookmarkEvent = onBookmarkEvent,
 						modifier = Modifier.fillMaxWidth()
 					)

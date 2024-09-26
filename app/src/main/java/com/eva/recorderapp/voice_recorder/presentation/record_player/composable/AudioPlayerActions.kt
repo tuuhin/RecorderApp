@@ -52,6 +52,7 @@ fun AudioPlayerActions(
 	shape: Shape = MaterialTheme.shapes.large,
 	color: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
 	contentColor: Color = contentColorFor(backgroundColor = color),
+	iconActiveColor: Color = MaterialTheme.colorScheme.primary,
 ) {
 	val playBackSpeedBottomSheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 	val scope = rememberCoroutineScope()
@@ -92,9 +93,10 @@ fun AudioPlayerActions(
 						Icon(
 							painter = painterResource(id = R.drawable.ic_mute_device),
 							contentDescription = stringResource(id = R.string.player_action_mute),
-							tint = if (playerMetaData.isMuted) MaterialTheme.colorScheme.primary else contentColor
+							tint = if (playerMetaData.isMuted) iconActiveColor else contentColor
 						)
 					},
+					enabled = false,
 					text = stringResource(id = R.string.player_action_mute),
 					onClick = onMutePlayer,
 				)
@@ -103,7 +105,7 @@ fun AudioPlayerActions(
 						Icon(
 							painter = painterResource(id = R.drawable.ic_repeat),
 							contentDescription = stringResource(id = R.string.player_action_repeat),
-							tint = if (playerMetaData.isRepeating) MaterialTheme.colorScheme.primary else contentColor
+							tint = if (playerMetaData.isRepeating) iconActiveColor else contentColor
 						)
 					},
 					text = stringResource(id = R.string.player_action_repeat),

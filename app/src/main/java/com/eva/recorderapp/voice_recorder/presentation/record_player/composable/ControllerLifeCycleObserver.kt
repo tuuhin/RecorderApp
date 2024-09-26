@@ -10,7 +10,7 @@ import androidx.lifecycle.eventFlow
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ControllerEvents
 
 @Composable
-fun ControllerLifeCyleObserver(
+fun ControllerLifeCycleObserver(
 	audioId: Long,
 	onEvent: (ControllerEvents) -> Unit,
 ) {

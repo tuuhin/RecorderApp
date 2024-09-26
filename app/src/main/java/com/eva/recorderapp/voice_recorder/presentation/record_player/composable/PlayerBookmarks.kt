@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -27,16 +28,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.BookMarkEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.CreateOrEditBookMarkState
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerBookMarks(
-	playerState: AudioPlayerInformation,
-	createOrEditState: CreateOrEditBookMarkState,
+	trackCurrentTime: () -> LocalTime,
+	bookmarks: ImmutableList<AudioBookmarkModel>,
+	bookMarkState: CreateOrEditBookMarkState,
 	onBookmarkEvent: (BookMarkEvents) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
@@ -51,7 +56,7 @@ fun PlayerBookMarks(
 			onDismissRequest = { isSheetOpen = false },
 		) {
 			AudioBookmarksList(
-				bookmarks = playerState.bookmarks,
+				bookmarks = bookmarks,
 				onEditBookMark = { onBookmarkEvent(BookMarkEvents.OpenDialogToEdit(it)) },
 				onDeleteBookMark = { onBookmarkEvent(BookMarkEvents.OnDeleteBookmark(it)) },
 				contentPadding = PaddingValues(all = dimensionResource(id = R.dimen.bottom_sheet_padding_lg)),
@@ -59,18 +64,18 @@ fun PlayerBookMarks(
 		}
 	}
 
-	if (createOrEditState.showDialog) {
+	if (bookMarkState.showDialog) {
 		BasicAlertDialog(
 			onDismissRequest = { onBookmarkEvent(BookMarkEvents.OnCloseDialog) },
 			properties = DialogProperties(dismissOnClickOutside = false)
 		) {
 			AddBookmarkDialogContent(
-				isUpdate = createOrEditState.isUpdate,
-				textFieldValue = createOrEditState.textValue,
+				isUpdate = bookMarkState.isUpdate,
+				textFieldValue = bookMarkState.textValue,
 				onValueChange = { onBookmarkEvent(BookMarkEvents.OnUpdateTextField(it)) },
 				onDismiss = { onBookmarkEvent(BookMarkEvents.OnCloseDialog) },
 				onConfirm = {
-					val currentTime = playerState.trackData.currentAsLocalTime
+					val currentTime = trackCurrentTime()
 					onBookmarkEvent(BookMarkEvents.OnAddOrUpdateBookMark(currentTime))
 				},
 			)
@@ -78,26 +83,33 @@ fun PlayerBookMarks(
 	}
 
 	Row(
-		modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween
+		modifier = modifier,
+		horizontalArrangement = Arrangement.SpaceBetween
 	) {
-		AssistChip(onClick = {
-			scope.launch { bookmarkSheet.show() }.invokeOnCompletion { isSheetOpen = true }
-		}, label = {
-			Text(
-				text = stringResource(id = R.string.player_action_show_bookmarks),
-				style = MaterialTheme.typography.labelMedium,
-			)
-		}, leadingIcon = {
-			Icon(
-				painter = painterResource(R.drawable.ic_list),
-				contentDescription = stringResource(id = R.string.player_action_show_bookmarks),
-				modifier = Modifier.size(AssistChipDefaults.IconSize)
-			)
-		}, shape = MaterialTheme.shapes.medium, colors = AssistChipDefaults.assistChipColors(
-			containerColor = MaterialTheme.colorScheme.secondaryContainer,
-			labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-			leadingIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-		)
+		AssistChip(
+			onClick = {
+				scope.launch { bookmarkSheet.show() }
+					.invokeOnCompletion { isSheetOpen = true }
+			},
+			label = {
+				Text(
+					text = stringResource(id = R.string.player_action_show_bookmarks),
+					style = MaterialTheme.typography.labelMedium,
+				)
+			},
+			leadingIcon = {
+				Icon(
+					painter = painterResource(R.drawable.ic_list),
+					contentDescription = stringResource(id = R.string.player_action_show_bookmarks),
+					modifier = Modifier.size(AssistChipDefaults.IconSize)
+				)
+			},
+			shape = MaterialTheme.shapes.medium,
+			colors = AssistChipDefaults.assistChipColors(
+				containerColor = MaterialTheme.colorScheme.secondaryContainer,
+				labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+				leadingIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+			),
 		)
 		SuggestionChip(
 			onClick = { onBookmarkEvent(BookMarkEvents.OpenDialogToCreate) },
@@ -119,7 +131,24 @@ fun PlayerBookMarks(
 				containerColor = MaterialTheme.colorScheme.tertiaryContainer,
 				labelColor = MaterialTheme.colorScheme.onTertiaryContainer,
 				iconContentColor = MaterialTheme.colorScheme.onTertiaryContainer
-			)
+			),
 		)
 	}
+}
+
+@Composable
+fun PlayerBookMarks(
+	trackData: PlayerTrackData,
+	bookmarks: ImmutableList<AudioBookmarkModel>,
+	bookMarkState: CreateOrEditBookMarkState,
+	onBookmarkEvent: (BookMarkEvents) -> Unit,
+	modifier: Modifier = Modifier,
+) {
+	PlayerBookMarks(
+		bookmarks = bookmarks,
+		trackCurrentTime = { trackData.currentAsLocalTime },
+		bookMarkState = bookMarkState,
+		onBookmarkEvent = onBookmarkEvent,
+		modifier = modifier.fillMaxWidth()
+	)
 }

@@ -85,7 +85,6 @@
   <string name="audio_metadata_name_title">Name</string>
   <string name="player_channel_resource_id">player_channel</string>
   <string name="show_recordings_list">List</string>
-  <string name="cannot_create_file">Cannot create file for recording</string>
   <string name="player_playback_speed">%.2f x</string>
   <string name="player_action_speed">Speed</string>
   <string name="player_action_repeat">Repeat</string>
@@ -182,14 +181,12 @@
   <string name="bookmarks_saved">Bookmarks Added</string>
   <string name="menu_option_no_favourite">No Favourite</string>
   <string name="enter_your_bookmark">Enter your bookmark</string>
-  <string name="edit_bookmark">Edit Bookmark</string>
   <string name="delete_bookmark">Delete Bookmark</string>
   <string name="bookmarks_list_title">Bookmarks</string>
   <string name="no_bookmarks_found">No Bookmarks</string>
   <string name="no_bookmarks_found_desc">Add bookmarks to quickly find important parts of your recording</string>
   <string name="option_text_field">Optional</string>
   <string name="add_bookmark_dialog_title">Add Boomark</string>
-  <string name="bookmark_create_label">BookMark</string>
   <string name="menu_option_update">Update</string>
   <string name="update_bookmark_dialog_title">Update BookMark</string>
 </resources>

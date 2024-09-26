@@ -25,7 +25,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedC
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerScreen
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerViewModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.CreateBookMarksViewModel
-import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ControllerLifeCyleObserver
+import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ControllerLifeCycleObserver
 
 fun NavGraphBuilder.audioPlayerRoute(
 	controller: NavHostController,
@@ -57,7 +57,7 @@ fun NavGraphBuilder.audioPlayerRoute(
 	// ui handler for bookmarks viewmodel
 	UiEventsSideEffect(eventsFlow = bookMarksViewmodel::uiEvent)
 
-	ControllerLifeCyleObserver(audioId = route.audioId, onEvent = viewModel::onControllerEvents)
+	ControllerLifeCycleObserver(audioId = route.audioId, onEvent = viewModel::onControllerEvents)
 
 	AudioPlayerScreen(
 		waveforms = { waveforms },

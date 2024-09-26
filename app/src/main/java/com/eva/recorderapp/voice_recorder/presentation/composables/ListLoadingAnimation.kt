@@ -44,7 +44,7 @@ fun <T> ListLoadingAnimation(
 	Crossfade(
 		targetState = listInfoState,
 		animationSpec = animationSpec,
-		label = "List loading crossfade animation",
+		label = "List loading cross-fade animation",
 		modifier = modifier.padding(contentPadding),
 	) { state ->
 		when (state) {

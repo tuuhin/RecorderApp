@@ -35,7 +35,7 @@ fun PlayerActionsAndSlider(
 	contentColor: Color = contentColorFor(backgroundColor = containerColor),
 ) {
 
-	val sliderPercentage by remember(trackData.current) {
+	val sliderPercentage by remember(trackData.currentAsLocalTime) {
 		derivedStateOf(trackData::playRatio)
 	}
 
@@ -80,7 +80,8 @@ private fun PlayerActionsAndSliderPreview() = RecorderAppTheme {
 		PlayerActionsAndSlider(
 			metaData = PreviewFakes.FAKE_AUDIO_INFORMATION.playerMetaData,
 			trackData = PlayerTrackData(),
-			onPlayerAction = {}, modifier = Modifier.padding(12.dp)
+			onPlayerAction = {},
+			modifier = Modifier.padding(12.dp)
 		)
 	}
 }

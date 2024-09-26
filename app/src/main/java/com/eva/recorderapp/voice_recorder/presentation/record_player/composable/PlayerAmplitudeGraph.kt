@@ -1,7 +1,5 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 
-import android.util.Log
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -11,10 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -27,7 +21,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextMeasurer
@@ -42,6 +35,7 @@ import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.data.util.asLocalTime
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.presentation.util.PlayRation
 import com.eva.recorderapp.voice_recorder.presentation.util.PlayerGraphData
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.collections.immutable.ImmutableList
@@ -53,7 +47,8 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun PlayerAmplitudeGraph(
-	trackData: PlayerTrackData,
+	trackDuration: LocalTime,
+	playRatio: PlayRation,
 	graphData: PlayerGraphData,
 	bookMarks: ImmutableList<LocalTime>,
 	modifier: Modifier = Modifier,
@@ -74,8 +69,6 @@ fun PlayerAmplitudeGraph(
 	val textMeasurer = rememberTextMeasurer()
 	val image = painterResource(R.drawable.ic_bookmark)
 
-	var isDragStarted by remember { mutableStateOf(false) }
-
 	Surface(
 		shape = shape,
 		color = containerColor,
@@ -83,19 +76,8 @@ fun PlayerAmplitudeGraph(
 	) {
 		Spacer(
 			modifier = Modifier
-				.padding(paddingValues = contentPadding)
+				.padding(contentPadding)
 				.defaultMinSize(minHeight = dimensionResource(id = R.dimen.line_graph_min_height))
-				.pointerInput(Unit) {
-					detectHorizontalDragGestures(
-						onDragStart = { isDragStarted = true },
-						onDragEnd = { isDragStarted = false },
-						onHorizontalDrag = { change, dragAmount ->
-							change.consume()
-							val amount = dragAmount.coerceIn(0f, size.width.toFloat())
-							Log.d("AMOUNT", "$amount")
-						},
-					)
-				}
 				.drawWithCache {
 
 					val centerYAxis = size.height / 2f
@@ -105,14 +87,12 @@ fun PlayerAmplitudeGraph(
 						if (amt > 0f) amt else 2.dp.toPx()
 					}
 
-					val bookMarksAsMillis = bookMarks.map { it.toMillisecondOfDay() }
-
-
 					onDrawBehind {
 						val samples = graphData()
+						val bookMarksAsMillis = bookMarks.map { it.toMillisecondOfDay() }
 
 						val totalSize = samples.size * spikesWidth
-						val translate = size.width * .5f - (totalSize * trackData.playRatio)
+						val translate = size.width * .5f - (totalSize * playRatio())
 
 						translate(left = translate) {
 							drawGraph(
@@ -123,7 +103,7 @@ fun PlayerAmplitudeGraph(
 								color = plotColor
 							)
 							drawTimeLine(
-								totalDuration = trackData.totalAsLocalTime,
+								totalDuration = trackDuration,
 								textMeasurer = textMeasurer,
 								bookMarks = bookMarksAsMillis,
 								bookMarkPainter = image,
@@ -301,6 +281,44 @@ private fun DrawScope.drawTrackPointer(
 		end = Offset(size.width / 2, size.height),
 		strokeWidth = strokeWidth,
 		cap = StrokeCap.Round
+	)
+}
+
+@Composable
+fun PlayerAmplitudeGraph(
+	trackData: PlayerTrackData,
+	graphData: PlayerGraphData,
+	bookMarks: ImmutableList<LocalTime>,
+	modifier: Modifier = Modifier,
+	plotColor: Color = MaterialTheme.colorScheme.secondary,
+	trackPointerColor: Color = MaterialTheme.colorScheme.primary,
+	bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
+	timelineColor: Color = MaterialTheme.colorScheme.outline,
+	timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
+	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
+	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	shape: Shape = MaterialTheme.shapes.small,
+	contentPadding: PaddingValues = PaddingValues(
+		horizontal = dimensionResource(id = R.dimen.graph_card_padding),
+		vertical = dimensionResource(id = R.dimen.graph_card_padding_other)
+	),
+) {
+	PlayerAmplitudeGraph(
+		playRatio = { trackData.playRatio },
+		trackDuration = trackData.totalAsLocalTime,
+		graphData = graphData,
+		bookMarks = bookMarks,
+		modifier = modifier,
+		plotColor = plotColor,
+		trackPointerColor = trackPointerColor,
+		bookMarkColor = bookMarkColor,
+		timelineColor = timelineColor,
+		timelineColorVariant = timelineColorVariant,
+		timelineTextColor = timelineTextColor,
+		timelineTextStyle = timelineTextStyle,
+		contentPadding = contentPadding, shape = shape,
+		containerColor = containerColor
 	)
 }
 
