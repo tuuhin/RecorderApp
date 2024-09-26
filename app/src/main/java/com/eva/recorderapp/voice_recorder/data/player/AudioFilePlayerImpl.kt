@@ -51,7 +51,7 @@ class AudioFilePlayerImpl(
 	}
 
 	override fun onMuteDevice() {
-		// TODO: Check proper implementaion
+		// TODO: Check proper implementation
 		val command = player.isCommandAvailable(Player.COMMAND_ADJUST_DEVICE_VOLUME_WITH_FLAGS)
 		if (!command) {
 			Log.w(LOGGER, "PLAYER COMMAND NOT FOUND")
@@ -87,7 +87,7 @@ class AudioFilePlayerImpl(
 				_listener.updateStateFromCurrentPlayerConfig()
 			} else {
 				Log.i(LOGGER, "MEDIA ITEM FOR AUDIO FILE : ${audio.id}")
-				// normalliy adding the audio file to the player
+				// normally adding the audio file to the player
 				addAudioItemToPlayer(audio)
 			}
 			// prepare the player if the state is idle
@@ -216,10 +216,15 @@ class AudioFilePlayerImpl(
 		val mediaItem = audio.toMediaItem()
 		// set this current media item
 		player.apply {
+			// set repeat mode
+			repeatMode = Player.REPEAT_MODE_ONE
+			// set speed
+			setPlaybackSpeed(1f)
+			// clear and set item
 			clearMediaItems()
 			setMediaItem(mediaItem)
 		}
-		Log.d(LOGGER, "MEDIA ITEM ADDED MEDIACOUNT:${player.mediaItemCount}")
+		Log.d(LOGGER, "MEDIA ITEM ADDED MEDIA COUNT:${player.mediaItemCount}")
 		if (player.playbackState != Player.STATE_IDLE) {
 			Log.d(LOGGER, "STOPPING PLAYER ")
 			// if the player is not in idle state stop the player

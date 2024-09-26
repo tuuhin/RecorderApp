@@ -2,6 +2,8 @@ package com.eva.recorderapp.voice_recorder.presentation.recordings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,17 +30,15 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.MediaAccessPermissionWrapper
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsBottomBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsInteractiveList
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsScreenTopBar
-import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RenameRecordingsNameDialog
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.SortOptionsSheetContent
-import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.requestReadStoragePermission
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RenameRecordingEvents
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RecordingsSortInfo
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RenameRecordingState
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
@@ -49,14 +49,17 @@ import kotlinx.coroutines.launch
 @Composable
 fun RecordingsScreen(
 	isRecordingsLoaded: Boolean,
+	selectedCategory: RecordingCategoryModel,
 	sortInfo: RecordingsSortInfo,
 	recordings: ImmutableList<SelectableRecordings>,
-	renameState: RenameRecordingState,
-	onRenameEvent: (RenameRecordingEvents) -> Unit,
+	categories: ImmutableList<RecordingCategoryModel>,
 	onScreenEvent: (RecordingScreenEvent) -> Unit,
 	onRecordingSelect: (RecordedVoiceModel) -> Unit,
 	modifier: Modifier = Modifier,
 	onNavigateToBin: () -> Unit = {},
+	onShowRenameDialog: (RecordedVoiceModel?) -> Unit = {},
+	onMoveToCategory: (Collection<RecordedVoiceModel>) -> Unit = {},
+	onNavigationToCategories: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
@@ -68,7 +71,7 @@ fun RecordingsScreen(
 
 	val selectedCount by remember(recordings) {
 		derivedStateOf {
-			recordings.filter(SelectableRecordings::isSelected).count()
+			recordings.count(SelectableRecordings::isSelected)
 		}
 	}
 
@@ -80,9 +83,6 @@ fun RecordingsScreen(
 	val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
 	val scope = rememberCoroutineScope()
-
-	// read storage permission
-	requestReadStoragePermission()
 
 	if (showSheet) {
 		ModalBottomSheet(
@@ -98,11 +98,6 @@ fun RecordingsScreen(
 		}
 	}
 
-	RenameRecordingsNameDialog(
-		state = renameState,
-		onEvent = onRenameEvent
-	)
-
 	BackHandler(
 		enabled = isAnySelected,
 		onBack = { onScreenEvent(RecordingScreenEvent.OnUnSelectAllRecordings) },
@@ -114,6 +109,7 @@ fun RecordingsScreen(
 				isSelectedMode = isAnySelected,
 				selectedCount = selectedCount,
 				navigation = navigation,
+				onManageCategories = onNavigationToCategories,
 				onUnSelectAll = { onScreenEvent(RecordingScreenEvent.OnUnSelectAllRecordings) },
 				onSelectAll = { onScreenEvent(RecordingScreenEvent.OnSelectAllRecordings) },
 				onSortItems = {
@@ -128,31 +124,53 @@ fun RecordingsScreen(
 		},
 		bottomBar = {
 			RecordingsBottomBar(
-				recordings = recordings,
 				showRename = showRenameOption,
 				isVisible = isAnySelected,
 				onShareSelected = { onScreenEvent(RecordingScreenEvent.ShareSelectedRecordings) },
 				onItemDelete = { onScreenEvent(RecordingScreenEvent.OnSelectedItemTrashRequest) },
-				onRename = { onRenameEvent(RenameRecordingEvents.OnShowRenameDialog) }
+				onStarItem = { onScreenEvent(RecordingScreenEvent.OnToggleFavourites) },
+				onRename = {
+					// no rename option if option is not available
+					if (showRenameOption) {
+						val firstSelected = recordings.filter { it.isSelected }
+							.map { it.recoding }.firstOrNull()
+						// show the rename dialog
+						onShowRenameDialog(firstSelected)
+					}
+				},
+				onMoveToCategory = {
+					val selectedOnes = recordings.filter { it.isSelected }
+						.map { it.recoding }
+					onMoveToCategory(selectedOnes)
+				},
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
 		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
-		RecordingsInteractiveList(
-			isRecordingsLoaded = isRecordingsLoaded,
-			recordings = recordings,
-			onItemClick = onRecordingSelect,
-			onItemSelect = { record ->
-				onScreenEvent(RecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
-			},
-			contentPadding = PaddingValues(
-				start = dimensionResource(id = R.dimen.sc_padding),
-				end = dimensionResource(R.dimen.sc_padding),
-				top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
-				bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
-			),
-		)
+		MediaAccessPermissionWrapper(
+			onLoadRecordings = { onScreenEvent(RecordingScreenEvent.PopulateRecordings) },
+			modifier = Modifier.padding(scPadding)
+		) {
+			RecordingsInteractiveList(
+				isRecordingsLoaded = isRecordingsLoaded,
+				selectedCategory = selectedCategory,
+				recordings = recordings,
+				categories = categories,
+				onItemClick = onRecordingSelect,
+				onCategorySelect = { category ->
+					onScreenEvent(RecordingScreenEvent.OnCategoryChanged(category))
+				},
+				onItemSelect = { record ->
+					onScreenEvent(RecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
+				},
+				contentPadding = PaddingValues(
+					horizontal = dimensionResource(id = R.dimen.sc_padding),
+					vertical = dimensionResource(id = R.dimen.sc_padding_secondary)
+				),
+				modifier = Modifier.fillMaxSize(),
+			)
+		}
 	}
 }
 
@@ -170,15 +188,15 @@ class SelectedRecordingsPreviewParams :
 @Composable
 private fun RecordingScreenPreview(
 	@PreviewParameter(SelectedRecordingsPreviewParams::class)
-	recordings: ImmutableList<SelectableRecordings>
+	recordings: ImmutableList<SelectableRecordings>,
 ) = RecorderAppTheme {
 	RecordingsScreen(
 		isRecordingsLoaded = true,
 		recordings = recordings,
+		selectedCategory = RecordingCategoryModel.ALL_CATEGORY,
+		categories = PreviewFakes.FAKE_CATEGORIES_WITH_ALL_OPTION,
 		sortInfo = RecordingsSortInfo(),
-		renameState = RenameRecordingState(),
 		onScreenEvent = {},
-		onRenameEvent = {},
 		onRecordingSelect = {},
 		navigation = {
 			Icon(

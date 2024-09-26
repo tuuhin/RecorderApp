@@ -11,7 +11,7 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 private const val LOGGER_TAG = "RECORDER_ACTION_HANDLER"
 
 class RecorderActionHandlerImpl(
-	private val context: Context
+	private val context: Context,
 ) : RecorderActionHandler {
 
 	private val serviceIntent: Intent
@@ -19,35 +19,42 @@ class RecorderActionHandlerImpl(
 
 	private fun startRecorder() {
 		val intent = serviceIntent.apply {
-			action = RecorderAction.START_RECORDER.action
+			action = RecorderAction.StartRecorderAction.action
 		}
 		context.startService(intent)
 	}
 
 	private fun resumeRecorder() {
 		val intent = serviceIntent.apply {
-			action = RecorderAction.RESUME_RECORDER.action
+			action = RecorderAction.ResumeRecorderAction.action
 		}
 		context.startService(intent)
 	}
 
 	private fun pauseRecorder() {
 		val intent = serviceIntent.apply {
-			action = RecorderAction.PAUSE_RECORDER.action
+			action = RecorderAction.PauseRecorderAction.action
 		}
 		context.startService(intent)
 	}
 
 	private fun stopRecorder() {
 		val intent = serviceIntent.apply {
-			action = RecorderAction.STOP_RECORDER.action
+			action = RecorderAction.StopRecorderAction.action
 		}
 		context.startService(intent)
 	}
 
 	private fun cancelRecording() {
 		val intent = serviceIntent.apply {
-			action = RecorderAction.CANCEL_RECORDER.action
+			action = RecorderAction.CancelRecorderAction.action
+		}
+		context.startService(intent)
+	}
+
+	private fun addBookMarkAction() {
+		val intent = serviceIntent.apply {
+			action = RecorderAction.AddBookMarkAction.action
 		}
 		context.startService(intent)
 	}
@@ -55,13 +62,14 @@ class RecorderActionHandlerImpl(
 	override fun onRecorderAction(action: RecorderAction): Resource<Unit, Exception> {
 		return try {
 			when (action) {
-				RecorderAction.START_RECORDER -> startRecorder()
-				RecorderAction.RESUME_RECORDER -> resumeRecorder()
-				RecorderAction.PAUSE_RECORDER -> pauseRecorder()
-				RecorderAction.STOP_RECORDER -> stopRecorder()
-				RecorderAction.CANCEL_RECORDER -> cancelRecording()
+				RecorderAction.StartRecorderAction -> startRecorder()
+				RecorderAction.ResumeRecorderAction -> resumeRecorder()
+				RecorderAction.PauseRecorderAction -> pauseRecorder()
+				RecorderAction.StopRecorderAction -> stopRecorder()
+				RecorderAction.CancelRecorderAction -> cancelRecording()
+				RecorderAction.AddBookMarkAction -> addBookMarkAction()
 			}
-			Resource.Success<Unit, Exception>(data = Unit)
+			Resource.Success(data = Unit)
 		} catch (e: SecurityException) {
 			Log.d(LOGGER_TAG, "SECURITY EXCEPTION", e)
 			Resource.Error<Unit, Exception>(e)
@@ -70,7 +78,8 @@ class RecorderActionHandlerImpl(
 			Resource.Error<Unit, Exception>(e)
 		} catch (e: Exception) {
 			e.printStackTrace()
-			Resource.Error<Unit, Exception>(e)
+			Resource.Error(e)
 		}
 	}
+
 }

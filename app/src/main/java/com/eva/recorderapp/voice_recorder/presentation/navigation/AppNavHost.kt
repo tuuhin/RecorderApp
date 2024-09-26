@@ -9,11 +9,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.eva.recorderapp.voice_recorder.presentation.navigation.dialogs.appInfoDialog
+import com.eva.recorderapp.voice_recorder.presentation.navigation.dialogs.renameRecordingDialog
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioEditorRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioPlayerRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.audioSettingsRoute
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.createOrUpdateCategoryRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recorderRoute
-import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingsroute
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingCategories
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.recordingsRoute
+import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.selectRecordingCategoryRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.routes.trashRecordingsRoute
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
@@ -33,14 +37,19 @@ fun AppNavHost(
 			startDestination = NavRoutes.VoiceRecorder,
 			modifier = modifier
 		) {
+			// screens
 			recorderRoute(navController = navController)
-			recordingsroute(controller = navController)
+			recordingsRoute(controller = navController)
 			trashRecordingsRoute(controller = navController)
+			recordingCategories(controller = navController)
 			audioPlayerRoute(controller = navController)
 			audioEditorRoute(controller = navController)
 			audioSettingsRoute(controller = navController)
-			//dialog
+			selectRecordingCategoryRoute(controller = navController)
+			createOrUpdateCategoryRoute(controller = navController)
+			//dialogs
 			appInfoDialog()
+			renameRecordingDialog(controller = navController)
 		}
 	}
 }

@@ -1,35 +1,54 @@
 package com.eva.recorderapp.voice_recorder.presentation.util
 
+import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
+import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
+import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
+import com.eva.recorderapp.voice_recorder.presentation.categories.utils.toSelectableCategory
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
-import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.datetime.Clock
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import java.time.LocalDateTime as JLocalDateTime
 
 object PreviewFakes {
 
 	private val now: LocalDateTime
-		get() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+		get() = JLocalDateTime.now().toKotlinLocalDateTime()
 
-	private val nowTime: LocalTime
-		get() = now.time
 
-	val PREVIEW_RECORDER_AMPLITUDES = List(80) { Random.nextFloat() }.toImmutableList()
+	val PREVIEW_RECORDER_AMPLITUDES = List(100) { Random.nextFloat() }.toImmutableList()
 
-	val FAKE_AUDIO_INFORMATION =
-		AudioPlayerInformation(waveforms = PlayerGraphInfo(waves = PREVIEW_RECORDER_AMPLITUDES))
+
+	private val PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE = List(150) {
+		Random.nextFloat()
+	}.mapIndexed { idx, amp ->
+		val duration = VoiceRecorder.AMPS_READ_DELAY_RATE.times(idx)
+		val time = LocalTime.fromMillisecondOfDay(duration.inWholeMilliseconds.toInt())
+		time to amp
+	}
+
+	val PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY =
+		PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE.take(100)
+
+	val FAKE_AUDIO_INFORMATION = AudioPlayerInformation(
+		trackData = PlayerTrackData(current = 4.seconds, total = 10.seconds)
+	)
 
 	val FAKE_VOICE_RECORDING_MODEL = RecordedVoiceModel(
 		id = 0L,
@@ -51,15 +70,17 @@ object PreviewFakes {
 		fileUri = "",
 		bitRateInKbps = 0f,
 		lastModified = now,
-		samplingRatekHz = 0f,
-		path = "Somepath/file",
+		samplingRateKHz = 0f,
+		path = "this_is_a_path/file",
 		channel = 1,
-		size = 100L, mimeType = "This/that"
+		size = 100L,
+		mimeType = "This/that",
+		isFavourite = true
 	)
 
 	val FAKE_TRASH_RECORDINGS_MODEL = TrashRecordingModel(
 		id = 0L,
-		title = "TRAHSED_001",
+		title = "TRASHED_001",
 		displayName = "TRASHED",
 		mimeType = "audio/mp3",
 		expiresAt = now,
@@ -69,18 +90,60 @@ object PreviewFakes {
 
 	val FAKE_TRASH_RECORDINGS_EMPTY = persistentListOf<SelectableTrashRecordings>()
 
-	val FAKE_TRASH_RECORDINGS_MODELS = List(10) { FAKE_TRASH_RECORDINGS_MODEL }
-		.toSelectableRecordings().toImmutableList()
+	val FAKE_TRASH_RECORDINGS_MODELS =
+		List(10) { FAKE_TRASH_RECORDINGS_MODEL }.toSelectableRecordings().toImmutableList()
 
 	val FAKE_VOICE_RECORDINGS_EMPTY = persistentListOf<SelectableRecordings>()
 
-	val FAKE_VOICE_RECORDING_MODELS = List(10) { FAKE_VOICE_RECORDING_MODEL }
-		.toSelectableRecordings()
-		.toImmutableList()
+	val FAKE_VOICE_RECORDING_MODELS =
+		List(10) { FAKE_VOICE_RECORDING_MODEL }.toSelectableRecordings().toImmutableList()
 
-	val FAKE_VOICE_RECORDINGS_SELECTED = List(10) { FAKE_VOICE_RECORDING_MODEL }
-		.toSelectableRecordings()
-		.mapIndexed { idx, record -> record.copy(isSelected = if (idx % 2 == 0) true else false) }
-		.toImmutableList()
+	val FAKE_VOICE_RECORDINGS_SELECTED =
+		List(10) { FAKE_VOICE_RECORDING_MODEL }.toSelectableRecordings()
+			.map { record -> record.copy(isSelected = Random.nextBoolean()) }.toImmutableList()
+
+	private val FAKE_RECORDING_CATEGORY = RecordingCategoryModel(
+		id = 0L, name = "Something", createdAt = now
+	).toSelectableCategory()
+
+	val FAKE_RECORDING_CATEGORIES = List(10) { FAKE_RECORDING_CATEGORY }.toImmutableList()
+
+	val FAKE_RECORDINGS_CATEGORIES_FEW_SELECTED =
+		List(10) { FAKE_RECORDING_CATEGORY }.map { category -> category.copy(isSelected = Random.nextBoolean()) }
+			.toImmutableList()
+
+	val FAKE_CATEGORY_WITH_COLOR_AND_TYPE = RecordingCategoryModel(
+		id = 0L,
+		name = "Android",
+		categoryType = CategoryType.CATEGORY_SONG,
+		categoryColor = CategoryColor.COLOR_BLUE
+	)
+
+	val FAKE_CATEGORIES_WITH_ALL_OPTION: ImmutableList<RecordingCategoryModel>
+		get() = (List(4) {
+			RecordingCategoryModel(
+				id = 0L,
+				name = "Android",
+				categoryType = CategoryType.entries.random(),
+				categoryColor = CategoryColor.entries.random()
+			)
+		} + FAKE_CATEGORY_WITH_COLOR_AND_TYPE + RecordingCategoryModel.ALL_CATEGORY).reversed()
+			.toImmutableList()
+
+	val FAKE_BOOKMARK_MODEL = AudioBookmarkModel(
+		bookMarkId = 0L,
+		text = "Android",
+		timeStamp = now.time,
+		recordingId = 0L
+	)
+
+	val FAKE_BOOKMARKS_LIST = List(20) {
+		AudioBookmarkModel(
+			bookMarkId = it.toLong(),
+			text = "Hello world",
+			timeStamp = LocalTime.fromSecondOfDay(400),
+			recordingId = 0L
+		)
+	}.toPersistentList()
 
 }

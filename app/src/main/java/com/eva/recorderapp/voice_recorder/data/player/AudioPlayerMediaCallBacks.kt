@@ -18,10 +18,8 @@ import com.google.common.util.concurrent.ListenableFuture
 class AudioPlayerMediaCallBacks
 	: MediaSession.Callback {
 
-	override fun onConnect(
-		session: MediaSession,
-		controller: MediaSession.ControllerInfo
-	): MediaSession.ConnectionResult {
+	override fun onConnect(session: MediaSession, controller: MediaSession.ControllerInfo)
+			: ConnectionResult {
 
 		val commands = PlayerSessionCommands.buttonsAsList
 			.mapNotNull(CommandButton::sessionCommand)
@@ -47,10 +45,7 @@ class AudioPlayerMediaCallBacks
 		return result
 	}
 
-	override fun onPostConnect(
-		session: MediaSession,
-		controller: MediaSession.ControllerInfo
-	) {
+	override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
 		val layout = ImmutableList.of(
 			PlayerSessionCommands.rewindButton,
 			PlayerSessionCommands.forwardButton
@@ -65,7 +60,7 @@ class AudioPlayerMediaCallBacks
 		session: MediaSession,
 		controller: MediaSession.ControllerInfo,
 		customCommand: SessionCommand,
-		args: Bundle
+		args: Bundle,
 	): ListenableFuture<SessionResult> {
 		when (customCommand.customAction) {
 			PlayerSessionCommands.FORWARD_BY_1SEC -> {

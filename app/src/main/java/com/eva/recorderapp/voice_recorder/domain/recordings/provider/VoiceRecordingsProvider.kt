@@ -11,17 +11,30 @@ typealias ResourcedVoiceRecordingModels = Resource<List<RecordedVoiceModel>, Exc
 interface VoiceRecordingsProvider {
 
 	/**
-	 * A flow version of [getVoiceRecordings]
+	 * A flow of recorded voice models,
 	 * @return a flow version of [ResourcedVoiceRecordingModels]
-	 * @see getVoiceRecordings its the base function which is only turned into a flow
+	 * @see getVoiceRecordings to fetch [VoiceRecordingModels] normally use this.
+	 * @throws Exception Make sure you check for any exceptions
 	 */
-	val voiceRecordingsFlow: Flow<ResourcedVoiceRecordingModels>
+	val voiceRecordingsFlow: Flow<VoiceRecordingModels>
+
+	/**
+	 * A resourced version of the [voiceRecordingsFlow].[Exception]'s are wrapped so no need
+	 * worry about exceptions
+	 */
+	val voiceRecordingFlowAsResource: Flow<ResourcedVoiceRecordingModels>
+
+
+	suspend fun getVoiceRecordings(): VoiceRecordingModels
 
 	/**
 	 * Gets the currently saved recordings from the storage
 	 * @return [Resource.Success] of [VoiceRecordingModels] if everything goes well otherwise [Resource.Error]
 	 */
-	suspend fun getVoiceRecordings(): ResourcedVoiceRecordingModels
+	suspend fun getVoiceRecordingsAsResource(): ResourcedVoiceRecordingModels
+
+
+	suspend fun getVoiceRecordingAsResourceFromId(recordingId: Long): Resource<RecordedVoiceModel, Exception>
 
 	/**
 	 * Deleted the current recording from the given uri, tries to delete
@@ -38,7 +51,7 @@ interface VoiceRecordingsProvider {
 	suspend fun deleteFileFromId(id: Long): Resource<Boolean, Exception>
 
 	/**
-	 * Permanently deletes recordings. Remember if these are deleted they cannot be recoverd any more
+	 * Permanently deletes recordings. Remember if these are deleted they cannot be recovered anymore
 	 * @param recordings a [Collection] of [RecordedVoiceModel] to be removed permanently
 	 * @return [Resource] indicating [recordings] are deleted successfully or there is any error
 	 */
@@ -46,13 +59,11 @@ interface VoiceRecordingsProvider {
 
 	/**
 	 * Renames the previous recording to a new name
-	 * @param recording Thre [RecordedVoiceModel] whoes name need to be changed
+	 * @param recording Three [RecordedVoiceModel] whose name need to be changed
 	 * @param newName New name for the file
-	 * @returna flow indicating everything performed well
+	 * @return a flow indicating everything performed well
 	 */
-	suspend fun renameRecording(
-		recording: RecordedVoiceModel,
-		newName: String
-	): Flow<Resource<Boolean, Exception>>
+	fun renameRecording(recording: RecordedVoiceModel, newName: String)
+			: Flow<Resource<Boolean, Exception>>
 
 }

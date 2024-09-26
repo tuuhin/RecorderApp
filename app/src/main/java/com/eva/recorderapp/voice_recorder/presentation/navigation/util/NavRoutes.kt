@@ -14,6 +14,9 @@ sealed interface NavRoutes {
 	data object TrashRecordings : NavRoutes
 
 	@Serializable
+	data object ManageCategories : NavRoutes
+
+	@Serializable
 	data class AudioPlayer(val audioId: Long) : NavRoutes
 
 	@Serializable
@@ -23,9 +26,11 @@ sealed interface NavRoutes {
 	data object AudioSettings : NavRoutes
 
 	@Serializable
-	data object ApplicationInfo : NavRoutes
+	data class CreateOrUpdateCategory(val categoryId: Long? = null) : NavRoutes
 
-	companion object {
-		const val AUDIO_PLAYER_PARAM_NAME = "audioId"
-	}
+	@Serializable
+	data class SelectRecordingCategoryRoute(
+		val recordingIds: Collection<Long> = emptyList(),
+	) : NavRoutes
+
 }

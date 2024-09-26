@@ -17,17 +17,23 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsS
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinScreen
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinViewmodel
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.handlers.DeleteRecordingRequestHandler
 
 fun NavGraphBuilder.trashRecordingsRoute(
-	controller: NavController
+	controller: NavController,
 ) = animatedComposable<NavRoutes.TrashRecordings> {
 
 	val viewModel = hiltViewModel<RecordingsBinViewmodel>()
 
+	DeleteRecordingRequestHandler(
+		eventsFlow = viewModel::deleteRequestEvent,
+		onResult = viewModel::onScreenEvent
+	)
+
+	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
+
 	val recordings by viewModel.trashRecordings.collectAsStateWithLifecycle()
 	val isLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
-
-	UiEventsSideEffect(viewModel = viewModel)
 
 	RecordingsBinScreen(
 		isRecordingsLoaded = isLoaded,

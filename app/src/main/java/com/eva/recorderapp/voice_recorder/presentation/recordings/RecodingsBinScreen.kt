@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.presentation.recordings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.MediaAccessPermissionWrapper
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingBinScreenTopBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsBinScreenBottomBar
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.RecordingsInteractiveList
@@ -45,12 +47,12 @@ fun RecordingsBinScreen(
 	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
 	val isAnySelected by remember(recordings) {
-		derivedStateOf { recordings.any { it.isSelected } }
+		derivedStateOf { recordings.any(SelectableTrashRecordings::isSelected) }
 	}
 
 	val selectedCount by remember(recordings) {
 		derivedStateOf {
-			recordings.filter { it.isSelected }.count()
+			recordings.count(SelectableTrashRecordings::isSelected)
 		}
 	}
 
@@ -58,7 +60,6 @@ fun RecordingsBinScreen(
 		enabled = isAnySelected,
 		onBack = { onScreenEvent(TrashRecordingScreenEvent.OnUnSelectTrashRecording) },
 	)
-
 
 	Scaffold(
 		topBar = {
@@ -81,21 +82,23 @@ fun RecordingsBinScreen(
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
 		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
-
-		RecordingsInteractiveList(
-			isRecordingsLoaded = isRecordingsLoaded,
-			recordings = recordings,
-			onItemSelect = { record ->
-				onScreenEvent(TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
-			},
-			contentPadding = PaddingValues(
-				start = dimensionResource(id = R.dimen.sc_padding),
-				end = dimensionResource(R.dimen.sc_padding),
-				top = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateTopPadding(),
-				bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
-			),
-			modifier = Modifier.fillMaxSize(),
-		)
+		MediaAccessPermissionWrapper(
+			onLoadRecordings = { onScreenEvent(TrashRecordingScreenEvent.PopulateTrashRecordings) },
+			modifier = Modifier.padding(scPadding)
+		) {
+			RecordingsInteractiveList(
+				isRecordingsLoaded = isRecordingsLoaded,
+				recordings = recordings,
+				onItemSelect = { record ->
+					onScreenEvent(TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect(record))
+				},
+				contentPadding = PaddingValues(
+					horizontal = dimensionResource(id = R.dimen.sc_padding),
+					vertical = dimensionResource(id = R.dimen.sc_padding_secondary)
+				),
+				modifier = Modifier.fillMaxSize(),
+			)
+		}
 	}
 }
 

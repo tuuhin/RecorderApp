@@ -1,7 +1,12 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -14,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -26,6 +32,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
@@ -48,7 +55,7 @@ fun RecordingCard(
 	shape: Shape = MaterialTheme.shapes.large,
 ) {
 	val clickModifier = if (isSelectable)
-		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selcted")
+		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selected")
 	else Modifier.combinedClickable(
 		onClick = onItemClick,
 		onLongClick = onItemSelect,
@@ -77,6 +84,7 @@ fun RecordingCard(
 			Crossfade(
 				targetState = isSelectable,
 				animationSpec = tween(durationMillis = 400),
+				label = "Radio Button Animation",
 				modifier = Modifier.padding(8.dp)
 			) { showSelectOption ->
 				if (showSelectOption)
@@ -99,13 +107,31 @@ fun RecordingCard(
 			}
 			Column(
 				modifier = Modifier.weight(1f),
-				verticalArrangement = Arrangement.spacedBy(4.dp)
+				verticalArrangement = Arrangement.spacedBy(6.dp)
 			) {
-				Text(
-					text = music.displayName,
-					style = MaterialTheme.typography.titleMedium,
-					color = MaterialTheme.colorScheme.primary
-				)
+				Row(
+					horizontalArrangement = Arrangement.SpaceBetween,
+					verticalAlignment = Alignment.CenterVertically,
+					modifier = Modifier.fillMaxWidth()
+				) {
+					Text(
+						text = music.displayName,
+						style = MaterialTheme.typography.titleMedium,
+						color = MaterialTheme.colorScheme.primary
+					)
+					AnimatedVisibility(
+						visible = music.isFavorite,
+						enter = scaleIn() + fadeIn(),
+						exit = scaleOut() + fadeOut()
+					) {
+						Icon(
+							painter = painterResource(R.drawable.ic_star_filled),
+							contentDescription = stringResource(R.string.menu_option_favourite),
+							tint = MaterialTheme.colorScheme.secondary,
+							modifier = Modifier.size(20.dp)
+						)
+					}
+				}
 				Row(
 					horizontalArrangement = Arrangement.SpaceBetween,
 					verticalAlignment = Alignment.CenterVertically,
@@ -154,7 +180,7 @@ private fun RecordingCardSelectModePreview() = RecorderAppTheme {
 @Composable
 private fun RecordingCardSelectedPreview() = RecorderAppTheme {
 	RecordingCard(
-		music = PreviewFakes.FAKE_VOICE_RECORDING_MODEL,
+		music = PreviewFakes.FAKE_VOICE_RECORDING_MODEL.copy(isFavorite = true),
 		isSelectable = true,
 		isSelected = true,
 		onItemClick = {},

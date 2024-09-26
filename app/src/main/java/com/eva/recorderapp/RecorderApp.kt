@@ -19,14 +19,14 @@ class RecorderApp : Application(), Configuration.Provider {
 	private val notificationManager by lazy { getSystemService<NotificationManager>() }
 
 	@Inject
-	lateinit var workerFatory: HiltWorkerFactory
+	lateinit var workerFactory: HiltWorkerFactory
 
 	@Inject
 	lateinit var shortcutFacade: AppShortcutFacade
 
 	override val workManagerConfiguration: Configuration
 		get() = Configuration.Builder()
-			.setWorkerFactory(workerFatory)
+			.setWorkerFactory(workerFactory)
 			.build()
 
 
@@ -44,23 +44,32 @@ class RecorderApp : Application(), Configuration.Provider {
 		}
 
 		val channel2 = NotificationChannel(
-			NotificationConstants.PLAYER_CHANNEL_ID,
-			NotificationConstants.PLAYER_CHANNEL_NAME,
+			NotificationConstants.RECORDING_CHANNEL_ID,
+			NotificationConstants.RECORDING_CHANNEL_NAME,
 			NotificationManager.IMPORTANCE_DEFAULT
 		).apply {
-			description = NotificationConstants.PLAYER_CHANNEL_DESC
+			description = NotificationConstants.RECORDING_CHANNEL_DESC
 			setShowBadge(false)
 			lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
 		}
 
-		val channels = listOf(channel1, channel2)
+		val channel3 = NotificationChannel(
+			NotificationConstants.PLAYER_CHANNEL_ID,
+			NotificationConstants.PLAYER_CHANNEL_NAME,
+			NotificationManager.IMPORTANCE_MIN
+		).apply {
+			description = NotificationConstants.PLAYER_CHANNEL_DESC
+			lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
+		}
+
+		val channels = listOf(channel1, channel2, channel3)
 
 		notificationManager?.createNotificationChannels(channels)
 
 		//shortcuts
 		shortcutFacade.createRecordingsShortCut()
 
-		//start wokers
+		//start workers
 		RemoveTrashRecordingWorker.startRepeatWorker(applicationContext)
 
 	}

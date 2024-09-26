@@ -14,24 +14,30 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalTime
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.DurationUnit
 
-class RecorderStopWatch {
+class RecorderStopWatch(
+	private val delayTime: Duration = 80.milliseconds,
+) {
 
 	private val scope = CoroutineScope(Dispatchers.Default)
 
 	private val _state = MutableStateFlow(RecorderState.IDLE)
 	val recorderState = _state.asStateFlow()
 
-	private val _elapsedTime = MutableStateFlow(0L)
+	private val _elapsedTime = MutableStateFlow(0)
+
+	@OptIn(ExperimentalCoroutinesApi::class)
 	val elapsedTime = _elapsedTime
-		.map { current -> LocalTime.fromNanosecondOfDay(current) }
+		.mapLatest { current -> LocalTime.fromMillisecondOfDay(current) }
 		.stateIn(
 			scope = scope,
 			started = SharingStarted.WhileSubscribed(2000),
@@ -51,17 +57,17 @@ class RecorderStopWatch {
 		.launchIn(scope)
 
 
-	private fun runStopWatch(isRunning: Boolean): Flow<Long> = flow {
+	private fun runStopWatch(isRunning: Boolean): Flow<Int> = flow {
 		var previous = Clock.System.now()
 		while (isRunning) {
 			val now = Clock.System.now()
 			if (now > previous) {
 				val diff = now.minus(previous)
-				val diffNano = diff.inWholeNanoseconds
-				emit(diffNano)
+				val diffInMillis = diff.toInt(DurationUnit.MILLISECONDS)
+				emit(diffInMillis)
 			}
 			previous = Clock.System.now()
-			delay(50.milliseconds)
+			delay(delayTime)
 		}
 	}.flowOn(Dispatchers.Default)
 
@@ -73,15 +79,15 @@ class RecorderStopWatch {
 	fun prepare() = _state.update { RecorderState.PREPARING }
 
 	fun stop() {
-		// completes the timer and reset the elpased time
+		// completes the timer and reset the elapsed time
 		_state.update { RecorderState.COMPLETED }
-		_elapsedTime.update { 0L }
+		_elapsedTime.update { 0 }
 	}
 
 	fun cancel() {
 		// cancel the current run
 		_state.update { RecorderState.CANCELLED }
-		_elapsedTime.update { 0L }
+		_elapsedTime.update { 0 }
 	}
 
 	fun reset() {

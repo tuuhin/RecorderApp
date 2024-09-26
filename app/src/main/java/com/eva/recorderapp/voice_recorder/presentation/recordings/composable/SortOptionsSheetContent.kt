@@ -95,7 +95,7 @@ fun SortOptionsSheetContent(
 
 @PreviewLightDark
 @Composable
-private fun SortOpetionsSheetContentPreview() = RecorderAppTheme {
+private fun SortOptionsSheetContentPreview() = RecorderAppTheme {
 	Surface {
 		SortOptionsSheetContent(
 			sortInfo = RecordingsSortInfo(),

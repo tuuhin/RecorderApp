@@ -2,7 +2,6 @@ package com.eva.recorderapp.voice_recorder.presentation.navigation.routes
 
 import android.content.Intent
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.EaseInCubic
 import androidx.compose.animation.core.FiniteAnimationSpec
@@ -35,10 +34,10 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsS
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.recorder.RecorderServiceBinder
 import com.eva.recorderapp.voice_recorder.presentation.recorder.RecorderViewModel
-import com.eva.recorderapp.voice_recorder.presentation.recorder.VoiceRecroderScreen
+import com.eva.recorderapp.voice_recorder.presentation.recorder.VoiceRecorderScreen
 
 fun NavGraphBuilder.recorderRoute(
-	navController: NavHostController
+	navController: NavHostController,
 ) = animatedComposable<NavRoutes.VoiceRecorder>(
 	deepLinks = listOf(
 		navDeepLink {
@@ -50,13 +49,13 @@ fun NavGraphBuilder.recorderRoute(
 
 	val viewModel = hiltViewModel<RecorderViewModel>()
 
-	UiEventsSideEffect(viewModel = viewModel)
+	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
 
 	RecorderServiceBinder { isBounded, service ->
 		AnimatedContent(
 			targetState = isBounded && service != null,
 			label = "Setting the recorder animation",
-			transitionSpec = { recorderServiceBinderTrasition() },
+			transitionSpec = { recorderServiceBinderTransition() },
 			modifier = Modifier.fillMaxSize()
 		) { isReady ->
 			if (isReady && service != null) {
@@ -64,10 +63,12 @@ fun NavGraphBuilder.recorderRoute(
 				val timer by service.recorderTime.collectAsStateWithLifecycle()
 				val recorderState by service.recorderState.collectAsStateWithLifecycle()
 				val recorderAmplitude by service.amplitudes.collectAsStateWithLifecycle()
+				val bookMarks by service.bookMarks.collectAsStateWithLifecycle()
 
-				VoiceRecroderScreen(
-					stopWatch = timer,
+				VoiceRecorderScreen(
+					stopWatchTime = timer,
 					recorderState = recorderState,
+					bookMarks = bookMarks,
 					amplitudeCallback = { recorderAmplitude },
 					onRecorderAction = viewModel::onAction,
 					onShowRecordings = dropUnlessResumed {
@@ -93,13 +94,13 @@ fun NavGraphBuilder.recorderRoute(
 	}
 }
 
-fun AnimatedContentTransitionScope<Boolean>.recorderServiceBinderTrasition(
-	scaleTranstion: FiniteAnimationSpec<Float> = spring(
+fun recorderServiceBinderTransition(
+	scaleTransition: FiniteAnimationSpec<Float> = spring(
 		dampingRatio = Spring.DampingRatioLowBouncy,
 		stiffness = Spring.StiffnessMedium
 	),
-	fadeTransition: FiniteAnimationSpec<Float> = tween(durationMillis = 200, easing = EaseInCubic)
+	fadeTransition: FiniteAnimationSpec<Float> = tween(durationMillis = 200, easing = EaseInCubic),
 ): ContentTransform {
-	return scaleIn(scaleTranstion) + fadeIn(fadeTransition) togetherWith
-			scaleOut(scaleTranstion) + fadeOut(fadeTransition)
+	return scaleIn(scaleTransition) + fadeIn(fadeTransition) togetherWith
+			scaleOut(scaleTransition) + fadeOut(fadeTransition)
 }

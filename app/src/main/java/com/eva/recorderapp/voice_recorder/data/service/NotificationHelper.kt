@@ -20,7 +20,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 
 class NotificationHelper(
-	private val context: Context
+	private val context: Context,
 ) {
 
 	private val _notificationManager by lazy { context.getSystemService<NotificationManager>() }
@@ -44,14 +44,14 @@ class NotificationHelper(
 		context: Context,
 		requestCodes: IntentRequestCodes,
 		intent: Intent,
-		flags: Int = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+		flags: Int = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT,
 	) = PendingIntent.getService(context, requestCodes.code, intent, flags)
 
 	private fun buildActivityPendingIntent(
 		context: Context,
 		requestCodes: IntentRequestCodes,
 		intent: Intent,
-		flags: Int = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+		flags: Int = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT,
 	) = PendingIntent.getActivity(context, requestCodes.code, intent, flags)
 
 
@@ -74,8 +74,8 @@ class NotificationHelper(
 			context = context,
 			requestCodes = IntentRequestCodes.STOP_VOICE_RECORDER,
 			intent = recorderServiceIntent.apply {
-				action = RecorderAction.STOP_RECORDER.action
-			}
+				action = RecorderAction.StopRecorderAction.action
+			},
 		)
 
 	private val cancelRecorderPendingIntent: PendingIntent
@@ -83,8 +83,8 @@ class NotificationHelper(
 			context = context,
 			requestCodes = IntentRequestCodes.CANCEL_VOICE_RECORDER,
 			intent = recorderServiceIntent.apply {
-				action = RecorderAction.CANCEL_RECORDER.action
-			}
+				action = RecorderAction.CancelRecorderAction.action
+			},
 		)
 
 	private val pauseRecorderPendingIntent: PendingIntent
@@ -92,8 +92,8 @@ class NotificationHelper(
 			context = context,
 			requestCodes = IntentRequestCodes.PAUSE_VOICE_RECORDER,
 			intent = recorderServiceIntent.apply {
-				action = RecorderAction.PAUSE_RECORDER.action
-			}
+				action = RecorderAction.PauseRecorderAction.action
+			},
 		)
 
 	private val resumeRecorderPendingIntent: PendingIntent
@@ -101,8 +101,8 @@ class NotificationHelper(
 			context = context,
 			requestCodes = IntentRequestCodes.RESUME_VOICE_RECORDER,
 			intent = recorderServiceIntent.apply {
-				action = RecorderAction.RESUME_RECORDER.action
-			}
+				action = RecorderAction.ResumeRecorderAction.action
+			},
 		)
 
 	private val recorderCustomView = RemoteViews(
@@ -120,15 +120,15 @@ class NotificationHelper(
 			.setStyle(NotificationCompat.DecoratedCustomViewStyle())
 			.setCustomContentView(recorderCustomView)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-			.setPriority(NotificationCompat.PRIORITY_HIGH)
-			.setSilent(true)
+			.setPriority(NotificationCompat.PRIORITY_MAX)
+			.setCategory(NotificationCompat.CATEGORY_SERVICE)
 			.setShowWhen(false)
 			.setOnlyAlertOnce(true)
 			.setOngoing(true)
 			.setContentIntent(recorderScreenPendingIntent)
 
 	private val recordingCompleteNotification: Notification =
-		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
+		NotificationCompat.Builder(context, NotificationConstants.RECORDING_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_outlined_recording)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -139,7 +139,7 @@ class NotificationHelper(
 			.build()
 
 	private val recordingCancelNotification: Notification =
-		NotificationCompat.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
+		NotificationCompat.Builder(context, NotificationConstants.RECORDING_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_outlined_recording)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)

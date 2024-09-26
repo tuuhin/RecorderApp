@@ -1,7 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.EaseInBounce
 import androidx.compose.animation.core.LinearEasing
@@ -51,10 +50,8 @@ fun AnimatedPlayPauseButton(
 	onPlay: () -> Unit,
 	modifier: Modifier = Modifier,
 	containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-	contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
+	contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
 ) {
-	val inverseColor = MaterialTheme.colorScheme.inverseSurface
-	// TODO: Check recomposition
 
 	val polygon = remember {
 		RoundedPolygon.star(
@@ -65,15 +62,18 @@ fun AnimatedPlayPauseButton(
 		)
 	}
 
-	val infiniteTrasition = rememberInfiniteTransition()
+	val infiniteTransition = rememberInfiniteTransition(
+		label = "Infinite transition for rotating shape"
+	)
 
-	val rotation by infiniteTrasition.animateFloat(
+	val rotation by infiniteTransition.animateFloat(
 		initialValue = 0f,
 		targetValue = 360f,
 		animationSpec = infiniteRepeatable(
 			animation = tween(10_000, easing = LinearEasing),
 			repeatMode = RepeatMode.Restart
-		)
+		),
+		label = "Amount of rotation for the play button",
 	)
 
 	FloatingActionButton(
@@ -89,6 +89,7 @@ fun AnimatedPlayPauseButton(
 				minHeight = dimensionResource(id = R.dimen.play_button_min_size)
 			)
 			.graphicsLayer {
+				shadowElevation = 1.5.dp.toPx()
 				clip = true
 				shape = RoundedPolygonShape(polygon, if (isPlaying) rotation else 0f)
 			}
@@ -113,33 +114,31 @@ fun AnimatedPlayPauseButton(
 	}
 }
 
-private fun AnimatedContentTransitionScope<Boolean>.isPlayingAnimation(): ContentTransform {
+private fun isPlayingAnimation(): ContentTransform {
 
-	val fadeAnimationSpec = tween<Float>(durationMillis = 200, easing = EaseInBounce)
-	val scaleAnimationSpec = spring<Float>(
+	val fadeSpec = tween<Float>(durationMillis = 200, easing = EaseInBounce)
+	val scaleSpec = spring<Float>(
 		dampingRatio = Spring.DampingRatioMediumBouncy,
 		stiffness = Spring.StiffnessMedium,
 	)
 
-	val enter = fadeIn(animationSpec = fadeAnimationSpec) +
-			scaleIn(animationSpec = scaleAnimationSpec)
-
-	val exit = fadeOut(animationSpec = fadeAnimationSpec) +
-			scaleOut(animationSpec = scaleAnimationSpec)
+	val enter = fadeIn(animationSpec = fadeSpec) + scaleIn(animationSpec = scaleSpec)
+	val exit = fadeOut(animationSpec = fadeSpec) + scaleOut(animationSpec = scaleSpec)
 
 	return enter togetherWith exit
 
 }
 
-private class IsPlayingPreviewParams
-	: CollectionPreviewParameterProvider<Boolean>(listOf(true, false))
+private class BooleanPreviewParams : CollectionPreviewParameterProvider<Boolean>(
+	listOf(true, false)
+)
 
 
 @PreviewLightDark
 @Composable
 private fun AnimatedPlayPauseButtonIsPlayingPreview(
-	@PreviewParameter(IsPlayingPreviewParams::class)
-	isPlaying: Boolean
+	@PreviewParameter(BooleanPreviewParams::class)
+	isPlaying: Boolean,
 ) = RecorderAppTheme {
 	Surface {
 		AnimatedPlayPauseButton(

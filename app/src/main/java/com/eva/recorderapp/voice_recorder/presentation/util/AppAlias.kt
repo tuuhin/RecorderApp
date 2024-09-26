@@ -1,7 +1,10 @@
 package com.eva.recorderapp.voice_recorder.presentation.util
 
-import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
+import com.eva.recorderapp.voice_recorder.presentation.categories.utils.SelectableCategory
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.datetime.LocalTime
 
-typealias RecordingAmplitudes = () -> ImmutableList<Float>
-typealias PlayerGraphData = () -> PlayerGraphInfo
+typealias RecordingDataPointCallback = () -> List<Pair<LocalTime, Float>>
+typealias PlayerGraphData = () -> List<Float>
+typealias SelectableCategoryImmutableList = ImmutableList<SelectableCategory>
+typealias PlayRation = () -> Float

@@ -5,7 +5,6 @@ import com.eva.recorderapp.voice_recorder.data.recorder.VoiceRecorderImpl
 import com.eva.recorderapp.voice_recorder.data.service.NotificationHelper
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
-import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
@@ -24,26 +23,20 @@ object RecorderServiceModule {
 
 	@Provides
 	@ServiceScoped
-	fun providesStopWatch(): RecorderStopWatch = RecorderStopWatch()
-
-	@Provides
-	@ServiceScoped
 	fun providesVoiceRecorder(
 		@ApplicationContext context: Context,
 		fileProvider: RecorderFileProvider,
-		stopWatch: RecorderStopWatch,
 		settings: RecorderAudioSettingsRepo,
 	): VoiceRecorder = VoiceRecorderImpl(
 		context = context,
 		fileProvider = fileProvider,
-		stopWatch = stopWatch,
 		settings = settings
 	)
 
 	@Provides
 	@ServiceScoped
 	fun providesNotificationHelper(
-		@ApplicationContext context: Context
+		@ApplicationContext context: Context,
 	): NotificationHelper = NotificationHelper(context = context)
 
 	@Provides
@@ -61,7 +54,7 @@ object RecorderServiceModule {
 	fun providesPauseRecordingOnCallUseCase(
 		settingsRepo: RecorderAudioSettingsRepo,
 		phoneStateObserver: PhoneStateObserver,
-		voiceRecorder: VoiceRecorder
+		voiceRecorder: VoiceRecorder,
 	): PhoneStateObserverUsecase = PhoneStateObserverUsecase(
 		settings = settingsRepo,
 		observer = phoneStateObserver,

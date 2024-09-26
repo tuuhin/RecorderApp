@@ -1,35 +1,39 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
-import com.eva.recorderapp.voice_recorder.data.player.AudioAmplitudeReader
 import com.eva.recorderapp.voice_recorder.data.player.MediaControllerProvider
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
+import com.eva.recorderapp.voice_recorder.domain.player.WaveformsReader
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
+import com.eva.recorderapp.voice_recorder.domain.use_cases.PlayerFileProviderFromIdUseCase
 import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
-import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
+import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
+import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioFileEvent
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ContentLoadState
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.ControllerEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
-import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphInfo
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerSliderControl
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -37,22 +41,29 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val TAG = "PLAYER_VIEWMODEL"
 
-@HiltViewModel(
-	assistedFactory = AudioPlayerViewModelFactory::class
-)
-class AudioPlayerViewModel @AssistedInject constructor(
-	@Assisted private val audioId: Long,
+@HiltViewModel
+class AudioPlayerViewModel @Inject constructor(
 	private val controller: MediaControllerProvider,
-	private val fileProvider: PlayerFileProvider,
-	private val actionHelper: RecordingsActionHelper,
-	private val samplesReader: AudioAmplitudeReader,
-	private val shortcutsUtil: AppShortcutFacade
+	private val fileProviderUseCase: PlayerFileProviderFromIdUseCase,
+	private val secondaryRecordingsData: RecordingsSecondaryDataProvider,
+	private val actionHelper: ShareRecordingsUtil,
+	private val waveformsReader: WaveformsReader,
+	private val shortcutsUtil: AppShortcutFacade,
+	bookmarksProvider: RecordingBookmarksProvider,
+	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
-	// audio player instance for calling the underlying api's
+	private val route: NavRoutes.AudioPlayer
+		get() = savedStateHandle.toRoute<NavRoutes.AudioPlayer>()
+
+	private val audioId: Long
+		get() = route.audioId
+
+	// audio player instance for calling the underlying app's
 	private val audioPlayer: AudioFilePlayer?
 		get() = controller.player
 
@@ -62,24 +73,19 @@ class AudioPlayerViewModel @AssistedInject constructor(
 	private val _currentAudio = MutableStateFlow<AudioFileModel?>(null)
 	private val _isAudioLoaded = MutableStateFlow(false)
 
-	@OptIn(ExperimentalCoroutinesApi::class)
-	private val samplesToImmutableList = samplesReader.samples
-		.map { data ->
-			val builder = persistentListOf<Float>().builder()
-			data.forEach(builder::add)
-			builder.build()
-		}.distinctUntilChanged()
-
-	// graph data
-	private val graphData = combine(
-		samplesToImmutableList,
-		samplesReader.isLoadingCompleted
-	) { waves, isLoaded ->
-		PlayerGraphInfo(
-			isLoaded = isLoaded,
-			waves = waves
+	private val bookMarksFlow = bookmarksProvider.getRecordingBookmarksFromId(audioId)
+		.map { it.toImmutableList() }
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.Eagerly,
+			initialValue = persistentListOf()
 		)
-	}
+
+	val waveforms = waveformsReader.wavefront.stateIn(
+		scope = viewModelScope,
+		started = SharingStarted.WhileSubscribed(8000),
+		initialValue = emptyList()
+	)
 
 	// media load state
 	val loadState = combine(
@@ -89,27 +95,26 @@ class AudioPlayerViewModel @AssistedInject constructor(
 		transform = ::prepareLoadState
 	).stateIn(
 		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(3000),
+		started = SharingStarted.Eagerly,
 		initialValue = ContentLoadState.Loading
 	)
 
 	// player information
-	val playerInfo = combine(
+	val currentAudioState = combine(
 		playerSliderControls.trackData,
 		controller.playerMetaDataFlow,
-		graphData,
-	) { trackData, metadata, graph ->
+		bookMarksFlow,
+	) { trackData, metadata, bookmarks ->
 		AudioPlayerInformation(
 			trackData = trackData,
 			playerMetaData = metadata,
-			waveforms = graph
+			bookmarks = bookmarks
 		)
 	}.stateIn(
 		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(2000),
+		started = SharingStarted.Eagerly,
 		initialValue = AudioPlayerInformation()
 	)
-
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
@@ -117,11 +122,10 @@ class AudioPlayerViewModel @AssistedInject constructor(
 
 
 	init {
-		prepareCurrentRecording(audioId)
-		computeSamples(audioId)
+		prepareCurrentRecording()
+		computeWaveforms(audioId)
 		preparePlayer()
-		// add last played shortcut
-		shortcutsUtil.addLastPlayedShortcut(audioId)
+		setShortcutForLastPlayed()
 	}
 
 	fun onControllerEvents(event: ControllerEvents) {
@@ -133,7 +137,6 @@ class AudioPlayerViewModel @AssistedInject constructor(
 
 	fun onPlayerEvents(event: PlayerEvents) {
 		when (event) {
-			PlayerEvents.ShareCurrentAudioFile -> shareCurrentAudioFile()
 			PlayerEvents.OnPausePlayer -> viewModelScope.launch { audioPlayer?.pausePlayer() }
 			PlayerEvents.OnStartPlayer -> viewModelScope.launch { audioPlayer?.startOrResumePlayer() }
 			is PlayerEvents.OnForwardByNDuration ->
@@ -150,73 +153,113 @@ class AudioPlayerViewModel @AssistedInject constructor(
 		}
 	}
 
+	fun onFileEvents(event: AudioFileEvent) {
+		when (event) {
+			AudioFileEvent.ShareCurrentAudioFile -> shareCurrentAudioFile()
+			is AudioFileEvent.ToggleIsFavourite -> toggleIsFavourite(event.file)
+		}
+	}
+
+
 	private fun shareCurrentAudioFile() = viewModelScope.launch {
 		_currentAudio.value?.let(actionHelper::shareAudioFile) ?: run {
 			_uiEvents.emit(UIEvents.ShowToast("Cannot share audio file"))
 		}
 	}
 
-	private fun prepareCurrentRecording(audioId: Long) {
-		fileProvider
-			.getAudioFileInfo(id = audioId)
-			.onEach { res ->
-				when (res) {
-					Resource.Loading -> _isAudioLoaded.update { false }
-					is Resource.Error -> {
-						_isAudioLoaded.update { true }
-						val message = res.message ?: res.error.message ?: ""
-						_uiEvents.emit(UIEvents.ShowSnackBar(message))
-					}
-
-					is Resource.Success -> {
-						_isAudioLoaded.update { true }
-						_currentAudio.update { res.data }
-					}
+	private fun toggleIsFavourite(fileModel: AudioFileModel) {
+		viewModelScope.launch {
+			val contentState = (loadState.value as? ContentLoadState.Content) ?: return@launch
+			val isAlreadyFav = contentState.data.isFavourite
+			when (val result =
+				secondaryRecordingsData.favouriteAudioFile(fileModel, !isAlreadyFav)) {
+				is Resource.Error -> {
+					val message = result.message ?: result.error.message ?: "fav cannot"
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
 				}
-			}.launchIn(viewModelScope)
+
+				is Resource.Success -> {
+					val message = result.message ?: "fav marked"
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+				}
+
+				else -> {}
+			}
+		}
 	}
+
+	private fun prepareCurrentRecording() = fileProviderUseCase.invoke(audioId)
+		.onEach { res ->
+			when (res) {
+				Resource.Loading -> _currentAudio.value ?: kotlin.run {
+					_isAudioLoaded.update { false }
+				}
+
+				is Resource.Error -> {
+					_isAudioLoaded.update { true }
+					val message = res.message ?: res.error.message ?: ""
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+				}
+
+				is Resource.Success -> {
+					_isAudioLoaded.update { true }
+					_currentAudio.update { res.data }
+				}
+			}
+		}.launchIn(viewModelScope)
+
 
 	private fun prepareLoadState(
 		isLoaded: Boolean,
 		audio: AudioFileModel?,
-		isControllerConnected: Boolean
+		isControllerConnected: Boolean,
 	): ContentLoadState = when {
 		!isLoaded || !isControllerConnected -> ContentLoadState.Loading
-		isLoaded && audio != null -> ContentLoadState.Content(audio)
+		audio != null -> ContentLoadState.Content(audio)
 		else -> ContentLoadState.Unknown
 	}
 
 	private fun preparePlayer() {
-
+		// make sure it's the same file
 		val currentAudio = _currentAudio.filterNotNull()
+			.distinctUntilChangedBy { it.id }
 
 		combine(controller.playerFlow, currentAudio) { player, file ->
+			when (val result = player.preparePlayer(file)) {
+				is Resource.Error -> {
+					val message = result.message ?: result.error.message ?: ""
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+				}
 
-			Log.d(TAG, "PREPARING PLAYER")
-			val result = player.preparePlayer(file)
-
-			when (result) {
-				is Resource.Error -> _uiEvents.emit(UIEvents.ShowSnackBar(result.message ?: ""))
 				else -> {}
 			}
 
 		}.launchIn(viewModelScope)
 	}
 
-	private fun computeSamples(audioId: Long) = viewModelScope.launch {
+	private fun computeWaveforms(audioId: Long) = viewModelScope.launch {
 
 		Log.d(TAG, "STARTING TO COMPUTE SAMPLES")
 
-		val result = samplesReader.evaluteSamplesGraphFromAudioId(audioId)
+		val result = waveformsReader.performWaveformsReading(audioId)
 		// if there is an error show the error
-		(result as? Resource.Error)?.let {
-			_uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: ""))
+		(result as? Resource.Error)?.let { err ->
+			val message = err.message ?: err.error.message ?: ""
+			_uiEvents.emit(UIEvents.ShowSnackBar(message))
+		}
+	}
+
+	private fun setShortcutForLastPlayed() {
+		// it's a main thread work
+		viewModelScope.launch(Dispatchers.Main) {
+			// add last played shortcut
+			shortcutsUtil.addLastPlayedShortcut(audioId)
 		}
 	}
 
 	override fun onCleared() {
-		//clear codec
-		samplesReader.clearResources()
+		//clear resources associated with reader
+		waveformsReader.clearResources()
 		Log.d(TAG, "CLEARING THE VIEWMODEL FOR AUDIO $audioId")
 		super.onCleared()
 	}

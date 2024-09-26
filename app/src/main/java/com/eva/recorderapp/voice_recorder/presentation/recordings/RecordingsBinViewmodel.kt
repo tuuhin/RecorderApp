@@ -1,11 +1,15 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
+import android.app.RecoverableSecurityException
+import android.os.Build
+import androidx.activity.result.IntentSenderRequest
 import androidx.lifecycle.viewModelScope
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
+import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.DeleteOrTrashRecordingsRequest
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.TrashRecordingScreenEvent
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toSelectableRecordings
@@ -40,97 +44,139 @@ class RecordingsBinViewmodel @Inject constructor(
 			initialValue = persistentListOf()
 		)
 
-	private val areRecodingsLoaded = MutableStateFlow(false)
-	val isLoaded = areRecodingsLoaded.asStateFlow()
+	private val selectedRecordings: Collection<TrashRecordingModel>
+		get() = _trashedRecordings.value
+			.filter(SelectableTrashRecordings::isSelected)
+			.map(SelectableTrashRecordings::trashRecording)
 
-	val _uiEvents = MutableSharedFlow<UIEvents>()
+
+	private val _isRecordingsLoaded = MutableStateFlow(false)
+	val isLoaded = _isRecordingsLoaded.asStateFlow()
+
+	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 
+	private val _deleteEvents = MutableSharedFlow<DeleteOrTrashRecordingsRequest>()
+	val deleteRequestEvent: SharedFlow<DeleteOrTrashRecordingsRequest>
+		get() = _deleteEvents.asSharedFlow()
 
-	init {
-		populateRecordings()
+
+	private fun populateRecordings() {
+		// recordings are already loaded no need to again add a collector
+		if (_isRecordingsLoaded.value) return
+
+		// recordings flow collector
+		provider.trashedRecordingsFlow
+			.onEach { res ->
+				when (res) {
+					is Resource.Error -> {
+						val message = res.message ?: res.error.message ?: "SOME ERROR"
+						_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
+						_isRecordingsLoaded.update { true }
+					}
+
+					Resource.Loading -> _isRecordingsLoaded.update { false }
+					is Resource.Success -> {
+						val new = res.data.toSelectableRecordings()
+
+						_trashedRecordings.update { new }
+						_isRecordingsLoaded.update { true }
+					}
+				}
+			}.launchIn(viewModelScope)
 	}
-
-	private fun populateRecordings() = provider.trashedRecordingsFlow
-		.onEach { res ->
-			when (res) {
-				is Resource.Error -> {
-					val message = res.message ?: res.error.message ?: "SOME ERROR"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
-					areRecodingsLoaded.update { true }
-				}
-
-				Resource.Loading -> areRecodingsLoaded.update { false }
-				is Resource.Success -> {
-					val new = res.data.toSelectableRecordings()
-
-					_trashedRecordings.update { new }
-					areRecodingsLoaded.update { true }
-				}
-			}
-
-		}.launchIn(viewModelScope)
 
 	fun onScreenEvent(event: TrashRecordingScreenEvent) {
 		when (event) {
-			is TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect -> ontoggleRecordingSelection(event.recording)
-			TrashRecordingScreenEvent.OnSelectTrashRecording -> onSelectOrUnSelectAllRecordings(true)
-			TrashRecordingScreenEvent.OnUnSelectTrashRecording -> onSelectOrUnSelectAllRecordings(false)
+			TrashRecordingScreenEvent.PopulateTrashRecordings -> populateRecordings()
+			TrashRecordingScreenEvent.OnSelectTrashRecording -> onSelectOrUnSelectAll(true)
+			TrashRecordingScreenEvent.OnUnSelectTrashRecording -> onSelectOrUnSelectAll(false)
 			TrashRecordingScreenEvent.OnSelectItemDeleteForeEver -> onPermanentDelete()
 			TrashRecordingScreenEvent.OnSelectItemRestore -> onRecordingsRestore()
+			is TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect -> onToggleSelection(event.recording)
+			is TrashRecordingScreenEvent.OnPostDeleteRequestApi30 ->
+				onPostTrashEvent(event.message)
 		}
 	}
 
-	private fun onSelectOrUnSelectAllRecordings(select: Boolean = false) {
+	private fun onSelectOrUnSelectAll(select: Boolean = false) {
 		_trashedRecordings.update { recordings ->
 			recordings.map { record -> record.copy(isSelected = select) }
 		}
 	}
 
 	private fun onRecordingsRestore() {
-		val selected = _trashedRecordings.value
-			.filter(SelectableTrashRecordings::isSelected)
-			.map(SelectableTrashRecordings::trashRecording)
-
 		viewModelScope.launch {
-			val result = provider.restoreRecordingsFromTrash(selected)
-			when (result) {
-				is Resource.Error -> _uiEvents.emit(
-					UIEvents.ShowToast(message = result.message ?: "Cannot restore items")
-				)
+			when (val result = provider.restoreRecordingsFromTrash(selectedRecordings)) {
+				is Resource.Error -> {
+					val message = result.message ?: "Cannot restore items"
+					_uiEvents.emit(UIEvents.ShowToast(message))
+				}
 
-				is Resource.Success -> _uiEvents.emit(
-					UIEvents.ShowToast(message = result.message ?: "Items restored")
-				)
+				is Resource.Success -> {
+					val message = result.message ?: "Items restored"
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+				}
 
 				else -> {}
 			}
 		}
 	}
 
-	private fun onPermanentDelete() {
-		val selected = _trashedRecordings.value
-			.filter(SelectableTrashRecordings::isSelected)
-			.map(SelectableTrashRecordings::trashRecording)
+	private fun onPermanentDelete() = viewModelScope.launch {
+		when (val result = provider.permanentlyDeleteRecordingsInTrash(selectedRecordings)) {
+			is Resource.Error -> {
+				if (result.error is SecurityException) {
+					handleSecurityExceptionToDelete(result.error)
+					return@launch
+				}
+				val message = result.message ?: "Cannot move items to trash"
+				onPostTrashEvent(message)
+			}
 
+			is Resource.Success -> {
+				val message = result.message ?: "Items deleted successfully"
+				onPostTrashEvent(message = message)
+			}
+
+			else -> {}
+		}
+	}
+
+	private fun handleSecurityExceptionToDelete(error: SecurityException) {
 		viewModelScope.launch {
-			val result = provider.permanentlyDeleteRecordedVoicesInTrash(selected)
-			when (result) {
-				is Resource.Error -> _uiEvents.emit(
-					UIEvents.ShowToast(message = result.message ?: "Cannot restore items")
-				)
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 
-				is Resource.Success -> _uiEvents.emit(
-					UIEvents.ShowToast(message = result.message ?: "Items restored")
-				)
+				val request = DeleteOrTrashRecordingsRequest.OnDeleteRequest(selectedRecordings)
+				_deleteEvents.emit(request)
 
-				else -> {}
+			} else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+				// TODO: Check the workflow for android 10
+				(error as? RecoverableSecurityException)?.let { exp ->
+					val pendingIntent = exp.userAction.actionIntent
+					val request = IntentSenderRequest.Builder(pendingIntent)
+						.build()
+					val deleteRequest =
+						DeleteOrTrashRecordingsRequest.OnDeleteRequest(
+							trashRecordings = selectedRecordings,
+							intentSenderRequest = request
+						)
+					_deleteEvents.emit(deleteRequest)
+				}
 			}
 		}
 	}
 
-	private fun ontoggleRecordingSelection(recording: TrashRecordingModel) {
+	private fun onPostTrashEvent(message: String) {
+		viewModelScope.launch {
+			// show the toast its deleted
+			_uiEvents.emit(UIEvents.ShowToast(message))
+		}
+	}
+
+
+	private fun onToggleSelection(recording: TrashRecordingModel) {
 		_trashedRecordings.update { recordings ->
 			recordings.map { record ->
 				if (record.trashRecording == recording)
@@ -139,5 +185,4 @@ class RecordingsBinViewmodel @Inject constructor(
 			}
 		}
 	}
-
 }

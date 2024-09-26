@@ -3,7 +3,9 @@ package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -23,8 +25,8 @@ import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
 @Composable
 fun NoRecordPermissionBox(
-	onPermsChanged: (Boolean) -> Unit,
-	modifier: Modifier = Modifier
+	onPermissionChanged: (Boolean) -> Unit,
+	modifier: Modifier = Modifier,
 ) {
 	Column(
 		modifier = modifier,
@@ -46,8 +48,9 @@ fun NoRecordPermissionBox(
 			style = MaterialTheme.typography.bodyMedium,
 			textAlign = TextAlign.Center
 		)
+		Spacer(modifier = Modifier.height(2.dp))
 		CheckPermissionButton(
-			onPermissionChanged = onPermsChanged,
+			onPermissionChanged = onPermissionChanged,
 			shape = MaterialTheme.shapes.medium
 		)
 	}
@@ -58,7 +61,7 @@ fun NoRecordPermissionBox(
 private fun NoRecorderPermissionBox() = RecorderAppTheme {
 	Surface {
 		NoRecordPermissionBox(
-			onPermsChanged = {},
+			onPermissionChanged = {},
 			modifier = Modifier
 				.fillMaxWidth()
 				.padding(12.dp)

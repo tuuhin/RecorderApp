@@ -1,7 +1,5 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,7 +27,7 @@ import com.eva.recorderapp.R
 fun RestoreRecordingsButton(
 	onItemRestore: () -> Unit,
 	modifier: Modifier = Modifier,
-	colors: IconButtonColors = IconButtonDefaults.iconButtonColors()
+	colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
 ) {
 
 	var showDialog by remember { mutableStateOf(false) }
@@ -76,7 +74,7 @@ fun RestoreRecordingsButton(
 			colors = colors,
 		) {
 			Icon(
-				imageVector = Icons.Default.Restore,
+				painter = painterResource(R.drawable.ic_restore_simple),
 				contentDescription = stringResource(id = R.string.recordings_restore_action)
 			)
 		}

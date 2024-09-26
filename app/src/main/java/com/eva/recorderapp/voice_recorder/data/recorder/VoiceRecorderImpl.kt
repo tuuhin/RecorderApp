@@ -5,19 +5,21 @@ import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import com.eva.recorderapp.R
+import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.recorder.MicrophoneDataPoint
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
+import com.eva.recorderapp.voice_recorder.domain.recorder.exceptions.FileNotConfiguredException
 import com.eva.recorderapp.voice_recorder.domain.recorder.models.RecordEncoderAndFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -30,15 +32,17 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
 import java.io.File
 import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val LOGGER_TAG = "VOICE_RECORDER"
 
 class VoiceRecorderImpl(
 	private val context: Context,
 	private val fileProvider: RecorderFileProvider,
-	private val stopWatch: RecorderStopWatch,
 	private val settings: RecorderAudioSettingsRepo,
 ) : VoiceRecorder {
+
+	private val stopWatch = RecorderStopWatch(delayTime = 60.milliseconds)
 
 	// recording format and encoder
 	private val format: RecordEncoderAndFormat
@@ -72,7 +76,7 @@ class VoiceRecorderImpl(
 		get() = stopWatch.elapsedTime
 
 	@OptIn(ExperimentalCoroutinesApi::class)
-	override val maxAmplitudes: Flow<FloatArray>
+	override val dataPoints: Flow<List<MicrophoneDataPoint>>
 		get() = recorderState.flatMapLatest { state ->
 			_bufferReader?.readAmplitudeBuffered(state)
 				?: emptyFlow()
@@ -101,7 +105,10 @@ class VoiceRecorderImpl(
 
 		_recorder?.setOnErrorListener(_errorListener)
 
-		_bufferReader = BufferedAmplitudeReader(recorder = _recorder)
+		_bufferReader = BufferedAmplitudeReader(
+			recorder = _recorder,
+			delayRate = VoiceRecorder.AMPS_READ_DELAY_RATE
+		)
 		Log.d(LOGGER_TAG, "CREATED RECORDER AND AMPLITUDE SUCCESSFULLY")
 	}
 
@@ -109,13 +116,13 @@ class VoiceRecorderImpl(
 	 * Creates the file uri in which the audio to be recorded and initiate
 	 * the recorder parameters
 	 */
-	private suspend fun initiateRecorderParams(): Boolean {
+	private suspend fun initiateRecorderParams() {
 		return coroutineScope {
 			if (_recorder == null) createRecorder()
 
 			// ensures the file is being created in a different coroutine
 			val file = async(Dispatchers.IO) {
-				fileProvider.createFileForRecoring(format.fileExtension)
+				fileProvider.createFileForRecording(format.fileExtension)
 			}
 
 			_recordingFile = file.await()
@@ -143,7 +150,6 @@ class VoiceRecorderImpl(
 				Log.i(LOGGER_TAG, "ENCODING BIT RATE : $bitrate")
 				Log.i(LOGGER_TAG, "CHANNEL COUNT :$channel")
 			}
-			true
 		}
 	}
 
@@ -151,25 +157,27 @@ class VoiceRecorderImpl(
 	 * Method to be called when recording has been finished, and you update the file
 	 * metadata
 	 */
-	private suspend fun updateFileDataToExternalStorage() {
+	private suspend fun updateRecordingToExternalStorage(): Resource<Long?, Exception> {
 		// update the file
-		_recordingFile?.let { file ->
+		val recordingId = _recordingFile?.let { file ->
 			withContext(Dispatchers.IO) {
-				fileProvider.transferFileDataToStorage(file, format)
 				Log.d(LOGGER_TAG, "RECORDER FILE UPDATED")
+				fileProvider.transferFileDataToStorage(file = file, mimeType = format.mimeType)
 			}
-		}
+		} ?: return Resource.Error(FileNotConfiguredException())
 		// set recording uri to null and close the socket
 		_recordingFile = null
 		// resets the recorder for  next recording
 		Log.d(LOGGER_TAG, "RESTING THE RECORDER")
 		_recorder?.reset()
+		return Resource.Success(recordingId)
 	}
 
 	private suspend fun stopAndDeleteFileMetaData() {
 		// update the file
 		_recordingFile?.let { file ->
-			withContext(Dispatchers.IO) {
+			// non-cancellable as file should be deleted
+			withContext(NonCancellable + Dispatchers.IO) {
 				fileProvider.deleteCreatedFile(file)
 				Log.d(LOGGER_TAG, "RECORDER FILE DELETED")
 			}
@@ -187,25 +195,18 @@ class VoiceRecorderImpl(
 			Log.d(LOGGER_TAG, "CANNOT START RECORDING ITS LOCKED")
 			return
 		}
-		// staring an operation lock it
-		operationLock.lock(this)
 		// current uri is already set cannot set it again
 		if (_recordingFile != null) {
 			Log.d(LOGGER_TAG, "CURRENT URI IS ALREADY SET")
 			return
 		}
+		// staring an operation lock it
+		operationLock.lock(this)
 		try {
 			// prepare the recording params
 			stopWatch.prepare()
 			Log.i(LOGGER_TAG, "PREPARING FILE FOR RECORDING")
-			val isOK = initiateRecorderParams()
-			if (!isOK) {
-				Log.d(LOGGER_TAG, "CANNOT INITIATE RECORDER PARAMS")
-				val message = context.getString(R.string.cannot_create_file)
-				Toast.makeText(context, message, Toast.LENGTH_SHORT)
-					.show()
-				return
-			}
+			initiateRecorderParams()
 			// prepare the recorder
 			_recorder?.prepare()
 			Log.d(LOGGER_TAG, "RECORDER PREPARED")
@@ -222,18 +223,19 @@ class VoiceRecorderImpl(
 		}
 	}
 
-	override suspend fun stopRecording() {
+	override suspend fun stopRecording(): Resource<Long?, Exception> {
 		// if it's holding the lock don't do anything
 		if (operationLock.holdsLock(this)) {
 			Log.d(LOGGER_TAG, "CANNOT STOP RECORDING ITS LOCKED")
-			return
+			// returning null as there was no error but a lock
+			return Resource.Success(null)
 		}
 		if (_recordingFile == null) {
 			Log.d(LOGGER_TAG, "FILE URI IS NOT SET SO RECORDER IS NOT READY")
 		}
 		// staring an operation lock it
 		operationLock.lock(this)
-		try {
+		return try {
 			// reset the timer
 			Log.d(LOGGER_TAG, "STOPWATCH STOPPED")
 			stopWatch.stop()
@@ -241,9 +243,10 @@ class VoiceRecorderImpl(
 			_recorder?.stop()
 			Log.d(LOGGER_TAG, "RECORDER STOPPED")
 			// update the file
-			updateFileDataToExternalStorage()
-		} catch (e: IOException) {
+			updateRecordingToExternalStorage()
+		} catch (e: IllegalStateException) {
 			e.printStackTrace()
+			Resource.Error(e, message = "Cannot stop as start wasn't called")
 		} finally {
 			// unlocks the current lock
 			operationLock.unlock(this)
@@ -327,5 +330,4 @@ class VoiceRecorderImpl(
 		stopWatch.reset()
 
 	}
-
 }

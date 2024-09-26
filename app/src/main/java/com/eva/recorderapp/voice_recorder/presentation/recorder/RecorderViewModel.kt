@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RecorderViewModel @Inject constructor(
-	private val handler: RecorderActionHandler
+	private val handler: RecorderActionHandler,
 ) : AppViewModel() {
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()

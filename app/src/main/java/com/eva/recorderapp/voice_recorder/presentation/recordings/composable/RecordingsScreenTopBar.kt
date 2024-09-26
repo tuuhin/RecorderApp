@@ -1,7 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -11,12 +10,11 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.DoneAll
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,15 +59,19 @@ fun RecordingsScreenTopBar(
 	navigation: @Composable () -> Unit = {},
 	onNavigateToBin: () -> Unit = {},
 	onSortItems: () -> Unit = {},
-	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
+	onManageCategories: () -> Unit = {},
+	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(
+		actionIconContentColor = MaterialTheme.colorScheme.primary,
+		navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+	),
 ) {
 
 	var showDropDown by remember { mutableStateOf(false) }
 
 	AnimatedContent(
 		targetState = isSelectedMode,
-		transitionSpec = { animateTopbar() },
-		label = "Selectable Topbar animation",
+		transitionSpec = { animateTopBar() },
+		label = "Selectable Top bar animation",
 		contentAlignment = Alignment.TopCenter,
 		modifier = modifier,
 	) { isSelected ->
@@ -108,7 +110,7 @@ fun RecordingsScreenTopBar(
 					) {
 						IconButton(onClick = onSelectAll) {
 							Icon(
-								imageVector = Icons.Outlined.DoneAll,
+								painter = painterResource(R.drawable.ic_done_all),
 								contentDescription = stringResource(id = R.string.select_all_action)
 							)
 						}
@@ -122,8 +124,21 @@ fun RecordingsScreenTopBar(
 		} else MediumTopAppBar(
 			title = { Text(text = stringResource(id = R.string.recording_top_bar_title)) },
 			actions = {
-				IconButton(onClick = { }) {
-					Icon(imageVector = Icons.Outlined.Search, contentDescription = "")
+				TooltipBox(
+					positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+					tooltip = {
+						PlainTooltip {
+							Text(text = stringResource(id = R.string.menu_option_recycle_bin))
+						}
+					},
+					state = rememberTooltipState(),
+				) {
+					IconButton(onClick = onNavigateToBin) {
+						Icon(
+							painter = painterResource(id = R.drawable.ic_recycle),
+							contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
+						)
+					}
 				}
 
 				Box {
@@ -146,14 +161,16 @@ fun RecordingsScreenTopBar(
 					DropdownMenu(
 						expanded = showDropDown,
 						onDismissRequest = { showDropDown = false },
+						shape = MaterialTheme.shapes.large,
 					) {
 						DropdownMenuItem(
-							text = { Text(text = stringResource(id = R.string.menu_option_recycle_bin)) },
-							onClick = onNavigateToBin,
+							text = { Text(text = stringResource(R.string.menu_option_categories)) },
+							onClick = onManageCategories,
 							leadingIcon = {
 								Icon(
-									painter = painterResource(id = R.drawable.ic_recycle),
-									contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
+									painter = painterResource(id = R.drawable.ic_category),
+									contentDescription = stringResource(R.string.menu_option_categories),
+									modifier = Modifier.size(24.dp)
 								)
 							},
 						)
@@ -177,7 +194,7 @@ fun RecordingsScreenTopBar(
 	}
 }
 
-fun AnimatedContentTransitionScope<Boolean>.animateTopbar(): ContentTransform {
+fun animateTopBar(): ContentTransform {
 	val enterIn = expandIn(
 		animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
 		expandFrom = Alignment.TopCenter
@@ -196,7 +213,7 @@ fun AnimatedContentTransitionScope<Boolean>.animateTopbar(): ContentTransform {
 	return enterIn togetherWith exitOut
 }
 
-private class BooleanPreivewParams :
+class BooleanPreviewParams :
 	CollectionPreviewParameterProvider<Boolean>(listOf(true, false))
 
 
@@ -204,8 +221,8 @@ private class BooleanPreivewParams :
 @PreviewLightDark
 @Composable
 private fun RecordingsTopBarSelectedPreview(
-	@PreviewParameter(BooleanPreivewParams::class)
-	isSelectedMode: Boolean
+	@PreviewParameter(BooleanPreviewParams::class)
+	isSelectedMode: Boolean,
 ) = RecorderAppTheme {
 	RecordingsScreenTopBar(
 		isSelectedMode = isSelectedMode,

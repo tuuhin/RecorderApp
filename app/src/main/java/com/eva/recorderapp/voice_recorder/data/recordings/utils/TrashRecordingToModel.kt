@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.data.recordings.utils
 
-import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileEntity
+import com.eva.recorderapp.voice_recorder.data.database.entity.TrashFileEntity
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import kotlinx.datetime.Clock

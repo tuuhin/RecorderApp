@@ -2,14 +2,21 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import android.os.Build
-import com.eva.recorderapp.voice_recorder.data.recordings.database.TrashFileDao
-import com.eva.recorderapp.voice_recorder.data.recordings.files.RecordingsActionHelperImpl
-import com.eva.recorderapp.voice_recorder.data.recordings.files.TrashRecordingsProviderApi29Impl
-import com.eva.recorderapp.voice_recorder.data.recordings.files.TrashRecordingsProviderImpl
-import com.eva.recorderapp.voice_recorder.data.recordings.files.VoiceRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingCategoryDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsBookmarkDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.database.dao.TrashFileDao
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingBookMarkProviderImpl
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingSecondaryDataProviderImpl
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingsCategoryProviderImpl
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderApi29Impl
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.data.recordings.provider.VoiceRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
-import com.eva.recorderapp.voice_recorder.domain.util.RecordingsActionHelper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,25 +31,45 @@ object RecorderRecordingsProvider {
 	@Provides
 	@Singleton
 	fun providesRecordingsProvider(
-		@ApplicationContext context: Context
+		@ApplicationContext context: Context,
 	): VoiceRecordingsProvider = VoiceRecordingsProviderImpl(context)
-
 
 	@Provides
 	@Singleton
 	fun providesTrashedRecordingsProvider(
 		@ApplicationContext context: Context,
-		trashMetaData: TrashFileDao
+		trashMetaData: TrashFileDao,
+		metadataDao: RecordingsMetadataDao,
 	): TrashRecordingsProvider =
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-			TrashRecordingsProviderImpl(context = context)
-		else
-			TrashRecordingsProviderApi29Impl(context = context, trashMediaDao = trashMetaData)
-
+			TrashRecordingsProviderImpl(context = context, recordingsDao = metadataDao)
+		else TrashRecordingsProviderApi29Impl(
+			context = context,
+			trashMediaDao = trashMetaData,
+			recordingsDao = metadataDao
+		)
 
 	@Provides
 	@Singleton
-	fun providesShareRecordingsActionHelper(
-		@ApplicationContext context: Context
-	): RecordingsActionHelper = RecordingsActionHelperImpl(context)
+	fun providesRecordingsCategoryProvider(
+		@ApplicationContext context: Context,
+		categoryDao: RecordingCategoryDao,
+	): RecordingCategoryProvider = RecordingsCategoryProviderImpl(
+		context = context,
+		categoryDao = categoryDao,
+	)
+
+	@Provides
+	@Singleton
+	fun providesSecondaryProvider(
+		@ApplicationContext context: Context,
+		recordingsMetadataDao: RecordingsMetadataDao,
+	): RecordingsSecondaryDataProvider =
+		RecordingSecondaryDataProviderImpl(context = context, recordingsDao = recordingsMetadataDao)
+
+	@Provides
+	@Singleton
+	fun providesBookmarkProvider(
+		bookmarkDao: RecordingsBookmarkDao,
+	): RecordingBookmarksProvider = RecordingBookMarkProviderImpl(bookmarkDao)
 }

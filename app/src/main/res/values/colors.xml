@@ -14,4 +14,21 @@
   <color name="notification_button_color">#000000</color>
   <color name="ic_launcher_background">#FFF1FFE8</color>
 
+  <color name="tailwind_color_red">#F87171</color>
+  <color name="tailwind_color_orange">#FB923C</color>
+  <color name="tailwind_color_amber">#FBBF24</color>
+  <color name="tailwind_color_yellow">#FACC15</color>
+  <color name="tailwind_color_lime">#A3E635</color>
+  <color name="tailwind_color_green">#4ADE80</color>
+  <color name="tailwind_color_emerald">#34D399</color>
+  <color name="tailwind_color_teal">#2DDB4F</color>
+  <color name="tailwind_color_cyan">#22D3EE</color>
+  <color name="tailwind_color_sky">#38BDF8</color>
+  <color name="tailwind_color_blue">#60A5FA</color>
+  <color name="tailwind_color_indigo">#818CF8</color>
+  <color name="tailwind_color_violet">#A78BFA</color>
+  <color name="tailwind_color_purple">#C084FC</color>
+  <color name="tailwind_color_pink">#F472B6</color>
+  <color name="tailwind_color_rose">#FB7185</color>
+
 </resources>

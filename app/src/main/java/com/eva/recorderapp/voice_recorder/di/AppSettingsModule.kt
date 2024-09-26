@@ -6,11 +6,13 @@ import com.eva.recorderapp.voice_recorder.data.datastore.RecorderFileSettingsRep
 import com.eva.recorderapp.voice_recorder.data.util.AppShortcutsUtilsImpl
 import com.eva.recorderapp.voice_recorder.data.util.BluetoothScoConnectImpl
 import com.eva.recorderapp.voice_recorder.data.util.PhoneStateObserverImpl
+import com.eva.recorderapp.voice_recorder.data.util.ShareRecordingsUtilImpl
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
 import com.eva.recorderapp.voice_recorder.domain.util.BluetoothScoConnect
 import com.eva.recorderapp.voice_recorder.domain.util.PhoneStateObserver
+import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -51,4 +53,10 @@ object AppSettingsModule {
 	fun providesPhoneStateObserver(
 		@ApplicationContext context: Context
 	): PhoneStateObserver = PhoneStateObserverImpl(context)
+
+	@Provides
+	@Singleton
+	fun providesShareRecordingsUtils(
+		@ApplicationContext context: Context
+	): ShareRecordingsUtil = ShareRecordingsUtilImpl(context)
 }

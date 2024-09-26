@@ -8,6 +8,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle.State
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
@@ -16,16 +18,17 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDialogs
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerScreen
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerViewModel
-import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerViewModelFactory
-import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ControllerLifeCyleObserver
+import com.eva.recorderapp.voice_recorder.presentation.record_player.CreateBookMarksViewModel
+import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ControllerLifeCycleObserver
 
 fun NavGraphBuilder.audioPlayerRoute(
-	controller: NavHostController
+	controller: NavHostController,
 ) = animatedComposable<NavRoutes.AudioPlayer>(
 	deepLinks = listOf(
 		navDeepLink {
@@ -36,24 +39,42 @@ fun NavGraphBuilder.audioPlayerRoute(
 ) { backStackEntry ->
 
 	val route = backStackEntry.toRoute<NavRoutes.AudioPlayer>()
+	val lifecycleOwner = LocalLifecycleOwner.current
 
-	val viewModel = hiltViewModel<AudioPlayerViewModel, AudioPlayerViewModelFactory>(
-		creationCallback = { factory -> factory.create(route.audioId) },
-	)
+	val viewModel = hiltViewModel<AudioPlayerViewModel>()
+	val bookMarksViewmodel = hiltViewModel<CreateBookMarksViewModel>()
 
 	val contentState by viewModel.loadState.collectAsStateWithLifecycle()
-	val playerState by viewModel.playerInfo.collectAsStateWithLifecycle()
+	val createOrEditBookMarkState by bookMarksViewmodel.bookmarkState.collectAsStateWithLifecycle()
+	val playerState by viewModel.currentAudioState.collectAsStateWithLifecycle()
+	val waveforms by viewModel.waveforms.collectAsStateWithLifecycle()
 
-	UiEventsSideEffect(viewModel = viewModel)
+	// lifeCycleState
+	val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
-	ControllerLifeCyleObserver(audioId = route.audioId, onEvent = viewModel::onControllerEvents)
+	// ui handler for player viewmodel
+	UiEventsSideEffect(eventsFlow = viewModel::uiEvent, onPopScreenEvent = controller::popBackStack)
+	// ui handler for bookmarks viewmodel
+	UiEventsSideEffect(eventsFlow = bookMarksViewmodel::uiEvent)
+
+	ControllerLifeCycleObserver(audioId = route.audioId, onEvent = viewModel::onControllerEvents)
 
 	AudioPlayerScreen(
+		waveforms = { waveforms },
 		loadState = contentState,
 		playerState = playerState,
+		bookMarkState = createOrEditBookMarkState,
 		onPlayerEvents = viewModel::onPlayerEvents,
+		onBookmarkEvent = bookMarksViewmodel::onBookMarkEvent,
+		onFileEvent = viewModel::onFileEvents,
 		onNavigateToEdit = dropUnlessResumed {
 			controller.navigate(NavRoutes.AudioEditor)
+		},
+		onRenameItem = { audioId ->
+			if (lifeCycleState.isAtLeast(State.RESUMED)) {
+				val dialog = NavDialogs.RenameRecordingDialog(audioId)
+				controller.navigate(dialog)
+			}
 		},
 		navigation = {
 			if (controller.previousBackStackEntry?.destination?.route != null) {
@@ -68,5 +89,4 @@ fun NavGraphBuilder.audioPlayerRoute(
 			}
 		},
 	)
-
 }

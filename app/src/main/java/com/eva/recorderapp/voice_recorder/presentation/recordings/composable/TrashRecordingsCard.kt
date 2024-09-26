@@ -47,9 +47,9 @@ fun TrashRecordingsCard(
 	val context = LocalContext.current
 
 	val expiryDateText = remember(trashRecording.expiresAt) {
-		val readbleText =
+		val readableText =
 			trashRecording.expiresAt.format(LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT)
-		context.getString(R.string.recording_info_expires_at, readbleText)
+		context.getString(R.string.recording_info_expires_at, readableText)
 	}
 
 	ElevatedCard(
@@ -66,14 +66,16 @@ fun TrashRecordingsCard(
 				.fillMaxWidth()
 				.padding(all = dimensionResource(id = R.dimen.card_padding)),
 		) {
-			Crossfade(targetState = isSelectable) { showSelectOption ->
+			Crossfade(
+				targetState = isSelectable,
+				label = "Radio Button Selection"
+			) { showSelectOption ->
 				if (showSelectOption) {
 					RadioButton(
 						selected = isSelected,
 						onClick = onClick,
 						colors = RadioButtonDefaults
 							.colors(selectedColor = MaterialTheme.colorScheme.secondary)
-
 					)
 				} else {
 					Image(
