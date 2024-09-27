@@ -89,7 +89,6 @@ fun AnimatedPlayPauseButton(
 				minHeight = dimensionResource(id = R.dimen.play_button_min_size)
 			)
 			.graphicsLayer {
-				shadowElevation = 1.5.dp.toPx()
 				clip = true
 				shape = RoundedPolygonShape(polygon, if (isPlaying) rotation else 0f)
 			}

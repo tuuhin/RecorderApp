@@ -5,7 +5,7 @@
   <string name="recorder_action_stop">Stop</string>
   <string name="recorder_notification_text_running">Recorder is running</string>
   <string name="recorder_notification_text_paused">Recorder Paused</string>
-  <string name="back_arrow">Back Arrow</string>
+  <string name="back_arrow" translatable="false">Back Arrow</string>
   <string name="action_paused">Pause</string>
   <string name="action_stop">Stop</string>
   <string name="allow_permissions">Allow permission</string>
@@ -26,7 +26,7 @@
   <string name="recording_trash_request_failed">Cannot move recordings to trash</string>
   <string name="recording_action_trash">Remove</string>
   <string name="no_recordings">No recording to display</string>
-  <string name="recording_bin_top_bar_title">Bin</string>
+  <string name="recording_bin_top_bar_title" translatable="false">Bin</string>
   <string name="recording_info_expires_at">Expires At: %s</string>
   <string name="recording_delete_request_success">Recordings Deleted Successfully</string>
   <string name="recording_delete_request_failed">Delete request failed</string>
@@ -41,7 +41,7 @@
   <string name="sort_order_desc">Descending</string>
   <string name="action_cancel">Cancel</string>
   <string name="recording_permanent_delete_dialog_title">Permanent Delete</string>
-  <string name="recording_permanent_delete_dialog_text">Recordings will be permanently removed are you sure you want to remove them, these cannot be restore later</string>
+  <string name="recording_permanent_delete_dialog_text">Recordings will be permanently removed are you sure you want to remove them, these cannot be restored later</string>
   <string name="recording_trash_dialog_title">Trash Items</string>
   <string name="recording_trash_dialog_text">These recordings will be trashed you can find then in recycle bin</string>
   <string name="sort_options_title">Sort By</string>
@@ -72,11 +72,11 @@
   <string name="meta_data_sheet_heading">Details</string>
   <string name="player_action_add_bookmark">BookMark</string>
   <string name="player_action_show_bookmarks">Show List</string>
-  <string name="audio_metadata_bitrate">%.2f kbps</string>
-  <string name="audio_metadata_sample_rate">%.2f khz</string>
+  <string name="audio_metadata_bitrate" translatable="false">%.2f kbps</string>
+  <string name="audio_metadata_sample_rate" translatable="false">%.2f khz</string>
   <string name="audio_metadata_sample_rate_title">Sample Rate</string>
   <string name="audio_metadata_path_title">Path</string>
-  <string name="audio_metadata_bitrate_title">Bitrate</string>
+  <string name="audio_metadata_bitrate_title" translatable="false">Bitrate</string>
   <string name="audio_metadata_channel_title">Channel</string>
   <string name="audio_metadata_last_edit_title">Last Modified</string>
   <string name="audio_metadata_mime_type_title">MimeType</string>
@@ -94,16 +94,16 @@
   <string name="recording_settings_quality_normal">Medium</string>
   <string name="recording_settings_quality_title">Quality</string>
   <string name="recording_settings_quality_text">Change the current audio quality higher quality means higher sample rate and bit rate</string>
-  <string name="audio_quality_sample_rate_bit_rate">%.2f kbps - %.2f khz</string>
+  <string name="audio_quality_sample_rate_bit_rate" translatable="false">%.2f kbps - %.2f khz</string>
   <string name="recording_settings_encoder_title">Audio Encoder</string>
   <string name="recording_settings_encoder_text">Select audio encoder,changing the encoding will vary the quality and size of the recording</string>
-  <string name="recording_settings_encoder_acc">ACC (*.m4a, *.mp3)</string>
-  <string name="recording_settings_encoder_three_gpp">AMR NB (*.amr, .*.3gpp)</string>
-  <string name="recording_settings_encoder_amr_wb">AMR WB (*.awb)</string>
-  <string name="recording_settings_encoder_optus">OPUS (*.ogg)</string>
+  <string name="recording_settings_encoder_acc" translatable="false">ACC (*.m4a, *.mp3)</string>
+  <string name="recording_settings_encoder_three_gpp" translatable="false">AMR NB (*.amr, .*.3gpp)</string>
+  <string name="recording_settings_encoder_amr_wb" translatable="false">AMR WB (*.awb)</string>
+  <string name="recording_settings_encoder_optus" translatable="false">OPUS (*.ogg)</string>
   <string name="recording_settings_encoder_amr_nb_text">Offers smaller file sizes and is well suited for low-bitrate scenarios</string>
   <string name="recording_settings_encoder_amr_wb_text">Suited for longer recordings with wider range of frequencies</string>
-  <string name="recording_settings_encoder_optus_text">High quality compression and adaptibility to different bitrates</string>
+  <string name="recording_settings_encoder_optus_text">High quality compression and adaptability to different bit-rates</string>
   <string name="recording_settings_encoder_mpeg_text">Good quality at same bitrate with large file size</string>
   <string name="recording_settings_skip_silences_title">Skip Silences</string>
   <string name="recording_settings_skip_silences_text">Skip silences while recording</string>
@@ -114,8 +114,8 @@
   <string name="app_settings_common">Settings</string>
   <string name="recording_settings_file_format_title">File Naming</string>
   <string name="recording_settings_file_format_text">Pick a naming strategy file names, for now it can be either the current time or a count</string>
-  <string name="recording_settings_name_format_date_time">%s_2022–12–31–00:00:00</string>
-  <string name="recording_settings_name_format_count">%s_001</string>
+  <string name="recording_settings_name_format_date_time" translatable="false">%s_2022–12–31–00:00:00</string>
+  <string name="recording_settings_name_format_count" translatable="false">%s_001</string>
   <string name="recording_settings_pause_recorder_on_calls">Pause Recorder</string>
   <string name="recording_settings_pause_recorder_on_call_text">Pause recorder on incomming call</string>
   <string name="storage_statistics">Storage</string>
@@ -125,7 +125,7 @@
   <string name="audio_metadata_channel_stereo">Stereo</string>
   <string name="sort_option_size">File Size</string>
   <string name="extras_info">Extra information</string>
-  <string name="turn_off_optimization">Its recommended to turn off battery optimization to run the recorder without any interuptions</string>
+  <string name="turn_off_optimization">Its recommended to turn off battery optimization to run the recorder without any interruptions</string>
   <string name="cannot_launch_activity">Cannot launch this intent</string>
   <string name="rename_recording_prefix_title">Rename Prefix</string>
   <string name="rename_recording_prefix_text">Changing the prefix will add this text as prefix to each of the recording</string>

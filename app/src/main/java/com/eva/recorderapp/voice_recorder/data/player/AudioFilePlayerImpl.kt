@@ -216,9 +216,9 @@ class AudioFilePlayerImpl(
 		val mediaItem = audio.toMediaItem()
 		// set this current media item
 		player.apply {
-			// set repeat mode
-			repeatMode = Player.REPEAT_MODE_ONE
-			// set speed
+			// set repeat mode off
+			repeatMode = Player.REPEAT_MODE_OFF
+			// set speed to 1f
 			setPlaybackSpeed(1f)
 			// clear and set item
 			clearMediaItems()

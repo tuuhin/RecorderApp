@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +27,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
@@ -45,15 +49,15 @@ fun IconButtonWithText(
 ) {
 
 	val indication = LocalIndication.current
+	val containerColor = if (enabled) colors.containerColor else colors.disabledContainerColor
+	val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
 
 	Column(
 		modifier = modifier
 			.defaultMinSize(minWidth = 56.dp)
 			.minimumInteractiveComponentSize()
 			.clip(shape)
-			.background(
-				color = if (enabled) colors.containerColor else colors.disabledContainerColor
-			)
+			.background(color = containerColor)
 			.clickable(
 				interactionSource = interactionSource,
 				enabled = enabled,
@@ -62,25 +66,31 @@ fun IconButtonWithText(
 				role = Role.Button
 			),
 	) {
-		Column(
-			modifier = Modifier.padding(vertical = 6.dp, horizontal = 12.dp),
-			verticalArrangement = Arrangement.spacedBy(spacing),
-			horizontalAlignment = Alignment.CenterHorizontally
-		) {
-			icon()
-			Text(
-				text = text,
-				style = textStyle,
-				color = if (enabled) colors.contentColor else colors.disabledContentColor
-			)
+		CompositionLocalProvider(LocalContentColor provides contentColor) {
+			Column(
+				modifier = Modifier.padding(vertical = 6.dp, horizontal = 12.dp),
+				verticalArrangement = Arrangement.spacedBy(spacing),
+				horizontalAlignment = Alignment.CenterHorizontally
+			) {
+				icon()
+				Text(
+					text = text,
+					style = textStyle
+				)
+			}
 		}
 	}
 }
 
+class IsIconEnabledPreviewParams : CollectionPreviewParameterProvider<Boolean>(listOf(false, true))
+
 
 @PreviewLightDark
 @Composable
-private fun IconButtonWithTextPreview() = RecorderAppTheme {
+private fun IconButtonWithTextPreview(
+	@PreviewParameter(IsIconEnabledPreviewParams::class)
+	enabled: Boolean,
+) = RecorderAppTheme {
 	Surface {
 		IconButtonWithText(
 			icon = {
@@ -90,7 +100,8 @@ private fun IconButtonWithTextPreview() = RecorderAppTheme {
 				)
 			},
 			text = "Icon key",
-			onClick = {}
+			onClick = {},
+			enabled = enabled,
 		)
 	}
 }

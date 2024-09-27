@@ -125,11 +125,10 @@ class CreateBookMarksViewModel @Inject constructor(
 			when (result) {
 				is Resource.Error -> {
 					val message = result.message ?: result.error.message ?: "Cannot add bookmark"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+					_uiEvents.emit(UIEvents.ShowToast(message))
 				}
 
-				is Resource.Success ->
-					_createOrEditBookMarkState.update { CreateOrEditBookMarkState() }
+				is Resource.Success -> _createOrEditBookMarkState.update { CreateOrEditBookMarkState() }
 
 				else -> {}
 			}
@@ -143,11 +142,10 @@ class CreateBookMarksViewModel @Inject constructor(
 			when (val result = bookmarksProvider.updateBookMark(bookmark, bookmarkText)) {
 				is Resource.Error -> {
 					val message = result.message ?: result.error.message ?: "Cannot add bookmark"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+					_uiEvents.emit(UIEvents.ShowToast(message))
 				}
 
-				is Resource.Success ->
-					_createOrEditBookMarkState.update { CreateOrEditBookMarkState() }
+				is Resource.Success -> _createOrEditBookMarkState.update { CreateOrEditBookMarkState() }
 
 				else -> {}
 			}
