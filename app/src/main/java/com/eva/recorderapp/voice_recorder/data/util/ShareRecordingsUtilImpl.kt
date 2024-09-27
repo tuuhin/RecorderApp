@@ -7,13 +7,17 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
 
 class ShareRecordingsUtilImpl(
-	private val context: Context
+	private val context: Context,
 ) : ShareRecordingsUtil {
+
+	private val bookMarksToCsvFileEncoder: BookMarksToCsvFileConvertor
+		get() = BookMarksToCsvFileConvertor(context)
 
 	override fun shareAudioFiles(collection: List<RecordedVoiceModel>): Resource<Unit, Exception> {
 
@@ -59,6 +63,33 @@ class ShareRecordingsUtilImpl(
 
 		return try {
 			context.startActivity(intentChooser)
+			Resource.Success(Unit)
+		} catch (e: ActivityNotFoundException) {
+			Resource.Error(e, "No Activity found to share content to")
+		} catch (e: Exception) {
+			e.printStackTrace()
+			Resource.Error(e)
+		}
+	}
+
+	override suspend fun shareBookmarksCsv(bookmarks: Collection<AudioBookmarkModel>): Resource<Unit, Exception> {
+
+		val uri = bookMarksToCsvFileEncoder.encodeBookmarksToCsvFile(bookmarks.toSet())
+
+
+		val intent = Intent(Intent.ACTION_SEND).apply {
+			setDataAndType(uri, "text/csv")
+			putExtra(Intent.EXTRA_STREAM, uri)
+			addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+		}
+
+		val picker = Intent.createChooser(intent, context.getString(R.string.sharing_bookmarks))
+			.apply {
+				addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+			}
+
+		return try {
+			context.startActivity(picker)
 			Resource.Success(Unit)
 		} catch (e: ActivityNotFoundException) {
 			Resource.Error(e, "No Activity found to share content to")

@@ -180,6 +180,7 @@
   <string name="add_bookmark_dialog_title">বুকমার্ক যুক্ত করুন</string>
   <string name="menu_option_update">আপডেট করুন</string>
   <string name="update_bookmark_dialog_title">বুকমার্ক আপডেট করুন</string>
-
+  <string name="bookmark_action_export">শেয়ার</string>
+  <string name="sharing_bookmarks">বুকমার্ক শেয়ার করুনা</string>
 </resources>
 

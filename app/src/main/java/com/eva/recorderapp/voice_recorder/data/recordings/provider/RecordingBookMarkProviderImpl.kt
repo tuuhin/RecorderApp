@@ -26,6 +26,13 @@ class RecordingBookMarkProviderImpl(
 		}.flowOn(Dispatchers.IO)
 	}
 
+	override suspend fun getRecordingBookmarksFromIdAsList(audioId: Long): List<AudioBookmarkModel> {
+		return withContext(Dispatchers.IO) {
+			bookmarkDao.getBookMarksFromRecordingId(audioId)
+				.map(RecordingBookMarkEntity::toModel)
+		}
+	}
+
 	override suspend fun createBookMarks(recordingId: Long, points: Collection<LocalTime>)
 			: Resource<Unit, Exception> {
 		val entities = points.map { point ->

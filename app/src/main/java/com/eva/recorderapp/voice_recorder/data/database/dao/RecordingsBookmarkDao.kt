@@ -19,6 +19,9 @@ interface RecordingsBookmarkDao {
 	@Query("SELECT * FROM RECORDING_BOOKMARK_TABLE WHERE RECORDING_ID=:recordId")
 	fun getBookMarksFromRecordingIdAsFlow(recordId: Long): Flow<List<RecordingBookMarkEntity>>
 
+	@Query("SELECT * FROM RECORDING_BOOKMARK_TABLE WHERE RECORDING_ID=:recordId")
+	suspend fun getBookMarksFromRecordingId(recordId: Long): List<RecordingBookMarkEntity>
+
 	@Query("SELECT * FROM RECORDING_BOOKMARK_TABLE WHERE BOOKMARK_ID=:bookmarkId")
 	suspend fun getBookMarkFromBookMarkId(bookmarkId: Long): RecordingBookMarkEntity?
 

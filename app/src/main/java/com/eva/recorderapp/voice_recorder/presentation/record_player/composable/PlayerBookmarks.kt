@@ -57,6 +57,7 @@ fun PlayerBookMarks(
 		) {
 			AudioBookmarksList(
 				bookmarks = bookmarks,
+				onExportBookmarks = { onBookmarkEvent(BookMarkEvents.OnExportBookMarkPoints) },
 				onEditBookMark = { onBookmarkEvent(BookMarkEvents.OpenDialogToEdit(it)) },
 				onDeleteBookMark = { onBookmarkEvent(BookMarkEvents.OnDeleteBookmark(it)) },
 				contentPadding = PaddingValues(all = dimensionResource(id = R.dimen.bottom_sheet_padding_lg)),

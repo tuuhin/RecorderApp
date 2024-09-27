@@ -9,6 +9,8 @@ interface RecordingBookmarksProvider {
 
 	fun getRecordingBookmarksFromId(audioId: Long): Flow<List<AudioBookmarkModel>>
 
+	suspend fun getRecordingBookmarksFromIdAsList(audioId: Long): List<AudioBookmarkModel>
+
 	suspend fun createBookMarks(recordingId: Long, points: Collection<LocalTime>)
 			: Resource<Unit, Exception>
 

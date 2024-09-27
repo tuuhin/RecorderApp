@@ -14,4 +14,6 @@ sealed interface BookMarkEvents {
 	data object OpenDialogToCreate : BookMarkEvents
 
 	data class OnAddOrUpdateBookMark(val time: LocalTime) : BookMarkEvents
+
+	data object OnExportBookMarkPoints : BookMarkEvents
 }

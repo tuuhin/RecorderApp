@@ -11,6 +11,7 @@ import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.data.util.roundToClosestSeconds
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
+import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.BookMarkEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.CreateOrEditBookMarkState
@@ -18,12 +19,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
@@ -32,6 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CreateBookMarksViewModel @Inject constructor(
 	private val bookmarksProvider: RecordingBookmarksProvider,
+	private val sharingUtil: ShareRecordingsUtil,
 	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
@@ -48,14 +46,6 @@ class CreateBookMarksViewModel @Inject constructor(
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 
-	private val bookMarksTimeStamps: StateFlow<List<LocalTime>>
-		get() = bookmarksProvider.getRecordingBookmarksFromId(audioId)
-			.map { models -> models.map { it.timeStamp } }
-			.stateIn(
-				scope = viewModelScope,
-				started = SharingStarted.Eagerly,
-				initialValue = emptyList()
-			)
 
 	fun onBookMarkEvent(event: BookMarkEvents) {
 		when (event) {
@@ -99,6 +89,8 @@ class CreateBookMarksViewModel @Inject constructor(
 					onAddBookMark(bookMarkText, event.time)
 				}
 			}
+
+			BookMarkEvents.OnExportBookMarkPoints -> exportBookMarks()
 		}
 	}
 
@@ -107,8 +99,10 @@ class CreateBookMarksViewModel @Inject constructor(
 		viewModelScope.launch {
 			// bookmarks should be lesser than recorderTime
 			val bookMarkTime = time.roundToClosestSeconds()
+			val presentBookmarkTime = bookmarksProvider.getRecordingBookmarksFromIdAsList(audioId)
+				.map { it.timeStamp }
 
-			if (bookMarkTime in bookMarksTimeStamps.value) {
+			if (bookMarkTime in presentBookmarkTime) {
 				return@launch
 			}
 
@@ -162,6 +156,20 @@ class CreateBookMarksViewModel @Inject constructor(
 				val message = res.message ?: res.error.message ?: "Cannot add bookmark"
 				_uiEvents.emit(UIEvents.ShowToast(message))
 			}
+		}
+	}
+
+	private fun exportBookMarks() = viewModelScope.launch {
+		val bookMarks = bookmarksProvider.getRecordingBookmarksFromIdAsList(audioId).ifEmpty {
+			_uiEvents.emit(UIEvents.ShowToast("No Bookmarks selected"))
+			return@launch
+		}
+
+		val result = sharingUtil.shareBookmarksCsv(bookMarks)
+
+		(result as? Resource.Error)?.let { res ->
+			val message = res.message ?: res.error.message ?: "Cannot add bookmark"
+			_uiEvents.emit(UIEvents.ShowToast(message))
 		}
 	}
 }
