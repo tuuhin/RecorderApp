@@ -107,7 +107,8 @@ class VoiceRecorderImpl(
 
 		_bufferReader = BufferedAmplitudeReader(
 			recorder = _recorder,
-			delayRate = VoiceRecorder.AMPS_READ_DELAY_RATE
+			delayRate = VoiceRecorder.AMPS_READ_DELAY_RATE,
+			bufferSize = VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
 		)
 		Log.d(LOGGER_TAG, "CREATED RECORDER AND AMPLITUDE SUCCESSFULLY")
 	}
