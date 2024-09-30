@@ -98,6 +98,13 @@ class AudioFilePlayerListener(
 			// If the player can advertise positions ie, its ready or play or paused
 			// then continue the loop
 			while (state.canAdvertiseCurrentPosition) {
+
+				val current = player.currentPosition.milliseconds
+				val total = player.duration.milliseconds
+
+				if (current.isNegative() && total.isNegative())
+					continue
+
 				val trackData = PlayerTrackData(
 					current = player.currentPosition.milliseconds,
 					total = player.duration.milliseconds,

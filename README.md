@@ -27,11 +27,11 @@ What are the features this app can provide, here's some:
   notifications,without having to return to the app.
 - :file_cabinet: **File Management**: Organize, delete, share, or rename your recordings with ease.
 - :package: **Category Management**: Categories your recording into different category, so that you
-  can easy find the requried one.
+  can easily find the required one.
 - :record_button: **Built-in Player**: Listen to your recordings directly within the app, complete
   with a media notification for easy playback control.
-- :bookmark: **Bookmarks** : You can add multiple bookmarks with the recording to easily rememeber
-  the important portions of your recording.
+- :bookmark: **Bookmarks** : You can add multiple bookmarks with the recording to easily remember
+  the important portions of your recording. You can too export the bookmarks as csv file.
 
 ## 📷 Screenshots
 

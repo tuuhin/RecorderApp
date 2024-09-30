@@ -1,10 +1,10 @@
 package com.eva.recorderapp.voice_recorder.presentation.util
 
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryColor
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel

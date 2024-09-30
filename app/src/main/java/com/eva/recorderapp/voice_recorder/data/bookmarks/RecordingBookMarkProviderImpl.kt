@@ -1,13 +1,11 @@
-package com.eva.recorderapp.voice_recorder.data.recordings.provider
+package com.eva.recorderapp.voice_recorder.data.bookmarks
 
 import android.database.sqlite.SQLiteException
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsBookmarkDao
 import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingBookMarkEntity
-import com.eva.recorderapp.voice_recorder.data.recordings.utils.toEntity
-import com.eva.recorderapp.voice_recorder.data.recordings.utils.toModel
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.RecordingBookmarksProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +22,13 @@ class RecordingBookMarkProviderImpl(
 		return bookmarkDao.getBookMarksFromRecordingIdAsFlow(audioId).map { entities ->
 			entities.map(RecordingBookMarkEntity::toModel)
 		}.flowOn(Dispatchers.IO)
+	}
+
+	override suspend fun getRecordingBookmarksFromIdAsList(audioId: Long): List<AudioBookmarkModel> {
+		return withContext(Dispatchers.IO) {
+			bookmarkDao.getBookMarksFromRecordingId(audioId)
+				.map(RecordingBookMarkEntity::toModel)
+		}
 	}
 
 	override suspend fun createBookMarks(recordingId: Long, points: Collection<LocalTime>)

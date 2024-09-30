@@ -186,7 +186,9 @@
   <string name="no_bookmarks_found">No Bookmarks</string>
   <string name="no_bookmarks_found_desc">Add bookmarks to quickly find important parts of your recording</string>
   <string name="option_text_field">Optional</string>
-  <string name="add_bookmark_dialog_title">Add Boomark</string>
+  <string name="add_bookmark_dialog_title">Add Bookmark</string>
   <string name="menu_option_update">Update</string>
   <string name="update_bookmark_dialog_title">Update BookMark</string>
+  <string name="bookmark_action_export">Export</string>
+  <string name="sharing_bookmarks">Sharing bookmarks</string>
 </resources>
