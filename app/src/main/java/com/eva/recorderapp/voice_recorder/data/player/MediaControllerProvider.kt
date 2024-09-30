@@ -8,7 +8,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionToken
-import com.eva.recorderapp.common.PlayerConstants
 import com.eva.recorderapp.voice_recorder.data.service.MediaPlayerService
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerMetaData
@@ -101,7 +100,7 @@ class MediaControllerProvider(
 	fun prepareController(audioId: Long) {
 		try {
 			val sessionExtras = bundleOf(
-				PlayerConstants.PLAYER_AUDIO_FILE_ID_KEY to audioId
+				MediaPlayerService.PLAYER_AUDIO_FILE_ID_KEY to audioId
 			)
 			_future = MediaController.Builder(context, sessionToken)
 				.setConnectionHints(sessionExtras)

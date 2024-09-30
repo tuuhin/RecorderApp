@@ -2,7 +2,7 @@ package com.eva.recorderapp.voice_recorder.presentation.record_player.util
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
 
 @Stable
 data class CreateOrEditBookMarkState(

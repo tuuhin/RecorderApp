@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.domain.player.model
+package com.eva.recorderapp.voice_recorder.domain.bookmarks
 
 import kotlinx.datetime.LocalTime
 

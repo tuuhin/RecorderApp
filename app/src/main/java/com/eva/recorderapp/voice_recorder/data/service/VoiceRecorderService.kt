@@ -11,12 +11,12 @@ import androidx.lifecycle.lifecycleScope
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.data.util.asLocalTime
-import com.eva.recorderapp.voice_recorder.data.util.roundToClosestSeconds
+import com.eva.recorderapp.common.asLocalTime
+import com.eva.recorderapp.common.roundToClosestSeconds
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
-import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
 import dagger.hilt.android.AndroidEntryPoint

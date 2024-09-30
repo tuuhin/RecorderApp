@@ -8,10 +8,10 @@ import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.data.player.MediaControllerProvider
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
 import com.eva.recorderapp.voice_recorder.domain.player.WaveformsReader
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PlayerFileProviderFromIdUseCase
 import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade

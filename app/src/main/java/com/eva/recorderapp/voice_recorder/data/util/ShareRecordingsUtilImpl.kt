@@ -7,17 +7,17 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.ExportBookMarkUriProvider
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.ExportBookMarksFailedException
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
 
 class ShareRecordingsUtilImpl(
 	private val context: Context,
+	private val exportBookMarkUriProvider: ExportBookMarkUriProvider,
 ) : ShareRecordingsUtil {
-
-	private val bookMarksToCsvFileEncoder: BookMarksToCsvFileConvertor
-		get() = BookMarksToCsvFileConvertor(context)
 
 	override fun shareAudioFiles(collection: List<RecordedVoiceModel>): Resource<Unit, Exception> {
 
@@ -74,8 +74,8 @@ class ShareRecordingsUtilImpl(
 
 	override suspend fun shareBookmarksCsv(bookmarks: Collection<AudioBookmarkModel>): Resource<Unit, Exception> {
 
-		val uri = bookMarksToCsvFileEncoder.encodeBookmarksToCsvFile(bookmarks.toSet())
-
+		val uri = exportBookMarkUriProvider.invoke(bookmarks.toSet())?.toUri()
+			?: return Resource.Error(ExportBookMarksFailedException())
 
 		val intent = Intent(Intent.ACTION_SEND).apply {
 			setDataAndType(uri, "text/csv")

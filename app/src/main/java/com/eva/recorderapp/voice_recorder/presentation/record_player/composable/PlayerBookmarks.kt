@@ -28,8 +28,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
 import com.eva.recorderapp.R
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.BookMarkEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.CreateOrEditBookMarkState
 import kotlinx.collections.immutable.ImmutableList

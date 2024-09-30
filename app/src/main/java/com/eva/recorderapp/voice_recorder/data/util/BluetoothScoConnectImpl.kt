@@ -97,6 +97,8 @@ class BluetoothScoConnectImpl(
 				val connected = audioManager?.communicationDevice
 					?: return Resource.Error(TelephonyFeatureNotException())
 
+				Log.i(TAG,"DEVICE FOUND OF TYPE :${connected.type}")
+
 				if (connected.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO && connected.isSink) {
 					Log.d(TAG, "DEVICE IS ALREADY CONNECTED :${connected.productName}")
 					return Resource.Error(BluetoothScoAlreadyConnected())

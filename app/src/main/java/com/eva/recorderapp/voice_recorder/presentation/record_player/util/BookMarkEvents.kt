@@ -1,7 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.util
 
 import androidx.compose.ui.text.input.TextFieldValue
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
 import kotlinx.datetime.LocalTime
 
 sealed interface BookMarkEvents {

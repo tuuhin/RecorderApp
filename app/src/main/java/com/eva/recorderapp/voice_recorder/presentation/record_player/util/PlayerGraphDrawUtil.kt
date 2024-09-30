@@ -14,7 +14,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.common.LocalTimeFormats
-import com.eva.recorderapp.voice_recorder.data.util.asLocalTime
+import com.eva.recorderapp.common.asLocalTime
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format

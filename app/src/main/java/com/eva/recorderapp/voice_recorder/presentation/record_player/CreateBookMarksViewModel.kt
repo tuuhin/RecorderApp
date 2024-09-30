@@ -8,9 +8,9 @@ import androidx.navigation.toRoute
 import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
-import com.eva.recorderapp.voice_recorder.data.util.roundToClosestSeconds
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
-import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
+import com.eva.recorderapp.common.roundToClosestSeconds
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.BookMarkEvents

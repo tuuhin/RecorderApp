@@ -11,7 +11,6 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.eva.recorderapp.MainActivity
 import com.eva.recorderapp.common.IntentRequestCodes
-import com.eva.recorderapp.common.PlayerConstants
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -58,7 +57,7 @@ class MediaPlayerService : MediaSessionService() {
 		Log.i(TAG, "SESSION SET")
 
 		audioId = controllerInfo.connectionHints
-			.getLong(PlayerConstants.PLAYER_AUDIO_FILE_ID_KEY, -1)
+			.getLong(PLAYER_AUDIO_FILE_ID_KEY, -1)
 
 		return mediaSession.apply {
 			setListener(listener)
@@ -103,6 +102,10 @@ class MediaPlayerService : MediaSessionService() {
 			)
 		}
 	}
+
+	companion object{
+		const val PLAYER_AUDIO_FILE_ID_KEY = "PLAYER_AUDIO_ID"
+	}
 }
 
 private fun MediaPlayerService.createBackStackIntent(audioId: Long): PendingIntent {
@@ -134,4 +137,6 @@ private fun MediaPlayerService.createBackStackIntent(audioId: Long): PendingInte
 		IntentRequestCodes.PLAYER_BACKSTACK_INTENT.code,
 		PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 	)
+
+
 }

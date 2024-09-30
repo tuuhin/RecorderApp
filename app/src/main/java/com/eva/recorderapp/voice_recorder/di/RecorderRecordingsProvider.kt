@@ -3,16 +3,13 @@ package com.eva.recorderapp.voice_recorder.di
 import android.content.Context
 import android.os.Build
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingCategoryDao
-import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsBookmarkDao
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.database.dao.TrashFileDao
-import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingBookMarkProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingSecondaryDataProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingsCategoryProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderApi29Impl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.VoiceRecordingsProviderImpl
-import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
@@ -67,9 +64,4 @@ object RecorderRecordingsProvider {
 	): RecordingsSecondaryDataProvider =
 		RecordingSecondaryDataProviderImpl(context = context, recordingsDao = recordingsMetadataDao)
 
-	@Provides
-	@Singleton
-	fun providesBookmarkProvider(
-		bookmarkDao: RecordingsBookmarkDao,
-	): RecordingBookmarksProvider = RecordingBookMarkProviderImpl(bookmarkDao)
 }

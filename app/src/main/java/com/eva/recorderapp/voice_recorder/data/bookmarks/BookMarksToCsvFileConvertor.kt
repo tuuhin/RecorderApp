@@ -1,11 +1,12 @@
-package com.eva.recorderapp.voice_recorder.data.util
+package com.eva.recorderapp.voice_recorder.data.bookmarks
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
 import com.eva.recorderapp.common.LocalTimeFormats
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioBookmarkModel
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.ExportBookMarkUriProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.format
@@ -13,17 +14,19 @@ import java.io.File
 
 private const val TAG = "BOOKMARKS_CSV_ENCODER"
 
-class BookMarksToCsvFileConvertor(private val context: Context) {
+class BookMarksToCsvFileConvertor(
+	private val context: Context,
+) : ExportBookMarkUriProvider {
 
 	private val filesDir: File
 		// as this files will be a one time export no need to save them to the files dir
 		get() = File(context.cacheDir, "bookmarks")
 			.apply(File::mkdirs)
 
-	private fun File.toContentUri(): Uri = FileProvider
-		.getUriForFile(context, "${context.packageName}.provider", this)
+	private fun File.toContentUri(): Uri =
+		FileProvider.getUriForFile(context, "${context.packageName}.provider", this)
 
-	suspend fun encodeBookmarksToCsvFile(points: Collection<AudioBookmarkModel>): Uri? {
+	override suspend operator fun invoke(points: Collection<AudioBookmarkModel>): String? {
 		return withContext(Dispatchers.IO) {
 
 			val content = buildString {
@@ -52,7 +55,7 @@ class BookMarksToCsvFileConvertor(private val context: Context) {
 
 				Log.d(TAG, "CONTENT URI :$contentUri")
 
-				return@withContext contentUri
+				return@withContext contentUri.toString()
 			} catch (e: Exception) {
 				e.printStackTrace()
 				null

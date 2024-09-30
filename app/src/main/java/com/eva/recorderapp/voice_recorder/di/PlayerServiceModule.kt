@@ -39,7 +39,7 @@ object PlayerServiceModule {
 		settings: RecorderAudioSettingsRepo,
 	): Player {
 
-		val attibutes = AudioAttributes.Builder()
+		val attributes = AudioAttributes.Builder()
 			.setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
 			.setUsage(C.USAGE_MEDIA)
 			.setSpatializationBehavior(C.SPATIALIZATION_BEHAVIOR_AUTO)
@@ -56,7 +56,7 @@ object PlayerServiceModule {
 		return ExoPlayer.Builder(context)
 			.setMediaSourceFactory(mediaSourceFactory)
 			.setSkipSilenceEnabled(settings.audioSettings.skipSilences)
-			.setAudioAttributes(attibutes, true)
+			.setAudioAttributes(attributes, true)
 			.setTrackSelector(DefaultTrackSelector(context))
 			.build()
 	}
