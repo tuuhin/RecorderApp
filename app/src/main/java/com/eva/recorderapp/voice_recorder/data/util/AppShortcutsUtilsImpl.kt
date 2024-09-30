@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import com.eva.recorderapp.MainActivity
 import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
@@ -13,7 +14,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLi
 private const val TAG = "APP_SHORTCUTS"
 
 class AppShortcutsUtilsImpl(
-	private val context: Context
+	private val context: Context,
 ) : AppShortcutFacade {
 
 	private val recordingShortcutId = "recording_shortcut"
@@ -24,8 +25,13 @@ class AppShortcutsUtilsImpl(
 			.setRank(0)
 			.setShortLabel(context.getString(R.string.app_shortcuts_recordings))
 			.setLongLabel(context.getString(R.string.app_shortcuts_recordings_text))
-			.setIcon(IconCompat.createWithResource(context, R.drawable.ic_shortcut_recorder))
-			.setIntent(Intent(Intent.ACTION_VIEW, NavDeepLinks.recordingsDestinationUri))
+			.setIcon(IconCompat.createWithResource(context, R.mipmap.ic_shortcut_recordings))
+			.setIntent(
+				Intent(context, MainActivity::class.java).apply {
+					action = Intent.ACTION_VIEW
+					data = NavDeepLinks.recordingsDestinationUri
+				},
+			)
 			.build()
 
 	private fun lastPlayedShortCut(audioId: Long): ShortcutInfoCompat {
@@ -33,20 +39,24 @@ class AppShortcutsUtilsImpl(
 			.setRank(1)
 			.setShortLabel(context.getString(R.string.app_shortcuts_open_last_played))
 			.setLongLabel(context.getString(R.string.app_shortcuts_open_last_played_text))
-			.setIcon(IconCompat.createWithResource(context, R.drawable.ic_shortcut_play))
-			.setIntent(Intent(Intent.ACTION_VIEW, NavDeepLinks.audioPlayerDestinationUri(audioId)))
+			.setIcon(IconCompat.createWithResource(context, R.mipmap.ic_shortcut_play))
+			.setIntent(
+				Intent(context, MainActivity::class.java).apply {
+					action = Intent.ACTION_VIEW
+					data = NavDeepLinks.audioPlayerDestinationUri(audioId)
+				},
+			)
 			.build()
 	}
 
 
 	override fun createRecordingsShortCut() {
-		val shortcuts = ShortcutManagerCompat.getDynamicShortcuts(context)
-			.map(ShortcutInfoCompat::getId)
-
-		if (!shortcuts.contains(recordingsShortCut.id)) {
-			ShortcutManagerCompat.pushDynamicShortcut(context, recordingsShortCut)
-			Log.d(TAG, "SHORTCUTS ADDED..")
-		}
+		// remove the shortcut
+		ShortcutManagerCompat.removeDynamicShortcuts(context, listOf(recordingShortcutId))
+		// then add the new one
+		ShortcutManagerCompat.pushDynamicShortcut(context, recordingsShortCut)
+		// this helps in dev process
+		Log.d(TAG, "SHORTCUTS ADDED..")
 	}
 
 	override fun addLastPlayedShortcut(audioId: Long) {
