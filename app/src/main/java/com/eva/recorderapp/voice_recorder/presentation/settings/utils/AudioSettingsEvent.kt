@@ -17,4 +17,6 @@ sealed interface AudioSettingsEvent {
 
 	data class OnUseBluetoothMicChanged(val isAllowed: Boolean) : AudioSettingsEvent
 
+	data class OnAddLocationEnabled(val isEnabled: Boolean) : AudioSettingsEvent
+
 }

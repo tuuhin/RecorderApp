@@ -17,9 +17,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 import java.io.OutputStream
 
-class RecorderAudioSettingsRepoImpl(
-	private val context: Context
-) : RecorderAudioSettingsRepo {
+class RecorderAudioSettingsRepoImpl(private val context: Context) : RecorderAudioSettingsRepo {
 
 	override val audioSettingsFlow: Flow<RecorderAudioSettings>
 		get() = context.recorderSettings.data.map(RecorderSettingsProto::toDomain)
@@ -71,6 +69,14 @@ class RecorderAudioSettingsRepoImpl(
 		context.recorderSettings.updateData { settings ->
 			settings.toBuilder()
 				.setPauseDuringCalls(isEnabled)
+				.build()
+		}
+	}
+
+	override suspend fun onAddLocationEnabled(isEnabled: Boolean) {
+		context.recorderSettings.updateData { settings ->
+			settings.toBuilder()
+				.setAllowLocationInfoIfAvailable(isEnabled)
 				.build()
 		}
 	}

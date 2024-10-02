@@ -28,7 +28,7 @@ fun AudioSettings(
 	settings: RecorderAudioSettings,
 	onEvent: (AudioSettingsEvent) -> Unit,
 	modifier: Modifier = Modifier,
-	contentPadding: PaddingValues = PaddingValues(12.dp)
+	contentPadding: PaddingValues = PaddingValues(12.dp),
 ) {
 
 	val isInspectionMode = LocalInspectionMode.current
@@ -68,7 +68,7 @@ fun AudioSettings(
 		}
 		item {
 			SettingsItemWithSwitch(
-				isSelected = settings.enableStero,
+				isSelected = settings.enableStereo,
 				title = stringResource(id = R.string.recording_settings_enable_stereo),
 				text = stringResource(id = R.string.recording_settings_enable_stereo_text),
 				leading = {
@@ -98,8 +98,13 @@ fun AudioSettings(
 		}
 		item {
 			PauseRecorderOnCallTile(
-				canPause = settings.pauseRecordingOnCall,
-				onChange = { onEvent(AudioSettingsEvent.OnPauseRecorderOnCalls(it)) })
+				isPauseRecordingOnIncommingCall = settings.pauseRecordingOnCall,
+				onActionEnabledChanged = { onEvent(AudioSettingsEvent.OnPauseRecorderOnCalls(it)) })
+		}
+		item {
+			LocationInfoCollectionCard(
+				isAddLocationInfoAllowed = settings.addLocationInfoInRecording,
+				onActionEnabledChanged = { onEvent(AudioSettingsEvent.OnAddLocationEnabled(it)) })
 		}
 		item {
 			SettingsItemWithSwitch(

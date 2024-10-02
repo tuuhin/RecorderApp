@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.settings.composables.audio
 
 import android.Manifest
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Icon
@@ -19,8 +20,8 @@ import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.presentation.settings.composables.SettingsItemWithSwitch
 
 @Composable
-fun PauseRecorderOnCallTile(
-	isPauseRecordingOnIncommingCall: Boolean,
+fun LocationInfoCollectionCard(
+	isAddLocationInfoAllowed: Boolean,
 	onActionEnabledChanged: (Boolean) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
@@ -28,10 +29,7 @@ fun PauseRecorderOnCallTile(
 	var showDialog by remember { mutableStateOf(false) }
 
 	var hasPermission by remember(context) {
-		mutableStateOf(
-			ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE)
-					== PermissionChecker.PERMISSION_GRANTED
-		)
+		mutableStateOf(context.hasLocationPermission)
 	}
 
 	val launcher = rememberLauncherForActivityResult(
@@ -40,20 +38,20 @@ fun PauseRecorderOnCallTile(
 		hasPermission = isGranted
 	}
 
-	PauseCallInfoDialog(
+	LocationInfoDialog(
 		showDialog = showDialog && !hasPermission,
-		onConfirm = { launcher.launch(Manifest.permission.READ_PHONE_STATE) },
+		onConfirm = { launcher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
 		onDismiss = { showDialog = false },
 	)
 
 	SettingsItemWithSwitch(
-		isSelected = hasPermission && isPauseRecordingOnIncommingCall,
-		title = stringResource(id = R.string.recording_settings_pause_recorder_on_calls),
-		text = stringResource(id = R.string.recording_settings_pause_recorder_on_call_text),
+		isSelected = hasPermission && isAddLocationInfoAllowed,
+		title = stringResource(id = R.string.recording_settings_add_location_info_title),
+		text = stringResource(id = R.string.recording_settings_add_location_info_text),
 		leading = {
 			Icon(
-				painter = painterResource(id = R.drawable.ic_call),
-				contentDescription = stringResource(id = R.string.recording_settings_pause_recorder_on_calls),
+				painter = painterResource(id = R.drawable.ic_location),
+				contentDescription = stringResource(id = R.string.recording_settings_add_location_info_title),
 			)
 		},
 		modifier = modifier,
@@ -63,3 +61,7 @@ fun PauseRecorderOnCallTile(
 		},
 	)
 }
+
+private val Context.hasLocationPermission: Boolean
+	get() = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+			PermissionChecker.PERMISSION_GRANTED

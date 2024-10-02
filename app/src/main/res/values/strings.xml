@@ -191,4 +191,9 @@
   <string name="update_bookmark_dialog_title">Update BookMark</string>
   <string name="bookmark_action_export">Export</string>
   <string name="sharing_bookmarks">Sharing bookmarks</string>
+  <string name="recording_settings_add_location_info_title">Add Location</string>
+  <string name="recording_settings_add_location_info_text">Add location info to your recordings</string>
+  <string name="recording_settings_add_location_info_text_explained">Some recordings formats can add location info in its metadata,which can be later used to determine recording location</string>
+  <string name="action_request_permission">Request</string>
+  <string name="recording_settings_pause_recorder_on_call_text_explained">Incoming calls can distort the content of the recording. Allow permission to pause the recording on incomming call</string>
 </resources>

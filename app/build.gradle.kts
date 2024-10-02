@@ -17,8 +17,8 @@ android {
 		applicationId = "com.eva.recorderapp"
 		minSdk = 29
 		targetSdk = 35
-		versionCode = 3
-		versionName = "1.1.1"
+		versionCode = 4
+		versionName = "1.1.2"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -32,6 +32,7 @@ android {
 			applicationIdSuffix = ".release"
 			isShrinkResources = true
 			multiDexEnabled = true
+			signingConfig = signingConfigs.getByName("debug")
 			proguardFiles(
 				getDefaultProguardFile("proguard-android-optimize.txt"),
 				"proguard-rules.pro"
@@ -92,6 +93,8 @@ dependencies {
 	implementation(libs.kotlinx.datetime)
 	//kotlinx-immutable
 	implementation(libs.kotlinx.collections.immutable)
+	//location
+	implementation(libs.gms.play.services.location)
 	//hilt
 	ksp(libs.hilt.android.compiler)
 	ksp(libs.androidx.hilt.compiler)

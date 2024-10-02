@@ -8,6 +8,7 @@ data class RecorderAudioSettings(
 	val quality: RecordQuality = RecordQuality.NORMAL,
 	val pauseRecordingOnCall: Boolean = false,
 	val skipSilences: Boolean = false,
-	val enableStero: Boolean = false,
+	val enableStereo: Boolean = false,
 	val useBluetoothMic: Boolean = false,
+	val addLocationInfoInRecording: Boolean = false,
 )

@@ -2,11 +2,13 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
+import com.eva.recorderapp.voice_recorder.data.location.CoarseLocationProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recorder.VoiceRecorderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecorderFileProviderImpl
 import com.eva.recorderapp.voice_recorder.data.service.NotificationHelper
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.location.LocationProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
@@ -38,14 +40,22 @@ object RecorderServiceModule {
 
 	@Provides
 	@ServiceScoped
+	fun providesLocationProvider(
+		@ApplicationContext context: Context,
+	): LocationProvider = CoarseLocationProviderImpl(context)
+
+	@Provides
+	@ServiceScoped
 	fun providesVoiceRecorder(
 		@ApplicationContext context: Context,
 		fileProvider: RecorderFileProvider,
 		settings: RecorderAudioSettingsRepo,
+		locationProvider: LocationProvider,
 	): VoiceRecorder = VoiceRecorderImpl(
 		context = context,
 		fileProvider = fileProvider,
-		settings = settings
+		settings = settings,
+		locationProvider = locationProvider
 	)
 
 	@Provides

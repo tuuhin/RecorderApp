@@ -11,6 +11,7 @@ message RecorderSettingsProto {
   bool skipSilences = 5;
   bool isStereoMode = 6;
   bool useBluetoothMic = 7;
+  bool allowLocationInfoIfAvailable = 8;
 }
 
 enum RecorderQualityProto{
