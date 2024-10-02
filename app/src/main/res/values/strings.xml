@@ -175,7 +175,7 @@
   <string name="category_type_title">Category Type</string>
   <string name="category_color_title">Category Color</string>
   <string name="category_icon_category">Category Icon for %s</string>
-  <string name="app_version_title">Version:</string>
+  <string name="app_version_title">Version name:</string>
   <string name="add_recording_bookmark">Bookmark</string>
   <string name="bookmark_tooltip_text">Add a bookmark to your recording at a interval of a second</string>
   <string name="bookmarks_saved">Bookmarks Added</string>
@@ -192,8 +192,9 @@
   <string name="bookmark_action_export">Export</string>
   <string name="sharing_bookmarks">Sharing bookmarks</string>
   <string name="recording_settings_add_location_info_title">Add Location</string>
-  <string name="recording_settings_add_location_info_text">Add location info to your recordings</string>
+  <string name="recording_settings_add_location_info_text">Automatically adds location to your recording</string>
   <string name="recording_settings_add_location_info_text_explained">Some recordings formats can add location info in its metadata,which can be later used to determine recording location</string>
   <string name="action_request_permission">Request</string>
   <string name="recording_settings_pause_recorder_on_call_text_explained">Incoming calls can distort the content of the recording. Allow permission to pause the recording on incomming call</string>
+  <string name="audio_metadata_file_location">Recorded at</string>
 </resources>

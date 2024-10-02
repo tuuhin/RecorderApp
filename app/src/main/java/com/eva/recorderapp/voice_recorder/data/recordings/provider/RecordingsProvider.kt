@@ -5,9 +5,6 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
-import android.media.MediaExtractor
-import android.media.MediaFormat
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -22,11 +19,9 @@ import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.toLocalDateTime
-import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import java.io.File
@@ -74,19 +69,6 @@ sealed class RecordingsProvider(private val context: Context) {
 			MediaStore.Audio.AudioColumns.DATE_EXPIRES,
 		)
 
-	protected val detailedFileProjection: Array<String>
-		get() = arrayOf(
-			MediaStore.Audio.AudioColumns._ID,
-			MediaStore.Audio.AudioColumns.TITLE,
-			MediaStore.Audio.AudioColumns.DISPLAY_NAME,
-			MediaStore.Audio.AudioColumns.SIZE,
-			MediaStore.Audio.AudioColumns.DURATION,
-			MediaStore.Audio.AudioColumns.DATE_MODIFIED,
-			MediaStore.Audio.AudioColumns.DATA,
-			MediaStore.Audio.AudioColumns.MIME_TYPE,
-		)
-
-
 	protected fun readNormalRecordingsFromCursor(cursor: Cursor): List<RecordedVoiceModel> {
 		val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID)
 		val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.TITLE)
@@ -114,7 +96,7 @@ sealed class RecordingsProvider(private val context: Context) {
 				val data = cursor.getString(dataColumn)
 
 				// checking the file exists or not
-				// in API-29 we can delete the file without deleting the metadata
+				// in API-29 we can delete the file without deleting the mediator entry
 				if (!File(data).exists()) continue
 
 				val model = RecordedVoiceModel(
@@ -165,53 +147,6 @@ sealed class RecordingsProvider(private val context: Context) {
 				)
 				add(model)
 			}
-		}
-	}
-
-	suspend fun evaluateValuesFromCursor(cursor: Cursor): AudioFileModel? {
-		return coroutineScope {
-			val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID)
-			val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.TITLE)
-			val nameColumn =
-				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DISPLAY_NAME)
-			val durationColumn =
-				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
-			val sizeColum = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.SIZE)
-			val dateModifiedCol =
-				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_MODIFIED)
-			val pathColumn =
-				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATA)
-			val mimeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.MIME_TYPE)
-
-			if (!cursor.moveToFirst()) return@coroutineScope null
-
-			val id = cursor.getLong(idColumn)
-			val title = cursor.getString(titleColumn)
-			val displayName = cursor.getString(nameColumn)
-			val duration = cursor.getLong(durationColumn)
-			val size = cursor.getLong(sizeColum)
-			val lastModified = cursor.getInt(dateModifiedCol)
-			val relPath = cursor.getString(pathColumn)
-			val mimeType = cursor.getString(mimeCol)
-			val uriString = ContentUris.withAppendedId(volumeUri, id)
-				.toString()
-
-			val extractor = extractMediaInfo(uri = ContentUris.withAppendedId(volumeUri, id))
-
-			AudioFileModel(
-				id = id,
-				title = title,
-				displayName = displayName,
-				duration = duration.milliseconds,
-				size = size,
-				fileUri = uriString,
-				bitRateInKbps = extractor?.bitRate ?: 0f,
-				lastModified = lastModified.seconds.toLocalDateTime(),
-				channel = extractor?.channelCount ?: 0,
-				path = relPath,
-				mimeType = mimeType,
-				samplingRateKHz = (extractor?.sampleRate ?: 0) / 1000f
-			)
 		}
 	}
 
@@ -361,55 +296,12 @@ sealed class RecordingsProvider(private val context: Context) {
 		}
 	}
 
-
-	private suspend fun extractMediaInfo(uri: Uri): MediaInfo? {
-		val extractor = MediaExtractor()
-		val retriever = MediaMetadataRetriever()
-		try {
-			return withContext(Dispatchers.Default) {// set source
-				extractor.setDataSource(context, uri, null)
-				retriever.setDataSource(context, uri)
-				// its accountable that there is a single track
-				val mediaFormat = extractor.getTrackFormat(0)
-				val channelCount = mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
-
-				val sampleRate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-					retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_SAMPLERATE)
-						?.toIntOrNull() ?: 0
-				} else mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-
-				val bitRateInKbps = retriever
-					.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
-					?.toIntOrNull()?.let { it / 1000f }
-					?: 0f
-
-				MediaInfo(
-					channelCount = channelCount,
-					sampleRate = sampleRate,
-					bitRate = bitRateInKbps
-				)
-			}
-		} catch (e: Exception) {
-			e.printStackTrace()
-			return null
-		} finally {
-			retriever.release()
-			extractor.release()
-		}
-	}
-
-	protected data class MediaInfo(
-		val channelCount: Int = 0,
-		val sampleRate: Int = 0,
-		val bitRate: Float = 0f,
-	)
-
-
 	companion object {
 
 		@RequiresApi(Build.VERSION_CODES.R)
 		fun createTrashRequest(
-			context: Context, models: Collection<RecordedVoiceModel>
+			context: Context,
+			models: Collection<RecordedVoiceModel>,
 		): IntentSenderRequest {
 
 			val uris = models.map(RecordedVoiceModel::fileUri).map(String::toUri)
@@ -421,7 +313,7 @@ sealed class RecordingsProvider(private val context: Context) {
 		@JvmName("create_delete_requests_from_trash_models")
 		@RequiresApi(Build.VERSION_CODES.R)
 		fun createDeleteRequest(
-			context: Context, models: Collection<TrashRecordingModel>
+			context: Context, models: Collection<TrashRecordingModel>,
 		): IntentSenderRequest {
 			val uris = models.map(TrashRecordingModel::fileUri).map(String::toUri)
 			val pendingIntent = MediaStore.createDeleteRequest(context.contentResolver, uris)
@@ -433,7 +325,7 @@ sealed class RecordingsProvider(private val context: Context) {
 		@RequiresApi(Build.VERSION_CODES.R)
 		fun createDeleteRequest(
 			context: Context,
-			models: List<RecordedVoiceModel>
+			models: List<RecordedVoiceModel>,
 		): IntentSenderRequest {
 			val uris = models.map(RecordedVoiceModel::fileUri).map(String::toUri)
 			val pendingIntent = MediaStore.createDeleteRequest(context.contentResolver, uris)

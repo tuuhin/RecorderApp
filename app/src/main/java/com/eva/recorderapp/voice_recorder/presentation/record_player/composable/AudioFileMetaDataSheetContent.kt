@@ -27,7 +27,7 @@ import kotlinx.datetime.format
 @Composable
 fun AudioFileMetaDataSheetContent(
 	audio: AudioFileModel,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 
 	val context = LocalContext.current
@@ -93,6 +93,12 @@ fun AudioFileMetaDataSheetContent(
 			title = stringResource(id = R.string.audio_metadata_path_title),
 			text = audio.path
 		)
+		if (audio.hasLocation) {
+			FileMetaData(
+				title = stringResource(R.string.audio_metadata_file_location),
+				text = audio.metaDataLocation
+			)
+		}
 	}
 }
 
@@ -100,7 +106,7 @@ fun AudioFileMetaDataSheetContent(
 private fun FileMetaData(
 	title: String,
 	text: String,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 	Column(
 		modifier = modifier.padding(vertical = 8.dp, horizontal = 4.dp)

@@ -4,27 +4,54 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
+import android.database.Cursor
 import android.database.SQLException
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import com.eva.recorderapp.common.Resource
+import com.eva.recorderapp.common.toLocalDateTime
+import com.eva.recorderapp.voice_recorder.data.recordings.utils.parseLocationFromString
+import com.eva.recorderapp.voice_recorder.domain.location.LocationAddressProvider
 import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.ResourcedDetailedRecordingModel
 import com.eva.recorderapp.voice_recorder.domain.player.exceptions.PlayerFileNotFoundException
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "PLAYER_FILE_PROVIDER"
 
-class PlayerFileProviderImpl(context: Context) : RecordingsProvider(context), PlayerFileProvider {
+class PlayerFileProviderImpl(
+	private val context: Context,
+	private val addressProvider: LocationAddressProvider,
+) : RecordingsProvider(context), PlayerFileProvider {
+
+	private val detailedFileProjection: Array<String>
+		get() = arrayOf(
+			MediaStore.Audio.AudioColumns._ID,
+			MediaStore.Audio.AudioColumns.TITLE,
+			MediaStore.Audio.AudioColumns.DISPLAY_NAME,
+			MediaStore.Audio.AudioColumns.SIZE,
+			MediaStore.Audio.AudioColumns.DURATION,
+			MediaStore.Audio.AudioColumns.DATE_MODIFIED,
+			MediaStore.Audio.AudioColumns.DATA,
+			MediaStore.Audio.AudioColumns.MIME_TYPE,
+		)
 
 	override fun providesAudioFileUri(audioId: Long): Uri {
 		return ContentUris.withAppendedId(volumeUri, audioId)
@@ -93,4 +120,104 @@ class PlayerFileProviderImpl(context: Context) : RecordingsProvider(context), Pl
 			}
 		}
 	}
+
+
+	private suspend fun extractMediaInfo(uri: Uri): MediaMetaDataInfo? {
+		val extractor = MediaExtractor()
+		val retriever = MediaMetadataRetriever()
+		try {
+			return withContext(Dispatchers.Default) {// set source
+				extractor.setDataSource(context, uri, null)
+				retriever.setDataSource(context, uri)
+				// its accountable that there is a single track
+				val mediaFormat = extractor.getTrackFormat(0)
+				val channelCount = mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+
+				val sampleRate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+					retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_SAMPLERATE)
+						?.toIntOrNull() ?: 0
+				} else mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+
+				val locationAsString = async {
+					retriever
+						.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION)
+						.let(::parseLocationFromString)
+						?.let { addressProvider.invoke(it) } ?: ""
+				}
+
+				val bitRateInKbps = retriever
+					.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+					?.toIntOrNull()?.let { it / 1000f }
+					?: 0f
+
+				MediaMetaDataInfo(
+					channelCount = channelCount,
+					sampleRate = sampleRate,
+					bitRate = bitRateInKbps,
+					locationString = locationAsString.await()
+				)
+			}
+		} catch (e: Exception) {
+			e.printStackTrace()
+			return null
+		} finally {
+			retriever.release()
+			extractor.release()
+		}
+	}
+
+	private suspend fun evaluateValuesFromCursor(cursor: Cursor): AudioFileModel? {
+		return withContext(Dispatchers.IO) {
+			val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID)
+			val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.TITLE)
+			val nameColumn =
+				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DISPLAY_NAME)
+			val durationColumn =
+				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
+			val sizeColum = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.SIZE)
+			val dataCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_MODIFIED)
+			val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATA)
+			val mimeTypeColumn =
+				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.MIME_TYPE)
+
+			if (!cursor.moveToFirst()) return@withContext null
+
+			val id = cursor.getLong(idColumn)
+			val title = cursor.getString(titleColumn)
+			val displayName = cursor.getString(nameColumn)
+			val duration = cursor.getLong(durationColumn)
+			val size = cursor.getLong(sizeColum)
+			val lastModified = cursor.getInt(dataCol)
+			val relPath = cursor.getString(pathColumn)
+			val mimeType = cursor.getString(mimeTypeColumn)
+			val uriString = ContentUris.withAppendedId(volumeUri, id)
+				.toString()
+
+			val extractor = extractMediaInfo(uri = ContentUris.withAppendedId(volumeUri, id))
+
+			AudioFileModel(
+				id = id,
+				title = title,
+				displayName = displayName,
+				duration = duration.milliseconds,
+				size = size,
+				fileUri = uriString,
+				bitRateInKbps = extractor?.bitRate ?: 0f,
+				lastModified = lastModified.seconds.toLocalDateTime(),
+				channel = extractor?.channelCount ?: 0,
+				path = relPath,
+				mimeType = mimeType,
+				samplingRateKHz = (extractor?.sampleRate ?: 0) / 1000f,
+				metaDataLocation = extractor?.locationString ?: ""
+			)
+		}
+	}
 }
+
+
+private data class MediaMetaDataInfo(
+	val channelCount: Int = 0,
+	val sampleRate: Int = 0,
+	val bitRate: Float = 0f,
+	val locationString: String = "",
+)
