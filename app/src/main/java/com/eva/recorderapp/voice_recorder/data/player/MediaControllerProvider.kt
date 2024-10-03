@@ -10,8 +10,8 @@ import androidx.media3.session.SessionError
 import androidx.media3.session.SessionToken
 import com.eva.recorderapp.voice_recorder.data.service.MediaPlayerService
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerMetaData
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerMetaData
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture

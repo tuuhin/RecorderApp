@@ -1,12 +1,13 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.composable
 
 import android.text.format.Formatter
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,10 +25,12 @@ import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import kotlinx.datetime.format
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AudioFileMetaDataSheetContent(
 	audio: AudioFileModel,
 	modifier: Modifier = Modifier,
+	contentPadding: PaddingValues = PaddingValues(),
 ) {
 
 	val context = LocalContext.current
@@ -44,60 +47,87 @@ fun AudioFileMetaDataSheetContent(
 		audio.lastModified.format(LocalTimeFormats.LOCALDATETIME_DATE_TIME_FORMAT)
 	}
 
-	Column(
-		modifier = modifier.padding(12.dp),
+	LazyColumn(
+		modifier = modifier,
+		contentPadding = contentPadding,
 		verticalArrangement = Arrangement.spacedBy(4.dp)
 	) {
-		Text(
-			text = stringResource(id = R.string.meta_data_sheet_heading),
-			style = MaterialTheme.typography.titleLarge,
-			color = MaterialTheme.colorScheme.onSurface
-		)
-		Spacer(modifier = Modifier.height(4.dp))
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_name_title),
-			text = audio.displayName
-		)
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_file_size_title),
-			text = fileSize
-		)
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_duration_title),
-			text = durationText
-		)
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_mime_type_title),
-			text = audio.mimeType
-		)
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_last_edit_title),
-			text = lastModified
-		)
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_channel_title),
-			text = stringResource(
-				id = if (audio.channel == 1) R.string.audio_metadata_channel_mono
-				else R.string.audio_metadata_channel_stereo
+		stickyHeader {
+			Text(
+				text = stringResource(id = R.string.meta_data_sheet_heading),
+				style = MaterialTheme.typography.titleLarge,
+				color = MaterialTheme.colorScheme.onSurface,
+				modifier = Modifier.padding(vertical = 4.dp)
 			)
-		)
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_bitrate_title),
-			text = stringResource(id = R.string.audio_metadata_bitrate, audio.bitRateInKbps)
-		)
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_sample_rate_title),
-			text = stringResource(id = R.string.audio_metadata_sample_rate, audio.samplingRateKHz)
-		)
-		FileMetaData(
-			title = stringResource(id = R.string.audio_metadata_path_title),
-			text = audio.path
-		)
-		if (audio.hasLocation) {
+		}
+
+		item {
 			FileMetaData(
-				title = stringResource(R.string.audio_metadata_file_location),
-				text = audio.metaDataLocation
+				title = stringResource(id = R.string.audio_metadata_name_title),
+				text = audio.displayName
 			)
+		}
+		item {
+			FileMetaData(
+				title = stringResource(id = R.string.audio_metadata_file_size_title),
+				text = fileSize
+			)
+		}
+		item {
+			FileMetaData(
+				title = stringResource(id = R.string.audio_metadata_duration_title),
+				text = durationText
+			)
+		}
+		item {
+			FileMetaData(
+				title = stringResource(id = R.string.audio_metadata_mime_type_title),
+				text = audio.mimeType
+			)
+		}
+		item {
+			FileMetaData(
+				title = stringResource(id = R.string.audio_metadata_last_edit_title),
+				text = lastModified
+			)
+		}
+		item {
+			FileMetaData(
+				title = stringResource(id = R.string.audio_metadata_channel_title),
+				text = stringResource(
+					id = if (audio.channel == 1) R.string.audio_metadata_channel_mono
+					else R.string.audio_metadata_channel_stereo
+				)
+			)
+		}
+		item {
+			FileMetaData(
+				title = stringResource(id = R.string.audio_metadata_bitrate_title),
+				text = stringResource(id = R.string.audio_metadata_bitrate, audio.bitRateInKbps)
+			)
+		}
+		item {
+			FileMetaData(
+				title = stringResource(id = R.string.audio_metadata_sample_rate_title),
+				text = stringResource(
+					id = R.string.audio_metadata_sample_rate,
+					audio.samplingRateKHz
+				)
+			)
+		}
+		item {
+			FileMetaData(
+				title = stringResource(id = R.string.audio_metadata_path_title),
+				text = audio.path
+			)
+		}
+		if (audio.hasLocation) {
+			item {
+				FileMetaData(
+					title = stringResource(R.string.audio_metadata_file_location),
+					text = audio.metaDataLocation
+				)
+			}
 		}
 	}
 }

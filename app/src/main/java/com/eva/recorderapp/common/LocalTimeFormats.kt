@@ -71,7 +71,6 @@ object LocalTimeFormats {
 		char(':')
 		minute()
 		char(' ')
-		amPmMarker("am", "pm")
 	}
 
 	val LOCALTIME_HH_MM_SS_FORMAT = LocalTime.Format {

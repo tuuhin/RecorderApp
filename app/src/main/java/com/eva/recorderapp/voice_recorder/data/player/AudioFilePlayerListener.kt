@@ -4,10 +4,10 @@ import android.util.Log
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerMetaData
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerPlayBackSpeed
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerState
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerMetaData
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerPlayBackSpeed
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerState
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow

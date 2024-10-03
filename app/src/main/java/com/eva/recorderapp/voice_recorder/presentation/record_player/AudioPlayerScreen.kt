@@ -2,6 +2,7 @@ package com.eva.recorderapp.voice_recorder.presentation.record_player
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -81,7 +82,10 @@ fun AudioPlayerScreen(
 			onDismissRequest = { openMetaDataBottomSheet = false },
 		) {
 			loadState.OnContent { audio ->
-				AudioFileMetaDataSheetContent(audio = audio)
+				AudioFileMetaDataSheetContent(
+					audio = audio,
+					contentPadding = PaddingValues(horizontal = dimensionResource(R.dimen.bottom_sheet_padding_lg))
+				)
 			}
 		}
 	}

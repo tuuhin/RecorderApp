@@ -23,18 +23,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.eva.recorderapp.BuildConfig
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.DeveloperInformation
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
@@ -50,15 +49,7 @@ fun AppDialogInfoContent(
 	color: Color = AlertDialogDefaults.containerColor,
 	contentColor: Color = contentColorFor(color),
 ) {
-
-	val inspectionMode = LocalInspectionMode.current
 	val context = LocalContext.current
-
-	val versioncode: String = remember {
-		if (inspectionMode) return@remember "0.0.0"
-		val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-		return@remember pInfo?.versionName ?: "0.0.0"
-	}
 
 	Box(
 		modifier = modifier.sizeIn(minWidth = 280.dp, maxWidth = 280.dp),
@@ -72,13 +63,13 @@ fun AppDialogInfoContent(
 		) {
 			Column(
 				modifier = Modifier.padding(20.dp),
-				verticalArrangement = Arrangement.spacedBy(4.dp),
+				verticalArrangement = Arrangement.spacedBy(8.dp),
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
 				Icon(
 					painter = painterResource(id = R.drawable.ic_launcher_foreground),
 					contentDescription = stringResource(R.string.app_name),
-					modifier = Modifier.size(40.dp),
+					modifier = Modifier.size(56.dp),
 					tint = iconColor
 				)
 				Text(
@@ -99,7 +90,7 @@ fun AppDialogInfoContent(
 						contentColor = MaterialTheme.colorScheme.onTertiaryContainer
 					) {
 						Text(
-							text = versioncode,
+							text = BuildConfig.VERSION_NAME,
 							style = MaterialTheme.typography.labelMedium,
 							modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)
 						)
@@ -115,7 +106,7 @@ fun AppDialogInfoContent(
 							context.viewAppProfile()
 						},
 						label = { Text(text = stringResource(id = R.string.app_info_source_code)) },
-						shape = MaterialTheme.shapes.small,
+						shape = MaterialTheme.shapes.large,
 						icon = {
 							Icon(
 								painter = painterResource(id = R.drawable.ic_code),
@@ -132,7 +123,7 @@ fun AppDialogInfoContent(
 							context.viewGithubProfile()
 						},
 						label = { Text(text = stringResource(id = R.string.app_info_author)) },
-						shape = MaterialTheme.shapes.small,
+						shape = MaterialTheme.shapes.large,
 						icon = {
 							Icon(
 								painter = painterResource(id = R.drawable.ic_author),

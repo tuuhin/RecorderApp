@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.ui.theme.DownloadableFonts
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerTrackData
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 
