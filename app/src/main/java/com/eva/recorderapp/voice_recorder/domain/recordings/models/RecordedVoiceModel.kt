@@ -17,6 +17,7 @@ data class RecordedVoiceModel(
 	val sizeInBytes: Long = 0,
 	val isFavorite: Boolean = false,
 	val categoryId: Long? = null,
+	val owner: String? = null,
 ) {
 	val durationAsLocaltime: LocalTime
 		get() = LocalTime.fromSecondOfDay(duration.inWholeSeconds.toInt())

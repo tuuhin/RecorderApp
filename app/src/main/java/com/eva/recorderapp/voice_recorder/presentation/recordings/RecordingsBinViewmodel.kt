@@ -95,8 +95,9 @@ class RecordingsBinViewmodel @Inject constructor(
 			TrashRecordingScreenEvent.OnSelectItemDeleteForeEver -> onPermanentDelete()
 			TrashRecordingScreenEvent.OnSelectItemRestore -> onRecordingsRestore()
 			is TrashRecordingScreenEvent.OnRecordingSelectOrUnSelect -> onToggleSelection(event.recording)
-			is TrashRecordingScreenEvent.OnPostDeleteRequestApi30 ->
-				onPostTrashEvent(event.message)
+			is TrashRecordingScreenEvent.OnPostDeleteRequest -> viewModelScope.launch {
+				_uiEvents.emit(UIEvents.ShowToast(event.message))
+			}
 		}
 	}
 
@@ -111,12 +112,12 @@ class RecordingsBinViewmodel @Inject constructor(
 			when (val result = provider.restoreRecordingsFromTrash(selectedRecordings)) {
 				is Resource.Error -> {
 					val message = result.message ?: "Cannot restore items"
-					_uiEvents.emit(UIEvents.ShowToast(message))
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
 				}
 
 				is Resource.Success -> {
 					val message = result.message ?: "Items restored"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
+					_uiEvents.emit(UIEvents.ShowToast(message))
 				}
 
 				else -> {}
@@ -131,13 +132,13 @@ class RecordingsBinViewmodel @Inject constructor(
 					handleSecurityExceptionToDelete(result.error)
 					return@launch
 				}
-				val message = result.message ?: "Cannot move items to trash"
-				onPostTrashEvent(message)
+				val message = result.error.message ?: result.message ?: "Cannot delete items"
+				_uiEvents.emit(UIEvents.ShowSnackBar(message))
 			}
 
 			is Resource.Success -> {
 				val message = result.message ?: "Items deleted successfully"
-				onPostTrashEvent(message = message)
+				_uiEvents.emit(UIEvents.ShowToast(message))
 			}
 
 			else -> {}
@@ -165,13 +166,6 @@ class RecordingsBinViewmodel @Inject constructor(
 					_deleteEvents.emit(deleteRequest)
 				}
 			}
-		}
-	}
-
-	private fun onPostTrashEvent(message: String) {
-		viewModelScope.launch {
-			// show the toast its deleted
-			_uiEvents.emit(UIEvents.ShowToast(message))
 		}
 	}
 

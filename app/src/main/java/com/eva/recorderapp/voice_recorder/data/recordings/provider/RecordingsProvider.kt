@@ -14,14 +14,17 @@ import android.util.Log
 import androidx.activity.result.IntentSenderRequest
 import androidx.annotation.RequiresApi
 import androidx.core.database.getIntOrNull
-import androidx.core.database.getLongOrNull
+import androidx.core.database.getStringOrNull
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
-import com.eva.recorderapp.R
 import com.eva.recorderapp.common.toLocalDateTime
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import java.io.File
@@ -38,12 +41,6 @@ sealed class RecordingsProvider(private val context: Context) {
 	val contentResolver: ContentResolver
 		get() = context.contentResolver
 
-	val recordingsMusicDirPath: String
-		get() = Environment.DIRECTORY_MUSIC + File.separator + context.getString(R.string.app_name)
-
-	val volumeUri: Uri
-		get() = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-
 
 	protected val recordingsProjection: Array<String>
 		get() = arrayOf(
@@ -55,7 +52,8 @@ sealed class RecordingsProvider(private val context: Context) {
 			MediaStore.Audio.AudioColumns.SIZE,
 			MediaStore.Audio.AudioColumns.DATE_MODIFIED,
 			MediaStore.Audio.AudioColumns.DATE_ADDED,
-			MediaStore.Audio.AudioColumns.DATA
+			MediaStore.Audio.AudioColumns.DATA,
+			MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME,
 		)
 
 	protected val trashRecordingsProjection: Array<String>
@@ -67,6 +65,7 @@ sealed class RecordingsProvider(private val context: Context) {
 			MediaStore.Audio.AudioColumns.DATE_ADDED,
 			MediaStore.Audio.AudioColumns.IS_TRASHED,
 			MediaStore.Audio.AudioColumns.DATE_EXPIRES,
+			MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME,
 		)
 
 	protected fun readNormalRecordingsFromCursor(cursor: Cursor): List<RecordedVoiceModel> {
@@ -79,6 +78,8 @@ sealed class RecordingsProvider(private val context: Context) {
 		val updateColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_MODIFIED)
 		val createdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_ADDED)
 		val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATA)
+		val packageNameColumn =
+			cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME)
 
 		return buildList {
 
@@ -92,8 +93,9 @@ sealed class RecordingsProvider(private val context: Context) {
 				val dateUpdated = cursor.getInt(updateColumn)
 				val dateAdded = cursor.getInt(createdColumn)
 				val mimeType = cursor.getString(mimeTypeColumn)
-				val uriString = ContentUris.withAppendedId(volumeUri, id).toString()
+				val uriString = ContentUris.withAppendedId(AUDIO_VOLUME_URI, id).toString()
 				val data = cursor.getString(dataColumn)
+				val packageName = cursor.getStringOrNull(packageNameColumn)
 
 				// checking the file exists or not
 				// in API-29 we can delete the file without deleting the mediator entry
@@ -109,6 +111,7 @@ sealed class RecordingsProvider(private val context: Context) {
 					recordedAt = dateAdded.seconds.toLocalDateTime(),
 					fileUri = uriString,
 					mimeType = mimeType,
+					owner = packageName
 				)
 				add(model)
 			}
@@ -122,6 +125,8 @@ sealed class RecordingsProvider(private val context: Context) {
 		val mimeTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.MIME_TYPE)
 		val createdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_ADDED)
 		val expiresColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_EXPIRES)
+		val ownerColumn =
+			cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME)
 
 		return buildList {
 
@@ -133,7 +138,8 @@ sealed class RecordingsProvider(private val context: Context) {
 				val dateAdded = cursor.getInt(createdColumn)
 				val mimeType = cursor.getString(mimeTypeColumn)
 				val expires = cursor.getInt(expiresColumn)
-				val uriString = ContentUris.withAppendedId(volumeUri, id).toString()
+				val owner = cursor.getStringOrNull(ownerColumn)
+				val uriString = ContentUris.withAppendedId(AUDIO_VOLUME_URI, id).toString()
 
 
 				val model = TrashRecordingModel(
@@ -143,7 +149,8 @@ sealed class RecordingsProvider(private val context: Context) {
 					recordedAt = dateAdded.seconds.toLocalDateTime(),
 					fileUri = uriString,
 					mimeType = mimeType,
-					expiresAt = expires.seconds.toLocalDateTime()
+					owner = owner,
+					expiresAt = expires.seconds.toLocalDateTime(),
 				)
 				add(model)
 			}
@@ -155,109 +162,75 @@ sealed class RecordingsProvider(private val context: Context) {
 	 * @param uri [Uri] to check for
 	 * @return [Pair] of [Boolean] first indicating isTrashed and second one isPending
 	 */
-	suspend fun checkIfUriAlreadyTrashedAndNotPending(uri: Uri): Pair<Boolean, Boolean> {
+	private suspend fun checkIfUriTrashed(uri: Uri): Boolean {
 		val projection = arrayOf(
 			MediaStore.Audio.AudioColumns.IS_TRASHED,
-			MediaStore.Audio.AudioColumns.IS_PENDING
 		)
 		return withContext(Dispatchers.IO) {
 			contentResolver.query(uri, projection, Bundle(), null)?.use { cursor ->
 				val trashColumn =
 					cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.IS_TRASHED)
-				val pendingColumn =
-					cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.IS_PENDING)
 
-				if (!cursor.moveToFirst()) return@withContext false to false
-
-				val isTrashed = cursor.getIntOrNull(trashColumn) == 1
-				val isPending = cursor.getIntOrNull(pendingColumn) == 1
-				// its already updated so no need to delete
-				return@withContext (isTrashed to isPending)
-			} ?: (false to false)
+				if (!cursor.moveToFirst()) return@withContext false
+				cursor.getIntOrNull(trashColumn) == 1
+			} ?: false
 		}
 	}
 
-	/**
-	 * Checks if a file exits for the given Uri and returns the [MediaStore.Audio.AudioColumns._ID]
-	 * column for the uri
-	 * @param uri [Uri] to be trashed
-	 * @return Media Item I'd
-	 */
-	private suspend fun evaluateFileExitsAndReturnId(uri: Uri): Long? {
-		val projection = arrayOf(
-			MediaStore.Audio.AudioColumns._ID,
-			MediaStore.Audio.AudioColumns.DATA
-		)
-
-		return withContext(Dispatchers.IO) {
-			contentResolver.query(uri, projection, bundleOf(), null)
-				?.use { cursor ->
-					val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID)
-					val dataColumn =
-						cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATA)
-
-					if (!cursor.moveToFirst()) return@withContext null
-
-					val id = cursor.getLongOrNull(idColumn)
-					val data = cursor.getString(dataColumn)
-
-					val file = File(data)
-
-					if (file.exists()) return@withContext id
-					null
-				}
-		}
-	}
-
-	/**
-	 * Moves the uri to trash, trash items will be automatically deleted after a certain period of
-	 * time
-	 * @param uri [Uri] to be trashed
-	 * @return [Boolean] indicating if the operation took place properly
-	 */
-	@RequiresApi(Build.VERSION_CODES.R)
-	suspend fun moveUriToTrash(uri: Uri): Boolean {
-		val fileID = evaluateFileExitsAndReturnId(uri)
-		if (fileID == null) {
-			Log.d(TAG, "FILE IS MISSING")
-			return false
-		}
-		val (isTrashed, _) = checkIfUriAlreadyTrashedAndNotPending(uri)
-		if (isTrashed) {
-			Log.d(TAG, "FILE IS ALREADY TRASHED")
-			return false
-		}
-
-		val updatedMetaData = ContentValues().apply {
-			put(MediaStore.Audio.AudioColumns.IS_TRASHED, 1)
-			put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
-		}
-
-		val rowsUpdated = contentResolver.update(uri, updatedMetaData, null, null)
-
-		return rowsUpdated == 1
-
-	}
-
-	/**
-	 * Removes the uri from the trash and restore the original file
-	 * @param uri [Uri] to be restored
-	 * @return [Boolean] indicating the update took place without any problems
-	 */
-	suspend fun removeUriFromTrash(uri: Uri): Boolean {
-		return withContext(Dispatchers.IO) {
-
-			val (isTrashed, _) = checkIfUriAlreadyTrashedAndNotPending(uri)
-			if (!isTrashed) return@withContext false
-
-			val updatedMetaData = ContentValues().apply {
-				put(MediaStore.Audio.AudioColumns.IS_TRASHED, 0)
-				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
+	suspend fun moveUrisToOrFromTrash(recordingsUris: Collection<Uri>, fromTrash: Boolean = true) {
+		return coroutineScope {
+			val trashedRecordings = recordingsUris.filter { uri ->
+				val isTrashed = checkIfUriTrashed(uri)
+				// if both of then true or false then it's true
+				(isTrashed xor fromTrash).not()
 			}
 
-			val rowsUpdated = contentResolver.update(uri, updatedMetaData, null, null)
-			rowsUpdated == 1
-			// single row affected i.e, the updated file
+			if (trashedRecordings.isEmpty()) {
+				Log.d(TAG, "THERE ARE NO RECORDINGS TO INTERFERE WITH")
+				return@coroutineScope
+			}
+
+			val trashFlag = if (fromTrash) 0 else 1
+
+			val metadata = ContentValues().apply {
+				put(MediaStore.Audio.AudioColumns.IS_TRASHED, trashFlag)
+			}
+			// don't put uris with non owner from this app
+			withContext(Dispatchers.IO) {
+				supervisorScope {
+					val results = trashedRecordings.map { uri ->
+						async {
+							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+								contentResolver.update(uri, metadata, null)
+							else contentResolver.update(uri, metadata, null, null)
+						}
+					}
+					results.awaitAll()
+				}
+			}
+		}
+	}
+
+
+	suspend fun permanentDeleteUrisFromAudioMediaVolume(recordingsUris: Collection<Uri>) {
+
+		val buildSelection = buildString {
+			append(MediaStore.Audio.AudioColumns._ID)
+			append(" in ")
+			append(" (")
+			(1..recordingsUris.size).forEach { index ->
+				if (index != recordingsUris.size) append(" ? ,")
+				else append(" ?")
+			}
+			append(" ) ")
+		}
+
+		val selectionArgs = recordingsUris.map { uri -> "${ContentUris.parseId(uri)}" }
+			.toTypedArray()
+
+		withContext(Dispatchers.IO) {
+			Log.d(TAG, " DELETE SELECTION AND SELECTION ARGS : $buildSelection $selectionArgs")
+			contentResolver.delete(AUDIO_VOLUME_URI, buildSelection, selectionArgs)
 		}
 	}
 
@@ -281,41 +254,72 @@ sealed class RecordingsProvider(private val context: Context) {
 	 */
 	suspend fun checkIfUriIsPending(uri: Uri): Boolean {
 		val projection = arrayOf(MediaStore.Audio.AudioColumns.IS_PENDING)
-		val args = Bundle()
+
 		return withContext(Dispatchers.IO) {
-			contentResolver.query(uri, projection, args, null)?.use { cursor ->
+			contentResolver.query(uri, projection, bundleOf(), null)?.use { cursor ->
 				val column = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.IS_PENDING)
 
 				if (!cursor.moveToFirst()) return@withContext false
-
 				val isPending = cursor.getIntOrNull(column)
-				// its already updated so no need to delete
-				Log.d(TAG, "URI $uri : IS PENDING : $isPending")
-				return@withContext isPending == 1
+
+				isPending == 1
 			} ?: false
 		}
 	}
 
+
 	companion object {
 
-		@RequiresApi(Build.VERSION_CODES.R)
-		fun createTrashRequest(
-			context: Context,
-			models: Collection<RecordedVoiceModel>,
-		): IntentSenderRequest {
+		val AUDIO_VOLUME_URI: Uri
+			get() = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
 
-			val uris = models.map(RecordedVoiceModel::fileUri).map(String::toUri)
+		// DON'T CHANGE
+		val RECORDINGS_MUSIC_PATH: String
+			get() {
+				// keep the recordings in recordings directory on API 31
+				// otherwise music directory
+				val directory = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+					Environment.DIRECTORY_RECORDINGS
+				else Environment.DIRECTORY_MUSIC
+
+				return directory + File.separator + "RecorderApp"
+			}
+
+		@RequiresApi(Build.VERSION_CODES.R)
+		fun createTrashRequest(context: Context, models: Collection<RecordedVoiceModel>)
+				: IntentSenderRequest? {
+
+			val uris = models.filterNot { it.owner == context.packageName }
+				.map(RecordedVoiceModel::fileUri)
+				.map(String::toUri)
+
+			if (uris.isEmpty()) {
+				Log.d(TAG, "NO URIS CANNOT BE DELETED")
+				return null
+			}
+
+			Log.d(TAG, "NO. OF URI TO TRASH ${uris.size}")
 			val pendingIntent = MediaStore.createTrashRequest(context.contentResolver, uris, true)
 
-			return IntentSenderRequest.Builder(pendingIntent).build()
+			return IntentSenderRequest.Builder(pendingIntent)
+				.build()
 		}
 
 		@JvmName("create_delete_requests_from_trash_models")
 		@RequiresApi(Build.VERSION_CODES.R)
 		fun createDeleteRequest(
 			context: Context, models: Collection<TrashRecordingModel>,
-		): IntentSenderRequest {
-			val uris = models.map(TrashRecordingModel::fileUri).map(String::toUri)
+		): IntentSenderRequest? {
+
+			val uris = models.filterNot { it.owner == context.packageName }
+				.map(TrashRecordingModel::fileUri)
+				.map(String::toUri)
+
+			if (uris.isEmpty()) {
+				Log.d(TAG, "NO URIS CANNOT BE DELETED")
+				return null
+			}
+
 			val pendingIntent = MediaStore.createDeleteRequest(context.contentResolver, uris)
 
 			return IntentSenderRequest.Builder(pendingIntent).build()
