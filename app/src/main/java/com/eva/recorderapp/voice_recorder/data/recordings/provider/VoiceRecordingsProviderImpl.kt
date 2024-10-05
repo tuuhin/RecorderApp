@@ -14,6 +14,8 @@ import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.CannotTrashFileDifferentOwnerException
 import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.InvalidRecordingIdException
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedVoiceRecordingModels
@@ -36,6 +38,7 @@ private const val LOGGER_TAG = "VOICE_RECORDINGS_PROVIDER"
 
 class VoiceRecordingsProviderImpl(
 	private val context: Context,
+	private val fileSettingsRepo: RecorderFileSettingsRepo,
 ) : RecordingsProvider(context), VoiceRecordingsProvider {
 
 	override val voiceRecordingsFlow: Flow<VoiceRecordingModels>
@@ -100,35 +103,34 @@ class VoiceRecordingsProviderImpl(
 		}
 
 	override suspend fun getVoiceRecordings(): VoiceRecordingModels {
-		val allowExternalRecordingsRead = false
-		val queryArgs =
-			if (allowExternalRecordingsRead && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-				// they are of owner package and external recordings
-				val selection = buildString {
-					append(MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME)
-					append(" = ? ")
-					append(" OR ")
-					append(MediaStore.Audio.AudioColumns.IS_RECORDING)
-					append(" = ? ")
-				}
-				val selectionArgs = arrayOf(context.packageName, "1")
-				bundleOf(
-					ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
-					ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
-				)
-			} else {
-				// only owner package
-				val selection = buildString {
-					append(MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME)
-					append(" = ? ")
-				}
-				val selectionArgs = arrayOf(context.packageName)
-				// items only of this package
-				bundleOf(
-					ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
-					ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
-				)
+		val allowExternalRead = fileSettingsRepo.fileSettings.allowExternalRead
+		val queryArgs = if (allowExternalRead && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			// they are of owner package and external recordings
+			val selection = buildString {
+				append(MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME)
+				append(" = ? ")
+				append(" OR ")
+				append(MediaStore.Audio.AudioColumns.IS_RECORDING)
+				append(" = ? ")
 			}
+			val selectionArgs = arrayOf(context.packageName, "1")
+			bundleOf(
+				ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
+				ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
+			)
+		} else {
+			// only owner package
+			val selection = buildString {
+				append(MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME)
+				append(" = ? ")
+			}
+			val selectionArgs = arrayOf(context.packageName)
+			// items only of this package
+			bundleOf(
+				ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
+				ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
+			)
+		}
 
 		val sortColumns = arrayOf(MediaStore.Audio.AudioColumns.DATE_ADDED)
 		val otherExtras = bundleOf(
@@ -247,6 +249,14 @@ class VoiceRecordingsProviderImpl(
 			: Flow<Resource<Boolean, Exception>> {
 		return flow {
 			emit(Resource.Loading)
+
+			val ownerSelf = recording.owner == context.packageName
+
+			if (!ownerSelf) {
+				emit(Resource.Error(CannotTrashFileDifferentOwnerException()))
+				return@flow
+			}
+
 			try {
 				val uri = recording.fileUri.toUri()
 

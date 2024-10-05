@@ -10,13 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun RecordingsBinScreenBottomBar(
-	recordings: ImmutableList<SelectableTrashRecordings>,
 	isVisible: Boolean,
 	onItemsDelete: () -> Unit,
 	onItemsRestore: () -> Unit,
@@ -36,13 +32,11 @@ fun RecordingsBinScreenBottomBar(
 			},
 			floatingActionButton = {
 				DeleteRecordingsButton(
-					recordings = recordings,
 					onDelete = onItemsDelete
 				)
 			},
 		)
 	}
-
 }
 
 
@@ -50,7 +44,6 @@ fun RecordingsBinScreenBottomBar(
 @Composable
 private fun RecordingsBinScreenBottomBarPreview() = RecorderAppTheme {
 	RecordingsBinScreenBottomBar(
-		recordings = persistentListOf(),
 		isVisible = true,
 		onItemsDelete = { },
 		onItemsRestore = { },

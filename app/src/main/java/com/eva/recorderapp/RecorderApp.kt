@@ -9,6 +9,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.voice_recorder.data.worker.RemoveTrashRecordingWorker
+import com.eva.recorderapp.voice_recorder.data.worker.UpdateRecordingPathWorker
 import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -71,6 +72,7 @@ class RecorderApp : Application(), Configuration.Provider {
 
 		//start workers
 		RemoveTrashRecordingWorker.startRepeatWorker(applicationContext)
-
+		// update path worker
+		UpdateRecordingPathWorker.startWorker(applicationContext)
 	}
 }

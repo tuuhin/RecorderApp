@@ -7,6 +7,7 @@ option java_generate_equals_and_hash = true;
 message  FileSettingsProto{
   string prefix = 1;
   NamingFormatProto format = 2;
+  bool allowExternalRead = 3;
 }
 
 enum NamingFormatProto{

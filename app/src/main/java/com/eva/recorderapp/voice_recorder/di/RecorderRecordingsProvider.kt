@@ -10,6 +10,7 @@ import com.eva.recorderapp.voice_recorder.data.recordings.provider.RecordingsCat
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderApi29Impl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.TrashRecordingsProviderImpl
 import com.eva.recorderapp.voice_recorder.data.recordings.provider.VoiceRecordingsProviderImpl
+import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
@@ -29,7 +30,8 @@ object RecorderRecordingsProvider {
 	@Singleton
 	fun providesRecordingsProvider(
 		@ApplicationContext context: Context,
-	): VoiceRecordingsProvider = VoiceRecordingsProviderImpl(context)
+		fileSettingsRepo: RecorderFileSettingsRepo,
+	): VoiceRecordingsProvider = VoiceRecordingsProviderImpl(context, fileSettingsRepo)
 
 	@Provides
 	@Singleton

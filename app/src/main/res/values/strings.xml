@@ -197,4 +197,6 @@
   <string name="action_request_permission">Request</string>
   <string name="recording_settings_pause_recorder_on_call_text_explained">Incoming calls can distort the content of the recording. Allow permission to pause the recording on incomming call</string>
   <string name="audio_metadata_file_location">Recorded at</string>
+  <string name="recording_settings_file_allow_external_read">Show other app recordings</string>
+  <string name="recording_settings_file_allow_external_read_text">Allow to show other app recordings</string>
 </resources>

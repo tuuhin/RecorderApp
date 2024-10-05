@@ -18,7 +18,8 @@ fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderAudioSetti
 
 fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSettings(
 	name = prefix,
-	format = format.toDomain
+	format = format.toDomain,
+	allowExternalRead = allowExternalRead
 )
 
 val RecorderQualityProto.toDomain: RecordQuality
