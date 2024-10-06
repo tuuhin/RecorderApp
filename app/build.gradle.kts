@@ -17,8 +17,8 @@ android {
 		applicationId = "com.eva.recorderapp"
 		minSdk = 29
 		targetSdk = 35
-		versionCode = 4
-		versionName = "1.1.2"
+		versionCode = 5
+		versionName = "1.2.0"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -40,11 +40,11 @@ android {
 		}
 	}
 	compileOptions {
-		sourceCompatibility = JavaVersion.VERSION_1_8
-		targetCompatibility = JavaVersion.VERSION_1_8
+		sourceCompatibility = JavaVersion.VERSION_17
+		targetCompatibility = JavaVersion.VERSION_17
 	}
 	kotlinOptions {
-		jvmTarget = "1.8"
+		jvmTarget = "17"
 	}
 	buildFeatures {
 		compose = true
@@ -121,6 +121,10 @@ dependencies {
 	implementation(libs.androidx.datastore)
 	implementation(libs.protobuf.javalite)
 	implementation(libs.protobuf.kotlin.lite)
+	//glance
+	implementation(libs.androidx.glance)
+	implementation(libs.androidx.glance.appwidget)
+	implementation(libs.androidx.glance.material3)
 	// tests
 	testImplementation(libs.junit)
 	testImplementation(libs.turbine)
@@ -135,6 +139,9 @@ dependencies {
 	//debug
 	debugImplementation(libs.androidx.ui.tooling)
 	debugImplementation(libs.androidx.ui.test.manifest)
+	// glance preview
+	debugImplementation(libs.androidx.glance.preview)
+	debugImplementation(libs.androidx.glance.appwidget.preview)
 }
 
 protobuf {

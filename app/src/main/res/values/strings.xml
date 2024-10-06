@@ -202,4 +202,5 @@
   <string name="write_request_accepted">Write request accepted</string>
   <string name="write_request_rejected">Rejected</string>
   <string name="other_app_subtitle">Other App</string>
+  <string name="widget_refresh">Refresh</string>
 </resources>
