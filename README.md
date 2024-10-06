@@ -25,7 +25,8 @@ What are the features this app can provide, here's some:
   your device.
 - :bellhop_bell: **Convenient Notifications**: Control your recordings directly from
   notifications,without having to return to the app.
-- :file_cabinet: **File Management**: Organize, delete, share, or rename your recordings with ease.
+- :file_cabinet: **File Management**: Organize, delete, share, or rename your own recordings with
+  ease, on api level `api-31`+ you can also read other apps recordings.
 - :package: **Category Management**: Categories your recording into different category, so that you
   can easily find the required one.
 - :record_button: **Built-in Player**: Listen to your recordings directly within the app, complete
@@ -61,10 +62,13 @@ phone safe and sound.Here are the list of permission required in this app
 - :musical_note: **Music and Audio Access** : Use to save and read the recordings
 - :bell: **Notifications** : Yes you can control the recorder from the notification
 
-There are some other permissions (optional ones), but they aren't necessary to the core audio
-recording and playing stuff.
+There are some optional permissions, but they aren't necessary to the core audio recording and
+playing stuff.
 
 - :telephone_receiver: **Phone State** : To handle incomming calls during a recording.
+- :world_map: **Location** : Some mediacodec like `acc` and `three_gpp` can add a additional
+  location data with the recording.You can view this location data on other devices which can read
+  metadata.
 
 ## :hammer_and_wrench: Getting Started
 

@@ -6,9 +6,10 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import androidx.core.os.bundleOf
+import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsMetadataDao
 import com.eva.recorderapp.voice_recorder.data.database.entity.RecordingsMetaDataEntity
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.AudioFileNamingFormat
@@ -17,10 +18,14 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.format
+import kotlinx.datetime.toKotlinLocalDateTime
 import java.io.File
 import java.io.IOException
+import java.time.LocalDateTime
 
 private const val LOGGER_TAG = "RECORDER_FILE_PROVIDE"
 
@@ -62,6 +67,7 @@ class RecorderFileProviderImpl(
 				}
 				// wait for the file data to be completely read
 				job.join()
+				Log.d(LOGGER_TAG, "CONTENT COPIED DONE")
 				val uriId = ContentUris.parseId(contentUri)
 				// update the metadata for the file
 				val mediaStoreUpdate = async(Dispatchers.IO) {
@@ -76,8 +82,9 @@ class RecorderFileProviderImpl(
 					recordingDao.updateOrInsertRecordingMetadata(entity)
 				}
 				// execute them parallel
-				Log.d(LOGGER_TAG, "UPDATING METADATA")
+				Log.d(LOGGER_TAG, "UPDATING METADATA CONCURRENTLY")
 				awaitAll(mediaStoreUpdate, otherMetadataDataUpdate, delTempFile)
+				Log.d(LOGGER_TAG, "UPDATE COMPLETED")
 				return@withContext uriId
 			} catch (e: IllegalArgumentException) {
 				Log.e(LOGGER_TAG, "EXTRAS PROVIDED WRONG")
@@ -98,56 +105,58 @@ class RecorderFileProviderImpl(
 		}
 	}
 
-	private suspend fun createUriForRecording(mimeType: String): Uri? {
-
+	private suspend fun createUriForRecording(mimeType: String): Uri? = coroutineScope {
 		val fileSettings = settings.fileSettings
-		val name = fileSettings.name
-		val nameFormat = fileSettings.format
-		val identifier = when (nameFormat) {
-			AudioFileNamingFormat.DATE_TIME -> "$epochSeconds"
-			AudioFileNamingFormat.COUNT -> {
-				val currentCount = getItemNumber()
-				"${currentCount + 1}".padStart(3, '0')
+
+		val namingStrategyDeferred = async(Dispatchers.IO) {
+			when (fileSettings.format) {
+				AudioFileNamingFormat.DATE_TIME -> {
+					LocalDateTime.now().toKotlinLocalDateTime()
+						.format(LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT)
+						.trim()
+				}
+
+				AudioFileNamingFormat.COUNT -> {
+					val currentCount = getItemNumber()
+					"${currentCount + 1}".padStart(3, '0').trim()
+				}
 			}
 		}
 
 		// file name
 		val fileName = buildString {
-			append(name)
-			append("_")
-			append(identifier)
+			append(fileSettings.name)
+			append("-")
+			append(namingStrategyDeferred.await())
 		}
-
+		// metadata
 		val metaData = ContentValues().apply {
-			put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, recordingsMusicDirPath)
+			put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, RECORDINGS_MUSIC_PATH)
 			put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, fileName)
 			put(MediaStore.Audio.AudioColumns.MIME_TYPE, mimeType)
 			put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
 			put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-				put(MediaStore.Audio.AudioColumns.IS_RECORDING, 1)
-			}
 		}
 
-		Log.d(LOGGER_TAG, "CREATING FILE")
-		val contentUri = withContext(Dispatchers.IO) {
+		// insert the metadata on IO thread
+		withContext(Dispatchers.IO) {
+			Log.d(LOGGER_TAG, "CREATING FILE WITH METADATA :$metaData")
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-				contentResolver.insert(volumeUri, metaData, null)
+				contentResolver.insert(AUDIO_VOLUME_URI, metaData, null)
 			} else {
-				contentResolver.insert(volumeUri, metaData)
+				contentResolver.insert(AUDIO_VOLUME_URI, metaData)
 			}
 		}
-		Log.d(LOGGER_TAG, "URI CREATED , $contentUri")
-
-		return contentUri
 	}
 
-	private suspend fun updateUriAfterRecording(file: Uri): Boolean {
 
+	private suspend fun updateUriAfterRecording(file: Uri): Boolean {
 		val updatedMetaData = ContentValues().apply {
 			put(MediaStore.Audio.AudioColumns.IS_PENDING, 0)
 			put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, epochSeconds)
 		}
+		Log.d(LOGGER_TAG, "UPDATING FILE METADATA :$updatedMetaData")
+
 		val result = withContext(Dispatchers.IO) {
 			contentResolver.update(file, updatedMetaData, null, null)
 		}
@@ -156,21 +165,19 @@ class RecorderFileProviderImpl(
 		return result == 1
 	}
 
-	/**
-	 * Method used to get a unique no. to give the file name should be short
-	 */
+
 	private suspend fun getItemNumber(): Int {
 		val projection = arrayOf(MediaStore.Audio.AudioColumns._ID)
 		val selection = "${MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME} = ?"
 		val selectionArgs = arrayOf(context.packageName)
 
-		val bundle = Bundle().apply {
-			putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
-			putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
-		}
+		val bundle = bundleOf(
+			ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
+			ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs
+		)
 
 		return withContext(Dispatchers.IO) {
-			contentResolver.query(volumeUri, projection, bundle, null)
+			contentResolver.query(AUDIO_VOLUME_URI, projection, bundle, null)
 				?.use { cursor -> cursor.count }
 				?: 0
 		}

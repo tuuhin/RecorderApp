@@ -17,7 +17,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class RecorderFileSettingsRepoImpl(
-	private val context: Context
+	private val context: Context,
 ) : RecorderFileSettingsRepo {
 
 	override val fileSettingsFlow: Flow<RecorderFileSettings>
@@ -38,6 +38,14 @@ class RecorderFileSettingsRepoImpl(
 		context.recorderFileSettings.updateData { settings ->
 			settings.toBuilder()
 				.setPrefix(prefix)
+				.build()
+		}
+	}
+
+	override suspend fun onAllowExternalFileRead(isAllowed: Boolean) {
+		context.recorderFileSettings.updateData { settings ->
+			settings.toBuilder()
+				.setAllowExternalRead(isAllowed)
 				.build()
 		}
 	}

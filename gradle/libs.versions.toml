@@ -23,6 +23,7 @@ hilt = "2.52"
 materialIconsExtendedVersion = "1.7.2"
 media3Common = "1.4.1"
 navigationCompose = "2.8.1"
+playServicesLocationVersion = "21.3.0"
 roomCompiler = "2.6.1"
 turbine = "1.1.0"
 uiTextGoogleFonts = "1.7.2"
@@ -50,6 +51,7 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomComp
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomCompiler" }
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 assertk = { module = "com.willowtreeapps.assertk:assertk", version.ref = "assertk" }
+gms-play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocationVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

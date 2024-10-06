@@ -8,4 +8,7 @@ sealed interface RenameRecordingEvent {
 
 	data object OnRenameRecording : RenameRecordingEvent
 
+	data class OnWriteAccessChanged(val isAllowed: Boolean, val message: String = "") :
+		RenameRecordingEvent
+
 }

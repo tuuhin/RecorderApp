@@ -11,12 +11,20 @@ typealias ResourcedVoiceRecordingModels = Resource<List<RecordedVoiceModel>, Exc
 interface VoiceRecordingsProvider {
 
 	/**
-	 * A flow of recorded voice models,
+	 * A flow of recorded voice models, settings can be configured to allow
+	 * other recording files to be read.
 	 * @return a flow version of [ResourcedVoiceRecordingModels]
 	 * @see getVoiceRecordings to fetch [VoiceRecordingModels] normally use this.
-	 * @throws Exception Make sure you check for any exceptions
+	 * @see
+	 * @throws Exception aren't handled here make sure to wrap this inside a `try-catch`.
 	 */
 	val voiceRecordingsFlow: Flow<VoiceRecordingModels>
+
+	/**
+	 * A flow of [ResourcedVoiceRecordingModels] who's [RecordedVoiceModel.owner] is always this app.
+	 * @see RecordedVoiceModel
+	 */
+	val voiceRecordingsOnlyThisApp:Flow<ResourcedVoiceRecordingModels>
 
 	/**
 	 * A resourced version of the [voiceRecordingsFlow].[Exception]'s are wrapped so no need

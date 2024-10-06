@@ -1,6 +1,6 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player.util
 
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerPlayBackSpeed
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerPlayBackSpeed
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 

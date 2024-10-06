@@ -5,7 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,12 +20,12 @@ import com.eva.recorderapp.voice_recorder.presentation.settings.composables.Sett
 
 @Composable
 fun PauseRecorderOnCallTile(
-	canPause: Boolean,
-	onChange: (Boolean) -> Unit,
-	modifier: Modifier = Modifier
+	isPauseRecordingOnIncommingCall: Boolean,
+	onActionEnabledChanged: (Boolean) -> Unit,
+	modifier: Modifier = Modifier,
 ) {
-
 	val context = LocalContext.current
+	var showDialog by remember { mutableStateOf(false) }
 
 	var hasPermission by remember(context) {
 		mutableStateOf(
@@ -41,12 +40,14 @@ fun PauseRecorderOnCallTile(
 		hasPermission = isGranted
 	}
 
-	val isSelected by remember(hasPermission, canPause) {
-		derivedStateOf { hasPermission && canPause }
-	}
+	PauseCallInfoDialog(
+		showDialog = showDialog && !hasPermission,
+		onConfirm = { launcher.launch(Manifest.permission.READ_PHONE_STATE) },
+		onDismiss = { showDialog = false },
+	)
 
 	SettingsItemWithSwitch(
-		isSelected = isSelected,
+		isSelected = hasPermission && isPauseRecordingOnIncommingCall,
 		title = stringResource(id = R.string.recording_settings_pause_recorder_on_calls),
 		text = stringResource(id = R.string.recording_settings_pause_recorder_on_call_text),
 		leading = {
@@ -56,12 +57,9 @@ fun PauseRecorderOnCallTile(
 			)
 		},
 		modifier = modifier,
-		onSelect = {
-			if (!hasPermission) {
-				launcher.launch(Manifest.permission.READ_PHONE_STATE)
-			} else {
-				onChange(it)
-			}
+		onSelect = { isEnabled ->
+			if (!hasPermission) showDialog = true
+			else onActionEnabledChanged(isEnabled)
 		},
 	)
 }

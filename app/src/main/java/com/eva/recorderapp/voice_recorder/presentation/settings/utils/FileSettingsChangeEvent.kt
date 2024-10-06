@@ -7,4 +7,6 @@ sealed interface FileSettingsChangeEvent {
 	data class OnFormatChange(val format: AudioFileNamingFormat) : FileSettingsChangeEvent
 
 	data class OnRecordingPrefixChange(val prefix: String) : FileSettingsChangeEvent
+
+	data class OnAllowExternalFiles(val isEnabled: Boolean) : FileSettingsChangeEvent
 }

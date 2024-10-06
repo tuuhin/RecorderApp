@@ -22,4 +22,6 @@ interface RecorderAudioSettingsRepo {
 	suspend fun onUseBluetoothMicEnabled(isAllowed: Boolean)
 
 	suspend fun onPauseRecorderOnCallEnabled(isEnabled: Boolean)
+
+	suspend fun onAddLocationEnabled(isEnabled: Boolean)
 }

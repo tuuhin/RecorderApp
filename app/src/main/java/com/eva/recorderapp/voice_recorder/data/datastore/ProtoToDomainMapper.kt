@@ -10,14 +10,16 @@ fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderAudioSetti
 	encoders = encoder.toDomain,
 	quality = quality.toDomain,
 	pauseRecordingOnCall = pauseDuringCalls,
-	enableStero = isStereoMode,
+	enableStereo = isStereoMode,
 	skipSilences = skipSilences,
-	useBluetoothMic = useBluetoothMic
+	useBluetoothMic = useBluetoothMic,
+	addLocationInfoInRecording = allowLocationInfoIfAvailable,
 )
 
 fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSettings(
 	name = prefix,
-	format = format.toDomain
+	format = format.toDomain,
+	allowExternalRead = allowExternalRead
 )
 
 val RecorderQualityProto.toDomain: RecordQuality

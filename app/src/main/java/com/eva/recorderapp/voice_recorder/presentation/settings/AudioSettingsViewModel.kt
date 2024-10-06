@@ -49,11 +49,15 @@ class AudioSettingsViewModel @Inject constructor(
 			is AudioSettingsEvent.OnQualityChange -> audioRepo.onQualityChange(event.quality)
 			is AudioSettingsEvent.OnSkipSilencesChange -> audioRepo.onSkipSilencesChange(event.skipAllowed)
 			is AudioSettingsEvent.OnStereoModeChange -> audioRepo.onStereoModeChange(event.mode)
-			is AudioSettingsEvent.OnPauseRecorderOnCalls -> audioRepo
-				.onPauseRecorderOnCallEnabled(event.isAllowed)
+			is AudioSettingsEvent.OnPauseRecorderOnCalls -> {
+				audioRepo.onPauseRecorderOnCallEnabled(event.isAllowed)
+			}
 
-			is AudioSettingsEvent.OnUseBluetoothMicChanged -> audioRepo
-				.onUseBluetoothMicEnabled(event.isAllowed)
+			is AudioSettingsEvent.OnUseBluetoothMicChanged -> {
+				audioRepo.onUseBluetoothMicEnabled(event.isAllowed)
+			}
+
+			is AudioSettingsEvent.OnAddLocationEnabled -> audioRepo.onAddLocationEnabled(event.isEnabled)
 		}
 	}
 
@@ -61,6 +65,8 @@ class AudioSettingsViewModel @Inject constructor(
 		when (event) {
 			is FileSettingsChangeEvent.OnFormatChange -> fileRepo.onFileNameFormatChange(event.format)
 			is FileSettingsChangeEvent.OnRecordingPrefixChange -> fileRepo.onFilePrefixChange(event.prefix)
+			is FileSettingsChangeEvent.OnAllowExternalFiles ->
+				fileRepo.onAllowExternalFileRead(event.isEnabled)
 		}
 	}
 }

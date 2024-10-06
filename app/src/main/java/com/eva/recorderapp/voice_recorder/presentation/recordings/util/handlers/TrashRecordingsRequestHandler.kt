@@ -37,33 +37,27 @@ fun TrashRecordingsRequestHandler(
 				context.getString(R.string.recording_delete_request_success)
 			else context.getString(R.string.recording_delete_request_failed)
 
-			val isSuccess = result.resultCode == Activity.RESULT_OK
-			val event = RecordingScreenEvent.OnPostTrashRequestApi30(isSuccess, message)
-
+			val event = RecordingScreenEvent.OnPostTrashRequest( message)
 			onResult(event)
 		}
 	)
 
 	// handle trash request for Api 30+
 	LaunchedEffect(key1 = lifecycleOwner) {
+		val flow = trashEventsFlow()
 		lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-			val flow = trashEventsFlow()
-
 			flow.collect { event ->
 				when (event) {
 					is DeleteOrTrashRecordingsRequest.OnTrashRequest -> {
-
 						if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
 							val request = event.intentSenderRequest ?: return@collect
 							trashRequestLauncher.launch(request)
 
 						} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-							val request = RecordingsProvider
-								.createTrashRequest(context, event.recordings)
-							trashRequestLauncher.launch(request)
+							RecordingsProvider.createTrashRequest(context, event.recordings)
+								?.let(trashRequestLauncher::launch)
 						}
 					}
-
 					else -> {}
 				}
 			}

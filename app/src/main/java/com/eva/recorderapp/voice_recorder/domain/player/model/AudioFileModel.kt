@@ -19,8 +19,12 @@ data class AudioFileModel(
 	val fileUri: String,
 	val mimeType: String,
 	val isFavourite: Boolean = false,
+	val metaDataLocation: String = "",
 ) {
 	val durationAsLocaltime: LocalTime
 		get() = LocalTime.fromSecondOfDay(duration.toInt(DurationUnit.SECONDS))
+
+	val hasLocation: Boolean
+		get() = metaDataLocation.isNotBlank()
 
 }

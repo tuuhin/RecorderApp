@@ -53,6 +53,7 @@ fun RenameRecordingsDialogContent(
 			value = state.textFieldState,
 			errorMessage = state.errorString,
 			hasError = state.hasError,
+			canRename = state.canRename,
 			onValueChange = { onEvent(RenameRecordingEvent.OnTextValueChange(it)) },
 			onRename = { onEvent(RenameRecordingEvent.OnRenameRecording) },
 			onCancel = onDismissRequest,
@@ -68,7 +69,7 @@ private fun RenameRecordingDialogContent(
 	onValueChange: (TextFieldValue) -> Unit,
 	onCancel: () -> Unit,
 	modifier: Modifier = Modifier,
-	isRenaming: Boolean = false,
+	canRename: Boolean = false,
 	onRename: () -> Unit = {},
 	errorMessage: String = "",
 	hasError: Boolean = false,
@@ -120,15 +121,12 @@ private fun RenameRecordingDialogContent(
 				modifier = Modifier.align(Alignment.End),
 				horizontalArrangement = Arrangement.spacedBy(6.dp)
 			) {
-				TextButton(
-					onClick = onCancel,
-					enabled = !isRenaming
-				) {
+				TextButton(onClick = onCancel) {
 					Text(text = stringResource(id = R.string.action_cancel))
 				}
 				Button(
 					onClick = onRename,
-					enabled = !isRenaming,
+					enabled = canRename,
 					shape = MaterialTheme.shapes.large
 				) {
 					Text(text = stringResource(id = R.string.rename_recording_action))

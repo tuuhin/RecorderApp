@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -22,14 +23,16 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import com.eva.recorderapp.R
+import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
 @Composable
 fun StorageStatistics(
 	modifier: Modifier = Modifier,
-	padding: PaddingValues = PaddingValues(16.dp)
+	padding: PaddingValues = PaddingValues(16.dp),
 ) {
 	val context = LocalContext.current
 	val isInspectionMode = LocalInspectionMode.current
@@ -43,7 +46,7 @@ fun StorageStatistics(
 		statsManager?.getFreeBytes(StorageManager.UUID_DEFAULT) ?: 0L
 	}
 
-	val freeSpaceReable = remember(freeSpace) {
+	val freeSpaceReadable = remember(freeSpace) {
 		Formatter.formatFileSize(context, freeSpace)
 	}
 
@@ -51,16 +54,18 @@ fun StorageStatistics(
 		statsManager?.getTotalBytes(StorageManager.UUID_DEFAULT) ?: 0L
 	}
 
-	val totalSpaceReable = remember(totalSpace) {
+	val totalSpaceReadable = remember(totalSpace) {
 		Formatter.formatFileSize(context, totalSpace)
 	}
 
 	val ratio by remember(freeSpace, totalSpace) {
 		derivedStateOf {
-			if (totalSpace == 0L) return@derivedStateOf 0f
+			if (isInspectionMode) return@derivedStateOf 0.5f
+			else if (totalSpace == 0L) return@derivedStateOf 0f
 			else 1 - (freeSpace / totalSpace).toFloat()
 		}
 	}
+
 
 	Column(
 		modifier = modifier.padding(padding),
@@ -75,9 +80,10 @@ fun StorageStatistics(
 
 		LinearProgressIndicator(
 			progress = { ratio },
-			color = MaterialTheme.colorScheme.secondary,
-			trackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+			color = MaterialTheme.colorScheme.onSecondaryContainer,
+			trackColor = MaterialTheme.colorScheme.secondaryContainer,
 			strokeCap = StrokeCap.Round,
+			modifier = Modifier.fillMaxWidth()
 		)
 
 		Row(
@@ -90,11 +96,12 @@ fun StorageStatistics(
 				Text(
 					text = stringResource(id = R.string.storage_statistics_used),
 					style = MaterialTheme.typography.labelLarge,
-					color = MaterialTheme.colorScheme.secondary
+					color = MaterialTheme.colorScheme.primary
 				)
 				Text(
-					text = freeSpaceReable,
-					style = MaterialTheme.typography.bodyMedium
+					text = freeSpaceReadable,
+					style = MaterialTheme.typography.labelMedium,
+					color = MaterialTheme.colorScheme.secondary
 				)
 			}
 			Column(
@@ -103,13 +110,22 @@ fun StorageStatistics(
 				Text(
 					text = stringResource(id = R.string.storage_statistics_total),
 					style = MaterialTheme.typography.labelLarge,
-					color = MaterialTheme.colorScheme.secondary
+					color = MaterialTheme.colorScheme.primary
 				)
 				Text(
-					text = totalSpaceReable,
-					style = MaterialTheme.typography.bodyMedium
+					text = totalSpaceReadable,
+					style = MaterialTheme.typography.labelMedium,
+					color = MaterialTheme.colorScheme.secondary
 				)
 			}
 		}
+	}
+}
+
+@PreviewLightDark
+@Composable
+private fun StorageStatisticsPreview() = RecorderAppTheme {
+	Surface {
+		StorageStatistics()
 	}
 }

@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -89,15 +90,14 @@ class RecordingsViewmodel @Inject constructor(
 		get() = _recordings.value.filter(SelectableRecordings::isSelected)
 			.map(SelectableRecordings::recoding)
 
-	private val _deleteEvents = MutableSharedFlow<DeleteOrTrashRecordingsRequest>()
+	private val _trashRecordingEvent = MutableSharedFlow<DeleteOrTrashRecordingsRequest>()
 	val trashRequestEvent: SharedFlow<DeleteOrTrashRecordingsRequest>
-		get() = _deleteEvents.asSharedFlow()
+		get() = _trashRecordingEvent.asSharedFlow()
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 
-	private val _trashItemsFallback = MutableStateFlow(emptyList<RecordedVoiceModel>())
 	private var _prepareRecordingsJob: Job? = null
 
 	private fun populateRecordings() {
@@ -144,22 +144,21 @@ class RecordingsViewmodel @Inject constructor(
 
 	private fun populateRecordingCategories() {
 		// load all categories with count
-		categoriesProvider.recordingCategoriesFlowWithItemCount
-			.onEach { res ->
-				when (res) {
-					is Resource.Error -> {
-						val message = res.message ?: res.error.message ?: "SOME ERROR"
-						_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
-						_isCategoriesLoaded.update { true }
-					}
-
-					Resource.Loading -> _isCategoriesLoaded.update { false }
-					is Resource.Success -> {
-						_categories.update { res.data }
-						_isCategoriesLoaded.update { true }
-					}
+		categoriesProvider.recordingCategoriesFlowWithItemCount.onEach { res ->
+			when (res) {
+				is Resource.Error -> {
+					val message = res.message ?: res.error.message ?: "SOME ERROR"
+					_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
+					_isCategoriesLoaded.update { true }
 				}
-			}.launchIn(viewModelScope)
+
+				Resource.Loading -> _isCategoriesLoaded.update { false }
+				is Resource.Success -> {
+					_categories.update { res.data }
+					_isCategoriesLoaded.update { true }
+				}
+			}
+		}.launchIn(viewModelScope)
 	}
 
 
@@ -174,12 +173,10 @@ class RecordingsViewmodel @Inject constructor(
 			RecordingScreenEvent.ShareSelectedRecordings -> shareSelectedRecordings()
 			RecordingScreenEvent.PopulateRecordings -> populateRecordings()
 			is RecordingScreenEvent.OnCategoryChanged -> _selectedCategory.update { event.categoryModel }
-			is RecordingScreenEvent.OnPostTrashRequestApi30 -> onPostTrashEvent(
-				event.isSuccess,
-				event.message
-			)
-
 			RecordingScreenEvent.OnToggleFavourites -> onToggleFavourites()
+			is RecordingScreenEvent.OnPostTrashRequest -> viewModelScope.launch {
+				_uiEvents.emit(UIEvents.ShowToast(event.message))
+			}
 		}
 	}
 
@@ -189,28 +186,38 @@ class RecordingsViewmodel @Inject constructor(
 		}
 	}
 
-
-	private fun onTrashSelectedRecordings() = viewModelScope.launch {
-		// set the trash items fallback
-		_trashItemsFallback.update { selectedRecordings }
+	private fun onTrashSelectedRecordings() {
 		// request for trash item
-		when (val result = trashProvider.createTrashRecordings(selectedRecordings)) {
-			is Resource.Error -> {
-				if (result.error is SecurityException) {
-					handleSecurityExceptionToTrash(result.error)
-					return@launch
+		trashProvider.createTrashRecordings(selectedRecordings)
+			.onEach { result ->
+				when (result) {
+					is Resource.Error -> {
+						// on security exception handle the case
+						if (result.error is SecurityException) {
+							handleSecurityExceptionToTrash(result.error, result.data)
+							return@onEach
+						}
+						val message = result.error.message ?: result.message
+						?: "Cannot move items to trash"
+
+						viewModelScope.launch {
+							_uiEvents.emit(UIEvents.ShowSnackBar(message))
+						}
+					}
+
+					is Resource.Success -> {
+						val message = result.message ?: "Moved items to trash"
+						viewModelScope.launch {
+							_uiEvents.emit(UIEvents.ShowToast(message))
+						}
+					}
+
+					else -> {}
 				}
-				val message = result.message ?: "Cannot move items to trash"
-				onPostTrashEvent(false, message)
-			}
-
-			is Resource.Success -> {
-				val message = result.message ?: "Moved items to trash"
-				onPostTrashEvent(true, message)
-			}
-
-			else -> {}
-		}
+			}.onCompletion {
+				// unselect everything on done whether it's a success or a false
+				onSelectOrUnSelectAllRecordings(false)
+			}.launchIn(viewModelScope)
 	}
 
 
@@ -244,37 +251,33 @@ class RecordingsViewmodel @Inject constructor(
 	}
 
 
-	private fun handleSecurityExceptionToTrash(error: SecurityException) = viewModelScope.launch {
+	private fun handleSecurityExceptionToTrash(
+		error: SecurityException,
+		recordingsToTrash: Collection<RecordedVoiceModel>? = null,
+	) {
+		if (recordingsToTrash == null) return
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 
-			val request = DeleteOrTrashRecordingsRequest.OnTrashRequest(selectedRecordings)
-			_deleteEvents.emit(request)
+			val request = DeleteOrTrashRecordingsRequest.OnTrashRequest(recordingsToTrash)
+			viewModelScope.launch {
+				_trashRecordingEvent.emit(request)
+			}
 
 		} else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
 			// TODO: Check the workflow for android 10
 			(error as? RecoverableSecurityException)?.let { exp ->
 				val pendingIntent = exp.userAction.actionIntent
 				val request = IntentSenderRequest.Builder(pendingIntent).build()
-				val trashEvent = DeleteOrTrashRecordingsRequest.OnTrashRequest(
-					recordings = selectedRecordings, intentSenderRequest = request
-				)
-				_deleteEvents.emit(trashEvent)
+
+				val trashEvent = DeleteOrTrashRecordingsRequest
+					.OnTrashRequest(recordings = recordingsToTrash, intentSenderRequest = request)
+
+				viewModelScope.launch {
+					_trashRecordingEvent.emit(trashEvent)
+				}
 			}
 		}
-	}
-
-
-	private fun onPostTrashEvent(isSuccess: Boolean, message: String) = viewModelScope.launch {
-		// if trash items are empty then no need to process trash events
-		if (_trashItemsFallback.value.isEmpty()) return@launch
-		// show the toast its deleted
-		_uiEvents.emit(UIEvents.ShowToast(message))
-		if (isSuccess) {
-			val deletedFiles = _trashItemsFallback.value
-			trashProvider.onPostTrashRecordings(deletedFiles)
-		}
-		//clear the deleted recordings list
-		_trashItemsFallback.update { emptyList() }
 	}
 
 	private fun toggleRecordingSelection(recording: RecordedVoiceModel) {

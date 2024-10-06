@@ -182,5 +182,16 @@
   <string name="update_bookmark_dialog_title">বুকমার্ক আপডেট করুন</string>
   <string name="bookmark_action_export">শেয়ার</string>
   <string name="sharing_bookmarks">বুকমার্ক শেয়ার করুনা</string>
+  <string name="recording_settings_add_location_info_title">অবস্থান যোগ</string>
+  <string name="recording_settings_add_location_info_text">আপনার রেকর্ডিং অবস্থান তথ্য যোগ করুন</string>
+  <string name="recording_settings_add_location_info_text_explained">কিছু রেকর্ডিং ফর্ম্যাট তার মেটাডেটাতে অবস্থানের তথ্য যোগ করতে পারে, যা পরে রেকর্ডিং অবস্থান নির্ধারণ করতে ব্যবহার করা যেতে পারে</string>
+  <string name="action_request_permission">অনুরোধ করুণ</string>
+  <string name="recording_settings_pause_recorder_on_call_text_explained">ইনকামিং কল রেকর্ডিংয়ের বিষয়বস্তু বিকৃত করতে পারে। ইনকামিং কলে রেকর্ডিং পজ করার অনুমতি দিন</string>
+  <string name="audio_metadata_file_location">রেকর্ড করা হয়েছে</string>
+  <string name="recording_settings_file_allow_external_read">অন্যান্য অ্যাপ রেকর্ডিং দেখান</string>
+  <string name="recording_settings_file_allow_external_read_text">অন্যান্য অ্যাপ রেকর্ডিং দেখানোর অনুমতি দিন</string>
+  <string name="write_request_accepted">রিনেম করার অনুরোধ গৃহীত হয়েছে</string>
+  <string name="write_request_rejected">রিনেম করার অনুরোধ প্রত্যাখ্যান করা হয়েছে</string>
+  <string name="other_app_subtitle">অন্যান্য অ্যাপ</string>
 </resources>
 

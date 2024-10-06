@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.player.PlayerPlayBackSpeed
+import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerPlayBackSpeed
 
 @Composable
 fun PlayBackSpeedSelector(

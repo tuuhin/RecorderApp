@@ -10,4 +10,5 @@ data class TrashRecordingModel(
 	val recordedAt: LocalDateTime,
 	val fileUri: String,
 	val expiresAt: LocalDateTime,
+	val owner: String? = null,
 )

@@ -10,6 +10,7 @@ import androidx.core.content.PermissionChecker
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
+import com.eva.recorderapp.voice_recorder.domain.location.LocationProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.MicrophoneDataPoint
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
@@ -21,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +42,7 @@ class VoiceRecorderImpl(
 	private val context: Context,
 	private val fileProvider: RecorderFileProvider,
 	private val settings: RecorderAudioSettingsRepo,
+	private val locationProvider: LocationProvider,
 ) : VoiceRecorder {
 
 	private val stopWatch = RecorderStopWatch(delayTime = 60.milliseconds)
@@ -49,7 +52,7 @@ class VoiceRecorderImpl(
 		get() = settings.audioSettings.encoders.recordFormat
 
 	private val channelCount: Int
-		get() = if (settings.audioSettings.enableStero) 2 else 1
+		get() = if (settings.audioSettings.enableStereo) 2 else 1
 
 	// recorder quality
 	private val quality: RecordQuality
@@ -117,40 +120,64 @@ class VoiceRecorderImpl(
 	 * Creates the file uri in which the audio to be recorded and initiate
 	 * the recorder parameters
 	 */
-	private suspend fun initiateRecorderParams() {
-		return coroutineScope {
-			if (_recorder == null) createRecorder()
+	@OptIn(ExperimentalCoroutinesApi::class)
+	private suspend fun initiateRecorderParams() = coroutineScope {
+		if (_recorder == null) createRecorder()
 
-			// ensures the file is being created in a different coroutine
-			val file = async(Dispatchers.IO) {
-				fileProvider.createFileForRecording(format.fileExtension)
+		// ensures the file is being created in a different coroutine
+		val fileDeferred = async(Dispatchers.IO) {
+			fileProvider.createFileForRecording(format.fileExtension)
+		}
+
+		// location deferred for current location if available
+		val locationDeferred = async(Dispatchers.IO) {
+			if (settings.audioSettings.addLocationInfoInRecording)
+				return@async locationProvider.invoke()
+			null
+		}
+
+		Log.d(LOGGER_TAG, "CONCURRENTLY FETCHING LOCATION AND PREPARING FILE")
+		awaitAll(locationDeferred, fileDeferred)
+
+		_recordingFile = fileDeferred.getCompleted()
+
+		val locationResult = locationDeferred.getCompleted()
+		val locationSuccess = (locationResult as? Resource.Success)
+		val locationFailed = (locationResult as? Resource.Error)
+
+		if (locationFailed != null) {
+			Log.w(LOGGER_TAG, "${locationFailed.message ?: locationFailed.error.message}")
+		}
+
+		_recorder?.apply {
+			setOutputFile(_recordingFile)
+			setAudioSource(MediaRecorder.AudioSource.MIC)
+			// recorder format
+			setOutputFormat(format.outputFormat)
+			// formater channel and sampling
+			setAudioEncoder(format.encoder)
+			setAudioChannels(channelCount)
+			// recording quality
+			setAudioSamplingRate(quality.sampleRate)
+			setAudioEncodingBitRate(quality.bitRate)
+			//set location can only add location to mp4 and 3gp files
+			locationSuccess?.data?.let {
+				Log.d(LOGGER_TAG, "LOCATION ADDED :$it")
+				setLocation(
+					it.latitude.toFloat(),
+					it.longitude.toFloat()
+				)
 			}
-
-			_recordingFile = file.await()
-
-			Log.d(LOGGER_TAG, "NEW_FILE_URI_CREATED")
-
-			_recorder?.apply {
-				setOutputFile(_recordingFile)
-				setAudioSource(MediaRecorder.AudioSource.MIC)
-				// recorder format
-				setOutputFormat(format.outputFormat)
-				// formater channel and sampling
-				setAudioEncoder(format.encoder)
-				setAudioChannels(channelCount)
-				// recording quality
-				setAudioSamplingRate(quality.sampleRate)
-				setAudioEncodingBitRate(quality.bitRate)
-			}
-			_recorder?.metrics?.let { bundle ->
-				val bitrate = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_BITRATE)
-				val sampleRte = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_SAMPLERATE)
-				val channel = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_CHANNELS)
-				Log.i(LOGGER_TAG, "RECORDER METRICS AFTER CONFIGURATION")
-				Log.i(LOGGER_TAG, "SAMPLING RATE : $sampleRte")
-				Log.i(LOGGER_TAG, "ENCODING BIT RATE : $bitrate")
-				Log.i(LOGGER_TAG, "CHANNEL COUNT :$channel")
-			}
+		}
+		// metrics logs
+		_recorder?.metrics?.let { bundle ->
+			val bitrate = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_BITRATE)
+			val sampleRte = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_SAMPLERATE)
+			val channel = bundle.getInt(MediaRecorder.MetricsConstants.AUDIO_CHANNELS)
+			Log.i(LOGGER_TAG, "RECORDER METRICS AFTER CONFIGURATION")
+			Log.i(LOGGER_TAG, "SAMPLING RATE : $sampleRte")
+			Log.i(LOGGER_TAG, "ENCODING BIT RATE : $bitrate")
+			Log.i(LOGGER_TAG, "CHANNEL COUNT :$channel")
 		}
 	}
 

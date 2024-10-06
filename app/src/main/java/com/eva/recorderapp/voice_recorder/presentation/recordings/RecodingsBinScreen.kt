@@ -73,7 +73,6 @@ fun RecordingsBinScreen(
 		},
 		bottomBar = {
 			RecordingsBinScreenBottomBar(
-				recordings = recordings,
 				isVisible = isAnySelected,
 				onItemsDelete = { onScreenEvent(TrashRecordingScreenEvent.OnSelectItemDeleteForeEver) },
 				onItemsRestore = { onScreenEvent(TrashRecordingScreenEvent.OnSelectItemRestore) },

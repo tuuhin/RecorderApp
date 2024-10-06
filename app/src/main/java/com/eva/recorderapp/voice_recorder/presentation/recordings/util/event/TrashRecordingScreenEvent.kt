@@ -18,5 +18,5 @@ interface TrashRecordingScreenEvent {
 
 	data object OnSelectItemDeleteForeEver : TrashRecordingScreenEvent
 
-	data class OnPostDeleteRequestApi30(val message: String = "") : TrashRecordingScreenEvent
+	data class OnPostDeleteRequest(val message: String = "") : TrashRecordingScreenEvent
 }

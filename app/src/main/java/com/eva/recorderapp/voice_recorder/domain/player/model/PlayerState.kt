@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.domain.player
+package com.eva.recorderapp.voice_recorder.domain.player.model
 
 enum class PlayerState {
 
@@ -7,6 +7,6 @@ enum class PlayerState {
 	COMPLETED;
 
 	val canAdvertiseCurrentPosition: Boolean
-		get() = this == PlayerState.PLAYER_READY
+		get() = this == PLAYER_READY
 
 }

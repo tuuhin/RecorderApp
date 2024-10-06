@@ -37,7 +37,7 @@ fun DeleteRecordingRequestHandler(
 					context.getString(R.string.recording_delete_request_success)
 				else context.getString(R.string.recording_delete_request_failed)
 
-			val event = TrashRecordingScreenEvent.OnPostDeleteRequestApi30(message)
+			val event = TrashRecordingScreenEvent.OnPostDeleteRequest(message)
 			onResult(event)
 		},
 	)
@@ -56,12 +56,8 @@ fun DeleteRecordingRequestHandler(
 								deleteRequestLauncher.launch(request)
 							}
 						} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-							val request = RecordingsProvider.createDeleteRequest(
-								context,
-								event.trashRecordings
-							)
-							// launch the request
-							deleteRequestLauncher.launch(request)
+							RecordingsProvider.createDeleteRequest(context, event.trashRecordings)
+								?.let(deleteRequestLauncher::launch)
 						}
 					}
 

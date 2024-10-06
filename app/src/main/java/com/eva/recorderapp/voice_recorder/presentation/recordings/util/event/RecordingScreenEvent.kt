@@ -25,10 +25,7 @@ sealed interface RecordingScreenEvent {
 
 	data object ShareSelectedRecordings : RecordingScreenEvent
 
-	data class OnPostTrashRequestApi30(
-		val isSuccess: Boolean = false,
-		val message: String = "",
-	) : RecordingScreenEvent
+	data class OnPostTrashRequest(val message: String = "") : RecordingScreenEvent
 
 	data class OnCategoryChanged(val categoryModel: RecordingCategoryModel) : RecordingScreenEvent
 }

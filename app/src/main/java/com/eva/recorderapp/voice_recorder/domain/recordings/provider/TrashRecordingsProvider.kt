@@ -31,23 +31,20 @@ interface TrashRecordingsProvider {
 	 * @return [Resource] indicating [recordings] are recovered successfully otherwise [Exception]
 	 */
 	suspend fun restoreRecordingsFromTrash(
-		recordings: Collection<TrashRecordingModel>
+		recordings: Collection<TrashRecordingModel>,
 	): Resource<Unit, Exception>
 
 	/**
-	 * Creates a trash entry from the original [RecordedVoiceModel], the trash recordings will not
-	 * show directly on normal recordings to get trash recordings follow [getTrashedVoiceRecordings]
-	 * @param recordings a [Collection] of [RecordedVoiceModel] to be trashed
-	 * @return [Resource] indicating [recordings] are moved to trash successfully otherwise [Exception]
+	 * Creates trash entries from the original [RecordedVoiceModel], the trash recordings will not
+	 * be shown directly and will be deleted with a grace period of 30 days.
+	 * @see TrashRecordingsProvider
+	 * @param recordings [TrashVoiceRecordings] to be trashed
+	 * @return A flow emitting [Resource.Success]  everything went well, [Resource.Error] there was
+	 * some security issues or other issues related to files.
 	 */
-	suspend fun createTrashRecordings(
-		recordings: Collection<RecordedVoiceModel>
-	): Resource<Unit, Exception>
+	fun createTrashRecordings(recordings: Collection<RecordedVoiceModel>)
+			: Flow<Resource<Collection<RecordedVoiceModel>, Exception>>
 
-	/**
-	 * Perform action after the recordings are being trashed
-	 */
-	suspend fun onPostTrashRecordings(recordings: Collection<RecordedVoiceModel>): Resource<Unit, Exception>
 
 	/**
 	 * Permanently deletes the trashed recordings. Remember if these are deleted they cannot be recovered anymore

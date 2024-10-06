@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.domain.player
+package com.eva.recorderapp.voice_recorder.domain.player.model
 
 import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
