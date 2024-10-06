@@ -213,24 +213,19 @@ sealed class RecordingsProvider(private val context: Context) {
 
 
 	suspend fun permanentDeleteUrisFromAudioMediaVolume(recordingsUris: Collection<Uri>) {
-
-		val buildSelection = buildString {
-			append(MediaStore.Audio.AudioColumns._ID)
-			append(" in ")
-			append(" (")
-			(1..recordingsUris.size).forEach { index ->
-				if (index != recordingsUris.size) append(" ? ,")
-				else append(" ?")
-			}
-			append(" ) ")
-		}
-
-		val selectionArgs = recordingsUris.map { uri -> "${ContentUris.parseId(uri)}" }
-			.toTypedArray()
-
+		// don't put uris with non owner from this app
+		// this may lead to security exception and exceptions are not handled
 		withContext(Dispatchers.IO) {
-			Log.d(TAG, " DELETE SELECTION AND SELECTION ARGS : $buildSelection $selectionArgs")
-			contentResolver.delete(AUDIO_VOLUME_URI, buildSelection, selectionArgs)
+			supervisorScope {
+				val results = recordingsUris.map { uri ->
+					async {
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+							contentResolver.delete(uri, null)
+						else contentResolver.delete(uri, null, null)
+					}
+				}
+				results.awaitAll()
+			}
 		}
 	}
 
