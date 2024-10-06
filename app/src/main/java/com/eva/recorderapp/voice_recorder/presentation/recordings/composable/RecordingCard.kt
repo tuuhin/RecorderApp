@@ -25,11 +25,14 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,6 +57,15 @@ fun RecordingCard(
 	isSelected: Boolean = false,
 	shape: Shape = MaterialTheme.shapes.large,
 ) {
+	val context = LocalContext.current
+	val isInspectionMode = LocalInspectionMode.current
+
+	val otherAppText = remember {
+		return@remember if (!isInspectionMode && music.owner != context.packageName  )
+			context.getString(R.string.other_app_subtitle)
+		else null
+	}
+
 	val clickModifier = if (isSelectable)
 		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selected")
 	else Modifier.combinedClickable(
@@ -146,8 +158,14 @@ fun RecordingCard(
 						style = MaterialTheme.typography.bodySmall,
 					)
 				}
+				otherAppText?.let { text ->
+					Text(
+						text = text,
+						style = MaterialTheme.typography.labelSmall,
+						color = MaterialTheme.colorScheme.tertiary
+					)
+				}
 			}
-
 		}
 	}
 }

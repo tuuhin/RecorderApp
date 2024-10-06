@@ -62,12 +62,12 @@ class RecorderFileProviderImpl(
 				Log.d(LOGGER_TAG, "UPDATING THE FILE CONTENT..")
 				val job = launch(Dispatchers.IO) {
 					contentResolver.openOutputStream(contentUri, "w")?.use { stream ->
-						val content = file.readText()
-						stream.writer().write(content)
+						stream.write(file.readBytes())
 					}
 				}
 				// wait for the file data to be completely read
 				job.join()
+				Log.d(LOGGER_TAG, "CONTENT COPIED DONE")
 				val uriId = ContentUris.parseId(contentUri)
 				// update the metadata for the file
 				val mediaStoreUpdate = async(Dispatchers.IO) {

@@ -188,5 +188,10 @@
   <string name="action_request_permission">অনুরোধ করুণ</string>
   <string name="recording_settings_pause_recorder_on_call_text_explained">ইনকামিং কল রেকর্ডিংয়ের বিষয়বস্তু বিকৃত করতে পারে। ইনকামিং কলে রেকর্ডিং পজ করার অনুমতি দিন</string>
   <string name="audio_metadata_file_location">রেকর্ড করা হয়েছে</string>
+  <string name="recording_settings_file_allow_external_read">অন্যান্য অ্যাপ রেকর্ডিং দেখান</string>
+  <string name="recording_settings_file_allow_external_read_text">অন্যান্য অ্যাপ রেকর্ডিং দেখানোর অনুমতি দিন</string>
+  <string name="write_request_accepted">রিনেম করার অনুরোধ গৃহীত হয়েছে</string>
+  <string name="write_request_rejected">রিনেম করার অনুরোধ প্রত্যাখ্যান করা হয়েছে</string>
+  <string name="other_app_subtitle">অন্যান্য অ্যাপ</string>
 </resources>
 

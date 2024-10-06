@@ -325,6 +325,15 @@ sealed class RecordingsProvider(private val context: Context) {
 			return IntentSenderRequest.Builder(pendingIntent).build()
 		}
 
+		@RequiresApi(Build.VERSION_CODES.R)
+		fun createWriteRequest(context: Context, recording: RecordedVoiceModel):IntentSenderRequest {
+			val uris = recording.fileUri.toUri()
+
+			val pendingIntent = MediaStore.createWriteRequest(context.contentResolver, listOf(uris))
+
+			return IntentSenderRequest.Builder(pendingIntent).build()
+		}
+
 		@JvmName("create_delete_requests_from_recorded_models")
 		@RequiresApi(Build.VERSION_CODES.R)
 		fun createDeleteRequest(

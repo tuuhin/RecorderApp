@@ -15,7 +15,6 @@ import androidx.core.os.bundleOf
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
-import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.CannotTrashFileDifferentOwnerException
 import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.InvalidRecordingIdException
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedVoiceRecordingModels
@@ -250,13 +249,6 @@ class VoiceRecordingsProviderImpl(
 		return flow {
 			emit(Resource.Loading)
 
-			val ownerSelf = recording.owner == context.packageName
-
-			if (!ownerSelf) {
-				emit(Resource.Error(CannotTrashFileDifferentOwnerException()))
-				return@flow
-			}
-
 			try {
 				val uri = recording.fileUri.toUri()
 
@@ -275,7 +267,7 @@ class VoiceRecordingsProviderImpl(
 					)
 				)
 			} catch (e: SecurityException) {
-				emit(Resource.Error(e, message = "Security Exception"))
+				emit(Resource.Error(e, message = "Access not found"))
 			} catch (e: SQLException) {
 				emit(Resource.Error(e, "SQL EXCEPTION"))
 			} catch (e: Exception) {
