@@ -22,10 +22,9 @@ import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.ResourcedDetailedRecordingModel
 import com.eva.recorderapp.voice_recorder.domain.player.exceptions.PlayerFileNotFoundException
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -60,18 +59,23 @@ class PlayerFileProviderImpl(
 	override fun getAudioFileInfo(id: Long): Flow<ResourcedDetailedRecordingModel> {
 		return callbackFlow {
 
-			val scope = CoroutineScope(Dispatchers.IO)
+			var updateJob: Job? = null
+			// send loading
 			trySend(Resource.Loading)
 
-			scope.launch {
+			// send the data
+			launch(Dispatchers.IO) {
+				// evaluate it and send
 				val first = getPlayerInfoFromAudioId(id)
 				send(first)
 			}
 
 			val contentObserver = object : ContentObserver(null) {
 				override fun onChange(selfChange: Boolean) {
-					Log.d(TAG, "CONTENT CHANGED")
-					scope.launch {
+					// observer has found some changes
+					// cancel the previous job and run new one
+					updateJob?.cancel()
+					updateJob = launch(Dispatchers.IO) {
 						val update = getPlayerInfoFromAudioId(id)
 						send(update)
 					}
@@ -85,7 +89,6 @@ class PlayerFileProviderImpl(
 			awaitClose {
 				Log.d(TAG, "REMOVED CONTENT OBSERVER FOR $fileContentUri")
 				contentResolver.unregisterContentObserver(contentObserver)
-				scope.cancel()
 			}
 		}
 	}
@@ -100,14 +103,11 @@ class PlayerFileProviderImpl(
 		)
 		return withContext(Dispatchers.IO) {
 			try {
-				val result = contentResolver.query(AUDIO_VOLUME_URI, _projection, bundle, null)
+				contentResolver.query(AUDIO_VOLUME_URI, _projection, bundle, null)
 					?.use { cur -> evaluateValuesFromCursor(cur) }
-
-				result?.let { Resource.Success(it) }
+					?.let { Resource.Success(it) }
 					?: Resource.Error(PlayerFileNotFoundException())
 			} catch (e: SecurityException) {
-				// the uri has a different owner, and we don't have proper permission to handle
-				// this case
 				Resource.Error(e, "CANNOT ACCESS FILE PERMISSION WAS NOT GRANTED")
 			} catch (e: SQLException) {
 				e.printStackTrace()
@@ -166,12 +166,15 @@ class PlayerFileProviderImpl(
 
 			val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns._ID)
 			val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.TITLE)
-			val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DISPLAY_NAME)
-			val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
+			val nameColumn =
+				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DISPLAY_NAME)
+			val durationColumn =
+				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
 			val sizeColum = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.SIZE)
 			val dataCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATE_MODIFIED)
 			val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DATA)
-			val mimeTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.MIME_TYPE)
+			val mimeTypeColumn =
+				cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.MIME_TYPE)
 
 			if (!cursor.moveToFirst()) return@withContext null
 

@@ -21,13 +21,14 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedVo
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingModels
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -40,21 +41,25 @@ class VoiceRecordingsProviderImpl(
 	private val fileSettingsRepo: RecorderFileSettingsRepo,
 ) : RecordingsProvider(context), VoiceRecordingsProvider {
 
-	override val voiceRecordingsFlow: Flow<VoiceRecordingModels>
-		get() = callbackFlow {
+	private fun recordingFlowWithExternalReadEnabled(allowExternalRead: Boolean)
+			: Flow<VoiceRecordingModels> {
+		return callbackFlow {
 
-			val scope = CoroutineScope(Dispatchers.IO)
+			var updateJob: Job? = null
 
-			scope.launch {
-				val recordings = getVoiceRecordings()
+			launch(Dispatchers.IO) {
+				val recordings = getVoiceRecordings(allowExternalRead)
 				send(recordings)
 			}
 
 			val observer = object : ContentObserver(null) {
 				override fun onChange(selfChange: Boolean) {
 					super.onChange(selfChange)
-					scope.launch {
-						val recordings = getVoiceRecordings()
+					// observer has found some changes
+					// cancel the previous job and run new one
+					updateJob?.cancel()
+					updateJob = launch(Dispatchers.IO) {
+						val recordings = getVoiceRecordings(allowExternalRead)
 						send(recordings)
 					}
 				}
@@ -64,11 +69,20 @@ class VoiceRecordingsProviderImpl(
 			contentResolver.registerContentObserver(AUDIO_VOLUME_URI, true, observer)
 
 			awaitClose {
+				// the launch will get automatically cancelled when closed
 				Log.d(LOGGER_TAG, "CANCEL OBSERVER FOR RECORDINGS")
-				scope.cancel()
 				contentResolver.unregisterContentObserver(observer)
 			}
 		}
+	}
+
+	@OptIn(ExperimentalCoroutinesApi::class)
+	override val voiceRecordingsFlow: Flow<VoiceRecordingModels>
+		get() = fileSettingsRepo.fileSettingsFlow
+			.map { settings -> settings.allowExternalRead }
+			.distinctUntilChanged()
+			.flatMapLatest(::recordingFlowWithExternalReadEnabled)
+
 
 	override val voiceRecordingFlowAsResource: Flow<ResourcedVoiceRecordingModels>
 		get() = flow {
@@ -76,7 +90,8 @@ class VoiceRecordingsProviderImpl(
 				// emit loading
 				emit(Resource.Loading)
 				// emit the models
-				emitAll(voiceRecordingsFlow.map { models -> Resource.Success(models) })
+				val recordings = getVoiceRecordingsAsResource()
+				emit(recordings)
 			} catch (e: Exception) {
 				e.printStackTrace()
 				emit(Resource.Error(e))
@@ -89,21 +104,17 @@ class VoiceRecordingsProviderImpl(
 				// emit loading
 				emit(Resource.Loading)
 				// emit the models
-				emitAll(
-					voiceRecordingsFlow.map { models ->
-						val ownerShipTHisApp = models.filter { it.owner == context.packageName }
-						Resource.Success(ownerShipTHisApp)
-					},
-				)
+				val recordings = getVoiceRecordings(false).filter { it.owner == context.packageName }
+				// emit the recordings with the correct owner name
+				emit(Resource.Success(recordings))
 			} catch (e: Exception) {
 				e.printStackTrace()
 				emit(Resource.Error(e))
 			}
 		}
 
-	override suspend fun getVoiceRecordings(): VoiceRecordingModels {
-		val allowExternalRead = fileSettingsRepo.fileSettings.allowExternalRead
-		val queryArgs = if (allowExternalRead && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+	override suspend fun getVoiceRecordings(queryAllRecordings: Boolean): VoiceRecordingModels {
+		val queryArgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && queryAllRecordings) {
 			// they are of owner package and external recordings
 			val selection = buildString {
 				append(MediaStore.Audio.AudioColumns.IS_RECORDING)
@@ -146,7 +157,8 @@ class VoiceRecordingsProviderImpl(
 	override suspend fun getVoiceRecordingsAsResource(): ResourcedVoiceRecordingModels {
 		return withContext(Dispatchers.IO) {
 			try {
-				val models = getVoiceRecordings()
+				val isExternalRecording = fileSettingsRepo.fileSettings.allowExternalRead
+				val models = getVoiceRecordings(queryAllRecordings = isExternalRecording)
 				Resource.Success(models)
 			} catch (e: SQLException) {
 				Resource.Error(e, "SQL EXCEPTION")
@@ -238,31 +250,28 @@ class VoiceRecordingsProviderImpl(
 				Resource.Error(e, errorMessage)
 			}
 		}
-
 	}
 
 	override fun renameRecording(recording: RecordedVoiceModel, newName: String)
 			: Flow<Resource<Boolean, Exception>> {
 		return flow {
-			emit(Resource.Loading)
-
 			try {
 				val uri = recording.fileUri.toUri()
 
 				val contentValues = ContentValues().apply {
 					put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, newName)
 				}
+				emit(Resource.Loading)
 
-				val rowsModified = withContext(Dispatchers.IO) {
+				val transaction = withContext(Dispatchers.IO) {
 					contentResolver.update(uri, contentValues, null, null)
 				}
-
-				emit(
-					Resource.Success(
-						data = rowsModified >= 1,
-						message = context.getString(R.string.rename_recording_success)
-					)
+				val result = Resource.Success<Boolean, Exception>(
+					data = transaction >= 1,
+					message = context.getString(R.string.rename_recording_success)
 				)
+
+				emit(result)
 			} catch (e: SecurityException) {
 				emit(Resource.Error(e, message = "Access not found"))
 			} catch (e: SQLException) {

@@ -5,6 +5,7 @@ import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 
 class PlayerFileProviderFromIdUseCase(
@@ -12,20 +13,23 @@ class PlayerFileProviderFromIdUseCase(
 	private val metadataProvider: RecordingsSecondaryDataProvider,
 ) {
 	operator fun invoke(audioId: Long): Flow<Resource<AudioFileModel, Exception>> {
+		val fileDataFlow = playerFileProvider.getAudioFileInfo(audioId)
+		val metaDataflow = metadataProvider.getRecordingFromIdAsFlow(audioId)
+			.catch { err -> err.printStackTrace() }
 
-		val fileProviderFlow = playerFileProvider.getAudioFileInfo(audioId)
-		val metaDataFlow = metadataProvider.getRecordingFromIdAsFlow(audioId)
-
-		return combine(fileProviderFlow, metaDataFlow) { resource, metadata ->
-			when (resource) {
+		return combine(
+			flow = fileDataFlow,
+			flow2 = metaDataflow
+		) { fileData, metadata ->
+			when (fileData) {
 				is Resource.Success -> {
-					val result = resource.data.copy(
+					val result = fileData.data.copy(
 						isFavourite = metadata?.isFavourite ?: false
 					)
 					Resource.Success(result)
 				}
 
-				else -> resource
+				else -> fileData
 			}
 		}
 	}
