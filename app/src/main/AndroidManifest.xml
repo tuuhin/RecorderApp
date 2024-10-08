@@ -67,6 +67,18 @@
       android:exported="false"
       android:foregroundServiceType="microphone" />
 
+    <receiver
+      android:name=".voice_recorder.widgets.recordings.RecordingsWidgetReceiver"
+      android:enabled="true"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/recordings_widget_provider" />
+    </receiver>
+
     <activity
       android:name=".MainActivity"
       android:exported="true"

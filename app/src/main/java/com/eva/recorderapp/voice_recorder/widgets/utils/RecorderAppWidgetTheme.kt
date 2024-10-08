@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.widgets.composables
+package com.eva.recorderapp.voice_recorder.widgets.utils
 
 import android.os.Build
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -11,7 +11,7 @@ import com.eva.recorderapp.ui.theme.darkScheme
 import com.eva.recorderapp.ui.theme.lightScheme
 
 @Composable
-fun RecorderWidgetTheme(
+fun RecorderAppWidgetTheme(
 	dynamicColor: Boolean = true,
 	content: @Composable() () -> Unit,
 ) {

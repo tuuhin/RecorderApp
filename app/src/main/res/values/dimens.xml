@@ -15,4 +15,9 @@
   <dimen name="dialog_min_constraint_height">560dp</dimen>
   <dimen name="graph_card_padding_other">24dp</dimen>
   <dimen name="bottom_sheet_min_height">300dp</dimen>
+
+  <dimen name="recordings_widget_min_height">109dp</dimen>
+  <dimen name="recordings_widget_max_height">306dp</dimen>
+  <dimen name="recordings_widget_min_width">109dp</dimen>
+  <dimen name="recordings_widget_max_width">306dp</dimen>
 </resources>
