@@ -27,23 +27,11 @@ interface VoiceRecordingsProvider {
 	val voiceRecordingsOnlyThisApp: Flow<ResourcedVoiceRecordingModels>
 
 	/**
-	 * A resourced version of the [voiceRecordingsFlow].[Exception]'s are wrapped so no need
-	 * worry about exceptions
-	 */
-	val voiceRecordingFlowAsResource: Flow<ResourcedVoiceRecordingModels>
-
-	/**
 	 * Gets the current recordings of the current package or all recordings
 	 * determined by [queryAllRecordings]
 	 * @param queryAllRecordings Flag to indicate if external recordings are to be evaluated too
 	 */
 	suspend fun getVoiceRecordings(queryAllRecordings: Boolean = false): VoiceRecordingModels
-
-	/**
-	 * Gets the currently saved recordings from the storage
-	 * @return [Resource.Success] of [VoiceRecordingModels] if everything goes well otherwise [Resource.Error]
-	 */
-	suspend fun getVoiceRecordingsAsResource(): ResourcedVoiceRecordingModels
 
 
 	suspend fun getVoiceRecordingAsResourceFromId(recordingId: Long): Resource<RecordedVoiceModel, Exception>

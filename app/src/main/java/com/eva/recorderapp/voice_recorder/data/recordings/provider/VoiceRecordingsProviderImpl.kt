@@ -27,7 +27,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -82,21 +84,8 @@ class VoiceRecordingsProviderImpl(
 			.map { settings -> settings.allowExternalRead }
 			.distinctUntilChanged()
 			.flatMapLatest(::recordingFlowWithExternalReadEnabled)
+			.catch { err -> err.printStackTrace() }
 
-
-	override val voiceRecordingFlowAsResource: Flow<ResourcedVoiceRecordingModels>
-		get() = flow {
-			try {
-				// emit loading
-				emit(Resource.Loading)
-				// emit the models
-				val recordings = getVoiceRecordingsAsResource()
-				emit(recordings)
-			} catch (e: Exception) {
-				e.printStackTrace()
-				emit(Resource.Error(e))
-			}
-		}
 
 	override val voiceRecordingsOnlyThisApp: Flow<ResourcedVoiceRecordingModels>
 		get() = flow {
@@ -104,9 +93,12 @@ class VoiceRecordingsProviderImpl(
 				// emit loading
 				emit(Resource.Loading)
 				// emit the models
-				val recordings = getVoiceRecordings(false).filter { it.owner == context.packageName }
+				val recordings = recordingFlowWithExternalReadEnabled(false)
+					.map {
+						Resource.Success<VoiceRecordingModels, Exception>(data = it)
+					}
 				// emit the recordings with the correct owner name
-				emit(Resource.Success(recordings))
+				emitAll(recordings)
 			} catch (e: Exception) {
 				e.printStackTrace()
 				emit(Resource.Error(e))
@@ -154,20 +146,6 @@ class VoiceRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun getVoiceRecordingsAsResource(): ResourcedVoiceRecordingModels {
-		return withContext(Dispatchers.IO) {
-			try {
-				val isExternalRecording = fileSettingsRepo.fileSettings.allowExternalRead
-				val models = getVoiceRecordings(queryAllRecordings = isExternalRecording)
-				Resource.Success(models)
-			} catch (e: SQLException) {
-				Resource.Error(e, "SQL EXCEPTION")
-			} catch (e: Exception) {
-				e.printStackTrace()
-				Resource.Error(e, e.message)
-			}
-		}
-	}
 
 	override suspend fun getVoiceRecordingAsResourceFromId(recordingId: Long): Resource<RecordedVoiceModel, Exception> {
 		val recordingUri = ContentUris.withAppendedId(AUDIO_VOLUME_URI, recordingId)

@@ -25,8 +25,8 @@ interface TrashRecordingsProvider {
 	suspend fun getTrashedVoiceRecordings(): ResourcedTrashRecordingModels
 
 	/**
-	 * Restore the original [RecordedVoiceModel], from the trash for one to one mapping of [TrashRecordingModel]
-	 * on restore they are shown on [VoiceRecordingsProvider.getVoiceRecordingsAsResource]
+	 * Restore the original [RecordedVoiceModel], from the trash for one [TrashRecordingModel]
+	 * if one-to-one mapping exists
 	 * @param recordings a [Collection] of [TrashRecordingModel] to be recovered
 	 * @return [Resource] indicating [recordings] are recovered successfully otherwise [Exception]
 	 */
