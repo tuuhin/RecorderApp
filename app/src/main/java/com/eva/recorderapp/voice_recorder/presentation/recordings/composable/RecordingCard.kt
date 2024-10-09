@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -60,11 +62,12 @@ fun RecordingCard(
 	val context = LocalContext.current
 	val isInspectionMode = LocalInspectionMode.current
 
-	val otherAppText = remember {
-		return@remember if (!isInspectionMode && music.owner != context.packageName  )
-			context.getString(R.string.other_app_subtitle)
-		else null
+	val otherAppText = remember(music.owner, context) {
+		if (isInspectionMode || music.owner == context.packageName) return@remember null
+
+		music.owner ?: context.getString(R.string.other_app_subtitle)
 	}
+
 
 	val clickModifier = if (isSelectable)
 		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selected")
@@ -110,61 +113,63 @@ fun RecordingCard(
 					)
 				else
 					Image(
-						painter = painterResource(id = R.drawable.ic_play_variant),
+						painter = painterResource(id = R.drawable.ic_microphone),
 						contentDescription = null,
 						colorFilter = ColorFilter
 							.tint(color = MaterialTheme.colorScheme.primary),
+						modifier = Modifier.size(24.dp)
 					)
 
 			}
 			Column(
 				modifier = Modifier.weight(1f),
-				verticalArrangement = Arrangement.spacedBy(6.dp)
+				verticalArrangement = Arrangement.spacedBy(4.dp)
 			) {
-				Row(
-					horizontalArrangement = Arrangement.SpaceBetween,
-					verticalAlignment = Alignment.CenterVertically,
-					modifier = Modifier.fillMaxWidth()
+				Text(
+					text = music.displayName,
+					style = MaterialTheme.typography.titleMedium,
+					color = MaterialTheme.colorScheme.primary
+				)
+				Text(
+					text = music.durationAsLocaltime.format(NOTIFICATION_TIMER_TIME_FORMAT),
+					style = MaterialTheme.typography.bodyMedium,
+					color = MaterialTheme.colorScheme.onBackground
+				)
+				AnimatedVisibility(
+					visible = isSelectable && otherAppText != null,
+					enter = slideInVertically(),
+					exit = slideOutVertically()
 				) {
-					Text(
-						text = music.displayName,
-						style = MaterialTheme.typography.titleMedium,
-						color = MaterialTheme.colorScheme.primary
-					)
-					AnimatedVisibility(
-						visible = music.isFavorite,
-						enter = scaleIn() + fadeIn(),
-						exit = scaleOut() + fadeOut()
-					) {
-						Icon(
-							painter = painterResource(R.drawable.ic_star_filled),
-							contentDescription = stringResource(R.string.menu_option_favourite),
-							tint = MaterialTheme.colorScheme.secondary,
-							modifier = Modifier.size(20.dp)
+					otherAppText?.let { text ->
+						Text(
+							text = text,
+							style = MaterialTheme.typography.labelMedium,
+							color = MaterialTheme.colorScheme.tertiary
 						)
 					}
 				}
-				Row(
-					horizontalArrangement = Arrangement.SpaceBetween,
-					verticalAlignment = Alignment.CenterVertically,
-					modifier = Modifier.fillMaxWidth()
+			}
+			Column(
+				horizontalAlignment = Alignment.End,
+				verticalArrangement = Arrangement.spacedBy(6.dp)
+			) {
+				AnimatedVisibility(
+					visible = music.isFavorite,
+					enter = scaleIn() + fadeIn(),
+					exit = scaleOut() + fadeOut()
 				) {
-					Text(
-						text = music.durationAsLocaltime.format(NOTIFICATION_TIMER_TIME_FORMAT),
-						style = MaterialTheme.typography.labelLarge
-					)
-					Text(
-						text = music.recordedAt.format(RECORDING_RECORD_TIME_FORMAT),
-						style = MaterialTheme.typography.bodySmall,
+					Icon(
+						painter = painterResource(R.drawable.ic_star_filled),
+						contentDescription = stringResource(R.string.menu_option_favourite),
+						tint = MaterialTheme.colorScheme.secondary,
+						modifier = Modifier.size(20.dp)
 					)
 				}
-				otherAppText?.let { text ->
-					Text(
-						text = text,
-						style = MaterialTheme.typography.labelSmall,
-						color = MaterialTheme.colorScheme.tertiary
-					)
-				}
+				Text(
+					text = music.recordedAt.format(RECORDING_RECORD_TIME_FORMAT),
+					style = MaterialTheme.typography.bodySmall,
+					color = MaterialTheme.colorScheme.onBackground
+				)
 			}
 		}
 	}

@@ -19,7 +19,6 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -44,8 +43,7 @@ class RecordingSecondaryDataProviderImpl(
 	override fun getRecordingFromIdAsFlow(recordingId: Long): Flow<ExtraRecordingMetadataModel?> {
 		return recordingsDao.getRecordingMetaDataFromIdAsFlow(recordingId)
 			.flowOn(Dispatchers.IO)
-			.filterNotNull()
-			.map(RecordingsMetaDataEntity::toModel)
+			.map { entity -> entity?.toModel() }
 	}
 
 	override suspend fun insertRecordingMetaData(recordingId: Long): Resource<ExtraRecordingMetadataModel, Exception> {

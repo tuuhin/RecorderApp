@@ -2,11 +2,19 @@ package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -30,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -37,6 +46,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
@@ -61,7 +72,10 @@ fun RecorderTopBar(
 		actions = {
 			AnimatedContent(
 				targetState = showActions,
-				label = "Is normal action visible"
+				label = "Is normal action visible",
+				transitionSpec = { bookMarksButtonAnimation() },
+				contentAlignment = Alignment.BottomCenter,
+				modifier = Modifier.widthIn(min = 60.dp)
 			) { isNormal ->
 				if (isNormal) {
 					TextButton(onClick = onNavigateToRecordings) {
@@ -110,7 +124,10 @@ fun RecorderTopBar(
 					) {
 						DropdownMenuItem(
 							text = { Text(text = stringResource(id = R.string.menu_option_recycle_bin)) },
-							onClick = onNavigateToBin,
+							onClick = {
+								onNavigateToBin()
+								showDropDown = false
+							},
 							leadingIcon = {
 								Icon(
 									painter = painterResource(id = R.drawable.ic_recycle),
@@ -120,7 +137,10 @@ fun RecorderTopBar(
 						)
 						DropdownMenuItem(
 							text = { Text(text = stringResource(id = R.string.menu_option_settings)) },
-							onClick = onNavigateToSettings,
+							onClick = {
+								onNavigateToSettings()
+								showDropDown = false
+							},
 							leadingIcon = {
 								Icon(
 									painter = painterResource(id = R.drawable.ic_settings),
@@ -135,6 +155,19 @@ fun RecorderTopBar(
 		colors = colors,
 		modifier = modifier,
 	)
+}
+
+private fun bookMarksButtonAnimation(): ContentTransform {
+
+	val slideAnimation = spring<IntOffset>(
+		dampingRatio = Spring.DampingRatioLowBouncy,
+		stiffness = Spring.StiffnessLow
+	)
+
+	val fadeAnimation = tween<Float>(durationMillis = 400, easing = FastOutSlowInEasing)
+
+	return slideInHorizontally(slideAnimation) + scaleIn(fadeAnimation) togetherWith
+			slideOutHorizontally(slideAnimation) + fadeOut(fadeAnimation)
 }
 
 private class BooleanPreviewParams :

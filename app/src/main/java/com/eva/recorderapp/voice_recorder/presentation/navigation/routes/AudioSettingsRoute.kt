@@ -39,13 +39,15 @@ fun NavGraphBuilder.audioSettingsRoute(
 			controller.navigate(NavDialogs.ApplicationInfo)
 		},
 		navigation = {
-			IconButton(
-				onClick = dropUnlessResumed(block = controller::popBackStack)
-			) {
-				Icon(
-					imageVector = Icons.AutoMirrored.Default.ArrowBack,
-					contentDescription = stringResource(R.string.back_arrow)
-				)
+			if (controller.previousBackStackEntry?.destination?.route != null) {
+				IconButton(
+					onClick = dropUnlessResumed(block = controller::popBackStack)
+				) {
+					Icon(
+						imageVector = Icons.AutoMirrored.Default.ArrowBack,
+						contentDescription = stringResource(R.string.back_arrow)
+					)
+				}
 			}
 		},
 	)
