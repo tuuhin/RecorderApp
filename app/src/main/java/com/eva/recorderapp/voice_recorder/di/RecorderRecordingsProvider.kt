@@ -15,6 +15,8 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCa
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
+import com.eva.recorderapp.voice_recorder.domain.use_cases.GetRecordingsOfCurrentAppUseCase
+import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,5 +67,14 @@ object RecorderRecordingsProvider {
 		recordingsMetadataDao: RecordingsMetadataDao,
 	): RecordingsSecondaryDataProvider =
 		RecordingSecondaryDataProviderImpl(context = context, recordingsDao = recordingsMetadataDao)
+
+	@Provides
+	@Singleton
+	fun providesOwnerRecordingsUseCase(
+		recordings: VoiceRecordingsProvider,
+		secondaryRecordingsData: RecordingsSecondaryDataProvider,
+		widgetFacade: AppWidgetsRepository,
+	): GetRecordingsOfCurrentAppUseCase =
+		GetRecordingsOfCurrentAppUseCase(recordings, secondaryRecordingsData, widgetFacade)
 
 }
