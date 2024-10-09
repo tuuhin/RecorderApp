@@ -106,13 +106,10 @@ class VoiceRecordingsProviderImpl(
 		val queryArgs = if (allowExternalRead && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 			// they are of owner package and external recordings
 			val selection = buildString {
-				append(MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME)
-				append(" = ? ")
-				append(" OR ")
 				append(MediaStore.Audio.AudioColumns.IS_RECORDING)
 				append(" = ? ")
 			}
-			val selectionArgs = arrayOf(context.packageName, "1")
+			val selectionArgs = arrayOf("1")
 			bundleOf(
 				ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
 				ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
