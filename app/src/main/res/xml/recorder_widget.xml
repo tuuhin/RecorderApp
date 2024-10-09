@@ -4,6 +4,5 @@
   android:initialLayout="@layout/glance_default_loading_layout"
   android:minWidth="@dimen/recorder_widget_min_width"
   android:minHeight="@dimen/recorder_widget_min_height"
-  android:resizeMode="horizontal|vertical"
   android:updatePeriodMillis="0"
   android:widgetCategory="home_screen" />

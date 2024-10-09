@@ -1,6 +1,8 @@
 package com.eva.recorderapp.voice_recorder.widgets.recordings.composables
 
+import android.text.format.Formatter
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -10,7 +12,6 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
-import androidx.glance.action.clickable
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -20,6 +21,7 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.layout.width
+import androidx.glance.layout.wrapContentHeight
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -32,19 +34,21 @@ import kotlinx.datetime.format
 @GlanceComposable
 @Composable
 fun RecordingWidgetCard(
-	musicItem: RecordedVoiceModel,
-	onClick: () -> Unit,
+	model: RecordedVoiceModel,
 	modifier: GlanceModifier = GlanceModifier,
 ) {
 
 	val context = LocalContext.current
 
+	val fileSize = remember(model.sizeInBytes) {
+		Formatter.formatShortFileSize(context, model.sizeInBytes)
+	}
+
 	Row(
 		modifier = modifier
-			.padding(all = 4.dp)
+			.padding(horizontal = 4.dp, vertical = 2.dp)
 			.maybeCornerRadius(16.dp, resId = R.drawable.rounded_shape_primary_cont_color)
-			.background(GlanceTheme.colors.primaryContainer)
-			.clickable(block = onClick),
+			.background(GlanceTheme.colors.primaryContainer),
 		verticalAlignment = Alignment.CenterVertically
 	) {
 		Box(
@@ -65,7 +69,7 @@ fun RecordingWidgetCard(
 		Spacer(modifier = GlanceModifier.width(12.dp))
 		Column(modifier = GlanceModifier.defaultWeight()) {
 			Text(
-				text = musicItem.title,
+				text = model.title,
 				style = TextStyle(
 					color = GlanceTheme.colors.onPrimaryContainer,
 					fontWeight = FontWeight.Medium,
@@ -73,20 +77,31 @@ fun RecordingWidgetCard(
 				),
 				maxLines = 1,
 			)
-			Text(
-				text = musicItem.durationAsLocaltime.format(NOTIFICATION_TIMER_TIME_FORMAT),
-				style = TextStyle(
-					color = GlanceTheme.colors.onPrimaryContainer,
-					fontWeight = FontWeight.Normal,
-					fontSize = 10.sp
-				),
-			)
+			Row(modifier = GlanceModifier.wrapContentHeight()) {
+				Text(
+					text = model.durationAsLocaltime.format(NOTIFICATION_TIMER_TIME_FORMAT),
+					style = TextStyle(
+						color = GlanceTheme.colors.onPrimaryContainer,
+						fontWeight = FontWeight.Normal,
+						fontSize = 10.sp
+					),
+				)
+				Spacer(modifier = GlanceModifier.width(12.dp))
+				Text(
+					text = fileSize,
+					style = TextStyle(
+						color = GlanceTheme.colors.onPrimaryContainer,
+						fontWeight = FontWeight.Normal,
+						fontSize = 10.sp
+					),
+				)
+			}
 		}
-		if (musicItem.isFavorite) {
+		if (model.isFavorite) {
 			Image(
 				provider = ImageProvider(R.drawable.ic_star_outlined),
 				contentDescription = context.getString(R.string.menu_option_favourite),
-				modifier = GlanceModifier.size(24.dp),
+				modifier = GlanceModifier.size(16.dp),
 				colorFilter = ColorFilter.tint(colorProvider = GlanceTheme.colors.onPrimaryContainer)
 			)
 		}

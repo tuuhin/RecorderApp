@@ -16,8 +16,6 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.size
-import androidx.glance.preview.ExperimentalGlancePreviewApi
-import androidx.glance.preview.Preview
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -38,7 +36,7 @@ fun RecordingsLoadError(
 		verticalAlignment = Alignment.CenterVertically
 	) {
 		Image(
-			provider = ImageProvider(R.drawable.ic_recording_load_failed),
+			provider = ImageProvider(R.drawable.ic_widget_error),
 			contentDescription = null,
 			colorFilter = ColorFilter.tint(colorProvider = GlanceTheme.colors.secondary),
 			modifier = GlanceModifier.size(28.dp)
@@ -64,8 +62,7 @@ fun RecordingsLoadError(
 	}
 }
 
-@OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 306, heightDp = 306)
+@GlancePreviewRecordings
 @Composable
 private fun RecordingsLoadErrorPreview() = RecorderAppWidgetTheme {
 	RecordingsLoadError(message = "Failed to load", modifier = GlanceModifier.fillMaxSize())

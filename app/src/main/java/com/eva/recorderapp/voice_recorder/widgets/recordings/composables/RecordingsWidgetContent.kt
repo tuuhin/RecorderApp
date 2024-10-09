@@ -14,21 +14,16 @@ import androidx.glance.appwidget.components.TitleBar
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.preview.ExperimentalGlancePreviewApi
-import androidx.glance.preview.Preview
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedVoiceRecordingModels
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import com.eva.recorderapp.voice_recorder.widgets.utils.RecorderAppWidgetTheme
-import com.eva.recorderapp.voice_recorder.widgets.utils.maybeCornerRadius
 
 @Composable
 @GlanceComposable
 fun RecordingsWidgetContent(
 	resource: ResourcedVoiceRecordingModels,
-	onItemClick: (RecordedVoiceModel) -> Unit,
 	onRefresh: () -> Unit = {},
 	modifier: GlanceModifier = GlanceModifier,
 ) {
@@ -54,7 +49,7 @@ fun RecordingsWidgetContent(
 		},
 		backgroundColor = GlanceTheme.colors.widgetBackground,
 		horizontalPadding = 10.dp,
-		modifier = modifier.maybeCornerRadius(R.drawable.widget_base_shape),
+		modifier = modifier,
 	) {
 		when (resource) {
 			Resource.Loading -> {
@@ -73,7 +68,6 @@ fun RecordingsWidgetContent(
 
 			is Resource.Success -> RecordingsList(
 				recordings = resource.data,
-				onItemClick = onItemClick,
 				modifier = GlanceModifier.fillMaxSize()
 			)
 		}
@@ -81,12 +75,11 @@ fun RecordingsWidgetContent(
 }
 
 
-@OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 306, heightDp = 306)
+@GlancePreviewRecordings
 @Composable
 private fun RecordingsContentPreviewResourceSuccess() = RecorderAppWidgetTheme {
 	RecordingsWidgetContent(
 		resource = Resource.Success(data = PreviewFakes.FAKE_VOICE_RECORDING_MODELS.map { it.recoding }),
 		onRefresh = {},
-		onItemClick = {})
+	)
 }

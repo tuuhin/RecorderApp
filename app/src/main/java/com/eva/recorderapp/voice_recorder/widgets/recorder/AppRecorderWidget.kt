@@ -2,19 +2,21 @@ package com.eva.recorderapp.voice_recorder.widgets.recorder
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.Intent
 import android.widget.RemoteViews
 import androidx.core.content.getSystemService
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.currentState
 import androidx.glance.state.GlanceStateDefinition
 import com.eva.recorderapp.MainActivity
 import com.eva.recorderapp.R
+import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
 import com.eva.recorderapp.voice_recorder.widgets.data.RecorderWidgetDataProto
 import com.eva.recorderapp.voice_recorder.widgets.data.toModel
 import com.eva.recorderapp.voice_recorder.widgets.utils.RecorderAppWidgetTheme
@@ -31,13 +33,25 @@ class AppRecorderWidget : GlanceAppWidget() {
 
 	override suspend fun provideGlance(context: Context, id: GlanceId) {
 		provideContent {
-			val state = currentState<RecorderWidgetDataProto>()
+
+			val protoState = currentState<RecorderWidgetDataProto>()
 
 			RecorderAppWidgetTheme {
 				RecorderWidgetContent(
-					model = state.toModel(),
+					model = protoState.toModel(),
 					modifier = GlanceModifier
-						.clickable(onClick = actionStartActivity<MainActivity>())
+						.clickable(
+							onClick = actionStartActivity(
+								Intent(
+									Intent.ACTION_VIEW,
+									NavDeepLinks.recorderDestinationUri,
+									context,
+									MainActivity::class.java
+								).apply {
+									flags = Intent.FLAG_ACTIVITY_NEW_TASK
+								}
+							),
+						)
 				)
 			}
 		}

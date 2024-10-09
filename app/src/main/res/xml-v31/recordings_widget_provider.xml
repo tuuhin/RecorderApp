@@ -8,7 +8,7 @@
   android:minHeight="@dimen/recordings_widget_min_height"
   android:previewLayout="@layout/recordings_widget_preview_layout"
   android:resizeMode="horizontal|vertical"
-  android:targetCellWidth="4"
+  android:targetCellWidth="2"
   android:targetCellHeight="2"
   android:widgetCategory="home_screen">
 
