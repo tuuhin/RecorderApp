@@ -125,7 +125,6 @@ class AudioPlayerViewModel @Inject constructor(
 		prepareCurrentRecording()
 		computeWaveforms(audioId)
 		preparePlayer()
-		setShortcutForLastPlayed()
 	}
 
 	fun onControllerEvents(event: ControllerEvents) {
@@ -191,10 +190,7 @@ class AudioPlayerViewModel @Inject constructor(
 	private fun prepareCurrentRecording() = fileProviderUseCase.invoke(audioId)
 		.onEach { res ->
 			when (res) {
-				Resource.Loading -> _currentAudio.value ?: kotlin.run {
-					_isAudioLoaded.update { false }
-				}
-
+				Resource.Loading -> _isAudioLoaded.update { false }
 				is Resource.Error -> {
 					_isAudioLoaded.update { true }
 					val message = res.message ?: res.error.message ?: ""
@@ -204,6 +200,8 @@ class AudioPlayerViewModel @Inject constructor(
 				is Resource.Success -> {
 					_isAudioLoaded.update { true }
 					_currentAudio.update { res.data }
+					// set shortcut only when resource is loaded
+					setShortcutForLastPlayed()
 				}
 			}
 		}.launchIn(viewModelScope)

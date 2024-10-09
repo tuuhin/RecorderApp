@@ -46,23 +46,27 @@ fun StorageStatistics(
 		statsManager?.getFreeBytes(StorageManager.UUID_DEFAULT) ?: 0L
 	}
 
-	val freeSpaceReadable = remember(freeSpace) {
-		Formatter.formatFileSize(context, freeSpace)
-	}
-
 	val totalSpace = remember(statsManager) {
 		statsManager?.getTotalBytes(StorageManager.UUID_DEFAULT) ?: 0L
+	}
+
+	val usedSpaceReadable = remember(freeSpace, totalSpace) {
+		// should be in between o and total space.
+		val usedSpace = (totalSpace - freeSpace).coerceIn(0..totalSpace)
+		Formatter.formatFileSize(context, usedSpace)
 	}
 
 	val totalSpaceReadable = remember(totalSpace) {
 		Formatter.formatFileSize(context, totalSpace)
 	}
 
-	val ratio by remember(freeSpace, totalSpace) {
+	val usedSpaceRatio by remember(freeSpace, totalSpace) {
 		derivedStateOf {
-			if (isInspectionMode) return@derivedStateOf 0.5f
-			else if (totalSpace == 0L) return@derivedStateOf 0f
-			else 1 - (freeSpace / totalSpace).toFloat()
+			val ratio = if (isInspectionMode) 0.5f
+			else if (totalSpace == 0L) 0f
+			else (1 - (freeSpace.toFloat() / totalSpace))
+			// specified range
+			ratio.coerceIn(0f..1f)
 		}
 	}
 
@@ -71,7 +75,6 @@ fun StorageStatistics(
 		modifier = modifier.padding(padding),
 		verticalArrangement = Arrangement.spacedBy(6.dp)
 	) {
-
 		Text(
 			text = stringResource(id = R.string.storage_statistics),
 			style = MaterialTheme.typography.titleMedium,
@@ -79,10 +82,11 @@ fun StorageStatistics(
 		)
 
 		LinearProgressIndicator(
-			progress = { ratio },
+			progress = { usedSpaceRatio },
 			color = MaterialTheme.colorScheme.onSecondaryContainer,
 			trackColor = MaterialTheme.colorScheme.secondaryContainer,
 			strokeCap = StrokeCap.Round,
+			gapSize = 4.dp,
 			modifier = Modifier.fillMaxWidth()
 		)
 
@@ -99,7 +103,7 @@ fun StorageStatistics(
 					color = MaterialTheme.colorScheme.primary
 				)
 				Text(
-					text = freeSpaceReadable,
+					text = usedSpaceReadable,
 					style = MaterialTheme.typography.labelMedium,
 					color = MaterialTheme.colorScheme.secondary
 				)

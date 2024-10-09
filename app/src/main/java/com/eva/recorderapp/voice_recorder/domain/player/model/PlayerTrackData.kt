@@ -25,6 +25,9 @@ data class PlayerTrackData(
 			return ratio.coerceIn(0f, 1f)
 		}
 
+	val allPositiveAndFinite: Boolean
+		get() = current.isFinite() && current.isPositive() && total.isFinite() && total.isPositive()
+
 	fun calculateSeekAmount(seek: Float): Duration {
 		try {
 			require(value = seek in 0f..1f)

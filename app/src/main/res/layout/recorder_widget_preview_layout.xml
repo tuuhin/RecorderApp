@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:layout_gravity="center"
+  android:background="@drawable/widget_base_shape"
+  android:minWidth="@dimen/recorder_widget_min_width"
+  android:minHeight="@dimen/recorder_widget_max_height"
+  android:orientation="horizontal"
+  android:padding="12dp">
+
+  <RelativeLayout
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:layout_gravity="center"
+    android:layout_marginEnd="16dp"
+    android:background="@drawable/rounded_shape_primary_cont_color">
+
+    <ImageView
+      android:layout_width="32dp"
+      android:layout_height="32dp"
+      android:layout_centerHorizontal="true"
+      android:layout_centerVertical="true"
+      android:contentDescription="@string/recording_top_bar_title"
+      android:src="@drawable/ic_mic_variant"
+      android:tint="@color/on_primary_container" />
+
+  </RelativeLayout>
+
+  <LinearLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_vertical"
+    android:orientation="vertical">
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center_horizontal"
+      android:layout_marginBottom="4dp"
+      android:text="@string/widget_recordings_preview_duration"
+      android:textColor="@color/on_surface"
+      android:textFontWeight="500"
+      android:textSize="18sp" />
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center_horizontal"
+      android:text="@string/recorder_state_recording"
+      android:textColor="@color/on_primary_container"
+      android:textFontWeight="400"
+      android:textSize="12sp" />
+  </LinearLayout>
+
+</LinearLayout>

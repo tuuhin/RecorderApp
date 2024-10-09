@@ -19,6 +19,7 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
+import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -40,6 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private const val LOGGER_TAG = "RECORDER_SERVICE"
 
@@ -61,6 +63,9 @@ class VoiceRecorderService : LifecycleService() {
 	@Inject
 	lateinit var bookmarksProvider: RecordingBookmarksProvider
 
+	@Inject
+	lateinit var widgetFacade: AppWidgetsRepository
+
 
 	private val binder = LocalBinder()
 
@@ -69,9 +74,12 @@ class VoiceRecorderService : LifecycleService() {
 	@OptIn(ExperimentalCoroutinesApi::class)
 	val bookMarks = _bookMarks.mapLatest { bookMarks ->
 		// convert it to set such that common items are subtracted
-		bookMarks.map(LocalTime::roundToClosestSeconds).toSet().toImmutableList()
+		bookMarks.map(LocalTime::roundToClosestSeconds)
+			.toImmutableList()
 	}.stateIn(
-		scope = lifecycleScope, started = SharingStarted.Lazily, initialValue = persistentListOf()
+		scope = lifecycleScope,
+		started = SharingStarted.Lazily,
+		initialValue = persistentListOf()
 	)
 
 	private val _amplitudes = MutableStateFlow(emptyList<Pair<LocalTime, Float>>())
@@ -89,6 +97,13 @@ class VoiceRecorderService : LifecycleService() {
 	private val notificationTimer: Flow<LocalTime>
 		get() = voiceRecorder.recorderTimer.sample(800.milliseconds)
 
+	/**
+	 * Recorder timer sampled per 1 seconds
+	 */
+	@OptIn(FlowPreview::class)
+	private val widgetTimer: Flow<LocalTime>
+		get() = voiceRecorder.recorderTimer.sample(1.seconds)
+
 	inner class LocalBinder : Binder() {
 
 		fun getService(): VoiceRecorderService = this@VoiceRecorderService
@@ -103,12 +118,11 @@ class VoiceRecorderService : LifecycleService() {
 	override fun onCreate() {
 		super.onCreate()
 		try {
-			// read phone states
 			// preparing the recorder
 			voiceRecorder.createRecorder()
 			// check use case
 			bluetoothScoUseCase.startConnectionIfAllowed()
-			// listen to changes
+			// read phone states
 			observeChangingPhoneState()
 			// inform bt connect
 			showBluetoothConnectedToast()
@@ -116,7 +130,8 @@ class VoiceRecorderService : LifecycleService() {
 			readAmplitudes()
 			// update the notification
 			readTimerAndUpdateNotification()
-
+			// update widget state
+			updateRecorderWidgetState()
 			Log.i(LOGGER_TAG, "SERVICE CREATED WITH OBSERVERS")
 		} catch (e: Exception) {
 			e.printStackTrace()
@@ -175,6 +190,13 @@ class VoiceRecorderService : LifecycleService() {
 		}.launchIn(lifecycleScope)
 	}
 
+	private fun updateRecorderWidgetState() {
+		combine(widgetTimer, recorderState) { time, state ->
+			// update the widget
+			widgetFacade.recorderWidgetUpdate(state, time)
+		}.launchIn(lifecycleScope)
+	}
+
 	private fun onStartRecording() {
 		//start the recorder
 		lifecycleScope.launch { voiceRecorder.startRecording() }.invokeOnCompletion {
@@ -212,6 +234,8 @@ class VoiceRecorderService : LifecycleService() {
 			voiceRecorder.cancelRecording()
 			//clear bookmarks
 			clearBookMarks()
+			//update widget
+			widgetFacade.resetRecorderWidget()
 		}.invokeOnCompletion {
 			// stop the foreground
 			stopForeground(STOP_FOREGROUND_REMOVE)
@@ -238,6 +262,8 @@ class VoiceRecorderService : LifecycleService() {
 
 				else -> {}
 			}
+			//update widget
+			widgetFacade.resetRecorderWidget()
 		}.invokeOnCompletion {
 			//clear and save bookmarks
 			// stop the foreground

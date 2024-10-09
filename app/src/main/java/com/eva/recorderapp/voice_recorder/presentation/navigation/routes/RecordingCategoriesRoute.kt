@@ -41,13 +41,15 @@ fun NavGraphBuilder.recordingCategories(
 			controller.navigate(NavRoutes.CreateOrUpdateCategory(category.id))
 		},
 		navigation = {
-			IconButton(
-				onClick = dropUnlessResumed(block = controller::popBackStack)
-			) {
-				Icon(
-					imageVector = Icons.AutoMirrored.Default.ArrowBack,
-					contentDescription = stringResource(R.string.back_arrow)
-				)
+			if (controller.previousBackStackEntry?.destination?.route != null) {
+				IconButton(
+					onClick = dropUnlessResumed(block = controller::popBackStack)
+				) {
+					Icon(
+						imageVector = Icons.AutoMirrored.Default.ArrowBack,
+						contentDescription = stringResource(R.string.back_arrow)
+					)
+				}
 			}
 		},
 	)

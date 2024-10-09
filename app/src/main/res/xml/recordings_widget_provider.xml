@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/widget_recordings_description"
+  android:initialLayout="@layout/glance_default_loading_layout"
+  android:minWidth="@dimen/recordings_widget_min_width"
+  android:minHeight="@dimen/recordings_widget_min_height"
+  android:resizeMode="horizontal|vertical"
+  android:widgetCategory="home_screen">
+
+</appwidget-provider>

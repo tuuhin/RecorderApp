@@ -6,8 +6,9 @@
   <color name="recorder_button_rim_color">#DCDCDC</color>
 
   <color name="surface">#FFFDFBFF</color>
-
-
+  <color name="on_surface">#FF1B1C15</color>
+  <color name="primary">#FF246A4B</color>
+  <color name="on_primary">#FFFFFFFF</color>
   <color name="primary_container">#FFAAF2CA</color>
   <color name="on_primary_container">#FF002113</color>
 

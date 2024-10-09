@@ -17,7 +17,7 @@ data class ExtendedColorScheme(
 	val customColor1: ColorFamily,
 )
 
-private val lightScheme = lightColorScheme(
+val lightScheme = lightColorScheme(
 	primary = primaryLight,
 	onPrimary = onPrimaryLight,
 	primaryContainer = primaryContainerLight,
@@ -55,7 +55,7 @@ private val lightScheme = lightColorScheme(
 	surfaceContainerHighest = surfaceContainerHighestLight,
 )
 
-private val darkScheme = darkColorScheme(
+val darkScheme = darkColorScheme(
 	primary = primaryDark,
 	onPrimary = onPrimaryDark,
 	primaryContainer = primaryContainerDark,
@@ -304,7 +304,7 @@ data class ColorFamily(
 	val color: Color,
 	val onColor: Color,
 	val colorContainer: Color,
-	val onColorContainer: Color
+	val onColorContainer: Color,
 )
 
 val unspecified_scheme = ColorFamily(
@@ -317,7 +317,7 @@ fun RecorderAppTheme(
 	darkTheme: Boolean = isSystemInDarkTheme(),
 	// Dynamic color is available on Android 12+
 	dynamicColor: Boolean = true,
-	content: @Composable() () -> Unit
+	content: @Composable() () -> Unit,
 ) {
 	val context = LocalContext.current
 
