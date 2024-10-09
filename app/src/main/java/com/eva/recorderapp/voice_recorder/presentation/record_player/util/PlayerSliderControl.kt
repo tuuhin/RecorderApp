@@ -18,24 +18,23 @@ class PlayerSliderControl(
 	//seek amount we have certain amount for the player and user
 	private val _seekAmountByUser = MutableStateFlow(0.seconds)
 
-	// flag to control is its controlled by the user
+	// flag to control is it's controlled by the user
 	private val _seekControlledByUser = MutableStateFlow(false)
 
-	// debounced controller flag
+	// debounced controller flag don't change the debounce amount
 	@OptIn(FlowPreview::class)
 	private val _isSeekPlayerUserControlled = _seekControlledByUser
 		.debounce(110.milliseconds)
 
 	val trackData = combine(
 		_seekAmountByUser,
-		controller.trackDataFlow,
+		controller.trackInfoAsFlow,
 		_isSeekPlayerUserControlled
-	) { userAmt, trackInfo, flag ->
-		// set the current pos as user amount if user has selected or plyer is in ready state
-		if (flag) trackInfo.copy(current = userAmt)
+	) { userAmt, trackInfo, isControlled ->
+		// set the current pos as user amount if user has selected or player is in ready state
+		if (isControlled) trackInfo.copy(current = userAmt)
 		else trackInfo
-	}
-		.distinctUntilChanged()
+	}.distinctUntilChanged()
 
 
 	/**

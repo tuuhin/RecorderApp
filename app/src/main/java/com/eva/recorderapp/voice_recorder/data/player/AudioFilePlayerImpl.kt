@@ -95,6 +95,8 @@ class AudioFilePlayerImpl(
 				player.prepare()
 				Log.d(LOGGER, "PLAYER PREPARED ")
 			}
+			// play audio when ready
+			player.playWhenReady = true
 			return Resource.Success(true)
 		} catch (e: IllegalStateException) {
 			Log.e(LOGGER, "PLAYER IS NOT CONFIGURED PROPERLY", e)
@@ -212,7 +214,7 @@ class AudioFilePlayerImpl(
 		Log.d(LOGGER, "REMOVED LISTENER FOR PLAYER")
 	}
 
-	private suspend fun addAudioItemToPlayer(audio: AudioFileModel) {
+	private fun addAudioItemToPlayer(audio: AudioFileModel) {
 		val mediaItem = audio.toMediaItem()
 		// set this current media item
 		player.apply {
@@ -228,7 +230,7 @@ class AudioFilePlayerImpl(
 		if (player.playbackState != Player.STATE_IDLE) {
 			Log.d(LOGGER, "STOPPING PLAYER ")
 			// if the player is not in idle state stop the player
-			stopPlayer()
+			player.stop()
 		}
 	}
 }

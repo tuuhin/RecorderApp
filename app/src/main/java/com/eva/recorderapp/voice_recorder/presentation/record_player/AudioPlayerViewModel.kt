@@ -26,7 +26,6 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.util.Player
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -49,7 +48,7 @@ private const val TAG = "PLAYER_VIEWMODEL"
 class AudioPlayerViewModel @Inject constructor(
 	private val controller: MediaControllerProvider,
 	private val fileProviderUseCase: PlayerFileProviderFromIdUseCase,
-	private val secondaryRecordingsData: RecordingsSecondaryDataProvider,
+	private val metadataProvider: RecordingsSecondaryDataProvider,
 	private val actionHelper: ShareRecordingsUtil,
 	private val waveformsReader: WaveformsReader,
 	private val shortcutsUtil: AppShortcutFacade,
@@ -77,7 +76,7 @@ class AudioPlayerViewModel @Inject constructor(
 		.map { it.toImmutableList() }
 		.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.Eagerly,
+			started = SharingStarted.WhileSubscribed(8000),
 			initialValue = persistentListOf()
 		)
 
@@ -123,14 +122,15 @@ class AudioPlayerViewModel @Inject constructor(
 
 	init {
 		prepareCurrentRecording()
-		computeWaveforms(audioId)
+		computeWaveforms()
 		preparePlayer()
+		setShortcutForLastPlayed()
 	}
 
 	fun onControllerEvents(event: ControllerEvents) {
 		when (event) {
 			is ControllerEvents.OnAddController -> controller.prepareController(event.audioId)
-			ControllerEvents.OnRemoveController -> controller.removeController()
+			ControllerEvents.OnRemoveController -> controller.releaseController()
 		}
 	}
 
@@ -167,11 +167,11 @@ class AudioPlayerViewModel @Inject constructor(
 	}
 
 	private fun toggleIsFavourite(fileModel: AudioFileModel) {
+		val contentState = (loadState.value as? ContentLoadState.Content) ?: return
+		val isAlreadyFav = contentState.data.isFavourite
+
 		viewModelScope.launch {
-			val contentState = (loadState.value as? ContentLoadState.Content) ?: return@launch
-			val isAlreadyFav = contentState.data.isFavourite
-			when (val result =
-				secondaryRecordingsData.favouriteAudioFile(fileModel, !isAlreadyFav)) {
+			when (val result = metadataProvider.favouriteAudioFile(fileModel, !isAlreadyFav)) {
 				is Resource.Error -> {
 					val message = result.message ?: result.error.message ?: "fav cannot"
 					_uiEvents.emit(UIEvents.ShowSnackBar(message))
@@ -201,7 +201,6 @@ class AudioPlayerViewModel @Inject constructor(
 					_isAudioLoaded.update { true }
 					_currentAudio.update { res.data }
 					// set shortcut only when resource is loaded
-					setShortcutForLastPlayed()
 				}
 			}
 		}.launchIn(viewModelScope)
@@ -210,20 +209,23 @@ class AudioPlayerViewModel @Inject constructor(
 	private fun prepareLoadState(
 		isLoaded: Boolean,
 		audio: AudioFileModel?,
-		isControllerConnected: Boolean,
+		isControllerReady: Boolean,
 	): ContentLoadState = when {
-		!isLoaded || !isControllerConnected -> ContentLoadState.Loading
+		!isLoaded || !isControllerReady -> ContentLoadState.Loading
 		audio != null -> ContentLoadState.Content(audio)
 		else -> ContentLoadState.Unknown
 	}
 
+
 	private fun preparePlayer() {
-		// make sure it's the same file
 		val currentAudio = _currentAudio.filterNotNull()
+			// ensures the file is not changed as file content can change
 			.distinctUntilChangedBy { it.id }
 
-		combine(controller.playerFlow, currentAudio) { player, file ->
-			when (val result = player.preparePlayer(file)) {
+		combine(controller.isControllerConnected, currentAudio) { isConnected, audio ->
+			if (!isConnected) return@combine
+			val result = controller.preparePlayer(audio) ?: return@combine
+			when (result) {
 				is Resource.Error -> {
 					val message = result.message ?: result.error.message ?: ""
 					_uiEvents.emit(UIEvents.ShowSnackBar(message))
@@ -235,29 +237,35 @@ class AudioPlayerViewModel @Inject constructor(
 		}.launchIn(viewModelScope)
 	}
 
-	private fun computeWaveforms(audioId: Long) = viewModelScope.launch {
+	private fun computeWaveforms() {
+		viewModelScope.launch {
+			Log.d(TAG, "STARTING TO COMPUTE SAMPLES")
 
-		Log.d(TAG, "STARTING TO COMPUTE SAMPLES")
-
-		val result = waveformsReader.performWaveformsReading(audioId)
-		// if there is an error show the error
-		(result as? Resource.Error)?.let { err ->
-			val message = err.message ?: err.error.message ?: ""
-			_uiEvents.emit(UIEvents.ShowSnackBar(message))
+			val result = waveformsReader.performWaveformsReading(audioId)
+			// if there is an error show the error
+			if (result is Resource.Error) {
+				val message = result.message ?: result.error.message ?: ""
+				_uiEvents.emit(UIEvents.ShowSnackBar(message))
+			}
 		}
 	}
 
 	private fun setShortcutForLastPlayed() {
-		// it's a main thread work
-		viewModelScope.launch(Dispatchers.Main) {
-			// add last played shortcut
-			shortcutsUtil.addLastPlayedShortcut(audioId)
-		}
+		_currentAudio.filterNotNull()
+			// ensures the file is not changed as file content can change
+			.distinctUntilChangedBy { it.id }
+			.onEach { model ->
+				// add last played shortcut
+				shortcutsUtil.addLastPlayedShortcut(model.id)
+			}
+			.launchIn(viewModelScope)
 	}
 
 	override fun onCleared() {
 		//clear resources associated with reader
 		waveformsReader.clearResources()
+		// cleanup for controller
+		controller.cleanUp()
 		Log.d(TAG, "CLEARING THE VIEWMODEL FOR AUDIO $audioId")
 		super.onCleared()
 	}

@@ -8,6 +8,7 @@ import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerMetaData
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerPlayBackSpeed
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerState
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -43,8 +44,8 @@ class AudioFilePlayerListener(
 			Player.STATE_IDLE -> PlayerState.IDLE
 			Player.STATE_ENDED -> PlayerState.COMPLETED
 			Player.STATE_READY -> PlayerState.PLAYER_READY
-			else -> null
-		} ?: return
+			else -> return
+		}
 		// only updates idle ready and ended
 		_playerState.update { newState }
 		Log.d(TAG, "PLAYER STATE :$newState")
@@ -95,24 +96,27 @@ class AudioFilePlayerListener(
 	private fun computeMusicTrackInfo(state: PlayerState): Flow<PlayerTrackData> {
 		return flow {
 			Log.d(TAG, "CURRENT PLAYER STATE: $state")
-			// an empty data to prefill the entry
-			emit(PlayerTrackData())
 			// If the player can advertise positions ie, its ready or play or paused
 			// then continue the loop
-			while (state.canAdvertiseCurrentPosition) {
+			try {
+				while (state.canAdvertiseCurrentPosition) {
 
-				val current = player.currentPosition.milliseconds
-				val total = player.duration.milliseconds
+					val current = player.currentPosition.milliseconds
+					val total = player.duration.milliseconds
 
-				if (current.isNegative() || total.isNegative())
-					continue
+					if (current.isNegative() || total.isNegative())
+						continue
 
-				val trackData = PlayerTrackData(current = current, total = total)
-				emit(trackData)
-				delay(100.milliseconds)
+					val trackData = PlayerTrackData(current = current, total = total)
+					emit(trackData)
+					delay(100.milliseconds)
+				}
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: Exception) {
+				e.printStackTrace()
 			}
-		}.filter { it.allPositiveAndFinite }
-			.distinctUntilChanged()
+		}.filter { it.allPositiveAndFinite }.distinctUntilChanged()
 	}
 
 
@@ -120,17 +124,17 @@ class AudioFilePlayerListener(
 		// update the repeat mode
 		_isLooping.update { player.repeatMode == Player.REPEAT_MODE_ONE }
 		// update the playback speed
-		_playBackSpeed.update {
+		_playBackSpeed.update { speed ->
 			val paramsSpeed = player.playbackParameters.speed
-			PlayerPlayBackSpeed.fromInt(paramsSpeed) ?: it
+			PlayerPlayBackSpeed.fromInt(paramsSpeed) ?: speed
 		}
 		// update the player state
-		_playerState.update {
+		_playerState.update { oldState ->
 			when (player.playbackState) {
 				Player.STATE_IDLE -> PlayerState.IDLE
 				Player.STATE_ENDED -> PlayerState.COMPLETED
 				Player.STATE_READY -> PlayerState.PLAYER_READY
-				else -> return@update it
+				else -> return@update oldState
 			}
 		}
 		// update the playing state
