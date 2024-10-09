@@ -18,6 +18,12 @@
 
   <dimen name="recordings_widget_min_height">109dp</dimen>
   <dimen name="recordings_widget_max_height">306dp</dimen>
-  <dimen name="recordings_widget_min_width">109dp</dimen>
-  <dimen name="recordings_widget_max_width">306dp</dimen>
+  <dimen name="recordings_widget_min_width">245dp</dimen>
+  <dimen name="recordings_widget_max_width">624dp</dimen>
+
+  <dimen name="recorder_widget_min_width">109dp</dimen>
+  <dimen name="recorder_widget_min_height">48dp</dimen>
+  <dimen name="recorder_widget_max_width">306dp</dimen>
+  <dimen name="recorder_widget_max_height">130dp</dimen>
+
 </resources>

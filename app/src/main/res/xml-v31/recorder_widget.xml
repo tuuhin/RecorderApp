@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/widget_recorder_description"
+  android:initialLayout="@layout/glance_default_loading_layout"
+  android:maxResizeWidth="@dimen/recorder_widget_max_width"
+  android:maxResizeHeight="@dimen/recorder_widget_max_height"
+  android:minWidth="@dimen/recorder_widget_min_width"
+  android:minHeight="@dimen/recorder_widget_min_height"
+  android:previewLayout="@layout/recorder_widget_preview_layout"
+  android:resizeMode="horizontal|vertical"
+  android:targetCellWidth="2"
+  android:targetCellHeight="1"
+  android:updatePeriodMillis="0"
+  android:widgetCategory="home_screen" />
+

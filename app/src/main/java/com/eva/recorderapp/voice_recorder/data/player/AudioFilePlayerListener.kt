@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
@@ -94,7 +95,8 @@ class AudioFilePlayerListener(
 	private fun computeMusicTrackInfo(state: PlayerState): Flow<PlayerTrackData> {
 		return flow {
 			Log.d(TAG, "CURRENT PLAYER STATE: $state")
-
+			// an empty data to prefill the entry
+			emit(PlayerTrackData())
 			// If the player can advertise positions ie, its ready or play or paused
 			// then continue the loop
 			while (state.canAdvertiseCurrentPosition) {
@@ -102,17 +104,15 @@ class AudioFilePlayerListener(
 				val current = player.currentPosition.milliseconds
 				val total = player.duration.milliseconds
 
-				if (current.isNegative() && total.isNegative())
+				if (current.isNegative() || total.isNegative())
 					continue
 
-				val trackData = PlayerTrackData(
-					current = player.currentPosition.milliseconds,
-					total = player.duration.milliseconds,
-				)
+				val trackData = PlayerTrackData(current = current, total = total)
 				emit(trackData)
 				delay(100.milliseconds)
 			}
-		}.distinctUntilChanged()
+		}.filter { it.allPositiveAndFinite }
+			.distinctUntilChanged()
 	}
 
 

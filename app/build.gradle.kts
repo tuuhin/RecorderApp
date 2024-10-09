@@ -125,6 +125,8 @@ dependencies {
 	implementation(libs.androidx.glance)
 	implementation(libs.androidx.glance.appwidget)
 	implementation(libs.androidx.glance.material3)
+	implementation(libs.androidx.glance.preview)
+	implementation(libs.androidx.glance.appwidget.preview)
 	// tests
 	testImplementation(libs.junit)
 	testImplementation(libs.turbine)
@@ -139,9 +141,6 @@ dependencies {
 	//debug
 	debugImplementation(libs.androidx.ui.tooling)
 	debugImplementation(libs.androidx.ui.test.manifest)
-	// glance preview
-	debugImplementation(libs.androidx.glance.preview)
-	debugImplementation(libs.androidx.glance.appwidget.preview)
 }
 
 protobuf {

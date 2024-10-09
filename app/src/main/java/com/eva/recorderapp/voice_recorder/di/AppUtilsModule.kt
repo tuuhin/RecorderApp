@@ -9,9 +9,11 @@ import com.eva.recorderapp.voice_recorder.data.util.ShareRecordingsUtilImpl
 import com.eva.recorderapp.voice_recorder.domain.bookmarks.ExportBookMarkUriProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderActionHandler
 import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
+import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
 import com.eva.recorderapp.voice_recorder.domain.util.BluetoothScoConnect
 import com.eva.recorderapp.voice_recorder.domain.util.PhoneStateObserver
 import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
+import com.eva.recorderapp.voice_recorder.widgets.data.AppWidgetsRepoImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,7 +28,7 @@ object AppUtilsModule {
 	@Provides
 	@Singleton
 	fun providesRecorderActionHandler(
-		@ApplicationContext context: Context
+		@ApplicationContext context: Context,
 	): RecorderActionHandler = RecorderActionHandlerImpl(context)
 
 	@Provides
@@ -54,5 +56,10 @@ object AppUtilsModule {
 		@ApplicationContext context: Context,
 		exportBookMarkUriProvider: ExportBookMarkUriProvider,
 	): ShareRecordingsUtil = ShareRecordingsUtilImpl(context, exportBookMarkUriProvider)
+
+	@Provides
+	@Singleton
+	fun providesWidgetUtils(@ApplicationContext context: Context): AppWidgetsRepository =
+		AppWidgetsRepoImpl(context)
 
 }
