@@ -3,64 +3,49 @@ package com.eva.recorderapp.voice_recorder.data.player
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
+import androidx.concurrent.futures.await
 import androidx.core.os.bundleOf
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionToken
+import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.data.service.MediaPlayerService
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
+import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerMetaData
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
-import com.google.common.util.concurrent.FutureCallback
-import com.google.common.util.concurrent.Futures
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
-import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.withContext
 
 private const val TAG = "MEDIA_CONTROLLER_PROVIDER"
 
-class MediaControllerProvider(
-	private val context: Context
-) {
+@OptIn(ExperimentalCoroutinesApi::class)
+class MediaControllerProvider(private val context: Context) {
 
-	private var _future: ListenableFuture<MediaController>? = null
+	private var _controller: MediaController? = null
+	private var _player: AudioFilePlayer? = null
+	private var _isPlayerPrepared = false
 
-	private var _player = MutableStateFlow<AudioFilePlayer?>(null)
 	private val _isConnected = MutableStateFlow(false)
+	val isControllerConnected: StateFlow<Boolean>
+		get() = _isConnected
 
-	val playerFlow: Flow<AudioFilePlayer>
-		get() = _player.filterNotNull().distinctUntilChanged()
+	val trackInfoAsFlow: Flow<PlayerTrackData>
+		get() = _isConnected.flatMapLatest { _player?.trackInfoAsFlow ?: emptyFlow() }
 
-	@OptIn(ExperimentalCoroutinesApi::class)
-	val trackDataFlow: Flow<PlayerTrackData>
-		get() = playerFlow.flatMapLatest { player -> player.trackInfoAsFlow }
-
-	@OptIn(ExperimentalCoroutinesApi::class)
 	val playerMetaDataFlow: Flow<PlayerMetaData>
-		get() = playerFlow.flatMapLatest { player -> player.playerMetaDataFlow }
-
-	@OptIn(FlowPreview::class)
-	val isControllerConnected: Flow<Boolean>
-		get() = _isConnected.debounce(50.milliseconds)
+		get() = _isConnected.flatMapLatest { _player?.playerMetaDataFlow ?: emptyFlow() }
 
 	val player: AudioFilePlayer?
-		get() = _player.value
-
-	private val sessionToken: SessionToken
-		get() = SessionToken(
-			context,
-			ComponentName(context, MediaPlayerService::class.java)
-		)
+		get() = _player
 
 	@androidx.annotation.OptIn(UnstableApi::class)
 	private val controllerListener = object : MediaController.Listener {
@@ -68,10 +53,11 @@ class MediaControllerProvider(
 		override fun onDisconnected(controller: MediaController) {
 			super.onDisconnected(controller)
 			Log.i(TAG, "MEDIA CONTROLLER DISCONNECTED")
+			// clear the player
+			_player?.cleanUp()
+			_player = null
+			// update is connected
 			_isConnected.update { controller.isConnected }
-			// remove listeners
-			player?.cleanUp()
-			_player.update { null }
 		}
 
 		override fun onError(controller: MediaController, sessionError: SessionError) {
@@ -80,43 +66,57 @@ class MediaControllerProvider(
 		}
 	}
 
-	private val controllerCallback = object : FutureCallback<MediaController> {
-		override fun onSuccess(result: MediaController?) {
 
-			result?.let { controller ->
-				Log.i(TAG, "CONTROLLER CREATED")
-				val appPlayer = controller.appPlayer
-				_isConnected.update { controller.isConnected }
-				_player.update { appPlayer }
-			}
-		}
+	suspend fun prepareController(audioId: Long) {
 
-		override fun onFailure(t: Throwable) {
-			Log.e(TAG, "FAILED TO RESOLVE FUTURE", t)
-		}
-	}
+		val sessionExtras = bundleOf(
+			MediaPlayerService.PLAYER_AUDIO_FILE_ID_KEY to audioId
+		)
 
-
-	fun prepareController(audioId: Long) {
+		val sessionToken =
+			SessionToken(context, ComponentName(context, MediaPlayerService::class.java))
 		try {
-			val sessionExtras = bundleOf(
-				MediaPlayerService.PLAYER_AUDIO_FILE_ID_KEY to audioId
-			)
-			_future = MediaController.Builder(context, sessionToken)
-				.setConnectionHints(sessionExtras)
-				.setListener(controllerListener)
-				.buildAsync()
+			Log.d(TAG, "PREPARING THE PLAYER")
+			// prepare the controller future
+			_controller = withContext(Dispatchers.Main.immediate) {
+				MediaController.Builder(context, sessionToken)
+					.setConnectionHints(sessionExtras)
+					.setListener(controllerListener)
+					.buildAsync()
+					.await()
+			}
+			val controller = _controller ?: return
+			Log.i(TAG, "CONTROLLER CREATED")
+			_player = controller.appPlayer
+			_isConnected.update { controller.isConnected }
 
-			Futures.addCallback(_future!!, controllerCallback, MoreExecutors.directExecutor())
 		} catch (e: Exception) {
-			Log.e(TAG, "EXCEPTION WHILE CREATING CONTROLLER", e)
+			Log.e(TAG, "FAILED TO RESOLVE FUTURE", e)
+			e.printStackTrace()
 		}
 	}
 
-	fun removeController() {
-		_future?.let(MediaController::releaseFuture)
-		_future = null
-		Log.d(TAG, "FUTURE FOR MEDIA CONTROLLER RELEASED")
+	fun releaseController() {
+		Log.d(TAG, "CLEARING UP CONTROLLER")
+		// release the controller if not released
+		_controller?.release()
+		_controller = null
+		// perform player cleanup
+		_player?.cleanUp()
+		_player = null
+		// reset is player prepared
+		_isPlayerPrepared = false
+	}
+
+	suspend fun preparePlayer(audio: AudioFileModel): Resource<Boolean, Exception>? {
+		if (_isPlayerPrepared) {
+			Log.d(TAG, "PLAYER IS ALREADY PREPARED")
+			return null
+		}
+		Log.d(TAG, "PREPARING PLAYER")
+		val results = player?.preparePlayer(audio)
+		_isPlayerPrepared = results is Resource.Success
+		return results
 	}
 
 }

@@ -42,15 +42,24 @@ fun IconButtonWithText(
 	modifier: Modifier = Modifier,
 	spacing: Dp = 4.dp,
 	enabled: Boolean = true,
+	isSelected: Boolean = false,
 	shape: Shape = MaterialTheme.shapes.medium,
 	textStyle: TextStyle = MaterialTheme.typography.labelMedium,
 	colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
+	selectedColor: IconButtonColors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary),
 	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
-
 	val indication = LocalIndication.current
-	val containerColor = if (enabled) colors.containerColor else colors.disabledContainerColor
-	val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
+
+	val containerColor =
+		if (enabled && isSelected) selectedColor.containerColor
+		else if (enabled) colors.containerColor
+		else colors.disabledContainerColor
+
+	val contentColor =
+		if (enabled && isSelected) selectedColor.contentColor
+		else if (enabled) colors.contentColor
+		else colors.disabledContentColor
 
 	Column(
 		modifier = modifier
@@ -102,6 +111,24 @@ private fun IconButtonWithTextPreview(
 			text = "Icon key",
 			onClick = {},
 			enabled = enabled,
+		)
+	}
+}
+
+@PreviewLightDark
+@Composable
+private fun IconButtonWithTextSelectedPreview() = RecorderAppTheme {
+	Surface {
+		IconButtonWithText(
+			icon = {
+				Icon(
+					painter = painterResource(R.drawable.ic_category_label),
+					contentDescription = "Key"
+				)
+			},
+			text = "Icon key",
+			onClick = {},
+			isSelected = true
 		)
 	}
 }

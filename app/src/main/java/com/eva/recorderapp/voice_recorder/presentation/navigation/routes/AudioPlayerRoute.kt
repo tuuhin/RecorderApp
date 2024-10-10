@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle.State
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
@@ -24,7 +23,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsS
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerScreen
 import com.eva.recorderapp.voice_recorder.presentation.record_player.AudioPlayerViewModel
-import com.eva.recorderapp.voice_recorder.presentation.record_player.CreateBookMarksViewModel
+import com.eva.recorderapp.voice_recorder.presentation.record_player.BookMarksViewModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ControllerLifeCycleObserver
 
 fun NavGraphBuilder.audioPlayerRoute(
@@ -39,21 +38,28 @@ fun NavGraphBuilder.audioPlayerRoute(
 ) { backStackEntry ->
 
 	val route = backStackEntry.toRoute<NavRoutes.AudioPlayer>()
-	val lifecycleOwner = LocalLifecycleOwner.current
 
 	val viewModel = hiltViewModel<AudioPlayerViewModel>()
-	val bookMarksViewmodel = hiltViewModel<CreateBookMarksViewModel>()
+	val bookMarksViewmodel = hiltViewModel<BookMarksViewModel>()
 
+	//player state
 	val contentState by viewModel.loadState.collectAsStateWithLifecycle()
-	val createOrEditBookMarkState by bookMarksViewmodel.bookmarkState.collectAsStateWithLifecycle()
 	val playerState by viewModel.currentAudioState.collectAsStateWithLifecycle()
 	val waveforms by viewModel.waveforms.collectAsStateWithLifecycle()
 
+	// bookmarks state
+	val createOrEditBookMarkState by bookMarksViewmodel.bookmarkState.collectAsStateWithLifecycle()
+	val bookMarks by bookMarksViewmodel.bookMarksFlow.collectAsStateWithLifecycle()
+
 	// lifeCycleState
-	val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+	val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
 	// ui handler for player viewmodel
-	UiEventsSideEffect(eventsFlow = viewModel::uiEvent, onPopScreenEvent = controller::popBackStack)
+	UiEventsSideEffect(
+		eventsFlow = viewModel::uiEvent,
+		onPopScreenEvent = controller::popBackStack
+	)
+
 	// ui handler for bookmarks viewmodel
 	UiEventsSideEffect(eventsFlow = bookMarksViewmodel::uiEvent)
 
@@ -63,12 +69,15 @@ fun NavGraphBuilder.audioPlayerRoute(
 		waveforms = { waveforms },
 		loadState = contentState,
 		playerState = playerState,
+		bookmarks = bookMarks,
 		bookMarkState = createOrEditBookMarkState,
 		onPlayerEvents = viewModel::onPlayerEvents,
 		onBookmarkEvent = bookMarksViewmodel::onBookMarkEvent,
 		onFileEvent = viewModel::onFileEvents,
 		onNavigateToEdit = dropUnlessResumed {
-			controller.navigate(NavRoutes.AudioEditor)
+			if (lifeCycleState.isAtLeast(State.RESUMED)) {
+				controller.navigate(NavRoutes.AudioEditor)
+			}
 		},
 		onRenameItem = { audioId ->
 			if (lifeCycleState.isAtLeast(State.RESUMED)) {
