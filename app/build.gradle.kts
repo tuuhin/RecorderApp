@@ -96,6 +96,7 @@ dependencies {
 	implementation(libs.kotlinx.collections.immutable)
 	//location
 	implementation(libs.gms.play.services.location)
+	implementation(libs.androidx.concurrent.futures.ktx)
 	//hilt
 	ksp(libs.hilt.android.compiler)
 	ksp(libs.androidx.hilt.compiler)

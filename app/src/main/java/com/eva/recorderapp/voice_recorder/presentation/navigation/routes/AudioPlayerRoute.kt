@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle.State
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
@@ -39,22 +38,28 @@ fun NavGraphBuilder.audioPlayerRoute(
 ) { backStackEntry ->
 
 	val route = backStackEntry.toRoute<NavRoutes.AudioPlayer>()
-	val lifecycleOwner = LocalLifecycleOwner.current
 
 	val viewModel = hiltViewModel<AudioPlayerViewModel>()
 	val bookMarksViewmodel = hiltViewModel<BookMarksViewModel>()
 
+	//player state
 	val contentState by viewModel.loadState.collectAsStateWithLifecycle()
 	val playerState by viewModel.currentAudioState.collectAsStateWithLifecycle()
 	val waveforms by viewModel.waveforms.collectAsStateWithLifecycle()
+
 	// bookmarks state
 	val createOrEditBookMarkState by bookMarksViewmodel.bookmarkState.collectAsStateWithLifecycle()
 	val bookMarks by bookMarksViewmodel.bookMarksFlow.collectAsStateWithLifecycle()
+
 	// lifeCycleState
-	val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+	val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
 	// ui handler for player viewmodel
-	UiEventsSideEffect(eventsFlow = viewModel::uiEvent, onPopScreenEvent = controller::popBackStack)
+	UiEventsSideEffect(
+		eventsFlow = viewModel::uiEvent,
+		onPopScreenEvent = controller::popBackStack
+	)
+
 	// ui handler for bookmarks viewmodel
 	UiEventsSideEffect(eventsFlow = bookMarksViewmodel::uiEvent)
 

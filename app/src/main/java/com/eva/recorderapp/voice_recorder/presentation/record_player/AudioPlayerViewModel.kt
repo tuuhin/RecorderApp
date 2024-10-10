@@ -90,7 +90,7 @@ class AudioPlayerViewModel @Inject constructor(
 		playerSliderControls.trackData,
 		controller.playerMetaDataFlow,
 		transform = ::AudioPlayerInformation
-	) .stateIn(
+	).stateIn(
 		scope = viewModelScope,
 		started = SharingStarted.Eagerly,
 		initialValue = AudioPlayerInformation()
@@ -110,7 +110,10 @@ class AudioPlayerViewModel @Inject constructor(
 
 	fun onControllerEvents(event: ControllerEvents) {
 		when (event) {
-			is ControllerEvents.OnAddController -> controller.prepareController(event.audioId)
+			ControllerEvents.OnAddController -> viewModelScope.launch {
+				controller.prepareController(audioId)
+			}
+
 			ControllerEvents.OnRemoveController -> controller.releaseController()
 		}
 	}
@@ -246,7 +249,6 @@ class AudioPlayerViewModel @Inject constructor(
 		//clear resources associated with reader
 		waveformsReader.clearResources()
 		// cleanup for controller
-		controller.cleanUp()
 		Log.d(TAG, "CLEARING THE VIEWMODEL FOR AUDIO $audioId")
 		super.onCleared()
 	}

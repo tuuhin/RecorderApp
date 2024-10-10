@@ -50,7 +50,6 @@ class AudioFilePlayerImpl(
 	}
 
 	override fun onMuteDevice() {
-		// TODO: Check proper implementation
 		val command = player.isCommandAvailable(Player.COMMAND_SET_VOLUME)
 		if (!command) {
 			Log.w(LOGGER, "PLAYER COMMAND NOT FOUND")

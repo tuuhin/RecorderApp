@@ -1,6 +1,7 @@
 [versions]
 agp = "8.6.1"
 assertk = "0.28.1"
+concurrentFuturesKtx = "1.2.0"
 datastore = "1.1.1"
 coreSplashscreen = "1.0.1"
 glance = "1.1.0"
@@ -34,6 +35,7 @@ protobufJavalite = "4.28.2"
 protobuf_version = "0.9.4"
 
 [libraries]
+androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrentFuturesKtx" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-glance = { module = "androidx.glance:glance", version.ref = "glance" }
