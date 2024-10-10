@@ -39,6 +39,9 @@ interface RecordingsMetadataDao {
 	@Query("SELECT * FROM RECORDING_META_DATA WHERE CATEGORY_ID=:categoryId")
 	fun getRecordingsFromCategoryIdAsFlow(categoryId: Long): Flow<List<RecordingsMetaDataEntity>>
 
+	@Query("SELECT EXISTS(SELECT 1 FROM RECORDING_META_DATA WHERE RECORDING_ID =:recordingId LIMIT 1)")
+	fun checkRecordingWithIdExists(recordingId: Long): Int
+
 	@Delete
 	suspend fun deleteRecordingsMetaDataBulk(entities: Collection<RecordingsMetaDataEntity>)
 

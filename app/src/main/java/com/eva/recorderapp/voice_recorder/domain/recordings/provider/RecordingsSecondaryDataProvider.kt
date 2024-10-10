@@ -17,6 +17,8 @@ interface RecordingsSecondaryDataProvider {
 
 	fun recordingsFromCategory(category: RecordingCategoryModel): Flow<ExtraRecordingMetaDataList>
 
+	suspend fun checkRecordingIdExists(recordingId: Long): Boolean?
+
 	suspend fun insertRecordingMetaData(recordingId: Long): Resource<ExtraRecordingMetadataModel, Exception>
 
 	suspend fun insertRecordingsMetaDataBulk(recordingsIds: List<Long>): Resource<Boolean, Exception>
@@ -31,7 +33,7 @@ interface RecordingsSecondaryDataProvider {
 	suspend fun favouriteRecordingsBulk(models: VoiceRecordingModels, isFavourite: Boolean = false)
 			: Resource<Unit, Exception>
 
-	suspend fun deleteRecordingMetaDataBulk(models: VoiceRecordingModels): Resource<Boolean, Exception>
+	suspend fun deleteRecordingMetaDataBulk(models: VoiceRecordingModels): Resource<Unit, Exception>
 
 	suspend fun favouriteAudioFile(file: AudioFileModel, isFav: Boolean = false)
 			: Resource<Unit, Exception>
