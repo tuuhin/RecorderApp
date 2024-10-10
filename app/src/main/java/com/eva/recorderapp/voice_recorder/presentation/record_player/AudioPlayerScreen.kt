@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.AudioFileMetaDataSheetContent
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.AudioPlayerScreenTopBar
 import com.eva.recorderapp.voice_recorder.presentation.record_player.composable.ContentStateAnimatedContainer
@@ -46,6 +47,8 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.util.Player
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PlayerGraphData
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +57,7 @@ fun AudioPlayerScreen(
 	waveforms: PlayerGraphData,
 	bookMarkState: CreateOrEditBookMarkState,
 	playerState: AudioPlayerInformation,
+	bookmarks: ImmutableList<AudioBookmarkModel>,
 	loadState: ContentLoadState,
 	onPlayerEvents: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
@@ -73,6 +77,12 @@ fun AudioPlayerScreen(
 	val canShowMetaDataBottomSheet by remember(loadState, openMetaDataBottomSheet) {
 		derivedStateOf {
 			loadState is ContentLoadState.Content && openMetaDataBottomSheet
+		}
+	}
+
+	val bookMarkTimeStamps by remember(bookmarks) {
+		derivedStateOf {
+			bookmarks.map(AudioBookmarkModel::timeStamp).toImmutableList()
 		}
 	}
 
@@ -133,13 +143,13 @@ fun AudioPlayerScreen(
 				) {
 					PlayerAmplitudeGraph(
 						trackData = playerState.trackData,
+						bookMarksTimeStamps = bookMarkTimeStamps,
 						graphData = waveforms,
-						bookMarks = playerState.bookmarksTimestamps,
 						modifier = Modifier.fillMaxWidth()
 					)
 					PlayerBookMarks(
 						trackData = playerState.trackData,
-						bookmarks = playerState.bookmarks,
+						bookmarks = bookmarks,
 						bookMarkState = bookMarkState,
 						onBookmarkEvent = onBookmarkEvent,
 						modifier = Modifier.fillMaxWidth()
@@ -164,6 +174,7 @@ private fun AudioPlayerScreenPreview() = RecorderAppTheme {
 	AudioPlayerScreen(
 		waveforms = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
 		playerState = PreviewFakes.FAKE_AUDIO_INFORMATION,
+		bookmarks = PreviewFakes.FAKE_BOOKMARKS_LIST,
 		bookMarkState = CreateOrEditBookMarkState(),
 		loadState = ContentLoadState.Content(data = PreviewFakes.FAKE_AUDIO_MODEL),
 		onPlayerEvents = {},

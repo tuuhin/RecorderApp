@@ -41,7 +41,7 @@ fun PlayerAmplitudeGraph(
 	totalTrackDuration: LocalTime,
 	playRatio: PlayRation,
 	graphData: PlayerGraphData,
-	bookMarks: ImmutableList<LocalTime>,
+	bookMarkTimeStamps: ImmutableList<LocalTime>,
 	modifier: Modifier = Modifier,
 	plotColor: Color = MaterialTheme.colorScheme.secondary,
 	trackPointerColor: Color = MaterialTheme.colorScheme.primary,
@@ -81,7 +81,7 @@ fun PlayerAmplitudeGraph(
 
 					onDrawBehind {
 						val samples = graphData()
-						val bookMarksAsMillis = bookMarks.map { it.toMillisecondOfDay() }
+						val bookMarksAsMillis = bookMarkTimeStamps.map { it.toMillisecondOfDay() }
 
 						val totalSize = samples.size * spikesWidth
 						val translate = size.width * .5f - (totalSize * playRatio())
@@ -122,7 +122,7 @@ fun PlayerAmplitudeGraph(
 fun PlayerAmplitudeGraph(
 	trackData: PlayerTrackData,
 	graphData: PlayerGraphData,
-	bookMarks: ImmutableList<LocalTime>,
+	bookMarksTimeStamps: ImmutableList<LocalTime>,
 	modifier: Modifier = Modifier,
 	plotColor: Color = MaterialTheme.colorScheme.secondary,
 	trackPointerColor: Color = MaterialTheme.colorScheme.primary,
@@ -142,7 +142,7 @@ fun PlayerAmplitudeGraph(
 		playRatio = { trackData.playRatio },
 		totalTrackDuration = trackData.totalAsLocalTime,
 		graphData = graphData,
-		bookMarks = bookMarks,
+		bookMarkTimeStamps = bookMarksTimeStamps,
 		modifier = modifier,
 		plotColor = plotColor,
 		trackPointerColor = trackPointerColor,
@@ -163,7 +163,7 @@ private fun PlayerAmplitudeGraphPreview() = RecorderAppTheme {
 	PlayerAmplitudeGraph(
 		trackData = PlayerTrackData(current = 5.seconds, total = 10.seconds),
 		graphData = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
-		bookMarks = persistentListOf(LocalTime.fromSecondOfDay(2), LocalTime.fromSecondOfDay(8)),
+		bookMarksTimeStamps = persistentListOf(LocalTime.fromSecondOfDay(2), LocalTime.fromSecondOfDay(8)),
 		modifier = Modifier.fillMaxWidth(),
 	)
 }

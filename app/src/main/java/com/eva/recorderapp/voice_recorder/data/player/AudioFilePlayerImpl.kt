@@ -1,7 +1,6 @@
 package com.eva.recorderapp.voice_recorder.data.player
 
 import android.util.Log
-import androidx.media3.common.C
 import androidx.media3.common.Player
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
@@ -51,14 +50,13 @@ class AudioFilePlayerImpl(
 	}
 
 	override fun onMuteDevice() {
-		// TODO: Check proper implementation
-		val command = player.isCommandAvailable(Player.COMMAND_ADJUST_DEVICE_VOLUME_WITH_FLAGS)
+		val command = player.isCommandAvailable(Player.COMMAND_SET_VOLUME)
 		if (!command) {
 			Log.w(LOGGER, "PLAYER COMMAND NOT FOUND")
 			return
 		}
-		val muted = !player.isDeviceMuted
-		player.setDeviceMuted(muted, C.VOLUME_FLAG_VIBRATE)
+		val isStreamMuted = player.volume == 0f
+		player.volume = if (isStreamMuted) 1f else 0f
 	}
 
 	override suspend fun preparePlayer(audio: AudioFileModel): Resource<Boolean, Exception> {
@@ -95,6 +93,8 @@ class AudioFilePlayerImpl(
 				player.prepare()
 				Log.d(LOGGER, "PLAYER PREPARED ")
 			}
+			// play audio when ready
+			player.playWhenReady = true
 			return Resource.Success(true)
 		} catch (e: IllegalStateException) {
 			Log.e(LOGGER, "PLAYER IS NOT CONFIGURED PROPERLY", e)
@@ -212,7 +212,7 @@ class AudioFilePlayerImpl(
 		Log.d(LOGGER, "REMOVED LISTENER FOR PLAYER")
 	}
 
-	private suspend fun addAudioItemToPlayer(audio: AudioFileModel) {
+	private fun addAudioItemToPlayer(audio: AudioFileModel) {
 		val mediaItem = audio.toMediaItem()
 		// set this current media item
 		player.apply {
@@ -220,6 +220,8 @@ class AudioFilePlayerImpl(
 			repeatMode = Player.REPEAT_MODE_OFF
 			// set speed to 1f
 			setPlaybackSpeed(1f)
+			// volume normal
+			volume = 1f
 			// clear and set item
 			clearMediaItems()
 			setMediaItem(mediaItem)
@@ -228,7 +230,7 @@ class AudioFilePlayerImpl(
 		if (player.playbackState != Player.STATE_IDLE) {
 			Log.d(LOGGER, "STOPPING PLAYER ")
 			// if the player is not in idle state stop the player
-			stopPlayer()
+			player.stop()
 		}
 	}
 }

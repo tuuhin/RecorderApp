@@ -61,7 +61,7 @@ fun PlayerActionsAndSlider(
 			playerMetaData = metaData,
 			onPlay = { onPlayerAction(PlayerEvents.OnStartPlayer) },
 			onPause = { onPlayerAction(PlayerEvents.OnPausePlayer) },
-			onMutePlayer = { onPlayerAction(PlayerEvents.OnMutePlayer) },
+			onMuteStream = { onPlayerAction(PlayerEvents.OnMutePlayer) },
 			onRepeatModeChange = { onPlayerAction(PlayerEvents.OnRepeatModeChange(it)) },
 			onRewind = { onPlayerAction(PlayerEvents.OnRewindByNDuration()) },
 			onForward = { onPlayerAction(PlayerEvents.OnForwardByNDuration()) },

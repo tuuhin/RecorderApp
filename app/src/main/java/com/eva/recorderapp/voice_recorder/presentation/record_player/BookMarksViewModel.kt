@@ -16,18 +16,23 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.BookMarkEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.CreateOrEditBookMarkState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
-class CreateBookMarksViewModel @Inject constructor(
+class BookMarksViewModel @Inject constructor(
 	private val bookmarksProvider: RecordingBookmarksProvider,
 	private val sharingUtil: ShareRecordingsUtil,
 	private val savedStateHandle: SavedStateHandle,
@@ -41,6 +46,14 @@ class CreateBookMarksViewModel @Inject constructor(
 
 	private val _createOrEditBookMarkState = MutableStateFlow(CreateOrEditBookMarkState())
 	val bookmarkState = _createOrEditBookMarkState.asStateFlow()
+
+	val bookMarksFlow = bookmarksProvider.getRecordingBookmarksFromId(audioId)
+		.map { it.toImmutableList() }
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.Eagerly,
+			initialValue = persistentListOf()
+		)
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
