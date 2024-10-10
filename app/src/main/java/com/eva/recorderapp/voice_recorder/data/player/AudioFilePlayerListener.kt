@@ -30,7 +30,7 @@ class AudioFilePlayerListener(
 	private val _playerState = MutableStateFlow(PlayerState.IDLE)
 	private val _playBackSpeed = MutableStateFlow(PlayerPlayBackSpeed.NORMAL)
 	private val _isLooping = MutableStateFlow(false)
-	private val _isDeviceMuted = MutableStateFlow(false)
+	private val _isStreamMuted = MutableStateFlow(false)
 	private val _isPlaying = MutableStateFlow(false)
 
 	override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -66,6 +66,12 @@ class AudioFilePlayerListener(
 		Log.d(TAG, "PLAYER SPEED $playerSpeed")
 	}
 
+	override fun onVolumeChanged(volume: Float) {
+		super.onVolumeChanged(volume)
+		Log.d(TAG, "DEVICE VOLUME CHANGED")
+		_isStreamMuted.update { volume == 0f }
+	}
+
 
 	override fun onPlayerError(error: PlaybackException) {
 		// need to check for exceptions
@@ -82,7 +88,7 @@ class AudioFilePlayerListener(
 			_playerState,
 			_isLooping,
 			_playBackSpeed,
-			_isDeviceMuted
+			_isStreamMuted
 		) { playing, state, repeat, speed, muted ->
 			PlayerMetaData(
 				isPlaying = playing,
@@ -121,6 +127,7 @@ class AudioFilePlayerListener(
 
 
 	fun updateStateFromCurrentPlayerConfig() {
+		Log.d(TAG, "UPDATING PLAYER CONFIG")
 		// update the repeat mode
 		_isLooping.update { player.repeatMode == Player.REPEAT_MODE_ONE }
 		// update the playback speed
@@ -139,5 +146,7 @@ class AudioFilePlayerListener(
 		}
 		// update the playing state
 		_isPlaying.update { player.isPlaying }
+		// update volume
+		_isStreamMuted.update { player.volume == 0f }
 	}
 }

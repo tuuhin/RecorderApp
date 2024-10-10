@@ -1,7 +1,6 @@
 package com.eva.recorderapp.voice_recorder.data.player
 
 import android.util.Log
-import androidx.media3.common.C
 import androidx.media3.common.Player
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
@@ -52,13 +51,13 @@ class AudioFilePlayerImpl(
 
 	override fun onMuteDevice() {
 		// TODO: Check proper implementation
-		val command = player.isCommandAvailable(Player.COMMAND_ADJUST_DEVICE_VOLUME_WITH_FLAGS)
+		val command = player.isCommandAvailable(Player.COMMAND_SET_VOLUME)
 		if (!command) {
 			Log.w(LOGGER, "PLAYER COMMAND NOT FOUND")
 			return
 		}
-		val muted = !player.isDeviceMuted
-		player.setDeviceMuted(muted, C.VOLUME_FLAG_VIBRATE)
+		val isStreamMuted = player.volume == 0f
+		player.volume = if (isStreamMuted) 1f else 0f
 	}
 
 	override suspend fun preparePlayer(audio: AudioFileModel): Resource<Boolean, Exception> {
@@ -222,6 +221,8 @@ class AudioFilePlayerImpl(
 			repeatMode = Player.REPEAT_MODE_OFF
 			// set speed to 1f
 			setPlaybackSpeed(1f)
+			// volume normal
+			volume = 1f
 			// clear and set item
 			clearMediaItems()
 			setMediaItem(mediaItem)

@@ -8,7 +8,6 @@ import com.eva.recorderapp.common.AppViewModel
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.data.player.MediaControllerProvider
-import com.eva.recorderapp.voice_recorder.domain.bookmarks.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.player.AudioFilePlayer
 import com.eva.recorderapp.voice_recorder.domain.player.WaveformsReader
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
@@ -24,8 +23,6 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.util.Contro
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerSliderControl
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -35,7 +32,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -52,7 +48,6 @@ class AudioPlayerViewModel @Inject constructor(
 	private val actionHelper: ShareRecordingsUtil,
 	private val waveformsReader: WaveformsReader,
 	private val shortcutsUtil: AppShortcutFacade,
-	bookmarksProvider: RecordingBookmarksProvider,
 	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
@@ -71,14 +66,6 @@ class AudioPlayerViewModel @Inject constructor(
 
 	private val _currentAudio = MutableStateFlow<AudioFileModel?>(null)
 	private val _isAudioLoaded = MutableStateFlow(false)
-
-	private val bookMarksFlow = bookmarksProvider.getRecordingBookmarksFromId(audioId)
-		.map { it.toImmutableList() }
-		.stateIn(
-			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(8000),
-			initialValue = persistentListOf()
-		)
 
 	val waveforms = waveformsReader.wavefront.stateIn(
 		scope = viewModelScope,
@@ -102,14 +89,8 @@ class AudioPlayerViewModel @Inject constructor(
 	val currentAudioState = combine(
 		playerSliderControls.trackData,
 		controller.playerMetaDataFlow,
-		bookMarksFlow,
-	) { trackData, metadata, bookmarks ->
-		AudioPlayerInformation(
-			trackData = trackData,
-			playerMetaData = metadata,
-			bookmarks = bookmarks
-		)
-	}.stateIn(
+		transform = ::AudioPlayerInformation
+	) .stateIn(
 		scope = viewModelScope,
 		started = SharingStarted.Eagerly,
 		initialValue = AudioPlayerInformation()
@@ -255,7 +236,7 @@ class AudioPlayerViewModel @Inject constructor(
 			// ensures the file is not changed as file content can change
 			.distinctUntilChangedBy { it.id }
 			.onEach { model ->
-				// add last played shortcut
+				// this ensures shortcut is only added if the content is properly
 				shortcutsUtil.addLastPlayedShortcut(model.id)
 			}
 			.launchIn(viewModelScope)

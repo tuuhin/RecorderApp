@@ -45,14 +45,13 @@ fun AudioPlayerActions(
 	onPlay: () -> Unit,
 	modifier: Modifier = Modifier,
 	onRepeatModeChange: (Boolean) -> Unit = {},
-	onMutePlayer: () -> Unit = {},
+	onMuteStream: () -> Unit = {},
 	onForward: () -> Unit = {},
 	onRewind: () -> Unit = {},
 	onSpeedSelected: (PlayerPlayBackSpeed) -> Unit = {},
 	shape: Shape = MaterialTheme.shapes.large,
 	color: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
 	contentColor: Color = contentColorFor(backgroundColor = color),
-	iconActiveColor: Color = MaterialTheme.colorScheme.primary,
 ) {
 	val playBackSpeedBottomSheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 	val scope = rememberCoroutineScope()
@@ -91,23 +90,22 @@ fun AudioPlayerActions(
 				IconButtonWithText(
 					icon = {
 						Icon(
-							painter = painterResource(id = R.drawable.ic_mute_device),
+							painter = painterResource(id = R.drawable.ic_mute_stream),
 							contentDescription = stringResource(id = R.string.player_action_mute),
-							tint = if (playerMetaData.isMuted) iconActiveColor else contentColor
 						)
 					},
-					enabled = false,
+					isSelected = playerMetaData.isMuted,
 					text = stringResource(id = R.string.player_action_mute),
-					onClick = onMutePlayer,
+					onClick = onMuteStream,
 				)
 				IconButtonWithText(
 					icon = {
 						Icon(
 							painter = painterResource(id = R.drawable.ic_repeat),
 							contentDescription = stringResource(id = R.string.player_action_repeat),
-							tint = if (playerMetaData.isRepeating) iconActiveColor else contentColor
 						)
 					},
+					isSelected = playerMetaData.isRepeating,
 					text = stringResource(id = R.string.player_action_repeat),
 					onClick = { onRepeatModeChange(!playerMetaData.isRepeating) },
 				)
