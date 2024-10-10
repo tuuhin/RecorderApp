@@ -4,6 +4,7 @@
   android:initialLayout="@layout/glance_default_loading_layout"
   android:minWidth="@dimen/recordings_widget_min_width"
   android:minHeight="@dimen/recordings_widget_min_height"
+  android:previewImage="@drawable/recordings_preview_layout_image"
   android:resizeMode="horizontal|vertical"
   android:widgetCategory="home_screen">
 

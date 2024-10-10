@@ -13,13 +13,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
 
-private const val TAG = "UPDATE_APP_WIDGETS"
+private const val TAG = "WIDGETS"
 
 class AppWidgetsRepoImpl(private val context: Context) : AppWidgetsRepository {
 
 	override suspend fun recordingsWidgetUpdate() {
 		withContext(Dispatchers.Default) {
-			Log.d(TAG, "RECORDINGS_WIDGET_UPDATED")
+			Log.d(TAG, "RECORDINGS DATA UPDATED")
 			AppRecordingsWidget().updateAll(context)
 		}
 	}
@@ -46,7 +46,6 @@ class AppWidgetsRepoImpl(private val context: Context) : AppWidgetsRepository {
 		}
 		// update the widget
 		withContext(Dispatchers.Default) {
-			Log.d(TAG, "RECORDER_WIDGET_UPDATED ")
 			AppRecorderWidget().updateAll(context)
 		}
 	}
