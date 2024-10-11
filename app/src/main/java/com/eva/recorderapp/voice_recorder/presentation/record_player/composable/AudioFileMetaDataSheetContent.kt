@@ -44,7 +44,7 @@ fun AudioFileMetaDataSheetContent(
 	}
 
 	val lastModified = remember(audio.lastModified) {
-		audio.lastModified.format(LocalTimeFormats.LOCALDATETIME_DATE_TIME_FORMAT)
+		audio.lastModified.format(LocalTimeFormats.LOCAL_DATETIME_DATE_TIME_FORMAT)
 	}
 
 	LazyColumn(

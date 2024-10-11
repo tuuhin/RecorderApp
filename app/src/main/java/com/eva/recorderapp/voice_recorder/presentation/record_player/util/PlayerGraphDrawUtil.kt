@@ -15,7 +15,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.common.LocalTimeFormats
 import com.eva.recorderapp.common.asLocalTime
-import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderConstants
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 import kotlin.time.Duration.Companion.milliseconds
@@ -69,7 +69,7 @@ object PlayerGraphDrawUtil {
 	) {
 		// 2000 for extra 2 seconds on the graph
 		val durationAsMillis = totalDuration.toMillisecondOfDay() + 2_000
-		val spacing = spikesWidth / VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
+		val spacing = spikesWidth / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 
 		repeat(durationAsMillis) { millis ->
 			if (millis % 2_000 == 0) {

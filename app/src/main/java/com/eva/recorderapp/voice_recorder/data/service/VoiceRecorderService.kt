@@ -11,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.common.asLocalTime
 import com.eva.recorderapp.common.roundToClosestSeconds
 import com.eva.recorderapp.voice_recorder.domain.bookmarks.RecordingBookmarksProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
@@ -23,6 +22,7 @@ import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -151,11 +151,11 @@ class VoiceRecorderService : LifecycleService() {
 	}
 
 
-	private fun readAmplitudes() = lifecycleScope.launch {
+	private fun readAmplitudes() = lifecycleScope.launch(Dispatchers.Default) {
 		voiceRecorder.dataPoints.collectLatest { array ->
-			val updated = array.map { (idx, amp) ->
-				val duration = VoiceRecorder.AMPS_READ_DELAY_RATE.times(idx.toInt())
-				duration.asLocalTime to amp
+			val updated = array.map { (time, amp) ->
+				val duration = LocalTime.fromMillisecondOfDay(time.toInt())
+				duration to amp
 			}
 			_amplitudes.update { updated }
 		}

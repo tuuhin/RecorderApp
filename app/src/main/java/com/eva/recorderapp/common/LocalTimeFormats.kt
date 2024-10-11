@@ -8,7 +8,7 @@ import kotlinx.datetime.format.char
 
 object LocalTimeFormats {
 
-	val LOCALDATETIME_DATE_TIME_FORMAT = LocalDateTime.Format {
+	val LOCAL_DATETIME_DATE_TIME_FORMAT = LocalDateTime.Format {
 		dayOfMonth()
 		char(' ')
 		monthName(MonthNames.ENGLISH_FULL)
@@ -40,13 +40,6 @@ object LocalTimeFormats {
 		secondFraction(2)
 	}
 
-	val LOCALTIME_FORMAT_HH_MM_SS = LocalTime.Format {
-		hour()
-		char(':')
-		minute()
-		char(':')
-		second()
-	}
 
 	val LOCALTIME_FORMAT_MM_SS_SF2 = LocalTime.Format {
 		minute()
@@ -79,15 +72,5 @@ object LocalTimeFormats {
 		minute()
 		char(':')
 		second()
-	}
-
-	val LOCALTIME_HH_MM_SS_S_FORMAT = LocalTime.Format {
-		hour()
-		char(':')
-		minute()
-		char(':')
-		second()
-		char('.')
-		secondFraction(1)
 	}
 }

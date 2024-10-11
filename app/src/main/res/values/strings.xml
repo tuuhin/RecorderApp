@@ -143,7 +143,7 @@
   <string name="toast_incoming_call">Incoming call</string>
   <string name="dialog_action_discard">Discard</string>
   <string name="cancel_recording_dialog_title">Cancel Recording</string>
-  <string name="cancel_recording_dialog_text">Are you sure you want to cancel this recording. Discarded one\'s are not recoverable</string>
+  <string name="cancel_recording_dialog_text">Are you sure you want to cancel this recording.Once\'s cancelled it\'s not recoverable</string>
   <string name="dialog_action_done">Done</string>
   <string name="save_recording_dialog_title">Save recording</string>
   <string name="save_recording_dialog_text">Sure you are done with your recording</string>

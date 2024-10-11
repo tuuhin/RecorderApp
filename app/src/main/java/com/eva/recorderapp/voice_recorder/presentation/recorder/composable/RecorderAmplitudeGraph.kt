@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderConstants
 import com.eva.recorderapp.voice_recorder.presentation.recorder.util.RecorderDrawGraphUtil.drawAmplitudeGraph
 import com.eva.recorderapp.voice_recorder.presentation.recorder.util.RecorderDrawGraphUtil.drawRecorderTimeline
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
@@ -62,10 +62,10 @@ fun RecorderAmplitudeGraph(
 				.padding(paddingValues = contentPadding)
 				.defaultMinSize(minHeight = dimensionResource(id = R.dimen.line_graph_min_height))
 				.drawWithCache {
-					val blockSize = VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
+					val blockSize = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 					val centerYAxis = size.height / 2
 
-					val spikesWidth = size.width / VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
+					val spikesWidth = size.width / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 					val spikesGap = (spikesWidth - 1.5.dp.toPx()).let { amt ->
 						if (amt > 0f) amt else 2.dp.toPx()
 					}
@@ -76,7 +76,7 @@ fun RecorderAmplitudeGraph(
 						val amplitudes = result.map { it.second }
 
 						val timeline = result.map { it.first }
-						val paddedTimeline = timeline.padWithTime(blockSize)
+						val paddedTimeline = RecorderConstants.padListWithExtra(timeline, blockSize)
 
 						val translateAmount = if (result.size <= blockSize) 0f
 						else (blockSize - result.size) * spikesWidth
@@ -117,17 +117,6 @@ fun RecorderAmplitudeGraph(
 	}
 }
 
-
-private fun List<LocalTime>.padWithTime(blockSize: Int, extra: Int = 10): List<LocalTime> {
-	val sizeDiff = blockSize - size
-	val lastValue = lastOrNull() ?: LocalTime.fromMillisecondOfDay(0)
-	// extra will create the translation effect properly
-	val amount = if (sizeDiff >= 0) sizeDiff else 0
-	return this + List(amount + extra) {
-		val millis = lastValue.toMillisecondOfDay() + ((it + 1) * 100)
-		LocalTime.fromMillisecondOfDay(millis)
-	}
-}
 
 @PreviewLightDark
 @Composable

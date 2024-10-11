@@ -6,7 +6,7 @@ import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
-import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderConstants
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.toSelectableCategory
@@ -38,7 +38,7 @@ object PreviewFakes {
 	private val PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE = List(150) {
 		Random.nextFloat()
 	}.mapIndexed { idx, amp ->
-		val duration = VoiceRecorder.AMPS_READ_DELAY_RATE.times(idx)
+		val duration = RecorderConstants.AMPS_READ_DELAY_RATE.times(idx)
 		val time = LocalTime.fromMillisecondOfDay(duration.inWholeMilliseconds.toInt())
 		time to amp
 	}

@@ -5,7 +5,6 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalTime
-import kotlin.time.Duration.Companion.milliseconds
 
 typealias MicrophoneDataPoint = Pair<Long, Float>
 
@@ -63,9 +62,4 @@ interface VoiceRecorder {
 	 */
 	fun releaseResources()
 
-	companion object {
-		// don't change the values
-		const val RECORDER_AMPLITUDES_BUFFER_SIZE = 100
-		val AMPS_READ_DELAY_RATE = 100.milliseconds
-	}
 }
