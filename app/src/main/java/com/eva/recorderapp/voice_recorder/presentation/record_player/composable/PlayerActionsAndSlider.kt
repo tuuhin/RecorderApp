@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerMetaData
-import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerState
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerEvents
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
@@ -30,6 +29,7 @@ fun PlayerActionsAndSlider(
 	trackData: PlayerTrackData,
 	onPlayerAction: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
+	isControllerSet: Boolean = true,
 	containerShape: Shape = MaterialTheme.shapes.large,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 	contentColor: Color = contentColorFor(backgroundColor = containerColor),
@@ -55,10 +55,11 @@ fun PlayerActionsAndSlider(
 				thumbColor = MaterialTheme.colorScheme.primary,
 				inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant
 			),
-			enabled = metaData.playerState == PlayerState.PLAYER_READY,
+			enabled = isControllerSet,
 		)
 		AudioPlayerActions(
 			playerMetaData = metaData,
+			isControllerReady = isControllerSet,
 			onPlay = { onPlayerAction(PlayerEvents.OnStartPlayer) },
 			onPause = { onPlayerAction(PlayerEvents.OnPausePlayer) },
 			onMuteStream = { onPlayerAction(PlayerEvents.OnMutePlayer) },

@@ -158,6 +158,7 @@ fun AudioPlayerScreen(
 				PlayerActionsAndSlider(
 					metaData = playerState.playerMetaData,
 					trackData = playerState.trackData,
+					isControllerSet = playerState.isControllerSet,
 					onPlayerAction = onPlayerEvents,
 					modifier = Modifier
 						.fillMaxWidth()

@@ -84,17 +84,16 @@ class AudioFilePlayerImpl(
 				// player media item is set so need to update the parameters
 				_listener.updateStateFromCurrentPlayerConfig()
 			} else {
-				Log.i(LOGGER, "MEDIA ITEM FOR AUDIO FILE : ${audio.id}")
+				Log.i(LOGGER, "MEDIA ITEM FOR AUDIO_ID: ${audio.id}")
 				// normally adding the audio file to the player
 				addAudioItemToPlayer(audio)
 			}
 			// prepare the player if the state is idle
 			if (player.playbackState == Player.STATE_IDLE) {
 				player.prepare()
-				Log.d(LOGGER, "PLAYER PREPARED ")
+				Log.d(LOGGER, "PLAYER PREPARED AND READY TO PLAY AUDIO")
+				player.playWhenReady = true
 			}
-			// play audio when ready
-			player.playWhenReady = true
 			return Resource.Success(true)
 		} catch (e: IllegalStateException) {
 			Log.e(LOGGER, "PLAYER IS NOT CONFIGURED PROPERLY", e)

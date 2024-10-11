@@ -47,7 +47,8 @@ object PreviewFakes {
 		PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE.take(100)
 
 	val FAKE_AUDIO_INFORMATION = AudioPlayerInformation(
-		trackData = PlayerTrackData(current = 4.seconds, total = 10.seconds)
+		trackData = PlayerTrackData(current = 4.seconds, total = 10.seconds),
+		isControllerSet = true
 	)
 
 	val FAKE_VOICE_RECORDING_MODEL = RecordedVoiceModel(
