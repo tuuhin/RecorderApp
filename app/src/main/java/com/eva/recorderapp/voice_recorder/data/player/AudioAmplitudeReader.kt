@@ -12,7 +12,7 @@ import com.eva.recorderapp.voice_recorder.domain.player.PlayerFileProvider
 import com.eva.recorderapp.voice_recorder.domain.player.RMSValues
 import com.eva.recorderapp.voice_recorder.domain.player.WaveformsReader
 import com.eva.recorderapp.voice_recorder.domain.player.exceptions.InvalidMimeTypeException
-import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderConstants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -218,7 +218,7 @@ class AudioAmplitudeReader(
 			}
 
 			_expectedPoints = _audioDuration.toInt(DurationUnit.MILLISECONDS)
-				.div(VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE)
+				.div(RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE)
 
 			Log.d(TAG, "MIME TYPE : $mimeType, DURATION: $_audioDuration")
 			// track selected

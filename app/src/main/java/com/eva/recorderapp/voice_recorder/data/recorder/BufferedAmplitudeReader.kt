@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.data.recorder
 import android.media.MediaRecorder
 import android.util.Log
 import com.eva.recorderapp.voice_recorder.domain.recorder.MicrophoneDataPoint
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,8 +19,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.sync.Mutex
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -29,11 +30,12 @@ private typealias MicroPhoneDataPointsInt = Pair<Long, Int>
 
 class BufferedAmplitudeReader(
 	private val recorder: MediaRecorder?,
+	private val stopWatch: RecorderStopWatch,
 	private val delayRate: Duration = 80.milliseconds,
 	private val bufferSize: Int = 80,
 ) {
-	private val _buffer = ConcurrentLinkedQueue<Pair<Long, Int>>()
-	private val _ampIdx = AtomicLong(0)
+	private val _buffer = ConcurrentLinkedQueue<MicroPhoneDataPointsInt>()
+	private val _lock = Mutex()
 
 	private val _ampsRange = MutableStateFlow(AmpsRange())
 
@@ -91,8 +93,6 @@ class BufferedAmplitudeReader(
 			Log.d(LOGGER_TAG, "CLEARING VALUES")
 			_buffer.clear()
 			_ampsRange.update { AmpsRange() }
-			_ampIdx.set(0)
-
 		}
 		return flow {
 			emit(emptyList())
@@ -105,18 +105,7 @@ class BufferedAmplitudeReader(
 	private fun toFixedSizeCollection(newValue: Int): Flow<List<MicroPhoneDataPointsInt>> {
 		return flow {
 			try {
-				// remove the items from the queue if the size exceeds
-				if (_buffer.size >= bufferSize * 3) {
-					// remove the first pair
-					Log.d(LOGGER_TAG, "REMOVING SOME ITEMS FROM FRONT")
-					repeat(bufferSize) {
-						_buffer.poll()
-					}
-					Log.d(LOGGER_TAG, "REMOVING ITEMS DONE")
-				}
-				// add the new one
-				_buffer.offer(_ampIdx.getAndIncrement() to newValue)
-
+				updateItemsInList(newValue)
 				// change the max value
 				if (newValue > _ampsRange.value.max) {
 					Log.d(LOGGER_TAG, "NEW MAX VALUE SET $newValue")
@@ -127,13 +116,40 @@ class BufferedAmplitudeReader(
 					Log.d(LOGGER_TAG, "NEW MIN VALUE SET $newValue")
 					_ampsRange.update { range -> range.copy(min = newValue) }
 				}
-				emit(_buffer.toList())
+				val distinctBuffer = _buffer.distinctBy { it.first }.toList()
+				emit(distinctBuffer)
 			} catch (e: Exception) {
 				e.printStackTrace()
 			}
 		}.flowOn(Dispatchers.Default)
 	}
 
+	private suspend fun updateItemsInList(newValue: Int) {
+		if (_lock.holdsLock(this)) {
+			Log.d(LOGGER_TAG, "ITS LOCKED REMOVING ITEMS IS ALREADY PROCESSING")
+			return
+		}
+		_lock.lock(this)
+		try {
+			val stopWatchTime = stopWatch.elapsedTime.value.toMillisecondOfDay().toLong()
+			val entry = (stopWatchTime / bufferSize) * bufferSize
+			// adds the element to the end of queue
+			_buffer.add(entry to newValue)
+			if (_buffer.size >= bufferSize * 3) {
+				// remove the first pair
+				Log.d(LOGGER_TAG, "REMOVING SOME ITEMS FROM FRONT")
+				// removes the elements
+				val itemsToRemove = _buffer.take(bufferSize).toSet()
+				_buffer.removeAll(itemsToRemove)
+				// items removed
+				Log.d(LOGGER_TAG, "ITEMS REMOVED")
+			}
+		} catch (e: Exception) {
+			e.printStackTrace()
+		} finally {
+			_lock.unlock()
+		}
+	}
 
 	private fun List<MicrophoneDataPoint>.normalize(): List<MicrophoneDataPoint> {
 		val ampRangeValue = _ampsRange.value
@@ -170,9 +186,5 @@ private data class AmpsRange(
 	val min: Int = 0,
 ) {
 	val range: Int
-		get() {
-			val range = max - min
-			return if (range <= 0) 1
-			else range
-		}
+		get() = (max - min).let { range -> if (range <= 0) 1 else range }
 }

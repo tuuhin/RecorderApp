@@ -77,7 +77,6 @@ class AudioPlayerViewModel @Inject constructor(
 	val loadState = combine(
 		flow = _isAudioLoaded,
 		flow2 = _currentAudio,
-		flow3 = controller.isControllerConnected,
 		transform = ::prepareLoadState
 	).stateIn(
 		scope = viewModelScope,
@@ -89,6 +88,7 @@ class AudioPlayerViewModel @Inject constructor(
 	val currentAudioState = combine(
 		playerSliderControls.trackData,
 		controller.playerMetaDataFlow,
+		controller.isControllerConnected,
 		transform = ::AudioPlayerInformation
 	).stateIn(
 		scope = viewModelScope,
@@ -190,15 +190,12 @@ class AudioPlayerViewModel @Inject constructor(
 		}.launchIn(viewModelScope)
 
 
-	private fun prepareLoadState(
-		isLoaded: Boolean,
-		audio: AudioFileModel?,
-		isControllerReady: Boolean,
-	): ContentLoadState = when {
-		!isLoaded || !isControllerReady -> ContentLoadState.Loading
-		audio != null -> ContentLoadState.Content(audio)
-		else -> ContentLoadState.Unknown
-	}
+	private fun prepareLoadState(isLoaded: Boolean, audio: AudioFileModel?): ContentLoadState =
+		when {
+			!isLoaded -> ContentLoadState.Loading
+			audio != null -> ContentLoadState.Content(audio)
+			else -> ContentLoadState.Unknown
+		}
 
 
 	private fun preparePlayer() {

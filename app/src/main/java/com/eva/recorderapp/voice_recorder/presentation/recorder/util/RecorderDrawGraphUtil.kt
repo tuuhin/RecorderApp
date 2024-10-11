@@ -24,6 +24,7 @@ object RecorderDrawGraphUtil {
 		spikesGap: Float = 2f,
 		spikesWidth: Float = 2f,
 		barColor: Color = Color.Gray,
+		debug: Boolean = false,
 	) {
 		amplitudes.forEachIndexed { idx, value ->
 			val scaleValue = value * .8f
@@ -40,13 +41,21 @@ object RecorderDrawGraphUtil {
 					cap = StrokeCap.Round
 				)
 			}
+			if (idx + 1 == amplitudes.size && debug) {
+				drawLine(
+					color = Color.Red,
+					start = start,
+					end = end,
+					strokeWidth = 2.dp.toPx()
+				)
+			}
 		}
 	}
 
 	fun DrawScope.drawRecorderTimeline(
 		image: Painter,
-		timeline: List<LocalTime>,
-		bookMarks: List<LocalTime>,
+		timeline: Collection<LocalTime>,
+		bookMarks: Collection<LocalTime>,
 		textMeasurer: TextMeasurer,
 		outlineColor: Color = Color.Gray,
 		outlineVariant: Color = Color.Gray,
@@ -59,8 +68,9 @@ object RecorderDrawGraphUtil {
 	) {
 		timeline.forEachIndexed { idx, time ->
 			val xAxis = spikesWidth * idx.toFloat()
+			val timeInMillis = time.toMillisecondOfDay()
 
-			if (idx.mod(20) == 0) {
+			if (timeInMillis.mod(2_000) == 0 || idx == 0) {
 
 				val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
 				val layoutResult = textMeasurer.measure(readable, style = textStyle)
@@ -87,7 +97,7 @@ object RecorderDrawGraphUtil {
 					end = Offset(xAxis, size.height),
 					strokeWidth = strokeWidthThick
 				)
-			} else if (idx.mod(5) == 0) {
+			} else if (timeInMillis.mod(500) == 0) {
 				drawLine(
 					color = outlineVariant,
 					start = Offset(xAxis, 0f),

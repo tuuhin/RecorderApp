@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.widgets.recorder
 
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,8 +46,12 @@ fun RecorderWidgetContent(
 ) {
 	val context = LocalContext.current
 
+	val background = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+		GlanceTheme.colors.widgetBackground
+	else GlanceTheme.colors.background
+
 	Scaffold(
-		backgroundColor = GlanceTheme.colors.widgetBackground,
+		backgroundColor = background,
 		modifier = modifier,
 		horizontalPadding = 12.dp
 	) {
@@ -99,8 +104,9 @@ fun RecorderWidgetContent(
 						style = TextStyle(
 							color = GlanceTheme.colors.onSurfaceVariant,
 							fontWeight = FontWeight.Normal,
-							fontSize = 16.sp
+							fontSize = 14.sp
 						),
+						maxLines = 1,
 					)
 				}
 			}

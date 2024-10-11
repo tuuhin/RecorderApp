@@ -6,4 +6,5 @@ import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
 data class AudioPlayerInformation(
 	val trackData: PlayerTrackData = PlayerTrackData(),
 	val playerMetaData: PlayerMetaData = PlayerMetaData(),
+	val isControllerSet: Boolean = false,
 )

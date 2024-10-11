@@ -49,7 +49,7 @@
   <string name="action_share">Share</string>
   <string name="share_intent_choose_title">Select an application to share files</string>
   <string name="rename_recording_dialog_title">Rename Recording</string>
-  <string name="rename_recording_dialog_text">Change name of the currently selected recording.Extensions are automatically added no need to add that</string>
+  <string name="rename_recording_dialog_text">Rename selected recording, no need to add extension.</string>
   <string name="rename_label_text">New Name</string>
   <string name="rename_recording_action">Rename</string>
   <string name="recorder_action_start">Record</string>
@@ -143,7 +143,7 @@
   <string name="toast_incoming_call">Incoming call</string>
   <string name="dialog_action_discard">Discard</string>
   <string name="cancel_recording_dialog_title">Cancel Recording</string>
-  <string name="cancel_recording_dialog_text">Are you sure you want to cancel this recording. Discarded one\'s are not recoverable</string>
+  <string name="cancel_recording_dialog_text">Are you sure you want to cancel this recording.Once\'s cancelled it\'s not recoverable</string>
   <string name="dialog_action_done">Done</string>
   <string name="save_recording_dialog_title">Save recording</string>
   <string name="save_recording_dialog_text">Sure you are done with your recording</string>

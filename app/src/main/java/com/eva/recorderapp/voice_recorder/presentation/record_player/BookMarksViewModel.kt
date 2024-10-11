@@ -120,11 +120,7 @@ class BookMarksViewModel @Inject constructor(
 			}
 
 			val result = if (bookMarkText != null) {
-				bookmarksProvider.createBookMark(
-					recordingId = audioId,
-					time = bookMarkTime,
-					text = bookMarkText,
-				)
+				bookmarksProvider.createBookMark(audioId, bookMarkTime, bookMarkText)
 			} else {
 				val collection = setOf(bookMarkTime)
 				bookmarksProvider.createBookMarks(audioId, collection)

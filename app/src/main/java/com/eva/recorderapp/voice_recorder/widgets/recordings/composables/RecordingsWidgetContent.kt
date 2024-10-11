@@ -1,5 +1,6 @@
 package com.eva.recorderapp.voice_recorder.widgets.recordings.composables
 
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceComposable
@@ -28,6 +29,9 @@ fun RecordingsWidgetContent(
 	modifier: GlanceModifier = GlanceModifier,
 ) {
 	val context = LocalContext.current
+	val background = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+		GlanceTheme.colors.widgetBackground
+	else GlanceTheme.colors.background
 
 	Scaffold(
 		titleBar = {
@@ -39,7 +43,7 @@ fun RecordingsWidgetContent(
 						imageProvider = ImageProvider(R.drawable.ic_widget_refresh),
 						contentDescription = context.getString(R.string.widget_refresh),
 						onClick = onRefresh,
-						backgroundColor = GlanceTheme.colors.widgetBackground,
+						backgroundColor =background,
 						contentColor = GlanceTheme.colors.primary,
 					)
 				},
@@ -47,8 +51,8 @@ fun RecordingsWidgetContent(
 				textColor = GlanceTheme.colors.onSurface,
 			)
 		},
-		backgroundColor = GlanceTheme.colors.widgetBackground,
-		horizontalPadding = 10.dp,
+		backgroundColor = background,
+		horizontalPadding = 12.dp,
 		modifier = modifier,
 	) {
 		when (resource) {

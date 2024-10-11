@@ -12,6 +12,7 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -28,7 +29,6 @@ import androidx.glance.text.TextStyle
 import com.eva.recorderapp.R
 import com.eva.recorderapp.common.LocalTimeFormats.NOTIFICATION_TIMER_TIME_FORMAT
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.widgets.utils.maybeCornerRadius
 import kotlinx.datetime.format
 
 @GlanceComposable
@@ -46,15 +46,15 @@ fun RecordingWidgetCard(
 
 	Row(
 		modifier = modifier
-			.padding(horizontal = 4.dp, vertical = 2.dp)
-			.maybeCornerRadius(16.dp, resId = R.drawable.rounded_shape_primary_cont_color)
+			.padding(all = 8.dp)
+			.cornerRadius(16.dp)
 			.background(GlanceTheme.colors.primaryContainer),
 		verticalAlignment = Alignment.CenterVertically
 	) {
 		Box(
 			modifier = GlanceModifier
 				.size(28.dp)
-				.maybeCornerRadius(8.dp, resId = R.drawable.rounded_shape_primary_color)
+				.cornerRadius(8.dp)
 				.background(GlanceTheme.colors.primary)
 				.padding(4.dp),
 			contentAlignment = Alignment.Center
@@ -66,7 +66,7 @@ fun RecordingWidgetCard(
 				colorFilter = ColorFilter.tint(colorProvider = GlanceTheme.colors.onPrimary)
 			)
 		}
-		Spacer(modifier = GlanceModifier.width(12.dp))
+		Spacer(modifier = GlanceModifier.width(8.dp))
 		Column(modifier = GlanceModifier.defaultWeight()) {
 			Text(
 				text = model.title,
@@ -99,10 +99,10 @@ fun RecordingWidgetCard(
 		}
 		if (model.isFavorite) {
 			Image(
-				provider = ImageProvider(R.drawable.ic_star_outlined),
+				provider = ImageProvider(R.drawable.ic_star_filled),
 				contentDescription = context.getString(R.string.menu_option_favourite),
 				modifier = GlanceModifier.size(16.dp),
-				colorFilter = ColorFilter.tint(colorProvider = GlanceTheme.colors.onPrimaryContainer)
+				colorFilter = ColorFilter.tint(colorProvider = GlanceTheme.colors.primary)
 			)
 		}
 	}

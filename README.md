@@ -6,7 +6,8 @@ recordings.With a clean and intuitive interface, this app offers a seamless user
 ## 💁 About
 
 A fully functioned recorder app with an ability to record over multiple media codec like **acc**,*
-*amr**,**opus** over different quality. The app can continue its recording in the background, so you
+*amr**,**opus** over different quality. The app can continue its recording in the background, so
+you
 never miss a moment. Once the recording, you can easily manage your files within the app.
 There `built-in player`, you can listen to your recordings directly within the app or use the
 convenient media notification for playback control.
@@ -33,6 +34,8 @@ What are the features this app can provide, here's some:
   with a media notification for easy playback control.
 - :bookmark: **Bookmarks** : You can add multiple bookmarks with the recording to easily remember
   the important portions of your recording. You can too export the bookmarks as csv file.
+- :eight_spoked_asterisk: **Widgets And Shortcuts** : App comes with two `widgets` and few
+  `shortcuts` to ease the experience of the user.
 
 ## 📷 Screenshots
 
@@ -43,12 +46,10 @@ These are some screen shorts for the app
    <img src="./screenshots/recorder_base_framed.png" width="24%" />
    <img src="./screenshots/recordings_framed.png" width="24%" />
    <img src="./screenshots/player_base_framed.png" width="24%" />
-   <img src="./screenshots/app_settings.png" width="24%" />
-
-   <img src="./screenshots/create_category_framed.png" width="24%" />
+   <img src="./screenshots/app_settings_framed.png" width="24%" />
    <img src="./screenshots/recording_categories_framed.png" width="24%" />
-   <img src="./screenshots/create_bookmark_dialog_framed.png" width="24%" />
-   <img src="./screenshots/file_metadata_framed.png" width="24%" />
+   <img src="./screenshots/player_bookmarks_framed.png" width="24%" />
+   <img src="./screenshots/app_widget_preview_framed.png" width="24%" />
 </p>
 
 For more [screenshots](./screenshots).
@@ -106,4 +107,7 @@ an [issue](https://github.com/tuuhin/RecorderApp/issues) if you have one.
 
 ### :next_track_button: What's next
 
-The planning isn't properly made but next up I will try to make `widgets` for the app.
+The app development is complete for now, with the core features fully implemented. Although the
+`edit` feature has not yet been rolled out, a significant amount of time and effort has been
+invested in this project. For the time being, it is considered completed, and further enhancements
+will be addressed as needed in the future.

@@ -32,7 +32,6 @@ class MediaControllerProvider(private val context: Context) {
 
 	private var _controller: MediaController? = null
 	private var _player: AudioFilePlayer? = null
-	private var _isPlayerPrepared = false
 
 	private val _isConnected = MutableStateFlow(false)
 	val isControllerConnected: StateFlow<Boolean>
@@ -104,18 +103,15 @@ class MediaControllerProvider(private val context: Context) {
 		// perform player cleanup
 		_player?.cleanUp()
 		_player = null
-		// reset is player prepared
-		_isPlayerPrepared = false
 	}
 
 	suspend fun preparePlayer(audio: AudioFileModel): Resource<Boolean, Exception>? {
-		if (_isPlayerPrepared) {
-			Log.d(TAG, "PLAYER IS ALREADY PREPARED")
+		if (_controller == null) {
+			Log.d(TAG, "CONTROLLER IS NOT SET")
 			return null
 		}
 		Log.d(TAG, "PREPARING PLAYER")
 		val results = player?.preparePlayer(audio)
-		_isPlayerPrepared = results is Resource.Success
 		return results
 	}
 

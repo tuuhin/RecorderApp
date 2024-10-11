@@ -6,6 +6,7 @@ import com.eva.recorderapp.voice_recorder.data.bookmarks.RecordingBookMarkProvid
 import com.eva.recorderapp.voice_recorder.data.database.dao.RecordingsBookmarkDao
 import com.eva.recorderapp.voice_recorder.domain.bookmarks.ExportBookMarkUriProvider
 import com.eva.recorderapp.voice_recorder.domain.bookmarks.RecordingBookmarksProvider
+import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,5 +28,9 @@ object BookmarksModule {
 	@Singleton
 	fun providesBookmarkProvider(
 		bookmarkDao: RecordingsBookmarkDao,
-	): RecordingBookmarksProvider = RecordingBookMarkProviderImpl(bookmarkDao)
+		secondaryDataProvider: RecordingsSecondaryDataProvider,
+	): RecordingBookmarksProvider = RecordingBookMarkProviderImpl(
+		bookmarkDao = bookmarkDao,
+		provider = secondaryDataProvider
+	)
 }

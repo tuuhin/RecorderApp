@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
-import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderConstants
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphDrawUtil.drawGraph
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphDrawUtil.drawTimeLine
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.PlayerGraphDrawUtil.drawTrackPointer
@@ -73,7 +73,7 @@ fun PlayerAmplitudeGraph(
 
 					val centerYAxis = size.height / 2f
 
-					val spikesWidth = size.width / VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
+					val spikesWidth = size.width / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 					val spikeSpace = (spikesWidth - 1.5.dp.toPx()).let { amt ->
 						if (amt > 0f) amt else 2.dp.toPx()
 					}

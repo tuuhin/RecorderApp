@@ -1,14 +1,13 @@
 package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.window.DialogProperties
 import com.eva.recorderapp.R
@@ -42,15 +41,14 @@ fun SaveRecordingDialog(
 			}
 		},
 		title = { Text(text = stringResource(id = R.string.save_recording_dialog_title)) },
-		text = { Text(text = stringResource(id = R.string.save_recording_dialog_text)) },
-		icon = {
-			Icon(
-				painter = painterResource(id = R.drawable.ic_record_player),
-				contentDescription = stringResource(id = R.string.recorder_action_stop)
+		text = {
+			Text(
+				text = stringResource(id = R.string.save_recording_dialog_text),
+				textAlign = TextAlign.Center
 			)
 		},
 		modifier = modifier,
-		shape = MaterialTheme.shapes.large,
+		shape = MaterialTheme.shapes.extraLarge,
 		properties = properties,
 	)
 }

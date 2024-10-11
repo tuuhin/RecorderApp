@@ -40,11 +40,26 @@ class RecordingSecondaryDataProviderImpl(
 			.map { entries -> entries.map(RecordingsMetaDataEntity::toModel) }
 	}
 
+
 	override fun getRecordingFromIdAsFlow(recordingId: Long): Flow<ExtraRecordingMetadataModel?> {
 		return recordingsDao.getRecordingMetaDataFromIdAsFlow(recordingId)
 			.flowOn(Dispatchers.IO)
 			.map { entity -> entity?.toModel() }
 	}
+
+
+	override suspend fun checkRecordingIdExists(recordingId: Long): Boolean? {
+		return withContext(Dispatchers.IO) {
+			try {
+				val result = recordingsDao.checkRecordingWithIdExists(recordingId)
+				result == 1
+			} catch (e: Exception) {
+				e.printStackTrace()
+				null
+			}
+		}
+	}
+
 
 	override suspend fun insertRecordingMetaData(recordingId: Long): Resource<ExtraRecordingMetadataModel, Exception> {
 		return try {
@@ -68,6 +83,7 @@ class RecordingSecondaryDataProviderImpl(
 		}
 	}
 
+
 	override suspend fun insertRecordingsMetaDataBulk(recordingsIds: List<Long>): Resource<Boolean, Exception> {
 		return try {
 			withContext(Dispatchers.IO) {
@@ -82,6 +98,7 @@ class RecordingSecondaryDataProviderImpl(
 			Resource.Error(e, e.message ?: "")
 		}
 	}
+
 
 	override suspend fun updateRecordingMetaData(model: RecordedVoiceModel): Resource<ExtraRecordingMetadataModel, Exception> {
 		return try {
@@ -112,6 +129,7 @@ class RecordingSecondaryDataProviderImpl(
 		}
 	}
 
+
 	override suspend fun updateRecordingCategoryBulk(
 		recordingIds: List<Long>,
 		category: RecordingCategoryModel,
@@ -122,20 +140,21 @@ class RecordingSecondaryDataProviderImpl(
 					category.id else null
 
 				// fetch the entities from ids
-				val entities = recordingsDao.getRecordingMetaDataFromIds(recordingIds)
+				val entriesFromId = recordingsDao.getRecordingMetaDataFromIds(recordingIds)
 				//update the contents
-				val updatedEntities = entities.map { entity ->
+				val updatedEntities = entriesFromId.map { entity ->
 					entity.copy(categoryId = categoryId)
 				}
 
-				val entitiesId = entities.map { it.recordingId }
+				val entitiesId = entriesFromId.map { it.recordingId }
 				// create new metadata as entry was not preset
 				val notFoundIds = recordingIds.filterNot { it in entitiesId }
 				val newlyAdded = notFoundIds.map { id ->
 					RecordingsMetaDataEntity(recordingId = id, categoryId = categoryId)
 				}
 				// update the entities
-				recordingsDao.updateOrInsertRecordingMetadataBulk(updatedEntities + newlyAdded)
+				val allEntries = (updatedEntities + newlyAdded).distinctBy { it.recordingId }
+				recordingsDao.updateOrInsertRecordingMetadataBulk(allEntries)
 
 				val message = context.getString(R.string.categories_updated, category.name)
 				Resource.Success(data = true, message = message)
@@ -148,10 +167,9 @@ class RecordingSecondaryDataProviderImpl(
 		}
 	}
 
-	override suspend fun favouriteRecordingsBulk(
-		models: VoiceRecordingModels,
-		isFavourite: Boolean,
-	): Resource<Unit, Exception> {
+
+	override suspend fun favouriteRecordingsBulk(models: VoiceRecordingModels, isFavourite: Boolean)
+			: Resource<Unit, Exception> {
 		return try {
 			val recordingIds = models.map { it.id }
 
@@ -168,8 +186,9 @@ class RecordingSecondaryDataProviderImpl(
 				val newlyAdded = notFoundIds.map { id ->
 					RecordingsMetaDataEntity(recordingId = id, isFavourite = isFavourite)
 				}
+				val allEntries = (entities + newlyAdded).distinctBy { it.recordingId }
 				// update the entities
-				recordingsDao.updateOrInsertRecordingMetadataBulk(entities + newlyAdded)
+				recordingsDao.updateOrInsertRecordingMetadataBulk(allEntries)
 			}
 
 			val message = if (isFavourite)
@@ -185,13 +204,14 @@ class RecordingSecondaryDataProviderImpl(
 		}
 	}
 
-	override suspend fun deleteRecordingMetaDataBulk(models: VoiceRecordingModels): Resource<Boolean, Exception> {
+
+	override suspend fun deleteRecordingMetaDataBulk(models: VoiceRecordingModels): Resource<Unit, Exception> {
 		return try {
 			withContext(Dispatchers.IO) {
 				val entities = models.map(RecordedVoiceModel::toMetadataEntity)
 				recordingsDao.deleteRecordingsMetaDataBulk(entities)
 			}
-			Resource.Success(false)
+			Resource.Success(Unit)
 		} catch (e: SQLiteException) {
 			Resource.Error(e, "SQL EXCEPTION")
 		} catch (e: Exception) {
@@ -200,10 +220,9 @@ class RecordingSecondaryDataProviderImpl(
 		}
 	}
 
-	override suspend fun favouriteAudioFile(
-		file: AudioFileModel,
-		isFav: Boolean,
-	): Resource<Unit, Exception> {
+
+	override suspend fun favouriteAudioFile(file: AudioFileModel, isFav: Boolean)
+			: Resource<Unit, Exception> {
 		return try {
 			withContext(Dispatchers.IO) {
 				val recordingId = file.id

@@ -21,6 +21,6 @@ interface RecordingBookmarksProvider {
 
 	suspend fun deleteBookMarks(bookmarks: Collection<AudioBookmarkModel>): Resource<Unit, Exception>
 
-	suspend fun updateBookMark(updatedBookmark: AudioBookmarkModel, text: String?)
+	suspend fun updateBookMark(bookmark: AudioBookmarkModel, text: String?)
 			: Resource<AudioBookmarkModel, Exception>
 }

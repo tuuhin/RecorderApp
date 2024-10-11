@@ -12,6 +12,7 @@ import com.eva.recorderapp.voice_recorder.domain.datastore.enums.RecordQuality
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.location.LocationProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.MicrophoneDataPoint
+import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderConstants
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderStopWatch
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
@@ -45,7 +46,7 @@ class VoiceRecorderImpl(
 	private val locationProvider: LocationProvider,
 ) : VoiceRecorder {
 
-	private val stopWatch = RecorderStopWatch(delayTime = 60.milliseconds)
+	private val stopWatch = RecorderStopWatch(delayTime = 50.milliseconds)
 
 	// recording format and encoder
 	private val format: RecordEncoderAndFormat
@@ -110,8 +111,9 @@ class VoiceRecorderImpl(
 
 		_bufferReader = BufferedAmplitudeReader(
 			recorder = _recorder,
-			delayRate = VoiceRecorder.AMPS_READ_DELAY_RATE,
-			bufferSize = VoiceRecorder.RECORDER_AMPLITUDES_BUFFER_SIZE
+			stopWatch = stopWatch,
+			delayRate = RecorderConstants.AMPS_READ_DELAY_RATE,
+			bufferSize = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 		)
 		Log.d(LOGGER_TAG, "CREATED RECORDER AND AMPLITUDE SUCCESSFULLY")
 	}
