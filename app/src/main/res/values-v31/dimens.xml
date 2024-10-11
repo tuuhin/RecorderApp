@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-  <!--  Recordings widget dimensions for API-31+-->
-  <dimen name="recordings_widget_min_height">115dp</dimen>
-  <dimen name="recordings_widget_min_width">109dp</dimen>
-</resources>

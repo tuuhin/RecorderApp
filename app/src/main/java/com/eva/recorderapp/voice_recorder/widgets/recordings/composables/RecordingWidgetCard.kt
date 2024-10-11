@@ -46,7 +46,7 @@ fun RecordingWidgetCard(
 
 	Row(
 		modifier = modifier
-			.padding(horizontal = 4.dp, vertical = 2.dp)
+			.padding(all = 8.dp)
 			.cornerRadius(16.dp)
 			.background(GlanceTheme.colors.primaryContainer),
 		verticalAlignment = Alignment.CenterVertically

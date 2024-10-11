@@ -49,7 +49,7 @@
   <string name="action_share">Share</string>
   <string name="share_intent_choose_title">Select an application to share files</string>
   <string name="rename_recording_dialog_title">Rename Recording</string>
-  <string name="rename_recording_dialog_text">Change name of the currently selected recording.Extensions are automatically added no need to add that</string>
+  <string name="rename_recording_dialog_text">Rename selected recording, no need to add extension.</string>
   <string name="rename_label_text">New Name</string>
   <string name="rename_recording_action">Rename</string>
   <string name="recorder_action_start">Record</string>
