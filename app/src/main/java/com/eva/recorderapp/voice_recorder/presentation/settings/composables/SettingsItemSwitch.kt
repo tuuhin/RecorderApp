@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -90,13 +87,9 @@ fun SettingsItemWithSwitch(
 @PreviewLightDark
 @Composable
 private fun SettingsItemSwitchPreview() = RecorderAppTheme {
-
 	SettingsItemWithSwitch(isSelected = false,
 		title = "Title",
 		text = "Supporting Text",
 		onSelect = { },
-		leading = {
-			Icon(imageVector = Icons.Default.ArrowUpward, contentDescription = null)
-		})
-
+		)
 }

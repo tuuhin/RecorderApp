@@ -4,35 +4,34 @@ assertk = "0.28.1"
 concurrentFuturesKtx = "1.2.0"
 datastore = "1.1.1"
 coreSplashscreen = "1.0.1"
-glance = "1.1.0"
+glance = "1.1.1"
 graphicsShapes = "1.0.1"
 hiltNavigation = "1.2.0"
-kotlin = "2.0.20"
+kotlin = "2.0.21"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-kotlinTest = "2.0.20"
 kotlinxCollectionsImmutable = "0.3.8"
 kotlinxCoroutinesTest = "1.9.0"
 kotlinxDatetime = "0.6.1"
 kotlinxSerializationJson = "1.7.3"
 lifecycleRuntimeKtx = "2.8.6"
-activityCompose = "1.9.2"
-composeBom = "2024.09.03"
-ksp = "2.0.20-1.0.25"
+activityCompose = "1.9.3"
+composeBom = "2024.10.00"
+ksp = "2.0.21-1.0.25"
 hilt = "2.52"
-materialIconsExtendedVersion = "1.7.3"
 media3Common = "1.4.1"
-navigationCompose = "2.8.2"
+navigationCompose = "2.8.3"
 playServicesLocationVersion = "21.3.0"
 roomCompiler = "2.6.1"
 turbine = "1.1.0"
-uiTextGoogleFonts = "1.7.3"
+uiTextGoogleFonts = "1.7.4"
 workRuntimeKtxVersion = "2.9.1"
 hiltWork = "1.2.0"
 protobufJavalite = "4.28.2"
 protobuf_version = "0.9.4"
+protobuf_gen_java_lite = "3.0.0"
 
 [libraries]
 androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrentFuturesKtx" }
@@ -75,12 +74,11 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinTest" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtendedVersion" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
@@ -88,6 +86,8 @@ androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWo
 androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
 protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufJavalite" }
 protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufJavalite" }
+protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobufJavalite" }
+protobuf-gen-javalite = { module = "com.google.protobuf:protoc-gen-javalite", version.ref = "protobuf_gen_java_lite" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -98,4 +98,3 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlinx_serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 androidx_room = { id = "androidx.room", version.ref = "roomCompiler" }
 google_protobuf = { id = "com.google.protobuf", version.ref = "protobuf_version" }
-

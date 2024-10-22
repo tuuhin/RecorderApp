@@ -79,8 +79,7 @@ dependencies {
 	implementation(libs.androidx.ui.graphics)
 	implementation(libs.androidx.ui.tooling.preview)
 	implementation(libs.androidx.material3)
-	//icons & shapes
-	implementation(libs.material.icons.extended)
+	//shapes
 	implementation(libs.androidx.graphics.shapes)
 	//navigation
 	implementation(libs.androidx.navigation.compose)
@@ -96,6 +95,7 @@ dependencies {
 	implementation(libs.kotlinx.collections.immutable)
 	//location
 	implementation(libs.gms.play.services.location)
+	// futures to coroutine
 	implementation(libs.androidx.concurrent.futures.ktx)
 	//hilt
 	ksp(libs.hilt.android.compiler)
@@ -146,11 +146,11 @@ dependencies {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:4.27.3"
+		artifact = libs.protobuf.protoc.get().toString()
 	}
 	plugins {
 		create("java") {
-			artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+			artifact = libs.protobuf.gen.javalite.get().toString()
 		}
 	}
 

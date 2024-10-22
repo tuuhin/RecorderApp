@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="surface">@color/white</color>
+  <color name="surface">#FEF9EB</color>
   <color name="on_surface">@android:color/system_neutral1_900</color>
   <color name="primary">@android:color/system_accent1_600</color>
   <color name="on_primary">@android:color/system_accent1_0</color>
