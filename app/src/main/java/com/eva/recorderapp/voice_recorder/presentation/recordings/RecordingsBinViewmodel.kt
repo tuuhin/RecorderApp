@@ -70,20 +70,17 @@ class RecordingsBinViewmodel @Inject constructor(
 		provider.trashedRecordingsFlow
 			.onEach { res ->
 				when (res) {
+					Resource.Loading -> _isRecordingsLoaded.update { false }
 					is Resource.Error -> {
 						val message = res.message ?: res.error.message ?: "SOME ERROR"
 						_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
-						_isRecordingsLoaded.update { true }
 					}
-
-					Resource.Loading -> _isRecordingsLoaded.update { false }
 					is Resource.Success -> {
 						val new = res.data.toSelectableRecordings()
-
 						_trashedRecordings.update { new }
-						_isRecordingsLoaded.update { true }
 					}
 				}
+				_isRecordingsLoaded.update { true }
 			}.launchIn(viewModelScope)
 	}
 
@@ -107,21 +104,19 @@ class RecordingsBinViewmodel @Inject constructor(
 		}
 	}
 
-	private fun onRecordingsRestore() {
-		viewModelScope.launch {
-			when (val result = provider.restoreRecordingsFromTrash(selectedRecordings)) {
-				is Resource.Error -> {
-					val message = result.message ?: "Cannot restore items"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message))
-				}
-
-				is Resource.Success -> {
-					val message = result.message ?: "Items restored"
-					_uiEvents.emit(UIEvents.ShowToast(message))
-				}
-
-				else -> {}
+	private fun onRecordingsRestore() = viewModelScope.launch {
+		when (val result = provider.restoreRecordingsFromTrash(selectedRecordings)) {
+			is Resource.Error -> {
+				val message = result.message ?: "Cannot restore items"
+				_uiEvents.emit(UIEvents.ShowSnackBar(message))
 			}
+
+			is Resource.Success -> {
+				val message = result.message ?: "Items restored"
+				_uiEvents.emit(UIEvents.ShowToast(message))
+			}
+
+			else -> {}
 		}
 	}
 
@@ -147,25 +142,19 @@ class RecordingsBinViewmodel @Inject constructor(
 
 	private fun handleSecurityExceptionToDelete(error: SecurityException) {
 		viewModelScope.launch {
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-
-				val request = DeleteOrTrashRecordingsRequest.OnDeleteRequest(selectedRecordings)
-				_deleteEvents.emit(request)
-
-			} else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-				// TODO: Check the workflow for android 10
-				(error as? RecoverableSecurityException)?.let { exp ->
-					val pendingIntent = exp.userAction.actionIntent
-					val request = IntentSenderRequest.Builder(pendingIntent)
-						.build()
-					val deleteRequest =
-						DeleteOrTrashRecordingsRequest.OnDeleteRequest(
-							trashRecordings = selectedRecordings,
-							intentSenderRequest = request
-						)
-					_deleteEvents.emit(deleteRequest)
-				}
+			val request = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+				DeleteOrTrashRecordingsRequest.OnDeleteRequest(selectedRecordings)
+			} else {
+				if (error !is RecoverableSecurityException) return@launch
+				// TODO: Check the workflow for android 10 or below
+				val pendingIntent = error.userAction.actionIntent
+				val request = IntentSenderRequest.Builder(pendingIntent).build()
+				DeleteOrTrashRecordingsRequest.OnDeleteRequest(
+					trashRecordings = selectedRecordings,
+					intentSenderRequest = request
+				)
 			}
+			_deleteEvents.emit(request)
 		}
 	}
 

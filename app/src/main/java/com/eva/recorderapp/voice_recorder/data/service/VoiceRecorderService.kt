@@ -17,7 +17,7 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
-import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
+import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUseCase
 import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentListOf
@@ -58,7 +58,7 @@ class VoiceRecorderService : LifecycleService() {
 	lateinit var bluetoothScoUseCase: BluetoothScoUseCase
 
 	@Inject
-	lateinit var phoneStateObserverUseCase: PhoneStateObserverUsecase
+	lateinit var phoneStateObserverUseCase: PhoneStateObserverUseCase
 
 	@Inject
 	lateinit var bookmarksProvider: RecordingBookmarksProvider
@@ -161,16 +161,12 @@ class VoiceRecorderService : LifecycleService() {
 		}
 	}
 
-	private fun showBluetoothConnectedToast() {
-		bluetoothScoUseCase.observeConnectedState(
-			scope = lifecycleScope,
-			onStateConnected = ::showScoConnectToast
-		)
+	private fun showBluetoothConnectedToast() = lifecycleScope.launch {
+		bluetoothScoUseCase.observeConnectedState(onStateConnected = ::showScoConnectToast)
 	}
 
-	private fun observeChangingPhoneState() {
+	private fun observeChangingPhoneState() = lifecycleScope.launch {
 		phoneStateObserverUseCase.checkIfAllowedAndRinging(
-			scope = lifecycleScope,
 			onPhoneRinging = {
 				phoneRingingToast()
 				onPauseRecording()

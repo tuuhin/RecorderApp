@@ -4,14 +4,16 @@ import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAu
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.util.PhoneStateObserver
 import com.eva.recorderapp.voice_recorder.domain.util.enums.PhoneState
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
-class PhoneStateObserverUsecase(
+class PhoneStateObserverUseCase(
 	private val settings: RecorderAudioSettingsRepo,
-	private val observer: PhoneStateObserver,
+	observer: PhoneStateObserver,
 	private val voiceRecorder: VoiceRecorder,
 ) {
 	private val isPauseAllowed
@@ -20,17 +22,16 @@ class PhoneStateObserverUsecase(
 	private val recorderState
 		get() = voiceRecorder.recorderState
 
-	val phoneStateObserver = observer.invoke()
+	private val phoneStateObserver = observer.invoke()
 
-	fun checkIfAllowedAndRinging(
-		scope: CoroutineScope,
-		onPhoneRinging: () -> Unit,
-	) {
-		combine(isPauseAllowed, phoneStateObserver, recorderState) { isAllowed, phState, rcState ->
-			if (!isAllowed) return@combine
-			if (rcState.isRecording && phState == PhoneState.RINGING) {
-				onPhoneRinging()
+	@OptIn(ExperimentalCoroutinesApi::class)
+	suspend fun checkIfAllowedAndRinging(onPhoneRinging: () -> Unit) = isPauseAllowed
+		.filter { it }
+		.flatMapLatest {
+			combine(phoneStateObserver, recorderState) { phState, rcState ->
+				rcState.isRecording && phState == PhoneState.RINGING
 			}
-		}.launchIn(scope)
-	}
+		}
+		.filter { it }
+		.collectLatest { onPhoneRinging() }
 }

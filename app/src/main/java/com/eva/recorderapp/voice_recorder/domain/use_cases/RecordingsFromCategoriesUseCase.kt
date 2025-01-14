@@ -7,6 +7,7 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsS
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedVoiceRecordingModels
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingModels
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -14,8 +15,8 @@ class RecordingsFromCategoriesUseCase(
 	private val recordings: VoiceRecordingsProvider,
 	private val secondaryRecordings: RecordingsSecondaryDataProvider,
 ) {
-	operator fun invoke(categoryModel: RecordingCategoryModel? = null): Flow<ResourcedVoiceRecordingModels> {
-		return if (categoryModel == null || categoryModel == RecordingCategoryModel.ALL_CATEGORY) {
+	operator fun invoke(categoryModel: RecordingCategoryModel = RecordingCategoryModel.ALL_CATEGORY): Flow<ResourcedVoiceRecordingModels> {
+		return if (categoryModel == RecordingCategoryModel.ALL_CATEGORY) {
 			combine(
 				flow = recordings.voiceRecordingsFlow,
 				flow2 = secondaryRecordings.providesRecordingMetaData
@@ -23,6 +24,8 @@ class RecordingsFromCategoriesUseCase(
 				try {
 					val result = mergePrimaryAndSecondaryMetadata(originalMetaData, extraMetaData)
 					Resource.Success(result)
+				} catch (e: CancellationException) {
+					throw e
 				} catch (e: Exception) {
 					e.printStackTrace()
 					Resource.Error(e)
@@ -39,6 +42,8 @@ class RecordingsFromCategoriesUseCase(
 					val selectedData = originalMetaData.filter { it.id in matchingIds }
 					val result = mergePrimaryAndSecondaryMetadata(selectedData, extraMetaData)
 					Resource.Success(result)
+				} catch (e: CancellationException) {
+					throw e
 				} catch (e: Exception) {
 					e.printStackTrace()
 					Resource.Error(e)

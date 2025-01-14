@@ -6,8 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -23,11 +22,8 @@ fun DeleteRecordingRequestHandler(
 	eventsFlow: () -> SharedFlow<DeleteOrTrashRecordingsRequest>,
 	onResult: (TrashRecordingScreenEvent) -> Unit,
 ) {
-
 	val context = LocalContext.current
 	val lifecycleOwner = LocalLifecycleOwner.current
-
-	val deleteRequestEvents by rememberUpdatedState(eventsFlow)
 
 	val deleteRequestLauncher = rememberLauncherForActivityResult(
 		contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -42,22 +38,19 @@ fun DeleteRecordingRequestHandler(
 		},
 	)
 
-	LaunchedEffect(lifecycleOwner) {
+	val rememberedFlow = remember(eventsFlow) { eventsFlow() }
+
+	LaunchedEffect(key1 = lifecycleOwner, key2 = eventsFlow) {
 
 		lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-
-			val flow = deleteRequestEvents()
-
-			flow.collect { event ->
+			rememberedFlow.collect { event ->
 				when (event) {
 					is DeleteOrTrashRecordingsRequest.OnDeleteRequest -> {
-						if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-							event.intentSenderRequest?.let { request ->
-								deleteRequestLauncher.launch(request)
-							}
-						} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 							RecordingsProvider.createDeleteRequest(context, event.trashRecordings)
 								?.let(deleteRequestLauncher::launch)
+						} else event.intentSenderRequest?.let { request ->
+							deleteRequestLauncher.launch(request)
 						}
 					}
 

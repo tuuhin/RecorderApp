@@ -6,8 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -27,8 +26,6 @@ fun TrashRecordingsRequestHandler(
 	val context = LocalContext.current
 	val lifecycleOwner = LocalLifecycleOwner.current
 
-	val trashEventsFlow by rememberUpdatedState(newValue = eventsFlow)
-
 	val trashRequestLauncher = rememberLauncherForActivityResult(
 		contract = ActivityResultContracts.StartIntentSenderForResult(),
 		onResult = { result ->
@@ -37,27 +34,27 @@ fun TrashRecordingsRequestHandler(
 				context.getString(R.string.recording_delete_request_success)
 			else context.getString(R.string.recording_delete_request_failed)
 
-			val event = RecordingScreenEvent.OnPostTrashRequest( message)
+			val event = RecordingScreenEvent.OnPostTrashRequest(message)
 			onResult(event)
 		}
 	)
 
+	val rememberedFlow = remember(eventsFlow) { eventsFlow() }
+
 	// handle trash request for Api 30+
-	LaunchedEffect(key1 = lifecycleOwner) {
-		val flow = trashEventsFlow()
+	LaunchedEffect(key1 = lifecycleOwner, key2 = rememberedFlow) {
 		lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-			flow.collect { event ->
+			rememberedFlow.collect { event ->
 				when (event) {
 					is DeleteOrTrashRecordingsRequest.OnTrashRequest -> {
 						if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
 							val request = event.intentSenderRequest ?: return@collect
 							trashRequestLauncher.launch(request)
 
-						} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-							RecordingsProvider.createTrashRequest(context, event.recordings)
-								?.let(trashRequestLauncher::launch)
-						}
+						} else RecordingsProvider.createTrashRequest(context, event.recordings)
+							?.let(trashRequestLauncher::launch)
 					}
+
 					else -> {}
 				}
 			}

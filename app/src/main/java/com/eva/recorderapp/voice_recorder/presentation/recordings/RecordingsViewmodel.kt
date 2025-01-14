@@ -23,20 +23,21 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.toS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -71,7 +72,7 @@ class RecordingsViewmodel @Inject constructor(
 		.map { categories -> categories.toImmutableList() }
 		.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(3000),
+			started = SharingStarted.WhileSubscribed(5000),
 			initialValue = persistentListOf()
 		)
 
@@ -98,26 +99,36 @@ class RecordingsViewmodel @Inject constructor(
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 
-	private var _prepareRecordingsJob: Job? = null
-
 	private fun populateRecordings() {
-		// recordings are already loaded no need to again add a collector
 		if (isLoaded.value) return
-		// prepare the categories
-		populateRecordingCategories()
+		// prepare the categories on a different coroutine
+		viewModelScope.launch { populateRecordingCategories() }
 		// populate the records according to requirements
-		_selectedCategory.onEach(::populateRecords).launchIn(viewModelScope)
+		viewModelScope.launch { readRecordingsFromCategory() }
 	}
 
-	private fun populateRecords(categoryModel: RecordingCategoryModel?) {
-		// cancels the job this the previous collector get cancelled
-		_prepareRecordingsJob?.cancel()
-		// set it to the new job
-		_prepareRecordingsJob = viewModelScope.launch {
-			recordingsFromCategoriesUseCase(categoryModel).onStart {
-				// set the loading spinner
-				_isRecordingsLoaded.update { false }
-			}.catch { err -> err.printStackTrace() }.onEach { res ->
+	// Load all the recordings categories
+	private suspend fun populateRecordingCategories() {
+		categoriesProvider.recordingCategoriesFlowWithItemCount.collect { res ->
+			when (res) {
+				Resource.Loading -> _isCategoriesLoaded.update { false }
+				is Resource.Error -> {
+					val message = res.message ?: res.error.message ?: "SOME ERROR"
+					_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
+				}
+
+				is Resource.Success -> _categories.update { res.data }
+			}
+			_isCategoriesLoaded.update { true }
+		}
+	}
+
+	@OptIn(ExperimentalCoroutinesApi::class)
+	private suspend fun readRecordingsFromCategory() {
+		_selectedCategory.flatMapLatest(recordingsFromCategoriesUseCase::invoke)
+			.catch { err -> err.printStackTrace() }
+			.cancellable()
+			.collect { res ->
 				when (res) {
 					Resource.Loading -> _isRecordingsLoaded.update { false }
 					is Resource.Error -> {
@@ -129,36 +140,12 @@ class RecordingsViewmodel @Inject constructor(
 								action = ::populateRecordings
 							)
 						)
-						_isRecordingsLoaded.update { true }
 					}
 
-					is Resource.Success -> {
-						val new = res.data.toSelectableRecordings()
-						_recordings.update { new }
-						_isRecordingsLoaded.update { true }
-					}
+					is Resource.Success -> _recordings.update { res.data.toSelectableRecordings() }
 				}
-			}.launchIn(this)
-		}
-	}
-
-	private fun populateRecordingCategories() {
-		// load all categories with count
-		categoriesProvider.recordingCategoriesFlowWithItemCount.onEach { res ->
-			when (res) {
-				is Resource.Error -> {
-					val message = res.message ?: res.error.message ?: "SOME ERROR"
-					_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
-					_isCategoriesLoaded.update { true }
-				}
-
-				Resource.Loading -> _isCategoriesLoaded.update { false }
-				is Resource.Success -> {
-					_categories.update { res.data }
-					_isCategoriesLoaded.update { true }
-				}
+				_isRecordingsLoaded.update { true }
 			}
-		}.launchIn(viewModelScope)
 	}
 
 
@@ -192,8 +179,8 @@ class RecordingsViewmodel @Inject constructor(
 			.onEach { result ->
 				when (result) {
 					is Resource.Error -> {
-						// on security exception handle the case
 						if (result.error is SecurityException) {
+							// on security exception handle the case
 							handleSecurityExceptionToTrash(result.error, result.data)
 							return@onEach
 						}
@@ -214,22 +201,21 @@ class RecordingsViewmodel @Inject constructor(
 
 					else -> {}
 				}
-			}.onCompletion {
-				// unselect everything on done whether it's a success or a false
-				onSelectOrUnSelectAllRecordings(false)
-			}.launchIn(viewModelScope)
+			}
+			.onCompletion { onSelectOrUnSelectAllRecordings(false) }
+			.launchIn(viewModelScope)
 	}
 
 
 	private fun onToggleFavourites() = viewModelScope.launch {
-		val isAllSelectedFavourite = selectedRecordings.all { it.isFavorite }
+		val isAllSelectedFavourite = selectedRecordings.all(RecordedVoiceModel::isFavorite)
 
 		val result = if (isAllSelectedFavourite) {
 			val selection = selectedRecordings.map { record -> record.copy(isFavorite = false) }
 			// unset favourite
 			secondaryDataProvider.favouriteRecordingsBulk(selection, false)
 		} else {
-			val favouriteSelection = selectedRecordings.filterNot { it.isFavorite }
+			val favouriteSelection = selectedRecordings.filterNot(RecordedVoiceModel::isFavorite)
 				.map { record -> record.copy(isFavorite = true) }
 			// set favourite
 			secondaryDataProvider.favouriteRecordingsBulk(favouriteSelection, true)
@@ -257,26 +243,20 @@ class RecordingsViewmodel @Inject constructor(
 	) {
 		if (recordingsToTrash == null) return
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+		viewModelScope.launch {
+			val request = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+				DeleteOrTrashRecordingsRequest.OnTrashRequest(recordingsToTrash)
+			} else {
+				if (error !is RecoverableSecurityException) return@launch
+				val pendingIntent = error.userAction.actionIntent
+				val senderRequest = IntentSenderRequest.Builder(pendingIntent).build()
 
-			val request = DeleteOrTrashRecordingsRequest.OnTrashRequest(recordingsToTrash)
-			viewModelScope.launch {
-				_trashRecordingEvent.emit(request)
+				DeleteOrTrashRecordingsRequest.OnTrashRequest(
+					recordings = recordingsToTrash,
+					intentSenderRequest = senderRequest
+				)
 			}
-
-		} else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-			// TODO: Check the workflow for android 10
-			(error as? RecoverableSecurityException)?.let { exp ->
-				val pendingIntent = exp.userAction.actionIntent
-				val request = IntentSenderRequest.Builder(pendingIntent).build()
-
-				val trashEvent = DeleteOrTrashRecordingsRequest
-					.OnTrashRequest(recordings = recordingsToTrash, intentSenderRequest = request)
-
-				viewModelScope.launch {
-					_trashRecordingEvent.emit(trashEvent)
-				}
-			}
+			_trashRecordingEvent.emit(request)
 		}
 	}
 
