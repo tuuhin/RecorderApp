@@ -114,7 +114,7 @@ private fun AnimatedContentTransitionScope<RecorderActionMode>.recorderStateAnim
 	) using SizeTransform(clip = false)
 }
 
-private class RecorderStatePreviewParams : CollectionPreviewParameterProvider<RecorderState>(
+class RecorderStatePreviewParams : CollectionPreviewParameterProvider<RecorderState>(
 	listOf(
 		RecorderState.RECORDING,
 		RecorderState.COMPLETED,

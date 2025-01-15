@@ -16,132 +16,124 @@ import com.eva.recorderapp.common.LocalTimeFormats
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 
-object RecorderDrawGraphUtil {
 
-	fun DrawScope.drawAmplitudeGraph(
-		amplitudes: List<Float>,
-		centerYAxis: Float,
-		spikesGap: Float = 2f,
-		spikesWidth: Float = 2f,
-		barColor: Color = Color.Gray,
-		debug: Boolean = false,
-	) {
-		amplitudes.forEachIndexed { idx, value ->
-			val scaleValue = value * .8f
-			val xAxis = spikesWidth * idx.toFloat()
-			val start = Offset(xAxis, centerYAxis * (1 - scaleValue))
-			val end = Offset(xAxis, centerYAxis * (1 + scaleValue))
-			if (start.y != end.y) {
-				// draw graph-line
-				drawLine(
-					color = barColor,
-					start = start,
-					end = end,
-					strokeWidth = spikesGap,
-					cap = StrokeCap.Round
-				)
-			}
-			if (idx + 1 == amplitudes.size && debug) {
-				drawLine(
-					color = Color.Red,
-					start = start,
-					end = end,
-					strokeWidth = 2.dp.toPx()
-				)
-			}
+fun DrawScope.drawAmplitudeGraph(
+	amplitudes: List<Float>,
+	centerYAxis: Float,
+	spikesGap: Float = 2f,
+	spikesWidth: Float = 2f,
+	barColor: Color = Color.Gray,
+	debug: Boolean = false,
+) {
+	amplitudes.forEachIndexed { idx, value ->
+		val scaleValue = value * .8f
+		val xAxis = spikesWidth * idx.toFloat()
+		val start = Offset(xAxis, centerYAxis * (1 - scaleValue))
+		val end = Offset(xAxis, centerYAxis * (1 + scaleValue))
+		if (start.y != end.y) {
+			// draw graph-line
+			drawLine(
+				color = barColor,
+				start = start,
+				end = end,
+				strokeWidth = spikesGap,
+				cap = StrokeCap.Round
+			)
+		}
+		if (idx + 1 == amplitudes.size && debug) {
+			drawLine(
+				color = Color.Red, start = start, end = end, strokeWidth = 2.dp.toPx()
+			)
 		}
 	}
+}
 
-	fun DrawScope.drawRecorderTimeline(
-		image: Painter,
-		timeline: Collection<LocalTime>,
-		bookMarks: Collection<LocalTime>,
-		textMeasurer: TextMeasurer,
-		outlineColor: Color = Color.Gray,
-		outlineVariant: Color = Color.Gray,
-		bookMarkColor: Color = Color.Blue,
-		spikesWidth: Float = 2f,
-		strokeWidthThick: Float = 2f,
-		strokeWidthLight: Float = 1f,
-		textStyle: TextStyle = TextStyle(),
-		textColor: Color = Color.Black,
-	) {
-		timeline.forEachIndexed { idx, time ->
-			val xAxis = spikesWidth * idx.toFloat()
-			val timeInMillis = time.toMillisecondOfDay()
+fun DrawScope.drawRecorderTimeline(
+	image: Painter,
+	timeline: Collection<LocalTime>,
+	bookMarks: Collection<LocalTime>,
+	textMeasurer: TextMeasurer,
+	outlineColor: Color = Color.Gray,
+	outlineVariant: Color = Color.Gray,
+	bookMarkColor: Color = Color.Blue,
+	spikesWidth: Float = 2f,
+	strokeWidthThick: Float = 2f,
+	strokeWidthLight: Float = 1f,
+	textStyle: TextStyle = TextStyle(),
+	textColor: Color = Color.Black,
+) {
+	timeline.forEachIndexed { idx, time ->
+		val xAxis = spikesWidth * idx.toFloat()
+		val timeInMillis = time.toMillisecondOfDay()
 
-			if (timeInMillis.mod(2_000) == 0 || idx == 0) {
+		if (timeInMillis.mod(2_000) == 0 || idx == 0) {
 
-				val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
-				val layoutResult = textMeasurer.measure(readable, style = textStyle)
-				val textOffset = with(layoutResult) {
-					Offset(size.width / 2f, size.height / 2f)
-				}
-
-				drawText(
-					textLayoutResult = layoutResult,
-					topLeft = Offset(xAxis, -1 * 8.dp.toPx()) - textOffset,
-					color = textColor,
-				)
-
-				drawLine(
-					color = outlineColor,
-					start = Offset(xAxis, 0f),
-					end = Offset(xAxis, 8.dp.toPx()),
-					strokeWidth = strokeWidthThick,
-					cap = StrokeCap.Round,
-				)
-				drawLine(
-					color = outlineColor,
-					start = Offset(xAxis, size.height - 8.dp.toPx()),
-					end = Offset(xAxis, size.height),
-					strokeWidth = strokeWidthThick
-				)
-			} else if (timeInMillis.mod(500) == 0) {
-				drawLine(
-					color = outlineVariant,
-					start = Offset(xAxis, 0f),
-					end = Offset(xAxis, 4.dp.toPx()),
-					strokeWidth = strokeWidthLight,
-					cap = StrokeCap.Round,
-				)
-				drawLine(
-					color = outlineVariant,
-					start = Offset(xAxis, size.height - 4.dp.toPx()),
-					end = Offset(xAxis, size.height),
-					strokeWidth = strokeWidthLight,
-					cap = StrokeCap.Round,
-				)
+			val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
+			val layoutResult = textMeasurer.measure(readable, style = textStyle)
+			val textOffset = with(layoutResult) {
+				Offset(size.width / 2f, size.height / 2f)
 			}
 
-			if (time in bookMarks) {
+			drawText(
+				textLayoutResult = layoutResult,
+				topLeft = Offset(xAxis, -1 * 8.dp.toPx()) - textOffset,
+				color = textColor,
+			)
 
-				drawLine(
-					color = bookMarkColor,
-					start = Offset(xAxis, 2.dp.toPx()),
-					end = Offset(xAxis, size.height - 2.dp.toPx()),
-					strokeWidth = strokeWidthThick,
-					cap = StrokeCap.Round
-				)
+			drawLine(
+				color = outlineColor,
+				start = Offset(xAxis, 0f),
+				end = Offset(xAxis, 8.dp.toPx()),
+				strokeWidth = strokeWidthThick,
+				cap = StrokeCap.Round,
+			)
+			drawLine(
+				color = outlineColor,
+				start = Offset(xAxis, size.height - 8.dp.toPx()),
+				end = Offset(xAxis, size.height),
+				strokeWidth = strokeWidthThick
+			)
+		} else if (timeInMillis.mod(500) == 0) {
+			drawLine(
+				color = outlineVariant,
+				start = Offset(xAxis, 0f),
+				end = Offset(xAxis, 4.dp.toPx()),
+				strokeWidth = strokeWidthLight,
+				cap = StrokeCap.Round,
+			)
+			drawLine(
+				color = outlineVariant,
+				start = Offset(xAxis, size.height - 4.dp.toPx()),
+				end = Offset(xAxis, size.height),
+				strokeWidth = strokeWidthLight,
+				cap = StrokeCap.Round,
+			)
+		}
 
-				drawCircle(
-					color = bookMarkColor,
-					radius = 3.dp.toPx(),
-					center = Offset(xAxis, 2.dp.toPx())
-				)
+		if (time in bookMarks) {
 
-				val imageSize = 12.dp
+			drawLine(
+				color = bookMarkColor,
+				start = Offset(xAxis, 2.dp.toPx()),
+				end = Offset(xAxis, size.height - 2.dp.toPx()),
+				strokeWidth = strokeWidthThick,
+				cap = StrokeCap.Round
+			)
 
-				translate(
-					left = xAxis - (imageSize.toPx() / 2f),
-					top = size.height + 4.dp.toPx()
-				) {
-					with(image) {
-						draw(
-							size = Size(imageSize.toPx(), imageSize.toPx()),
-							colorFilter = ColorFilter.tint(bookMarkColor)
-						)
-					}
+			drawCircle(
+				color = bookMarkColor, radius = 3.dp.toPx(), center = Offset(xAxis, 2.dp.toPx())
+			)
+
+			val imageSize = 12.dp
+
+			translate(
+				left = xAxis - (imageSize.toPx() / 2f), top = size.height + 4.dp.toPx()
+			) {
+				with(image) {
+					draw(
+						size = Size(imageSize.toPx(), imageSize.toPx()),
+						colorFilter = ColorFilter.tint(bookMarkColor)
+					)
 				}
 			}
 		}

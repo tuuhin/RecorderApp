@@ -8,3 +8,4 @@ typealias RecordingDataPointCallback = () -> List<Pair<LocalTime, Float>>
 typealias PlayerGraphData = () -> List<Float>
 typealias SelectableCategoryImmutableList = ImmutableList<SelectableCategory>
 typealias PlayRation = () -> Float
+typealias BookMarksDeferredCallback = () -> ImmutableList<LocalTime>
