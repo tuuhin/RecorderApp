@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.navigation.routes
 
 import android.content.Intent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
@@ -12,6 +13,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsS
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.recorder.RecorderViewModel
 import com.eva.recorderapp.voice_recorder.presentation.recorder.VoiceRecorderScreen
+import com.eva.recorderapp.voice_recorder.presentation.util.LocalSharedTransitionVisibilityScopeProvider
 
 fun NavGraphBuilder.recorderRoute(
 	navController: NavHostController,
@@ -28,10 +30,14 @@ fun NavGraphBuilder.recorderRoute(
 
 	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
 
-	VoiceRecorderScreen(
-		onRecorderAction = viewModel::onAction,
-		onShowRecordings = dropUnlessResumed { navController.navigate(NavRoutes.VoiceRecordings) },
-		onNavigateToBin = dropUnlessResumed { navController.navigate(NavRoutes.TrashRecordings) },
-		onNavigateToSettings = dropUnlessResumed { navController.navigate(NavRoutes.AudioSettings) },
-	)
+	CompositionLocalProvider(
+		LocalSharedTransitionVisibilityScopeProvider provides this
+	) {
+		VoiceRecorderScreen(
+			onRecorderAction = viewModel::onAction,
+			onShowRecordings = dropUnlessResumed { navController.navigate(NavRoutes.VoiceRecordings) },
+			onNavigateToBin = dropUnlessResumed { navController.navigate(NavRoutes.TrashRecordings) },
+			onNavigateToSettings = dropUnlessResumed { navController.navigate(NavRoutes.AudioSettings) },
+		)
+	}
 }

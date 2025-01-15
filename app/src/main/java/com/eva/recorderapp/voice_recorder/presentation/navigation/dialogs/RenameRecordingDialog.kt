@@ -50,7 +50,7 @@ fun NavGraphBuilder.renameRecordingDialog(
 			viewModel.onEvent(event)
 		}
 	)
-	
+
 
 	LaunchedEffect(key1 = lifeCycleOwner) {
 		lifeCycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -58,13 +58,10 @@ fun NavGraphBuilder.renameRecordingDialog(
 				when (event) {
 					is RenamePermissionEvent.OnAskAccessRequest -> {
 						// intent with the intent request
-						val request = if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q)
-							event.intentSenderRequest
-						// intent with the Recordings provider request
-						else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+						val request = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
 							RecordingsProvider.createWriteRequest(context, event.recordings)
-						// for other case nothing
-						else null
+						// intent with the Recordings provider request
+						else event.intentSenderRequest
 
 						// launch the permission request
 						request?.let(permissionLauncher::launch)

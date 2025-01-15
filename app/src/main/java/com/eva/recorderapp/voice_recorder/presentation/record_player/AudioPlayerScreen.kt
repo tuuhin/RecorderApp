@@ -1,5 +1,11 @@
 package com.eva.recorderapp.voice_recorder.presentation.record_player
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,13 +53,16 @@ import com.eva.recorderapp.voice_recorder.presentation.record_player.util.Player
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PlayerGraphData
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun AudioPlayerScreen(
+	selectedAudioId: Long,
 	waveforms: PlayerGraphData,
 	bookMarkState: CreateOrEditBookMarkState,
 	playerState: AudioPlayerInformation,
@@ -116,7 +125,12 @@ fun AudioPlayerScreen(
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
-		modifier = modifier,
+		modifier = modifier.sharedBoundsWrapper(
+			key = SharedElementTransitionKeys.recordSharedEntryContainer(selectedAudioId),
+			resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+			enter = fadeIn(animationSpec = tween(easing = EaseOut, durationMillis = 300)),
+			exit = fadeOut(animationSpec = tween(easing = EaseOut, durationMillis = 300)),
+		),
 	) { scPadding ->
 		ContentStateAnimatedContainer(
 			loadState = loadState,
@@ -131,7 +145,7 @@ fun AudioPlayerScreen(
 			onSuccess = {
 				PlayerDurationText(
 					track = playerState.trackData,
-					modifier = Modifier.align(Alignment.TopCenter)
+					modifier = Modifier.align(Alignment.TopCenter),
 				)
 				Column(
 					modifier = Modifier
@@ -173,6 +187,7 @@ fun AudioPlayerScreen(
 @Composable
 private fun AudioPlayerScreenPreview() = RecorderAppTheme {
 	AudioPlayerScreen(
+		selectedAudioId = 0L,
 		waveforms = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
 		playerState = PreviewFakes.FAKE_AUDIO_INFORMATION,
 		bookmarks = PreviewFakes.FAKE_BOOKMARKS_LIST,

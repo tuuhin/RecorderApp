@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -18,6 +19,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsS
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.settings.AudioSettingsScreen
 import com.eva.recorderapp.voice_recorder.presentation.settings.AudioSettingsViewModel
+import com.eva.recorderapp.voice_recorder.presentation.util.LocalSharedTransitionVisibilityScopeProvider
 
 fun NavGraphBuilder.audioSettingsRoute(
 	controller: NavController,
@@ -30,25 +32,27 @@ fun NavGraphBuilder.audioSettingsRoute(
 
 	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
 
-	AudioSettingsScreen(
-		audioSettings = audioSettings,
-		fileSettings = fileSettings,
-		onAudioSettingsChange = viewModel::onAudioEvent,
-		onFileSettingsChange = viewModel::onFileEvent,
-		onNavigateToInfo = dropUnlessResumed {
-			controller.navigate(NavDialogs.ApplicationInfo)
-		},
-		navigation = {
-			if (controller.previousBackStackEntry?.destination?.route != null) {
-				IconButton(
-					onClick = dropUnlessResumed(block = controller::popBackStack)
-				) {
-					Icon(
-						imageVector = Icons.AutoMirrored.Default.ArrowBack,
-						contentDescription = stringResource(R.string.back_arrow)
-					)
+	CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
+		AudioSettingsScreen(
+			audioSettings = audioSettings,
+			fileSettings = fileSettings,
+			onAudioSettingsChange = viewModel::onAudioEvent,
+			onFileSettingsChange = viewModel::onFileEvent,
+			onNavigateToInfo = dropUnlessResumed {
+				controller.navigate(NavDialogs.ApplicationInfo)
+			},
+			navigation = {
+				if (controller.previousBackStackEntry?.destination?.route != null) {
+					IconButton(
+						onClick = dropUnlessResumed(block = controller::popBackStack)
+					) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = stringResource(R.string.back_arrow)
+						)
+					}
 				}
-			}
-		},
-	)
+			},
+		)
+	}
 }
