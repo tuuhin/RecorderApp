@@ -9,7 +9,6 @@ import com.eva.recorderapp.voice_recorder.domain.player.model.PlayerTrackData
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderConstants
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.TrashRecordingModel
-import com.eva.recorderapp.voice_recorder.presentation.categories.utils.toSelectableCategory
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
@@ -105,13 +104,10 @@ object PreviewFakes {
 
 	private val FAKE_RECORDING_CATEGORY = RecordingCategoryModel(
 		id = 0L, name = "Something", createdAt = now
-	).toSelectableCategory()
+	)
 
 	val FAKE_RECORDING_CATEGORIES = List(10) { FAKE_RECORDING_CATEGORY }.toImmutableList()
 
-	val FAKE_RECORDINGS_CATEGORIES_FEW_SELECTED =
-		List(10) { FAKE_RECORDING_CATEGORY }.map { category -> category.copy(isSelected = Random.nextBoolean()) }
-			.toImmutableList()
 
 	val FAKE_CATEGORY_WITH_COLOR_AND_TYPE = RecordingCategoryModel(
 		id = 0L,

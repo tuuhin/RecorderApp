@@ -130,7 +130,7 @@ fun RecorderTopBar(
 							},
 							leadingIcon = {
 								Icon(
-									painter = painterResource(id = R.drawable.ic_recycle),
+									painter = painterResource(id = R.drawable.ic_delete),
 									contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
 								)
 							},

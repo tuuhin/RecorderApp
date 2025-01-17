@@ -23,13 +23,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SelectRecordingCategoryViewModel @Inject constructor(
+class SelectCategoryViewModel @Inject constructor(
 	private val categoryProvider: RecordingCategoryProvider,
 	private val dataProvider: RecordingsSecondaryDataProvider,
 	private val savedStateHandle: SavedStateHandle,
@@ -47,6 +48,7 @@ class SelectRecordingCategoryViewModel @Inject constructor(
 	private val _categories = MutableStateFlow(emptyList<RecordingCategoryModel>())
 	val categories = _categories
 		.map { it.toImmutableList() }
+		.onStart { populateCategories() }
 		.stateIn(
 			scope = viewModelScope,
 			started = SharingStarted.WhileSubscribed(3000),
@@ -60,10 +62,6 @@ class SelectRecordingCategoryViewModel @Inject constructor(
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 
-	init {
-		// populate categories
-		populateCategories()
-	}
 
 	fun onEvent(event: RecordingCategoryEvent) {
 		when (event) {
@@ -109,19 +107,16 @@ class SelectRecordingCategoryViewModel @Inject constructor(
 	private fun populateCategories() = categoryProvider.recordingCategoryAsResourceFlow
 		.onEach { res ->
 			when (res) {
+				Resource.Loading -> _isLoaded.update { false }
 				is Resource.Error -> {
 					val message = res.message ?: res.error.message ?: "SOME ERROR"
 					_uiEvents.emit(UIEvents.ShowToast(message = message))
 					_uiEvents.emit(UIEvents.PopScreen)
-					_isLoaded.update { true }
 				}
 
-				Resource.Loading -> _isLoaded.update { false }
-				is Resource.Success -> {
-					_categories.update { res.data }
-					_isLoaded.update { true }
-				}
+				is Resource.Success -> _categories.update { res.data }
 			}
+			_isLoaded.update { true }
 		}.launchIn(viewModelScope)
 
 }

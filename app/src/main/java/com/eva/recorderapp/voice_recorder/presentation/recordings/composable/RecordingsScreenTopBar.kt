@@ -2,6 +2,7 @@ package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
@@ -24,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarColors
@@ -40,14 +42,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun RecordingsScreenTopBar(
 	isSelectedMode: Boolean,
@@ -77,9 +82,7 @@ fun RecordingsScreenTopBar(
 	) { isSelected ->
 		if (isSelected) {
 			MediumTopAppBar(
-				title = {
-					Text(text = stringResource(R.string.selected_recording_count, selectedCount))
-				},
+				title = { Text(text = stringResource(R.string.selected_recording_count, selectedCount)) },
 				navigationIcon = {
 					TooltipBox(
 						positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
@@ -133,10 +136,13 @@ fun RecordingsScreenTopBar(
 					},
 					state = rememberTooltipState(),
 				) {
-					IconButton(onClick = onNavigateToBin) {
-						Icon(
-							painter = painterResource(id = R.drawable.ic_recycle),
-							contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
+					TextButton(
+						onClick = onNavigateToBin,
+						modifier = Modifier.sharedBoundsWrapper(key = SharedElementTransitionKeys.RECORDING_BIN_SHARED_BOUNDS)
+					) {
+						Text(
+							text = stringResource(R.string.recording_bin_top_bar_title),
+							fontWeight = FontWeight.SemiBold
 						)
 					}
 				}

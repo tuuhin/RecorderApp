@@ -32,7 +32,7 @@ import com.eva.recorderapp.voice_recorder.presentation.util.colorRes
 import com.eva.recorderapp.voice_recorder.presentation.util.imageVector
 
 @Composable
-fun RecordingsCategoryCard(
+fun CategoryCard(
 	category: RecordingCategoryModel,
 	onItemClick: () -> Unit,
 	modifier: Modifier = Modifier,
@@ -40,7 +40,7 @@ fun RecordingsCategoryCard(
 	borderColor: Color = MaterialTheme.colorScheme.secondary,
 ) {
 	val containerColor = category.categoryColor.colorRes
-		?: MaterialTheme.colorScheme.surfaceContainerHigh
+		?: MaterialTheme.colorScheme.secondaryContainer
 
 	val border = remember(isSelected) {
 		if (isSelected) BorderStroke(width = 2.dp, color = borderColor)
@@ -87,8 +87,8 @@ fun RecordingsCategoryCard(
 
 @PreviewLightDark
 @Composable
-private fun RecordingCategoryCardPreview() = RecorderAppTheme {
-	RecordingsCategoryCard(
+private fun CategoryCardPreview() = RecorderAppTheme {
+	CategoryCard(
 		category = PreviewFakes.FAKE_CATEGORY_WITH_COLOR_AND_TYPE,
 		onItemClick = {},
 		isSelected = true,

@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -32,16 +33,18 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.Tra
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableTrashRecordings
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 import kotlinx.collections.immutable.ImmutableList
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun RecordingsBinScreen(
 	isRecordingsLoaded: Boolean,
 	recordings: ImmutableList<SelectableTrashRecordings>,
 	onScreenEvent: (TrashRecordingScreenEvent) -> Unit,
 	modifier: Modifier = Modifier,
-	navigation: @Composable () -> Unit = {}
+	navigation: @Composable () -> Unit = {},
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
 	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -79,7 +82,9 @@ fun RecordingsBinScreen(
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
-		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+		modifier = modifier
+			.nestedScroll(scrollBehavior.nestedScrollConnection)
+			.sharedBoundsWrapper(key = SharedElementTransitionKeys.RECORDING_BIN_SHARED_BOUNDS),
 	) { scPadding ->
 		MediaAccessPermissionWrapper(
 			onLoadRecordings = { onScreenEvent(TrashRecordingScreenEvent.PopulateTrashRecordings) },
@@ -113,7 +118,7 @@ class SelectableTrashRecordingPreviewParams :
 @Composable
 private fun RecordingsBinScreenPreview(
 	@PreviewParameter(SelectableTrashRecordingPreviewParams::class)
-	recordings: ImmutableList<SelectableTrashRecordings>
+	recordings: ImmutableList<SelectableTrashRecordings>,
 ) = RecorderAppTheme {
 	RecordingsBinScreen(
 		isRecordingsLoaded = true,

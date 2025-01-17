@@ -26,6 +26,7 @@
   <string name="recording_trash_request_failed">রেকর্ডিংগুলিকে ট্র্যাশে সরানো যাবে না৷</string>
   <string name="recording_action_trash">সরান</string>
   <string name="no_recordings">প্রদর্শনের জন্য কোনো রেকর্ডিং নেই</string>
+  <string name="no_recordings_in_bin">বিন উপস্থিত কোনো রেকর্ডিং</string>
   <string name="recording_bin_top_bar_title">বিন</string>
   <string name="recording_info_expires_at">মেয়াদ শেষ হবে: %s</string>
   <string name="recording_delete_request_success">রেকর্ডিং সফলভাবে মুছে ফেলা হয়েছে</string>
@@ -163,7 +164,7 @@
   <string name="create_category_action">তৈরি করুন</string>
   <string name="edit_category_action">সম্পাদনা করুন</string>
   <string name="add_new_category">নতুন ক্যাটাগরি</string>
-  <string name="category_type_title">বিভাগ প্রকার</string>
+  <string name="category_icon_picker_title">বিভাগ প্রকার</string>
   <string name="category_color_title">ক্যাটাগরি কালার</string>
   <string name="category_icon_category">%s-এর জন্য বিভাগ আইকন</string>
   <string name="app_version_title">সংস্করণ:</string>
@@ -193,5 +194,15 @@
   <string name="write_request_accepted">রিনেম করার অনুরোধ গৃহীত হয়েছে</string>
   <string name="write_request_rejected">রিনেম করার অনুরোধ প্রত্যাখ্যান করা হয়েছে</string>
   <string name="other_app_subtitle">অন্যান্য অ্যাপ</string>
+  <string name="category_type_label">লেবেল</string>
+  <string name="category_type_important">গুরুত্বপূর্ণ</string>
+  <string name="category_type_work">কাজ</string>
+  <string name="category_type_music">সঙ্গীত</string>
+  <string name="category_type_group">দল</string>
+  <string name="category_type_song">গান</string>
+  <string name="category_type_study">অধ্যয়ন</string>
+  <string name="category_type_message">বার্তা</string>
+  <string name="category_type_unknown">অজানা</string>
+  <string name="menu_option_edit">সম্পাদনা</string>
 </resources>
 

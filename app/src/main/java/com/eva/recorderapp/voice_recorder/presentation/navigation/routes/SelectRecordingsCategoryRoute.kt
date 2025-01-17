@@ -13,8 +13,8 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.presentation.categories.SelectRecordingCategoryViewModel
-import com.eva.recorderapp.voice_recorder.presentation.categories.SelectRecordingsCategoryScreen
+import com.eva.recorderapp.voice_recorder.presentation.categories.SelectCategoryScreen
+import com.eva.recorderapp.voice_recorder.presentation.categories.SelectCategoryViewModel
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
@@ -24,7 +24,7 @@ fun NavGraphBuilder.selectRecordingCategoryRoute(
 	controller: NavController,
 ) = animatedComposable<NavRoutes.SelectRecordingCategoryRoute> {
 
-	val viewModel = hiltViewModel<SelectRecordingCategoryViewModel>()
+	val viewModel = hiltViewModel<SelectCategoryViewModel>()
 
 	UiEventsSideEffect(
 		eventsFlow = viewModel::uiEvent,
@@ -36,7 +36,7 @@ fun NavGraphBuilder.selectRecordingCategoryRoute(
 	val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
 
 	CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
-		SelectRecordingsCategoryScreen(
+		SelectCategoryScreen(
 			isLoaded = isLoaded,
 			categories = categories,
 			selectedCategory = selectedCategory,

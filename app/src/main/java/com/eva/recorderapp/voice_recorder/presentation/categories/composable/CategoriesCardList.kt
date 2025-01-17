@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,17 +26,18 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
+import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.presentation.composables.ListLoadingAnimation
+import com.eva.recorderapp.voice_recorder.presentation.util.CategoryImmutableList
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
-import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-fun RecordingCategoriesList(
+fun CategoriesCardList(
 	isLoaded: Boolean,
-	onItemClick: (RecordingCategoryModel) -> Unit,
-	categories: ImmutableList<RecordingCategoryModel>,
+	onEdit: (RecordingCategoryModel) -> Unit,
+	onDelete: (RecordingCategoryModel) -> Unit,
+	categories: CategoryImmutableList,
 	modifier: Modifier = Modifier,
-	selectedCategory: RecordingCategoryModel? = null,
 	contentPadding: PaddingValues = PaddingValues(),
 ) {
 	val isLocalInspectionMode = LocalInspectionMode.current
@@ -47,7 +48,7 @@ fun RecordingCategoriesList(
 	}
 
 	val contentType: ((Int, RecordingCategoryModel) -> Any?) = remember {
-		{ _, _ -> RecordingCategoryModel::class.simpleName }
+		{ _, _ -> RecordedVoiceModel::class.simpleName }
 	}
 
 	ListLoadingAnimation(
@@ -56,22 +57,22 @@ fun RecordingCategoriesList(
 		contentPadding = contentPadding,
 		modifier = modifier,
 		onDataReady = {
-			LazyVerticalGrid(
-				columns = GridCells.Fixed(3),
+			LazyColumn(
 				modifier = Modifier.fillMaxSize(),
-				verticalArrangement = Arrangement.spacedBy(12.dp),
-				horizontalArrangement = Arrangement.spacedBy(12.dp)
+				verticalArrangement = Arrangement.spacedBy(6.dp)
 			) {
 				itemsIndexed(
 					items = categories,
 					key = keys,
 					contentType = contentType
 				) { _, category ->
-					RecordingsCategoryCard(
+					ExtendedCategoryCard(
 						category = category,
-						isSelected = category == selectedCategory,
-						onItemClick = { onItemClick(category) },
-						modifier = Modifier.animateItem(),
+						onDelete = { onDelete(category) },
+						onEdit = { onEdit(category) },
+						modifier = Modifier
+							.fillMaxWidth()
+							.animateItem(),
 					)
 				}
 			}
@@ -100,12 +101,13 @@ fun RecordingCategoriesList(
 
 @PreviewLightDark
 @Composable
-private fun RecordingsCategoriesListPreview() = RecorderAppTheme {
+private fun CategoriesCardListPreview() = RecorderAppTheme {
 	Surface {
-		RecordingCategoriesList(
+		CategoriesCardList(
 			isLoaded = true,
 			categories = PreviewFakes.FAKE_CATEGORIES_WITH_ALL_OPTION,
-			onItemClick = {}
+			onEdit = {},
+			onDelete = {}
 		)
 	}
 }

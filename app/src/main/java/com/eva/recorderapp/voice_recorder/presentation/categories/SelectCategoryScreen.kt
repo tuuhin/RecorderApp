@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.categories
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -12,10 +13,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -34,15 +37,17 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
-import com.eva.recorderapp.voice_recorder.presentation.categories.composable.RecordingCategoriesList
+import com.eva.recorderapp.voice_recorder.presentation.categories.composable.SelectableCategoriesCardGrid
 import com.eva.recorderapp.voice_recorder.presentation.categories.utils.RecordingCategoryEvent
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 import kotlinx.collections.immutable.ImmutableList
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun SelectRecordingsCategoryScreen(
+fun SelectCategoryScreen(
 	isLoaded: Boolean,
 	categories: ImmutableList<RecordingCategoryModel>,
 	onEvent: (RecordingCategoryEvent) -> Unit,
@@ -59,7 +64,11 @@ fun SelectRecordingsCategoryScreen(
 			MediumTopAppBar(
 				title = { Text(text = stringResource(R.string.select_category_screen)) },
 				actions = {
-					TextButton(onClick = onNavigateToCreateNew) {
+					TextButton(
+						onClick = onNavigateToCreateNew,
+						colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+						modifier = Modifier.sharedBoundsWrapper(key = SharedElementTransitionKeys.categoryCardSharedBoundsTransition())
+					) {
 						Text(text = stringResource(R.string.add_new_category))
 					}
 				},
@@ -89,7 +98,7 @@ fun SelectRecordingsCategoryScreen(
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
 		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
-		RecordingCategoriesList(
+		SelectableCategoriesCardGrid(
 			isLoaded = isLoaded,
 			selectedCategory = selectedCategory,
 			categories = categories,
@@ -115,11 +124,11 @@ class RecordingCategoryNullAblePreviewParams :
 
 @PreviewLightDark
 @Composable
-private fun SelectedRecordingsCategoryModel(
+private fun SelectCategoryScreenPreview(
 	@PreviewParameter(RecordingCategoryNullAblePreviewParams::class)
 	selectedCategory: RecordingCategoryModel?,
 ) = RecorderAppTheme {
-	SelectRecordingsCategoryScreen(
+	SelectCategoryScreen(
 		isLoaded = true,
 		categories = PreviewFakes.FAKE_CATEGORIES_WITH_ALL_OPTION,
 		onEvent = {},
