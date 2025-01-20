@@ -60,6 +60,7 @@ fun RecordingsScreen(
 	onShowRenameDialog: (RecordedVoiceModel?) -> Unit = {},
 	onMoveToCategory: (Collection<RecordedVoiceModel>) -> Unit = {},
 	onNavigationToCategories: () -> Unit = {},
+	onNavigateToSearch: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
@@ -110,6 +111,7 @@ fun RecordingsScreen(
 				selectedCount = selectedCount,
 				navigation = navigation,
 				onManageCategories = onNavigationToCategories,
+				onNavigateToSearch = onNavigateToSearch,
 				onUnSelectAll = { onScreenEvent(RecordingScreenEvent.OnUnSelectAllRecordings) },
 				onSelectAll = { onScreenEvent(RecordingScreenEvent.OnSelectAllRecordings) },
 				onSortItems = {

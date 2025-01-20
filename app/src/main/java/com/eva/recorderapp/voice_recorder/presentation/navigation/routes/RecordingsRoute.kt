@@ -24,7 +24,7 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsS
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsScreen
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsViewmodel
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.handlers.TrashRecordingsRequestHandler
+import com.eva.recorderapp.voice_recorder.presentation.recordings.handlers.TrashRecordingsRequestHandler
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSharedTransitionVisibilityScopeProvider
 
 fun NavGraphBuilder.recordingsRoute(
@@ -68,6 +68,9 @@ fun NavGraphBuilder.recordingsRoute(
 			onScreenEvent = viewModel::onScreenEvent,
 			onNavigateToBin = dropUnlessResumed {
 				controller.navigate(NavRoutes.TrashRecordings)
+			},
+			onNavigateToSearch = dropUnlessResumed {
+				controller.navigate(NavRoutes.SearchRecordings)
 			},
 			onNavigationToCategories = dropUnlessResumed {
 				controller.navigate(NavRoutes.ManageCategories)

@@ -227,4 +227,15 @@
   <string name="category_type_message">Message</string>
   <string name="category_type_unknown">Unknown</string>
   <string name="menu_option_edit">Edit</string>
+  <string name="time_filter_today">Today</string>
+  <string name="time_filter_yesterday">Yesterday</string>
+  <string name="time_filter_week">This Week</string>
+  <string name="time_filter_this_month">This Month</string>
+  <string name="time_filter_last_month">Last Month</string>
+  <string name="time_filter_this_year">This year</string>
+  <string name="search_filter_categories_title">Categories</string>
+  <string name="search_filter_date_created_title">Data Created</string>
+  <string name="search_filter_title">Filters</string>
+  <string name="menu_option_search">Search</string>
+  <string name="search_bar_placeholder">Recording.</string>
 </resources>

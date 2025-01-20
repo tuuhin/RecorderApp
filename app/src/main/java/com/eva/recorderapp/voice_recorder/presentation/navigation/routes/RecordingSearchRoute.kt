@@ -8,6 +8,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
@@ -16,32 +18,39 @@ import com.eva.recorderapp.R
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsSideEffect
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
-import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinScreen
-import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinViewmodel
-import com.eva.recorderapp.voice_recorder.presentation.recordings.handlers.DeleteRecordingRequestHandler
+import com.eva.recorderapp.voice_recorder.presentation.recordings.search.SearchRecordingsScreen
+import com.eva.recorderapp.voice_recorder.presentation.recordings.search.SearchRecordingsViewmodel
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSharedTransitionVisibilityScopeProvider
 
-fun NavGraphBuilder.trashRecordingsRoute(
+fun NavGraphBuilder.recordingsSearchRoute(
 	controller: NavController,
-) = animatedComposable<NavRoutes.TrashRecordings> {
+) = animatedComposable<NavRoutes.SearchRecordings> {
 
-	val viewModel = hiltViewModel<RecordingsBinViewmodel>()
+	val lifecycleOwner = LocalLifecycleOwner.current
 
-	DeleteRecordingRequestHandler(
-		eventsFlow = viewModel::deleteRequestEvent,
-		onResult = viewModel::onScreenEvent
-	)
+	val viewModel = hiltViewModel<SearchRecordingsViewmodel>()
+
+	val categories by viewModel.categories.collectAsStateWithLifecycle()
+	val searchResults by viewModel.recordings.collectAsStateWithLifecycle()
+	val screenState by viewModel.searchState.collectAsStateWithLifecycle()
+
+	// lifeCycleState
+	val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
 	UiEventsSideEffect(eventsFlow = viewModel::uiEvent)
 
-	val recordings by viewModel.trashRecordings.collectAsStateWithLifecycle()
-	val isLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
-
 	CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
-		RecordingsBinScreen(
-			isRecordingsLoaded = isLoaded,
-			recordings = recordings,
-			onScreenEvent = viewModel::onScreenEvent,
+		SearchRecordingsScreen(
+			state = screenState,
+			categories = categories,
+			searchResults = searchResults,
+			onEvent = viewModel::onEvent,
+			onSelectRecording = { record ->
+				if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
+					val audioRoute = NavRoutes.AudioPlayer(record.id)
+					controller.navigate(audioRoute)
+				}
+			},
 			navigation = {
 				if (controller.previousBackStackEntry?.destination?.route != null) {
 					IconButton(

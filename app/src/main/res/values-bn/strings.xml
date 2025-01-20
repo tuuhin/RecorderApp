@@ -204,5 +204,16 @@
   <string name="category_type_message">বার্তা</string>
   <string name="category_type_unknown">অজানা</string>
   <string name="menu_option_edit">সম্পাদনা</string>
+  <string name="time_filter_today">আজ</string>
+  <string name="time_filter_yesterday">গতকাল</string>
+  <string name="time_filter_week">এই সপ্তাহে</string>
+  <string name="time_filter_this_month">এই মাসে</string>
+  <string name="time_filter_last_month">গত মাসে</string>
+  <string name="time_filter_this_year">এই বছর</string>
+  <string name="search_filter_categories_title">বিভাগ</string>
+  <string name="search_filter_date_created_title">ডেট তৈরি</string>
+  <string name="search_filter_title">ফিল্টার</string>
+  <string name="menu_option_search">অনুসন্ধান</string>
+  <string name="search_bar_placeholder">রেকর্ডিং।</string>
 </resources>
 

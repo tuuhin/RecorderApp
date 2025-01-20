@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.presentation.recordings.util.handlers
+package com.eva.recorderapp.voice_recorder.presentation.recordings.handlers
 
 import android.app.Activity
 import android.os.Build

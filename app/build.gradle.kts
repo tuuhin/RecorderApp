@@ -84,6 +84,7 @@ dependencies {
 	implementation(libs.androidx.material3)
 	//shapes
 	implementation(libs.androidx.graphics.shapes)
+	implementation(libs.androidx.icons.extended)
 	//navigation
 	implementation(libs.androidx.navigation.compose)
 	implementation(libs.androidx.hilt.navigation.compose)
