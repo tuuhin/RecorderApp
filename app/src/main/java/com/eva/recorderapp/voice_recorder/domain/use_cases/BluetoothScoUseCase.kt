@@ -1,8 +1,8 @@
 package com.eva.recorderapp.voice_recorder.domain.use_cases
 
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
-import com.eva.recorderapp.voice_recorder.domain.util.BluetoothScoConnect
-import com.eva.recorderapp.voice_recorder.domain.util.enums.BtSCOChannelState
+import com.eva.recorderapp.voice_recorder.domain.interactions.BluetoothScoConnect
+import com.eva.recorderapp.voice_recorder.domain.interactions.enums.BtSCOChannelState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update

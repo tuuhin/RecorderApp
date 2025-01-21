@@ -2,17 +2,17 @@ package com.eva.recorderapp.voice_recorder.di
 
 import android.content.Context
 import com.eva.recorderapp.voice_recorder.data.recorder.RecorderActionHandlerImpl
-import com.eva.recorderapp.voice_recorder.data.util.AppShortcutsUtilsImpl
-import com.eva.recorderapp.voice_recorder.data.util.BluetoothScoConnectImpl
-import com.eva.recorderapp.voice_recorder.data.util.PhoneStateObserverImpl
-import com.eva.recorderapp.voice_recorder.data.util.ShareRecordingsUtilImpl
+import com.eva.recorderapp.voice_recorder.data.interactions.AppShortcutsUtilsImpl
+import com.eva.recorderapp.voice_recorder.data.interactions.BluetoothScoConnectImpl
+import com.eva.recorderapp.voice_recorder.data.interactions.PhoneStateObserverImpl
+import com.eva.recorderapp.voice_recorder.data.interactions.ShareRecordingsUtilImpl
 import com.eva.recorderapp.voice_recorder.domain.bookmarks.ExportBookMarkUriProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderActionHandler
-import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
-import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
-import com.eva.recorderapp.voice_recorder.domain.util.BluetoothScoConnect
-import com.eva.recorderapp.voice_recorder.domain.util.PhoneStateObserver
-import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
+import com.eva.recorderapp.voice_recorder.domain.interactions.AppShortcutFacade
+import com.eva.recorderapp.voice_recorder.domain.interactions.AppWidgetsRepository
+import com.eva.recorderapp.voice_recorder.domain.interactions.BluetoothScoConnect
+import com.eva.recorderapp.voice_recorder.domain.interactions.PhoneStateObserver
+import com.eva.recorderapp.voice_recorder.domain.interactions.ShareRecordingsUtil
 import com.eva.recorderapp.voice_recorder.widgets.data.AppWidgetsRepoImpl
 import dagger.Module
 import dagger.Provides
@@ -23,7 +23,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object AppUtilsModule {
+object AppInteractionModule {
 
 	@Provides
 	@Singleton

@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.domain.util
+package com.eva.recorderapp.voice_recorder.domain.interactions
 
 interface AppShortcutFacade {
 

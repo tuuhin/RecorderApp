@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package com.eva.recorderapp.voice_recorder.data.util
+package com.eva.recorderapp.voice_recorder.data.interactions
 
 import android.Manifest
 import android.content.Context
@@ -13,8 +13,8 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
-import com.eva.recorderapp.voice_recorder.domain.util.PhoneStateObserver
-import com.eva.recorderapp.voice_recorder.domain.util.enums.PhoneState
+import com.eva.recorderapp.voice_recorder.domain.interactions.PhoneStateObserver
+import com.eva.recorderapp.voice_recorder.domain.interactions.enums.PhoneState
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

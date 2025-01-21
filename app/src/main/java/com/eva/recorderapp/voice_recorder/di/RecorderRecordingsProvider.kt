@@ -16,7 +16,7 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsS
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.use_cases.GetRecordingsOfCurrentAppUseCase
-import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
+import com.eva.recorderapp.voice_recorder.domain.interactions.AppWidgetsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.util
+package com.eva.recorderapp.voice_recorder.data.interactions
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -12,7 +12,7 @@ import com.eva.recorderapp.voice_recorder.domain.bookmarks.ExportBookMarkUriProv
 import com.eva.recorderapp.voice_recorder.domain.bookmarks.ExportBookMarksFailedException
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
-import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
+import com.eva.recorderapp.voice_recorder.domain.interactions.ShareRecordingsUtil
 
 class ShareRecordingsUtilImpl(
 	private val context: Context,

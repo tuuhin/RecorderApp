@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.util
+package com.eva.recorderapp.voice_recorder.data.interactions
 
 import android.content.Context
 import android.content.Intent
@@ -8,7 +8,7 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.eva.recorderapp.MainActivity
 import com.eva.recorderapp.R
-import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
+import com.eva.recorderapp.voice_recorder.domain.interactions.AppShortcutFacade
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavDeepLinks
 
 private const val TAG = "APP_SHORTCUTS"

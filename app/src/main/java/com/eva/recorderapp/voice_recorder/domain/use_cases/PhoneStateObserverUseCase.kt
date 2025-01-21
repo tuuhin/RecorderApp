@@ -2,8 +2,8 @@ package com.eva.recorderapp.voice_recorder.domain.use_cases
 
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderAudioSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
-import com.eva.recorderapp.voice_recorder.domain.util.PhoneStateObserver
-import com.eva.recorderapp.voice_recorder.domain.util.enums.PhoneState
+import com.eva.recorderapp.voice_recorder.domain.interactions.PhoneStateObserver
+import com.eva.recorderapp.voice_recorder.domain.interactions.enums.PhoneState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine

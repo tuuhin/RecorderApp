@@ -1,8 +1,8 @@
-package com.eva.recorderapp.voice_recorder.domain.util
+package com.eva.recorderapp.voice_recorder.domain.interactions
 
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.util.enums.BtSCOChannelState
-import com.eva.recorderapp.voice_recorder.domain.util.models.AudioDevice
+import com.eva.recorderapp.voice_recorder.domain.interactions.enums.BtSCOChannelState
+import com.eva.recorderapp.voice_recorder.domain.interactions.models.AudioDevice
 import kotlinx.coroutines.flow.Flow
 
 interface BluetoothScoConnect {

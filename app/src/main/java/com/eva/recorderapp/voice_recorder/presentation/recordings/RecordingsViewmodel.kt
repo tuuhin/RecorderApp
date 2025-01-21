@@ -13,7 +13,7 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCa
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.TrashRecordingsProvider
 import com.eva.recorderapp.voice_recorder.domain.use_cases.RecordingsFromCategoriesUseCase
-import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
+import com.eva.recorderapp.voice_recorder.domain.interactions.ShareRecordingsUtil
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.DeleteOrTrashRecordingsRequest
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.event.RecordingScreenEvent
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.RecordingsSortInfo

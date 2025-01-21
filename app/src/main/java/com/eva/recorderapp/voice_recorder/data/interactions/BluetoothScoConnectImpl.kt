@@ -1,4 +1,4 @@
-package com.eva.recorderapp.voice_recorder.data.util
+package com.eva.recorderapp.voice_recorder.data.interactions
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -12,12 +12,12 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import com.eva.recorderapp.common.Resource
-import com.eva.recorderapp.voice_recorder.domain.util.BluetoothScoConnect
-import com.eva.recorderapp.voice_recorder.domain.util.enums.BtSCOChannelState
-import com.eva.recorderapp.voice_recorder.domain.util.exception.BluetoothScoAlreadyConnected
-import com.eva.recorderapp.voice_recorder.domain.util.exception.BluetoothScoDeviceNotFound
-import com.eva.recorderapp.voice_recorder.domain.util.exception.TelephonyFeatureNotException
-import com.eva.recorderapp.voice_recorder.domain.util.models.AudioDevice
+import com.eva.recorderapp.voice_recorder.domain.interactions.BluetoothScoConnect
+import com.eva.recorderapp.voice_recorder.domain.interactions.enums.BtSCOChannelState
+import com.eva.recorderapp.voice_recorder.domain.interactions.exception.BluetoothScoAlreadyConnected
+import com.eva.recorderapp.voice_recorder.domain.interactions.exception.BluetoothScoDeviceNotFound
+import com.eva.recorderapp.voice_recorder.domain.interactions.exception.TelephonyFeatureNotException
+import com.eva.recorderapp.voice_recorder.domain.interactions.models.AudioDevice
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

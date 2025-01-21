@@ -18,7 +18,7 @@ import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderAction
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUseCase
-import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
+import com.eva.recorderapp.voice_recorder.domain.interactions.AppWidgetsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList

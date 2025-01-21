@@ -13,8 +13,8 @@ import com.eva.recorderapp.voice_recorder.domain.player.WaveformsReader
 import com.eva.recorderapp.voice_recorder.domain.player.model.AudioFileModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingsSecondaryDataProvider
 import com.eva.recorderapp.voice_recorder.domain.use_cases.PlayerFileProviderFromIdUseCase
-import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
-import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
+import com.eva.recorderapp.voice_recorder.domain.interactions.AppShortcutFacade
+import com.eva.recorderapp.voice_recorder.domain.interactions.ShareRecordingsUtil
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioFileEvent
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.AudioPlayerInformation

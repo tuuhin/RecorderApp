@@ -239,7 +239,7 @@ fun animateTopBar(): ContentTransform {
 	return enterIn togetherWith exitOut
 }
 
-private class BooleanPreviewParams :
+class BooleanPreviewParams :
 	CollectionPreviewParameterProvider<Boolean>(listOf(true, false))
 
 
