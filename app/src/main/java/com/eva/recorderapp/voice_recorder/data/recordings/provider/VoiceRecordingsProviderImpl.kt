@@ -16,6 +16,7 @@ import com.eva.recorderapp.R
 import com.eva.recorderapp.common.Resource
 import com.eva.recorderapp.voice_recorder.domain.datastore.repository.RecorderFileSettingsRepo
 import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.InvalidRecordingIdException
+import com.eva.recorderapp.voice_recorder.domain.recordings.exceptions.NoRecordingsModifiedOrDeletedException
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.ResourcedVoiceRecordingModels
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecordingModels
@@ -23,7 +24,6 @@ import com.eva.recorderapp.voice_recorder.domain.recordings.provider.VoiceRecord
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -47,8 +47,6 @@ class VoiceRecordingsProviderImpl(
 			: Flow<VoiceRecordingModels> {
 		return callbackFlow {
 
-			var updateJob: Job? = null
-
 			launch(Dispatchers.IO) {
 				val recordings = getVoiceRecordings(allowExternalRead)
 				send(recordings)
@@ -57,10 +55,8 @@ class VoiceRecordingsProviderImpl(
 			val observer = object : ContentObserver(null) {
 				override fun onChange(selfChange: Boolean) {
 					super.onChange(selfChange)
-					// observer has found some changes
-					// cancel the previous job and run new one
-					updateJob?.cancel()
-					updateJob = launch(Dispatchers.IO) {
+					// observer has found some changes launch a new coroutine to update data
+					launch(Dispatchers.IO) {
 						val recordings = getVoiceRecordings(allowExternalRead)
 						send(recordings)
 					}
@@ -105,8 +101,8 @@ class VoiceRecordingsProviderImpl(
 			}
 		}
 
-	override suspend fun getVoiceRecordings(queryAllRecordings: Boolean): VoiceRecordingModels {
-		val queryArgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && queryAllRecordings) {
+	override suspend fun getVoiceRecordings(queryOthers: Boolean): VoiceRecordingModels {
+		val queryArgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && queryOthers) {
 			// they are of owner package and external recordings
 			val selection = buildString {
 				append(MediaStore.Audio.AudioColumns.IS_RECORDING)
@@ -160,15 +156,20 @@ class VoiceRecordingsProviderImpl(
 		} catch (e: Exception) {
 			Resource.Error(e)
 		}
-
 	}
 
 
-	override suspend fun deleteFileFromUri(uri: Uri): Resource<Boolean, Exception> {
+	override suspend fun deleteFileFromUri(uri: Uri): Resource<Unit, Exception> {
 		return withContext(Dispatchers.IO) {
 			try {
 				val deleteRow = contentResolver.delete(uri, null, null)
-				return@withContext Resource.Success(deleteRow == 1)
+				return@withContext if (deleteRow == 1)
+					Resource.Success<Unit, Exception>(
+						data = Unit,
+						message = context.getString(R.string.rename_recording_success)
+					)
+				else Resource.Error(NoRecordingsModifiedOrDeletedException())
+
 			} catch (e: SecurityException) {
 				Resource.Error(e, "SECURITY EXCEPTION")
 			} catch (e: CancellationException) {
@@ -180,7 +181,7 @@ class VoiceRecordingsProviderImpl(
 		}
 	}
 
-	override suspend fun deleteFileFromId(id: Long): Resource<Boolean, Exception> {
+	override suspend fun deleteFileFromId(id: Long): Resource<Unit, Exception> {
 		val selection = "${MediaStore.Audio.AudioColumns._ID} = ? "
 		val selectionArgs = arrayOf("$id")
 		val bundle = bundleOf(
@@ -194,8 +195,13 @@ class VoiceRecordingsProviderImpl(
 					contentResolver.delete(AUDIO_VOLUME_URI, bundle)
 				else contentResolver.delete(AUDIO_VOLUME_URI, selection, selectionArgs)
 
-				if (deleteRow == 1) return@withContext Resource.Success(true)
-				return@withContext Resource.Success(false)
+				return@withContext if (deleteRow == 1)
+					Resource.Success<Unit, Exception>(
+						data = Unit,
+						message = context.getString(R.string.rename_recording_success)
+					)
+				else Resource.Error(NoRecordingsModifiedOrDeletedException())
+
 			} catch (e: SecurityException) {
 				Resource.Error(e, "SECURITY EXCEPTION")
 			} catch (e: CancellationException) {
@@ -231,7 +237,7 @@ class VoiceRecordingsProviderImpl(
 	}
 
 	override fun renameRecording(recording: RecordedVoiceModel, newName: String)
-			: Flow<Resource<Boolean, Exception>> {
+			: Flow<Resource<Unit, Exception>> {
 		return flow {
 			try {
 				val uri = recording.fileUri.toUri()
@@ -244,12 +250,15 @@ class VoiceRecordingsProviderImpl(
 				val transaction = withContext(Dispatchers.IO) {
 					contentResolver.update(uri, contentValues, null, null)
 				}
-				val result = Resource.Success<Boolean, Exception>(
-					data = transaction >= 1,
-					message = context.getString(R.string.rename_recording_success)
-				)
+				val result = if (transaction == 1)
+					Resource.Success<Unit, Exception>(
+						data = Unit,
+						message = context.getString(R.string.rename_recording_success)
+					)
+				else Resource.Error(NoRecordingsModifiedOrDeletedException())
 
 				emit(result)
+
 			} catch (e: SecurityException) {
 				emit(Resource.Error(e, message = "Access not found"))
 			} catch (e: SQLException) {

@@ -12,44 +12,52 @@ typealias ResourcedTrashRecordingModels = Resource<List<TrashRecordingModel>, Ex
 interface TrashRecordingsProvider {
 
 	/**
-	 * A flow version for [getTrashedVoiceRecordings]
-	 * @return A [Flow] of [ResourcedTrashRecordingModels]
-	 * @see getTrashedVoiceRecordings
+	 * Provides a flow of trashed recordings.
+	 *
+	 * @return A [Flow] of [ResourcedTrashRecordingModels].
+	 * @see getTrashedVoiceRecordings For retrieving trashed recordings directly (without a flow).
 	 */
 	val trashedRecordingsFlow: Flow<ResourcedTrashRecordingModels>
 
 	/**
-	 * Gets the current trashed recordings for this app
-	 * @return [Resource.Success] indicating [TrashVoiceRecordings] otherwise [Resource.Error]
+	 * Retrieves the current trashed recordings for this app.
+	 *
+	 * @return A [ResourcedTrashRecordingModels] containing either a [Resource.Success] with the
+	 *         [TrashVoiceRecordings] or a [Resource.Error] with an [Exception].
 	 */
 	suspend fun getTrashedVoiceRecordings(): ResourcedTrashRecordingModels
 
 	/**
-	 * Restore the original [RecordedVoiceModel], from the trash for one [TrashRecordingModel]
-	 * if one-to-one mapping exists
-	 * @param recordings a [Collection] of [TrashRecordingModel] to be recovered
-	 * @return [Resource] indicating [recordings] are recovered successfully otherwise [Exception]
+	 * Restores recordings from the trash. This attempts to restore the original
+	 * [RecordedVoiceModel] for each provided [TrashRecordingModel].
+	 *
+	 * @param recordings A [Collection] of [TrashRecordingModel] objects to restore.
+	 * @return A [Resource] indicating success (Unit) or failure (an [Exception]).
 	 */
 	suspend fun restoreRecordingsFromTrash(
 		recordings: Collection<TrashRecordingModel>,
 	): Resource<Unit, Exception>
 
 	/**
-	 * Creates trash entries from the original [RecordedVoiceModel], the trash recordings will not
-	 * be shown directly and will be deleted with a grace period of 30 days.
-	 * @see TrashRecordingsProvider
-	 * @param recordings [TrashVoiceRecordings] to be trashed
-	 * @return A flow emitting [Resource.Success]  everything went well, [Resource.Error] there was
-	 * some security issues or other issues related to files.
+	 * Creates trash entries for the provided [RecordedVoiceModel] objects. These trashed
+	 * recordings will not be immediately visible and are subject to a grace period
+	 * (e.g., 30 days) before permanent deletion.
+	 *
+	 * @param recordings A [Collection] of [RecordedVoiceModel] objects to move to the trash.
+	 * @return A flow emitting [Resource] objects. A [Resource.Success] indicates that the
+	 *         trash entries were created successfully. A [Resource.Error] indicates a
+	 *         security issue or other file-related error. data is kept for models to handle the
+	 *         exceptions if needed.
 	 */
 	fun createTrashRecordings(recordings: Collection<RecordedVoiceModel>)
 			: Flow<Resource<Collection<RecordedVoiceModel>, Exception>>
 
 
 	/**
-	 * Permanently deletes the trashed recordings. Remember if these are deleted they cannot be recovered anymore
-	 * @param trashRecordings a [Collection] of [TrashRecordingModel] to be removed permanently
-	 * @return [Resource] indicating [trashRecordings] are deleted successfully otherwise [Exception]
+	 * Permanently deletes recordings from the trash. This action is irreversible.
+	 *
+	 * @param trashRecordings A [Collection] of [TrashRecordingModel] objects to permanently delete.
+	 * @return A [Resource] indicating success (Unit) or failure (an [Exception]).
 	 */
 	suspend fun permanentlyDeleteRecordingsInTrash(trashRecordings: Collection<TrashRecordingModel>): Resource<Unit, Exception>
 
