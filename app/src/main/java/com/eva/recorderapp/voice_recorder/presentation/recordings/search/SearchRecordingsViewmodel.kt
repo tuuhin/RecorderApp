@@ -7,9 +7,12 @@ import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCategoryModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.domain.recordings.provider.RecordingCategoryProvider
+import com.eva.recorderapp.voice_recorder.domain.use_cases.RecordingsFromCategoriesUseCase
+import com.eva.recorderapp.voice_recorder.presentation.util.RecordedVoiceModelsList
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,6 +22,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -37,6 +41,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @HiltViewModel
 class SearchRecordingsViewmodel @Inject constructor(
 	private val categoriesProvider: RecordingCategoryProvider,
+	private val recordingsUseCase: RecordingsFromCategoriesUseCase,
 ) : AppViewModel() {
 
 	private val _categories = MutableStateFlow(emptyList<RecordingCategoryModel>())
@@ -47,8 +52,8 @@ class SearchRecordingsViewmodel @Inject constructor(
 	private val _searchQuery = MutableStateFlow("")
 
 	@OptIn(FlowPreview::class)
-	private val _debouncedSearchQuery: Flow<String>
-		get() = _searchQuery.debounce(600.milliseconds)
+	private val query: Flow<String>
+		get() = _searchQuery.debounce(200.milliseconds)
 
 	val searchState = combine(
 		_searchQuery,
@@ -61,42 +66,13 @@ class SearchRecordingsViewmodel @Inject constructor(
 		initialValue = SearchRecordingScreenState()
 	)
 
-	val recordings = combine(
-		_recordings, _categoryFilter, _timeFilter, _debouncedSearchQuery
-	) { recordings, category, time, query ->
-
-		val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-		val yesterday = today.minus(DatePeriod(days = 1))
-		val lastMonth = today.minus(DatePeriod(months = 1))
-
-		recordings.filter { model ->
-			val recordedAt = model.recordedAt.date
-
-			val timeFilter = when (time) {
-				SearchFilterTimeOption.TODAY -> recordedAt == today
-				SearchFilterTimeOption.YESTERDAY -> recordedAt == yesterday
-				SearchFilterTimeOption.WEEK -> with(recordedAt) {
-					val startOfWeek = today.minus(DatePeriod(days = dayOfWeek.value))
-					val endOfWeek = today.plus(DatePeriod(days = 7 - dayOfWeek.value))
-					recordedAt in startOfWeek..endOfWeek
-				}
-
-				SearchFilterTimeOption.THIS_MONTH -> recordedAt.month == today.month
-				SearchFilterTimeOption.LAST_MONTH -> recordedAt.month == lastMonth.month
-				SearchFilterTimeOption.THIS_YEAR -> recordedAt.year == today.year
-				null -> true
-			}
-
-			val isCategorySame = category?.id?.let { it == model.categoryId } ?: true
-
-			isCategorySame && timeFilter && model.displayName.contains(query)
-		}.toImmutableList()
-
-	}.stateIn(
-		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(5000),
-		initialValue = persistentListOf()
-	)
+	val recordings = combine(_recordings, query, _timeFilter, transform = ::filterSearch)
+		.onStart { populateRecordings() }
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(5000),
+			initialValue = persistentListOf()
+		)
 
 	val categories = _categories
 		.map { categories -> categories.toImmutableList() }
@@ -115,11 +91,20 @@ class SearchRecordingsViewmodel @Inject constructor(
 
 	fun onEvent(event: SearchRecordingScreenEvent) {
 		when (event) {
-			is SearchRecordingScreenEvent.OnCategorySelected -> _categoryFilter.update { event.category }
-			is SearchRecordingScreenEvent.OnSelectTimeFilter -> _timeFilter.update { event.filter }
+			is SearchRecordingScreenEvent.OnCategorySelected -> {
+				val category = if (event.category != _categoryFilter.value) event.category else null
+				_categoryFilter.update { category }
+			}
+
+			is SearchRecordingScreenEvent.OnSelectTimeFilter -> {
+				val timeRange = if (event.filter != _timeFilter.value) event.filter else null
+				_timeFilter.update { timeRange }
+			}
+
 			is SearchRecordingScreenEvent.OnQueryChange -> _searchQuery.update { event.text }
 		}
 	}
+
 
 	private fun populateRecordingCategories() {
 		categoriesProvider.recordingCategoryAsResourceFlow
@@ -136,9 +121,58 @@ class SearchRecordingsViewmodel @Inject constructor(
 			}.launchIn(viewModelScope)
 	}
 
-	private fun populateRecordings() {
 
+	@OptIn(ExperimentalCoroutinesApi::class)
+	private fun populateRecordings() {
+		val recordingsFlow = _categoryFilter.flatMapLatest { model ->
+			val category = model ?: RecordingCategoryModel.ALL_CATEGORY
+			recordingsUseCase.invoke(category)
+		}
+		recordingsFlow.onEach { resource ->
+			when (resource) {
+				is Resource.Success -> _recordings.update { resource.data }
+				else -> {}
+			}
+		}.launchIn(viewModelScope)
 	}
 
 
+	private fun filterSearch(
+		recordings: List<RecordedVoiceModel>,
+		query: String,
+		timeFilter: SearchFilterTimeOption? = null,
+	): RecordedVoiceModelsList {
+		// if all is none then it's empty list
+		if (query.isEmpty() && timeFilter == null) return persistentListOf()
+
+		val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+		val yesterday = today.minus(DatePeriod(days = 1))
+		val lastMonth = today.minus(DatePeriod(months = 1))
+
+		return recordings.filter { model ->
+			val recordedAt = model.recordedAt.date
+
+			val filter = when (timeFilter) {
+				SearchFilterTimeOption.TODAY -> recordedAt == today
+				SearchFilterTimeOption.YESTERDAY -> recordedAt == yesterday
+				SearchFilterTimeOption.WEEK -> with(recordedAt) {
+					val startOfWeek = today.minus(DatePeriod(days = dayOfWeek.value))
+					val endOfWeek = today.plus(DatePeriod(days = 7 - dayOfWeek.value))
+					recordedAt in startOfWeek..endOfWeek
+				}
+
+				SearchFilterTimeOption.THIS_MONTH -> recordedAt.month == today.month
+				SearchFilterTimeOption.LAST_MONTH -> recordedAt.month == lastMonth.month
+				SearchFilterTimeOption.THIS_YEAR -> recordedAt.year == today.year
+				null -> true
+			}
+
+			val searchText = model.displayName.lowercase()
+			val queryLowerCase = query.lowercase()
+			val isMatching = searchText.split("\\s+".toRegex())
+				.any { word -> queryLowerCase in word }
+
+			filter && isMatching
+		}.toImmutableList()
+	}
 }

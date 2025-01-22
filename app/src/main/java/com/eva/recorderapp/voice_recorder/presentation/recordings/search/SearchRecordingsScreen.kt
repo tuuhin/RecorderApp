@@ -1,29 +1,47 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings.search
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
+import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.SearchBarTextField
+import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.SearchFilterOptions
 import com.eva.recorderapp.voice_recorder.presentation.recordings.composable.SearchResultsContent
 import com.eva.recorderapp.voice_recorder.presentation.util.CategoryImmutableList
+import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import com.eva.recorderapp.voice_recorder.presentation.util.RecordedVoiceModelsList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,38 +54,73 @@ fun SearchRecordingsScreen(
 	modifier: Modifier = Modifier,
 	navigation: @Composable () -> Unit = {},
 ) {
-	Box(modifier = modifier.fillMaxSize()) {
-		SearchBar(
-			inputField = {
-				SearchBarDefaults.InputField(
-					query = state.searchQuery,
-					onQueryChange = { onEvent(SearchRecordingScreenEvent.OnQueryChange(it)) },
-					onSearch = { },
-					expanded = true,
-					onExpandedChange = { },
-					placeholder = { Text(text = stringResource(R.string.search_bar_placeholder)) },
-					leadingIcon = navigation,
-				)
-			},
-			expanded = true,
-			onExpandedChange = { },
-			colors = SearchBarDefaults.colors(
-				containerColor = MaterialTheme.colorScheme.surface,
-				dividerColor = MaterialTheme.colorScheme.outlineVariant
-			)
+	val snackBarProvider = LocalSnackBarProvider.current
+	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+	val scope = rememberCoroutineScope()
+
+	var showSheet by remember { mutableStateOf(false) }
+	val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+	if (showSheet) {
+		ModalBottomSheet(
+			sheetState = sheetState,
+			onDismissRequest = { showSheet = false },
 		) {
-			SearchResultsContent(
+			SearchFilterOptions(
 				categories = categories,
-				searchResults = searchResults,
 				timeFilterOption = state.timeFilter,
 				selectedCategory = state.selectedCategory,
-				onItemSelect = onSelectRecording,
 				onCategorySelect = { onEvent(SearchRecordingScreenEvent.OnCategorySelected(it)) },
-				onTimeFilterSelect = { onEvent(SearchRecordingScreenEvent.OnSelectTimeFilter(it)) },
-				contentPadding = PaddingValues(
+				onSelectTimeFilter = { onEvent(SearchRecordingScreenEvent.OnSelectTimeFilter(it)) },
+				modifier = Modifier.fillMaxWidth()
+			)
+		}
+	}
+
+	Scaffold(
+		topBar = {
+			MediumTopAppBar(
+				title = { Text(text = stringResource(R.string.menu_option_search)) },
+				actions = {
+					IconButton(
+						onClick = {
+							scope.launch { sheetState.show() }
+								.invokeOnCompletion { showSheet = true }
+						},
+					) {
+						Icon(
+							imageVector = Icons.Default.FilterList,
+							contentDescription = stringResource(R.string.search_filter_title)
+						)
+					}
+				},
+				navigationIcon = navigation,
+				scrollBehavior = scrollBehavior,
+				colors = TopAppBarDefaults
+					.topAppBarColors(actionIconContentColor = MaterialTheme.colorScheme.primary)
+			)
+		},
+		snackbarHost = { SnackbarHost(snackBarProvider) },
+		modifier = modifier,
+	) { scPadding ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(scPadding)
+				.padding(
 					horizontal = dimensionResource(R.dimen.sc_padding),
 					vertical = dimensionResource(R.dimen.sc_padding_secondary)
 				),
+			verticalArrangement = Arrangement.spacedBy(8.dp)
+		) {
+			SearchBarTextField(
+				query = state.searchQuery,
+				onQueryChange = { onEvent(SearchRecordingScreenEvent.OnQueryChange(it)) },
+			)
+			SearchResultsContent(
+				searchResults = searchResults,
+				onItemSelect = onSelectRecording,
 				modifier = Modifier.fillMaxSize(),
 			)
 		}
