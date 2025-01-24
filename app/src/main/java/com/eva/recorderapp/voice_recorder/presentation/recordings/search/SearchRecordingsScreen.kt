@@ -14,18 +14,24 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -83,16 +89,26 @@ fun SearchRecordingsScreen(
 			MediumTopAppBar(
 				title = { Text(text = stringResource(R.string.menu_option_search)) },
 				actions = {
-					IconButton(
-						onClick = {
-							scope.launch { sheetState.show() }
-								.invokeOnCompletion { showSheet = true }
+					TooltipBox(
+						positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+						tooltip = {
+							PlainTooltip {
+								Text(text = stringResource(R.string.search_filter_title))
+							}
 						},
+						state = rememberTooltipState(),
 					) {
-						Icon(
-							imageVector = Icons.Default.FilterList,
-							contentDescription = stringResource(R.string.search_filter_title)
-						)
+						IconButton(
+							onClick = {
+								scope.launch { sheetState.show() }
+									.invokeOnCompletion { showSheet = true }
+							},
+						) {
+							Icon(
+								imageVector = Icons.Default.FilterList,
+								contentDescription = stringResource(R.string.search_filter_title)
+							)
+						}
 					}
 				},
 				navigationIcon = navigation,
@@ -102,7 +118,7 @@ fun SearchRecordingsScreen(
 			)
 		},
 		snackbarHost = { SnackbarHost(snackBarProvider) },
-		modifier = modifier,
+		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
 	) { scPadding ->
 		Column(
 			modifier = Modifier
@@ -112,11 +128,13 @@ fun SearchRecordingsScreen(
 					horizontal = dimensionResource(R.dimen.sc_padding),
 					vertical = dimensionResource(R.dimen.sc_padding_secondary)
 				),
-			verticalArrangement = Arrangement.spacedBy(8.dp)
+			verticalArrangement = Arrangement.spacedBy(12.dp)
 		) {
 			SearchBarTextField(
 				query = state.searchQuery,
 				onQueryChange = { onEvent(SearchRecordingScreenEvent.OnQueryChange(it)) },
+				onVoiceInput = { onEvent(SearchRecordingScreenEvent.OnVoiceSearchResults(it)) },
+				modifier = Modifier.align(Alignment.CenterHorizontally)
 			)
 			SearchResultsContent(
 				searchResults = searchResults,

@@ -56,7 +56,7 @@ fun SearchResultsContent(
 		onDataReady = {
 			LazyColumn(
 				contentPadding = contentPadding,
-				verticalArrangement = Arrangement.spacedBy(6.dp)
+				verticalArrangement = Arrangement.spacedBy(8.dp)
 			) {
 				itemsIndexed(
 					items = searchResults,

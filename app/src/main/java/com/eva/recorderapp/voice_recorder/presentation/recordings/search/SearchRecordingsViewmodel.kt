@@ -56,10 +56,7 @@ class SearchRecordingsViewmodel @Inject constructor(
 		get() = _searchQuery.debounce(200.milliseconds)
 
 	val searchState = combine(
-		_searchQuery,
-		_categoryFilter,
-		_timeFilter,
-		transform = ::SearchRecordingScreenState
+		_searchQuery, _categoryFilter, _timeFilter, transform = ::SearchRecordingScreenState
 	).stateIn(
 		scope = viewModelScope,
 		started = SharingStarted.Eagerly,
@@ -102,23 +99,26 @@ class SearchRecordingsViewmodel @Inject constructor(
 			}
 
 			is SearchRecordingScreenEvent.OnQueryChange -> _searchQuery.update { event.text }
+			is SearchRecordingScreenEvent.OnVoiceSearchResults -> {
+				if (event.results.isEmpty()) return
+				_searchQuery.update { event.results.first() }
+			}
 		}
 	}
 
 
 	private fun populateRecordingCategories() {
-		categoriesProvider.recordingCategoryAsResourceFlow
-			.onEach { res ->
-				when (res) {
-					is Resource.Error -> {
-						val message = res.message ?: res.error.message ?: "SOME ERROR"
-						_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
-					}
-
-					is Resource.Success -> _categories.update { res.data }
-					else -> {}
+		categoriesProvider.recordingCategoryAsResourceFlow.onEach { res ->
+			when (res) {
+				is Resource.Error -> {
+					val message = res.message ?: res.error.message ?: "SOME ERROR"
+					_uiEvents.emit(UIEvents.ShowSnackBar(message = message))
 				}
-			}.launchIn(viewModelScope)
+
+				is Resource.Success -> _categories.update { res.data }
+				else -> {}
+			}
+		}.launchIn(viewModelScope)
 	}
 
 
@@ -169,8 +169,8 @@ class SearchRecordingsViewmodel @Inject constructor(
 
 			val searchText = model.displayName.lowercase()
 			val queryLowerCase = query.lowercase()
-			val isMatching = searchText.split("\\s+".toRegex())
-				.any { word -> queryLowerCase in word }
+			val isMatching =
+				searchText.split("\\s+".toRegex()).any { word -> queryLowerCase in word }
 
 			filter && isMatching
 		}.toImmutableList()
