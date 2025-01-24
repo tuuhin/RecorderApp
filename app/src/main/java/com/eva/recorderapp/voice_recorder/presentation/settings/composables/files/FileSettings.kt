@@ -32,12 +32,6 @@ fun FileSettings(
 			StorageStatistics(modifier = Modifier.fillMaxWidth())
 		}
 		item {
-			FilePrefixSelector(
-				prefix = settings.name,
-				onPrefixChange = { onEvent(FileSettingsChangeEvent.OnRecordingPrefixChange(it)) }
-			)
-		}
-		item {
 			FileNamingFormat(
 				prefix = settings.name,
 				format = settings.format,
@@ -45,15 +39,22 @@ fun FileSettings(
 			)
 		}
 		item {
-			SettingsItemWithSwitch(
-				isSelected = settings.allowExternalRead,
-				title = stringResource(id = R.string.recording_settings_file_allow_external_read),
-				text = stringResource(id = R.string.recording_settings_file_allow_external_read_text),
-				onSelect = { isEnabled ->
-					onEvent(FileSettingsChangeEvent.OnAllowExternalFiles(isEnabled))
-				},
-				enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+			FilePrefixSelector(
+				prefix = settings.name,
+				onPrefixChange = { onEvent(FileSettingsChangeEvent.OnRecordingPrefixChange(it)) }
 			)
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			item {
+				SettingsItemWithSwitch(
+					isSelected = settings.allowExternalRead,
+					title = stringResource(id = R.string.recording_settings_file_allow_external_read),
+					text = stringResource(id = R.string.recording_settings_file_allow_external_read_text),
+					onSelect = { isEnabled ->
+						onEvent(FileSettingsChangeEvent.OnAllowExternalFiles(isEnabled))
+					},
+				)
+			}
 		}
 	}
 }

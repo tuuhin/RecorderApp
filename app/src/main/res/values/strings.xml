@@ -86,7 +86,7 @@
   <string name="audio_metadata_name_title">Name</string>
   <string name="player_channel_resource_id">player_channel</string>
   <string name="show_recordings_list">List</string>
-  <string name="player_playback_speed">%.2f x</string>
+  <string name="player_playback_speed" translatable="false">%.2f x</string>
   <string name="player_action_speed">Speed</string>
   <string name="player_action_repeat">Repeat</string>
   <string name="player_action_mute">Mute</string>
@@ -162,7 +162,7 @@
   <string name="delete_category_dialog_text">Removing a category will not remove a audio item, just the references are erased.</string>
   <string name="menu_option_categories">Category</string>
   <string name="menu_option_favourite">Favourite</string>
-  <string name="categories_updated">Recordings moved to %s category.</string>
+  <string name="categories_updated" translatable="false">Recordings moved to %s category.</string>
   <string name="recordings_add_to_favourite_success">Favourites marked</string>
   <string name="recordings_remove_favourite_failed">Favourites removed</string>
   <string name="edit_category_title">Edit Category</string>
@@ -175,7 +175,7 @@
   <string name="add_new_category">New Category</string>
   <string name="category_icon_picker_title">Select an icon</string>
   <string name="category_color_title">Pick a Color</string>
-  <string name="category_icon_category">Category Icon for %s</string>
+  <string name="category_icon_category" translatable="false">Category Icon for %s</string>
   <string name="app_version_title">Version name:</string>
   <string name="add_recording_bookmark">Bookmark</string>
   <string name="bookmark_tooltip_text">Add a bookmark to your recording at a interval of a second</string>
@@ -217,6 +217,7 @@
   <string name="recorder_state_recording" translatable="false">Recording</string>
   <string name="recorder_state_paused" translatable="false">Paused</string>
   <string name="widget_recorder_widget" translatable="false">Recorder Widget</string>
+
   <string name="category_type_label">Label</string>
   <string name="category_type_important">Important</string>
   <string name="category_type_work">Work</string>
@@ -234,8 +235,11 @@
   <string name="time_filter_last_month">Last Month</string>
   <string name="time_filter_this_year">This year</string>
   <string name="search_filter_categories_title">Categories</string>
-  <string name="search_filter_date_created_title">Data Created</string>
+  <string name="search_filter_date_created_title">Date Created</string>
   <string name="search_filter_title">Filters</string>
   <string name="menu_option_search">Search</string>
-  <string name="search_bar_placeholder">Recording.</string>
+  <string name="search_bar_placeholder">Search recordings…</string>
+  <string name="no_search_results">No search results</string>
+  <string name="voice_recognizer" translatable="false">Mic Input</string>
+  <string name="voice_search_prompt" translatable="false">Speak your search query</string>
 </resources>

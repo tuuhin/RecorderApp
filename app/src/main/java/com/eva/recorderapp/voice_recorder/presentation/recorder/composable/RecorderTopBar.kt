@@ -3,6 +3,7 @@ package com.eva.recorderapp.voice_recorder.presentation.recorder.composable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -50,8 +51,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun RecorderTopBar(
 	showActions: Boolean,
@@ -78,7 +81,10 @@ fun RecorderTopBar(
 				modifier = Modifier.widthIn(min = 60.dp)
 			) { isNormal ->
 				if (isNormal) {
-					TextButton(onClick = onNavigateToRecordings) {
+					TextButton(
+						onClick = onNavigateToRecordings,
+						modifier = Modifier.sharedBoundsWrapper(key = SharedElementTransitionKeys.RECORDINGS_LIST_SHARED_BOUNDS)
+					) {
 						Text(
 							text = stringResource(id = R.string.show_recordings_list),
 							fontWeight = FontWeight.SemiBold

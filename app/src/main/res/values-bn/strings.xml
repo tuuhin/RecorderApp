@@ -84,7 +84,6 @@
   <string name="audio_metadata_name_title">নাম</string>
   <string name="player_channel_resource_id">প্লেয়ার চ্যানেল</string>
   <string name="show_recordings_list">লিস্ট</string>
-  <string name="player_playback_speed">%.2f গুণ</string>
   <string name="player_action_speed">স্পীড</string>
   <string name="player_action_repeat">পুনরাবৃত্তি করুন</string>
   <string name="player_action_mute">নিঃশব্দ</string>
@@ -153,7 +152,6 @@
   <string name="delete_category_dialog_text">একটি বিভাগ সরানো একটি অডিও আইটেম মুছে ফেলা হবে না, শুধুমাত্র রেফারেন্স মুছে ফেলা হয়</string>
   <string name="menu_option_categories">ক্যাটাগরি</string>
   <string name="menu_option_favourite">প্রিয়</string>
-  <string name="categories_updated">রেকর্ডিংগুলি %s বিভাগে সরানো হয়েছে৷</string>
   <string name="recordings_add_to_favourite_success">পছন্দসই চিহ্নিত</string>
   <string name="recordings_remove_favourite_failed">প্রিয় সরানো হয়েছে</string>
   <string name="edit_category_title">বিভাগ সম্পাদনা করুন</string>
@@ -166,7 +164,6 @@
   <string name="add_new_category">নতুন ক্যাটাগরি</string>
   <string name="category_icon_picker_title">বিভাগ প্রকার</string>
   <string name="category_color_title">ক্যাটাগরি কালার</string>
-  <string name="category_icon_category">%s-এর জন্য বিভাগ আইকন</string>
   <string name="app_version_title">সংস্করণ:</string>
   <string name="add_recording_bookmark">বুকমার্ক</string>
   <string name="bookmark_tooltip_text">এক সেকেন্ডের ব্যবধানে আপনার রেকর্ডিংয়ে একটি বুকমার্ক যোগ করুন</string>
@@ -211,9 +208,10 @@
   <string name="time_filter_last_month">গত মাসে</string>
   <string name="time_filter_this_year">এই বছর</string>
   <string name="search_filter_categories_title">বিভাগ</string>
-  <string name="search_filter_date_created_title">ডেট তৈরি</string>
+  <string name="search_filter_date_created_title">তারিখ তৈরি</string>
   <string name="search_filter_title">ফিল্টার</string>
   <string name="menu_option_search">অনুসন্ধান</string>
-  <string name="search_bar_placeholder">রেকর্ডিং।</string>
+  <string name="search_bar_placeholder">ররেকর্ডিং অনুসন্ধান করুন…</string>
+  <string name="no_search_results">কোন অনুসন্ধান ফলাফল</string>
 </resources>
 
