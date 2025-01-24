@@ -6,8 +6,7 @@ recordings.With a clean and intuitive interface, this app offers a seamless user
 ## 💁 About
 
 A fully functioned recorder app with an ability to record over multiple media codec like **acc**,*
-*amr**,**opus** over different quality. The app can continue its recording in the background, so
-you
+*amr**,**opus** over different quality. The app can continue its recording in the background, so you
 never miss a moment. Once the recording, you can easily manage your files within the app.
 There `built-in player`, you can listen to your recordings directly within the app or use the
 convenient media notification for playback control.
@@ -47,6 +46,7 @@ These are some screen shorts for the app
    <img src="./screenshots/recordings_framed.png" width="24%" />
    <img src="./screenshots/player_base_framed.png" width="24%" />
    <img src="./screenshots/app_settings_framed.png" width="24%" />
+   <img src="./screenshots/recordings_search_screen_framed.png" width="24%">
    <img src="./screenshots/recording_categories_framed.png" width="24%" />
    <img src="./screenshots/player_bookmarks_framed.png" width="24%" />
    <img src="./screenshots/app_widget_preview_framed.png" width="24%" />
@@ -70,6 +70,16 @@ playing stuff.
 - :world_map: **Location** : Some mediacodec like `acc` and `three_gpp` can add a additional
   location data with the recording.You can view this location data on other devices which can read
   metadata.
+
+## :new: What's new
+
+The current version have these new changes added to the app
+
+- **Search recordings** Finding old recording was a mess thus a search feature is added, user can
+  search via `time`, `category` and obviously via name
+
+- **Transitions** Added some shared bounds transition to the app,animations like
+  `containter-transform` is added.
 
 ## :hammer_and_wrench: Getting Started
 
