@@ -26,6 +26,7 @@
   <string name="recording_trash_request_failed">Cannot move recordings to trash</string>
   <string name="recording_action_trash">Remove</string>
   <string name="no_recordings">No recording to display</string>
+  <string name="no_recordings_in_bin">No recordings present in bin</string>
   <string name="recording_bin_top_bar_title" translatable="false">Bin</string>
   <string name="recording_info_expires_at">Expires At: %s</string>
   <string name="recording_delete_request_success">Recordings Deleted Successfully</string>
@@ -50,7 +51,7 @@
   <string name="share_intent_choose_title">Select an application to share files</string>
   <string name="rename_recording_dialog_title">Rename Recording</string>
   <string name="rename_recording_dialog_text">Rename selected recording, no need to add extension.</string>
-  <string name="rename_label_text">New Name</string>
+  <string name="rename_label_text">Enter category name</string>
   <string name="rename_recording_action">Rename</string>
   <string name="recorder_action_start">Record</string>
   <string name="recorder_action_cancel">Cancel</string>
@@ -85,7 +86,7 @@
   <string name="audio_metadata_name_title">Name</string>
   <string name="player_channel_resource_id">player_channel</string>
   <string name="show_recordings_list">List</string>
-  <string name="player_playback_speed">%.2f x</string>
+  <string name="player_playback_speed" translatable="false">%.2f x</string>
   <string name="player_action_speed">Speed</string>
   <string name="player_action_repeat">Repeat</string>
   <string name="player_action_mute">Mute</string>
@@ -156,12 +157,12 @@
   <string name="menu_option_create">Create</string>
   <string name="no_categories_found">No Categories added</string>
   <string name="create_category_title">Create Category</string>
-  <string name="create_new_category_text">Categories, help recordings to be grouped together.</string>
+  <string name="create_new_category_text">Group your categories with custom categories.</string>
   <string name="delete_category_dialog_title">Remove Category</string>
   <string name="delete_category_dialog_text">Removing a category will not remove a audio item, just the references are erased.</string>
   <string name="menu_option_categories">Category</string>
   <string name="menu_option_favourite">Favourite</string>
-  <string name="categories_updated">Recordings moved to %s category.</string>
+  <string name="categories_updated" translatable="false">Recordings moved to %s category.</string>
   <string name="recordings_add_to_favourite_success">Favourites marked</string>
   <string name="recordings_remove_favourite_failed">Favourites removed</string>
   <string name="edit_category_title">Edit Category</string>
@@ -172,9 +173,9 @@
   <string name="create_category_action">Create</string>
   <string name="edit_category_action">Edit</string>
   <string name="add_new_category">New Category</string>
-  <string name="category_type_title">Category Type</string>
-  <string name="category_color_title">Category Color</string>
-  <string name="category_icon_category">Category Icon for %s</string>
+  <string name="category_icon_picker_title">Select an icon</string>
+  <string name="category_color_title">Pick a Color</string>
+  <string name="category_icon_category" translatable="false">Category Icon for %s</string>
   <string name="app_version_title">Version name:</string>
   <string name="add_recording_bookmark">Bookmark</string>
   <string name="bookmark_tooltip_text">Add a bookmark to your recording at a interval of a second</string>
@@ -216,4 +217,29 @@
   <string name="recorder_state_recording" translatable="false">Recording</string>
   <string name="recorder_state_paused" translatable="false">Paused</string>
   <string name="widget_recorder_widget" translatable="false">Recorder Widget</string>
+
+  <string name="category_type_label">Label</string>
+  <string name="category_type_important">Important</string>
+  <string name="category_type_work">Work</string>
+  <string name="category_type_music">Music</string>
+  <string name="category_type_group">Group</string>
+  <string name="category_type_song">Song</string>
+  <string name="category_type_study">Study</string>
+  <string name="category_type_message">Message</string>
+  <string name="category_type_unknown">Unknown</string>
+  <string name="menu_option_edit">Edit</string>
+  <string name="time_filter_today">Today</string>
+  <string name="time_filter_yesterday">Yesterday</string>
+  <string name="time_filter_week">This Week</string>
+  <string name="time_filter_this_month">This Month</string>
+  <string name="time_filter_last_month">Last Month</string>
+  <string name="time_filter_this_year">This year</string>
+  <string name="search_filter_categories_title">Categories</string>
+  <string name="search_filter_date_created_title">Date Created</string>
+  <string name="search_filter_title">Filters</string>
+  <string name="menu_option_search">Search</string>
+  <string name="search_bar_placeholder">Search recordings…</string>
+  <string name="no_search_results">No search results</string>
+  <string name="voice_recognizer" translatable="false">Mic Input</string>
+  <string name="voice_search_prompt" translatable="false">Speak your search query</string>
 </resources>

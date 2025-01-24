@@ -4,12 +4,6 @@ import com.eva.recorderapp.voice_recorder.domain.categories.models.RecordingCate
 
 sealed interface CategoriesScreenEvent {
 
-	data class OnToggleSelection(val category: RecordingCategoryModel) : CategoriesScreenEvent
-
-	data object OnSelectAll : CategoriesScreenEvent
-
-	data object OnUnSelectAll : CategoriesScreenEvent
-
-	data object OnDeleteSelected : CategoriesScreenEvent
+	data class OnDeleteCategory(val category: RecordingCategoryModel) : CategoriesScreenEvent
 
 }

@@ -26,6 +26,7 @@
   <string name="recording_trash_request_failed">রেকর্ডিংগুলিকে ট্র্যাশে সরানো যাবে না৷</string>
   <string name="recording_action_trash">সরান</string>
   <string name="no_recordings">প্রদর্শনের জন্য কোনো রেকর্ডিং নেই</string>
+  <string name="no_recordings_in_bin">বিন উপস্থিত কোনো রেকর্ডিং</string>
   <string name="recording_bin_top_bar_title">বিন</string>
   <string name="recording_info_expires_at">মেয়াদ শেষ হবে: %s</string>
   <string name="recording_delete_request_success">রেকর্ডিং সফলভাবে মুছে ফেলা হয়েছে</string>
@@ -83,7 +84,6 @@
   <string name="audio_metadata_name_title">নাম</string>
   <string name="player_channel_resource_id">প্লেয়ার চ্যানেল</string>
   <string name="show_recordings_list">লিস্ট</string>
-  <string name="player_playback_speed">%.2f গুণ</string>
   <string name="player_action_speed">স্পীড</string>
   <string name="player_action_repeat">পুনরাবৃত্তি করুন</string>
   <string name="player_action_mute">নিঃশব্দ</string>
@@ -152,7 +152,6 @@
   <string name="delete_category_dialog_text">একটি বিভাগ সরানো একটি অডিও আইটেম মুছে ফেলা হবে না, শুধুমাত্র রেফারেন্স মুছে ফেলা হয়</string>
   <string name="menu_option_categories">ক্যাটাগরি</string>
   <string name="menu_option_favourite">প্রিয়</string>
-  <string name="categories_updated">রেকর্ডিংগুলি %s বিভাগে সরানো হয়েছে৷</string>
   <string name="recordings_add_to_favourite_success">পছন্দসই চিহ্নিত</string>
   <string name="recordings_remove_favourite_failed">প্রিয় সরানো হয়েছে</string>
   <string name="edit_category_title">বিভাগ সম্পাদনা করুন</string>
@@ -163,9 +162,8 @@
   <string name="create_category_action">তৈরি করুন</string>
   <string name="edit_category_action">সম্পাদনা করুন</string>
   <string name="add_new_category">নতুন ক্যাটাগরি</string>
-  <string name="category_type_title">বিভাগ প্রকার</string>
+  <string name="category_icon_picker_title">বিভাগ প্রকার</string>
   <string name="category_color_title">ক্যাটাগরি কালার</string>
-  <string name="category_icon_category">%s-এর জন্য বিভাগ আইকন</string>
   <string name="app_version_title">সংস্করণ:</string>
   <string name="add_recording_bookmark">বুকমার্ক</string>
   <string name="bookmark_tooltip_text">এক সেকেন্ডের ব্যবধানে আপনার রেকর্ডিংয়ে একটি বুকমার্ক যোগ করুন</string>
@@ -193,5 +191,27 @@
   <string name="write_request_accepted">রিনেম করার অনুরোধ গৃহীত হয়েছে</string>
   <string name="write_request_rejected">রিনেম করার অনুরোধ প্রত্যাখ্যান করা হয়েছে</string>
   <string name="other_app_subtitle">অন্যান্য অ্যাপ</string>
+  <string name="category_type_label">লেবেল</string>
+  <string name="category_type_important">গুরুত্বপূর্ণ</string>
+  <string name="category_type_work">কাজ</string>
+  <string name="category_type_music">সঙ্গীত</string>
+  <string name="category_type_group">দল</string>
+  <string name="category_type_song">গান</string>
+  <string name="category_type_study">অধ্যয়ন</string>
+  <string name="category_type_message">বার্তা</string>
+  <string name="category_type_unknown">অজানা</string>
+  <string name="menu_option_edit">সম্পাদনা</string>
+  <string name="time_filter_today">আজ</string>
+  <string name="time_filter_yesterday">গতকাল</string>
+  <string name="time_filter_week">এই সপ্তাহে</string>
+  <string name="time_filter_this_month">এই মাসে</string>
+  <string name="time_filter_last_month">গত মাসে</string>
+  <string name="time_filter_this_year">এই বছর</string>
+  <string name="search_filter_categories_title">বিভাগ</string>
+  <string name="search_filter_date_created_title">তারিখ তৈরি</string>
+  <string name="search_filter_title">ফিল্টার</string>
+  <string name="menu_option_search">অনুসন্ধান</string>
+  <string name="search_bar_placeholder">ররেকর্ডিং অনুসন্ধান করুন…</string>
+  <string name="no_search_results">কোন অনুসন্ধান ফলাফল</string>
 </resources>
 

@@ -33,4 +33,7 @@ sealed interface NavRoutes {
 		val recordingIds: Collection<Long> = emptyList(),
 	) : NavRoutes
 
+	@Serializable
+	data object SearchRecordings : NavRoutes
+
 }

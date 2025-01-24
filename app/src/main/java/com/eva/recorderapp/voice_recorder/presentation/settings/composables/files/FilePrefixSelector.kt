@@ -9,11 +9,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -29,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,12 +44,11 @@ import androidx.compose.ui.window.DialogProperties
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilePrefixSelector(
 	prefix: String,
 	onPrefixChange: (String) -> Unit,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 
 	var showDialog by remember {
@@ -70,11 +74,19 @@ fun FilePrefixSelector(
 				style = MaterialTheme.typography.titleMedium
 			)
 		},
+		leadingContent = {
+			Icon(
+				imageVector = Icons.Outlined.TextFields,
+				contentDescription = stringResource(id = R.string.recording_settings_change_name_prefix)
+			)
+		},
 		supportingContent = { Text(text = prefix) },
 		modifier = modifier
 			.clip(shape = MaterialTheme.shapes.medium)
 			.clickable { showDialog = true },
-		tonalElevation = 0.dp
+		tonalElevation = 0.dp,
+		shadowElevation = 0.dp,
+		colors = ListItemDefaults.colors(containerColor = Color.Transparent)
 	)
 }
 
@@ -87,7 +99,7 @@ private fun RenamePrefixDialog(
 	onTextFieldValueChange: (TextFieldValue) -> Unit,
 	onDismiss: () -> Unit,
 	onRename: (TextFieldValue) -> Unit,
-	modifier: Modifier = Modifier, properties: DialogProperties = DialogProperties()
+	modifier: Modifier = Modifier, properties: DialogProperties = DialogProperties(),
 ) {
 	if (!showDialog) return
 

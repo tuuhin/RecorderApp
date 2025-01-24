@@ -1,6 +1,7 @@
 package com.eva.recorderapp.voice_recorder.presentation.recordings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -42,10 +43,12 @@ import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.Rec
 import com.eva.recorderapp.voice_recorder.presentation.recordings.util.state.SelectableRecordings
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun RecordingsScreen(
 	isRecordingsLoaded: Boolean,
@@ -60,6 +63,7 @@ fun RecordingsScreen(
 	onShowRenameDialog: (RecordedVoiceModel?) -> Unit = {},
 	onMoveToCategory: (Collection<RecordedVoiceModel>) -> Unit = {},
 	onNavigationToCategories: () -> Unit = {},
+	onNavigateToSearch: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 ) {
 	val snackBarProvider = LocalSnackBarProvider.current
@@ -110,6 +114,7 @@ fun RecordingsScreen(
 				selectedCount = selectedCount,
 				navigation = navigation,
 				onManageCategories = onNavigationToCategories,
+				onNavigateToSearch = onNavigateToSearch,
 				onUnSelectAll = { onScreenEvent(RecordingScreenEvent.OnUnSelectAllRecordings) },
 				onSelectAll = { onScreenEvent(RecordingScreenEvent.OnSelectAllRecordings) },
 				onSortItems = {
@@ -146,7 +151,8 @@ fun RecordingsScreen(
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
-		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+			.sharedBoundsWrapper(key = SharedElementTransitionKeys.RECORDINGS_LIST_SHARED_BOUNDS),
 	) { scPadding ->
 		MediaAccessPermissionWrapper(
 			onLoadRecordings = { onScreenEvent(RecordingScreenEvent.PopulateRecordings) },

@@ -23,7 +23,7 @@ object UseCasesModule {
 		secondaryRecordingsData: RecordingsSecondaryDataProvider,
 	): RecordingsFromCategoriesUseCase = RecordingsFromCategoriesUseCase(
 		recordings = recordings,
-		secondaryRecordings = secondaryRecordingsData
+		secondaryDataProvider = secondaryRecordingsData
 	)
 
 	@Provides

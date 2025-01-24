@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,7 +18,8 @@ import com.eva.recorderapp.voice_recorder.presentation.navigation.util.UiEventsS
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.animatedComposable
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinScreen
 import com.eva.recorderapp.voice_recorder.presentation.recordings.RecordingsBinViewmodel
-import com.eva.recorderapp.voice_recorder.presentation.recordings.util.handlers.DeleteRecordingRequestHandler
+import com.eva.recorderapp.voice_recorder.presentation.recordings.handlers.DeleteRecordingRequestHandler
+import com.eva.recorderapp.voice_recorder.presentation.util.LocalSharedTransitionVisibilityScopeProvider
 
 fun NavGraphBuilder.trashRecordingsRoute(
 	controller: NavController,
@@ -35,21 +37,23 @@ fun NavGraphBuilder.trashRecordingsRoute(
 	val recordings by viewModel.trashRecordings.collectAsStateWithLifecycle()
 	val isLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
 
-	RecordingsBinScreen(
-		isRecordingsLoaded = isLoaded,
-		recordings = recordings,
-		onScreenEvent = viewModel::onScreenEvent,
-		navigation = {
-			if (controller.previousBackStackEntry?.destination?.route != null) {
-				IconButton(
-					onClick = dropUnlessResumed(block = controller::popBackStack)
-				) {
-					Icon(
-						imageVector = Icons.AutoMirrored.Default.ArrowBack,
-						contentDescription = stringResource(R.string.back_arrow)
-					)
+	CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
+		RecordingsBinScreen(
+			isRecordingsLoaded = isLoaded,
+			recordings = recordings,
+			onScreenEvent = viewModel::onScreenEvent,
+			navigation = {
+				if (controller.previousBackStackEntry?.destination?.route != null) {
+					IconButton(
+						onClick = dropUnlessResumed(block = controller::popBackStack)
+					) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = stringResource(R.string.back_arrow)
+						)
+					}
 				}
-			}
-		},
-	)
+			},
+		)
+	}
 }

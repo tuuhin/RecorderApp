@@ -23,20 +23,20 @@ import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderConstants
-import com.eva.recorderapp.voice_recorder.presentation.recorder.util.RecorderDrawGraphUtil.drawAmplitudeGraph
-import com.eva.recorderapp.voice_recorder.presentation.recorder.util.RecorderDrawGraphUtil.drawRecorderTimeline
+import com.eva.recorderapp.voice_recorder.presentation.recorder.util.drawAmplitudeGraph
+import com.eva.recorderapp.voice_recorder.presentation.recorder.util.drawRecorderTimeline
+import com.eva.recorderapp.voice_recorder.presentation.util.BookMarksDeferredCallback
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
 import com.eva.recorderapp.voice_recorder.presentation.util.RecordingDataPointCallback
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.LocalTime
 
 @Composable
 fun RecorderAmplitudeGraph(
-	dataPointCallback: RecordingDataPointCallback,
-	bookMarks: ImmutableList<LocalTime>,
+	amplitudesCallback: RecordingDataPointCallback,
+	bookMarksDeferred: BookMarksDeferredCallback,
 	modifier: Modifier = Modifier,
-	plotColor: Color = MaterialTheme.colorScheme.secondary,
+	chartColor: Color = MaterialTheme.colorScheme.secondary,
 	bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
 	timelineColor: Color = MaterialTheme.colorScheme.outline,
 	timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
@@ -71,7 +71,7 @@ fun RecorderAmplitudeGraph(
 					}
 
 					onDrawBehind {
-						val result = dataPointCallback()
+						val result = amplitudesCallback()
 
 						val amplitudes = result.map { it.second }
 
@@ -84,7 +84,7 @@ fun RecorderAmplitudeGraph(
 						val bookmarksToDraw = if (timeline.isNotEmpty())
 						// min is required not to draw extra lines and max ensures it doesn't
 						// cross the line
-							bookMarks.filter { time -> time > timeline.min() && time < timeline.max() }
+							bookMarksDeferred().filter { time -> time > timeline.min() && time < timeline.max() }
 						// otherwise its empty
 						else emptyList()
 
@@ -94,7 +94,7 @@ fun RecorderAmplitudeGraph(
 								spikesGap = spikesGap,
 								centerYAxis = centerYAxis,
 								spikesWidth = spikesWidth,
-								barColor = plotColor,
+								barColor = chartColor,
 							)
 							drawRecorderTimeline(
 								image = tag,
@@ -122,11 +122,13 @@ fun RecorderAmplitudeGraph(
 @Composable
 private fun RecorderAmplitudeGraphPreview() = RecorderAppTheme {
 	RecorderAmplitudeGraph(
-		dataPointCallback = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY },
-		bookMarks = persistentListOf(
-			LocalTime.fromSecondOfDay(2),
-			LocalTime.fromSecondOfDay(4)
-		),
+		amplitudesCallback = { PreviewFakes.PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY },
+		bookMarksDeferred = {
+			persistentListOf(
+				LocalTime.fromSecondOfDay(2),
+				LocalTime.fromSecondOfDay(4)
+			)
+		},
 		modifier = Modifier.fillMaxWidth(),
 	)
 }

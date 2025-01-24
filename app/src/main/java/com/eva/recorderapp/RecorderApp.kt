@@ -10,7 +10,7 @@ import androidx.work.Configuration
 import com.eva.recorderapp.common.NotificationConstants
 import com.eva.recorderapp.voice_recorder.data.worker.RemoveTrashRecordingWorker
 import com.eva.recorderapp.voice_recorder.data.worker.UpdateRecordingPathWorker
-import com.eva.recorderapp.voice_recorder.domain.util.AppShortcutFacade
+import com.eva.recorderapp.voice_recorder.domain.interactions.AppShortcutFacade
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

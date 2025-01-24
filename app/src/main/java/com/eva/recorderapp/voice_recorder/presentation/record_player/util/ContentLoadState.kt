@@ -10,27 +10,18 @@ sealed interface ContentLoadState {
 	data object Unknown : ContentLoadState
 
 	@Composable
-	fun OnContent(content: @Composable (AudioFileModel) -> Unit) {
-		(this as? ContentLoadState.Content)?.let {
-			content(it.data)
-		}
-	}
-
-	@Composable
-	fun OnUnknown(content: @Composable () -> Unit) {
-		(this as? ContentLoadState.Unknown)?.let { content() }
-	}
-
-	@Composable
-	fun OnState(
-		onLoading: @Composable () -> Unit,
-		onContent: @Composable (AudioFileModel) -> Unit,
-		onUnknown: @Composable () -> Unit
+	fun OnContentOrOther(
+		content: @Composable (AudioFileModel) -> Unit,
+		onOther: @Composable () -> Unit,
 	) {
 		when (this) {
-			is Content -> onContent(this.data)
-			Loading -> onLoading()
-			Unknown -> onUnknown()
+			is Content -> content(data)
+			else -> onOther()
 		}
+	}
+
+	@Composable
+	fun OnContent(content: @Composable (AudioFileModel) -> Unit) {
+		if (this is Content) content(data)
 	}
 }

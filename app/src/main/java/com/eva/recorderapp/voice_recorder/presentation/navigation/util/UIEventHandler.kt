@@ -6,6 +6,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -25,13 +26,12 @@ fun UiEventsSideEffect(
 	val lifecyleOwner = LocalLifecycleOwner.current
 	val snackBarState = LocalSnackBarProvider.current
 
-	val uiEvents by rememberUpdatedState(newValue = eventsFlow)
+	val rememberedFlow = remember(eventsFlow) { eventsFlow() }
 	val updatedPopScreenEvent by rememberUpdatedState(newValue = onPopScreenEvent)
 
-	LaunchedEffect(key1 = lifecyleOwner) {
+	LaunchedEffect(key1 = lifecyleOwner, key2 = rememberedFlow) {
 		lifecyleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-			val flow = uiEvents()
-			flow.collect { event ->
+			rememberedFlow.collect { event ->
 				when (event) {
 					is UIEvents.ShowToast -> {
 						Toast.makeText(context, event.message, Toast.LENGTH_SHORT)
@@ -51,7 +51,11 @@ fun UiEventsSideEffect(
 						}
 					}
 
-					is UIEvents.ShowSnackBar -> snackBarState.showSnackbar(message = event.message)
+					is UIEvents.ShowSnackBar -> snackBarState.showSnackbar(
+						message = event.message,
+						duration = SnackbarDuration.Short
+					)
+
 					UIEvents.PopScreen -> updatedPopScreenEvent()
 				}
 			}

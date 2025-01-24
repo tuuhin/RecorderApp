@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -19,25 +20,27 @@ import com.eva.recorderapp.voice_recorder.data.service.VoiceRecorderService
 
 @Composable
 fun RecorderServiceBinder(
-	content: @Composable (isBounded: Boolean, service: VoiceRecorderService?) -> Unit,
+	content: @Composable (service: VoiceRecorderService?) -> Unit,
 ) {
 
 	val lifeCycleOwner = LocalLifecycleOwner.current
 	val context = LocalContext.current
 
-	var isBounded by remember { mutableStateOf(false) }
+	// nothing on inspection mode
+	// cannot bind services in preview mode
+	if (LocalInspectionMode.current) return
+
 	var mService by remember { mutableStateOf<VoiceRecorderService?>(null) }
+
 
 	val serviceConnection = remember {
 		object : ServiceConnection {
 			override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
 				val binder = service as? VoiceRecorderService.LocalBinder
 				mService = binder?.getService()
-				isBounded = true
 			}
 
 			override fun onServiceDisconnected(name: ComponentName?) {
-				isBounded = false
 				mService = null
 			}
 		}
@@ -65,6 +68,5 @@ fun RecorderServiceBinder(
 		}
 	}
 
-	content(isBounded, mService)
-
+	content(mService)
 }

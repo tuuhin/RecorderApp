@@ -11,59 +11,77 @@ typealias ResourcedVoiceRecordingModels = Resource<List<RecordedVoiceModel>, Exc
 interface VoiceRecordingsProvider {
 
 	/**
-	 * A flow of recorded voice models, settings can be configured to allow
-	 * other recording files to be read.
-	 * @return a flow version of [ResourcedVoiceRecordingModels]
-	 * @see getVoiceRecordings to fetch [VoiceRecordingModels] normally use this.
-	 * @see
-	 * @throws Exception aren't handled here make sure to wrap this inside a `try-catch`.
+	 * Provides a flow of recorded voice models. Settings can be configured to allow
+	 * reading of recordings from other apps.
+	 *
+	 * @return A flow of [VoiceRecordingModels].
+	 * @see getVoiceRecordings For fetching [VoiceRecordingModels] directly (without a flow).
+	 * @throws Exception Exceptions are not handled within the flow. Ensure proper error handling,
+	 *                   e.g., using `catch` or `try-catch` when collecting the flow.
 	 */
 	val voiceRecordingsFlow: Flow<VoiceRecordingModels>
 
 	/**
-	 * A flow of [ResourcedVoiceRecordingModels] who's [RecordedVoiceModel.owner] is always this app.
+	 * Provides a flow of [ResourcedVoiceRecordingModels] containing recordings owned by this app.
+	 *
 	 * @see RecordedVoiceModel
 	 */
 	val voiceRecordingsOnlyThisApp: Flow<ResourcedVoiceRecordingModels>
 
 	/**
-	 * Gets the current recordings of the current package or all recordings
-	 * determined by [queryAllRecordings]
-	 * @param queryAllRecordings Flag to indicate if external recordings are to be evaluated too
+	 * Retrieves the current recordings. The scope of recordings retrieved (this app only or all)
+	 * is determined by the [queryOthers] parameter.
+	 *
+	 * @param queryOthers If `true`, includes recordings from other apps; otherwise, only
+	 *                           retrieves recordings owned by this app. Defaults to `false`.
+	 * @return A list of [VoiceRecordingModels].
 	 */
-	suspend fun getVoiceRecordings(queryAllRecordings: Boolean = false): VoiceRecordingModels
+	suspend fun getVoiceRecordings(queryOthers: Boolean = false): VoiceRecordingModels
 
-
+	/**
+	 * Retrieves a specific  recording as a [Resource] format by its ID.
+	 *
+	 * @param recordingId The ID of the recording to retrieve.
+	 * @return A [Resource] containing either the [RecordedVoiceModel] or an [Exception].
+	 */
 	suspend fun getVoiceRecordingAsResourceFromId(recordingId: Long): Resource<RecordedVoiceModel, Exception>
 
 	/**
-	 * Deleted the current recording from the given uri, tries to delete
-	 * the values associated with the uri, the uri's owner package should be
-	 * this app , otherwise  a [Resource.Error]
+	 * Deletes a recording based on its URI. This method only allows deletion of recordings owned
+	 * by this app.
+	 *
+	 * @param uri The URI of the recording to delete.
+	 * @return A [Resource] indicating success (Unit) or failure (an [Exception]). Returns a
+	 *         [Resource.Error] if the URI is not owned by this app.
 	 */
-	suspend fun deleteFileFromUri(uri: Uri): Resource<Boolean, Exception>
+	suspend fun deleteFileFromUri(uri: Uri): Resource<Unit, Exception>
 
 	/**
-	 * Same as [deleteFileFromUri] just rather than submitting the uri to be deleted we pass
-	 * the id for the entry. Again the [id] of the matching uri's owner package should be this one
-	 * otherwise [Resource.Error]
+	 * Deletes a recording based on its ID. This method only allows deletion of recordings owned
+	 * by this app.
+	 *
+	 * @param id The ID of the recording to delete.
+	 * @return A [Resource] indicating success (Unit) or failure (an [Exception]). Returns a
+	 *         [Resource.Error] if the ID does not correspond to a recording owned by this app.
 	 */
-	suspend fun deleteFileFromId(id: Long): Resource<Boolean, Exception>
+	suspend fun deleteFileFromId(id: Long): Resource<Unit, Exception>
 
 	/**
-	 * Permanently deletes recordings. Remember if these are deleted they cannot be recovered anymore
-	 * @param recordings a [Collection] of [RecordedVoiceModel] to be removed permanently
-	 * @return [Resource] indicating [recordings] are deleted successfully or there is any error
+	 * Permanently deletes a collection of recordings. This action is irreversible.
+	 *
+	 * @param recordings A collection of [RecordedVoiceModel] objects to delete.
+	 * @return A [Resource] indicating success (Unit) or failure (an [Exception]).
 	 */
 	suspend fun permanentlyDeleteRecordedVoices(recordings: Collection<RecordedVoiceModel>): Resource<Unit, Exception>
 
 	/**
-	 * Renames the previous recording to a new name
-	 * @param recording Three [RecordedVoiceModel] whose name need to be changed
-	 * @param newName New name for the file
-	 * @return a flow indicating everything performed well
+	 * Renames a recording.
+	 *
+	 * @param recording The [RecordedVoiceModel] to rename.
+	 * @param newName The new name for the recording.
+	 * @return A flow emitting [Resource] objects indicating the success or failure of the rename operation.
 	 */
 	fun renameRecording(recording: RecordedVoiceModel, newName: String)
-			: Flow<Resource<Boolean, Exception>>
+			: Flow<Resource<Unit, Exception>>
 
 }

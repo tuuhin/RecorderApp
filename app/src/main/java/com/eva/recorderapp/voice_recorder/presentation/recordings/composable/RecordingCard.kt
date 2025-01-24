@@ -2,6 +2,9 @@ package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,9 +30,12 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
@@ -46,9 +52,11 @@ import com.eva.recorderapp.common.LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.domain.recordings.models.RecordedVoiceModel
 import com.eva.recorderapp.voice_recorder.presentation.util.PreviewFakes
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 import kotlinx.datetime.format
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun RecordingCard(
 	music: RecordedVoiceModel,
@@ -68,16 +76,6 @@ fun RecordingCard(
 		music.owner ?: context.getString(R.string.other_app_subtitle)
 	}
 
-
-	val clickModifier = if (isSelectable)
-		Modifier.clickable(onClick = onItemSelect, onClickLabel = "Item Selected")
-	else Modifier.combinedClickable(
-		onClick = onItemClick,
-		onLongClick = onItemSelect,
-		onClickLabel = "Item Clicked",
-		onLongClickLabel = "Item Selected"
-	)
-
 	val cardColor = if (!isSelected) CardDefaults.elevatedCardColors()
 	else CardDefaults.cardColors()
 
@@ -86,8 +84,13 @@ fun RecordingCard(
 		shape = shape,
 		elevation = CardDefaults.elevatedCardElevation(pressedElevation = 4.dp),
 		modifier = modifier
-			.clip(shape)
-			.then(clickModifier),
+			.recordingCardCombinedClick(isSelectable, onItemClick, onItemSelect)
+			.sharedBoundsWrapper(
+				key = SharedElementTransitionKeys.recordSharedEntryContainer(music.id),
+				resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+				enter = fadeIn(animationSpec = tween(easing = EaseOut, durationMillis = 300)),
+				exit = fadeOut(animationSpec = tween(easing = EaseOut, durationMillis = 300)),
+			),
 	) {
 		Row(
 			horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -109,7 +112,6 @@ fun RecordingCard(
 						colors = RadioButtonDefaults
 							.colors(selectedColor = MaterialTheme.colorScheme.secondary),
 						modifier = Modifier.size(24.dp)
-
 					)
 				else
 					Image(
@@ -128,12 +130,15 @@ fun RecordingCard(
 				Text(
 					text = music.displayName,
 					style = MaterialTheme.typography.titleMedium,
-					color = MaterialTheme.colorScheme.primary
+					color = MaterialTheme.colorScheme.primary,
+					modifier = Modifier.sharedBoundsWrapper(
+						key = SharedElementTransitionKeys.recordSharedEntryTitle(music.id)
+					)
 				)
 				Text(
 					text = music.durationAsLocaltime.format(NOTIFICATION_TIMER_TIME_FORMAT),
 					style = MaterialTheme.typography.bodyMedium,
-					color = MaterialTheme.colorScheme.onBackground
+					color = MaterialTheme.colorScheme.onBackground,
 				)
 				AnimatedVisibility(
 					visible = isSelectable && otherAppText != null,
@@ -173,6 +178,32 @@ fun RecordingCard(
 			}
 		}
 	}
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Modifier.recordingCardCombinedClick(
+	isSelectable: Boolean,
+	onItemClick: () -> Unit,
+	onItemSelect: () -> Unit,
+	clipShape: Shape = MaterialTheme.shapes.medium,
+) = composed {
+
+	val onItemClickUpdatedState by rememberUpdatedState(onItemClick)
+	val onItemSelectUpdatedState by rememberUpdatedState(onItemSelect)
+
+	val clickModifier = if (isSelectable) clickable(
+		onClick = onItemSelectUpdatedState,
+		onClickLabel = "Item Selected"
+	)
+	else combinedClickable(
+		onClick = onItemClickUpdatedState,
+		onLongClick = onItemSelectUpdatedState,
+		onClickLabel = "Item Clicked",
+		onLongClickLabel = "Item Selected"
+	)
+
+	clip(clipShape).then(clickModifier)
 }
 
 @PreviewLightDark

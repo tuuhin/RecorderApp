@@ -2,6 +2,7 @@ package com.eva.recorderapp.voice_recorder.presentation.recordings.composable
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
@@ -13,7 +14,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -24,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarColors
@@ -40,14 +45,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun RecordingsScreenTopBar(
 	isSelectedMode: Boolean,
@@ -59,6 +67,7 @@ fun RecordingsScreenTopBar(
 	navigation: @Composable () -> Unit = {},
 	onNavigateToBin: () -> Unit = {},
 	onSortItems: () -> Unit = {},
+	onNavigateToSearch: () -> Unit = {},
 	onManageCategories: () -> Unit = {},
 	colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(
 		actionIconContentColor = MaterialTheme.colorScheme.primary,
@@ -78,7 +87,11 @@ fun RecordingsScreenTopBar(
 		if (isSelected) {
 			MediumTopAppBar(
 				title = {
-					Text(text = stringResource(R.string.selected_recording_count, selectedCount))
+					Text(
+						text = stringResource(
+							R.string.selected_recording_count, selectedCount
+						)
+					)
 				},
 				navigationIcon = {
 					TooltipBox(
@@ -133,10 +146,13 @@ fun RecordingsScreenTopBar(
 					},
 					state = rememberTooltipState(),
 				) {
-					IconButton(onClick = onNavigateToBin) {
-						Icon(
-							painter = painterResource(id = R.drawable.ic_recycle),
-							contentDescription = stringResource(id = R.string.menu_option_recycle_bin)
+					TextButton(
+						onClick = onNavigateToBin,
+						modifier = Modifier.sharedBoundsWrapper(key = SharedElementTransitionKeys.RECORDING_BIN_SHARED_BOUNDS)
+					) {
+						Text(
+							text = stringResource(R.string.recording_bin_top_bar_title),
+							fontWeight = FontWeight.SemiBold
 						)
 					}
 				}
@@ -168,7 +184,7 @@ fun RecordingsScreenTopBar(
 							onClick = onManageCategories,
 							leadingIcon = {
 								Icon(
-									painter = painterResource(id = R.drawable.ic_category),
+									imageVector = Icons.Default.Category,
 									contentDescription = stringResource(R.string.menu_option_categories),
 									modifier = Modifier.size(24.dp)
 								)
@@ -179,8 +195,18 @@ fun RecordingsScreenTopBar(
 							onClick = onSortItems,
 							leadingIcon = {
 								Icon(
-									painter = painterResource(id = R.drawable.ic_sort),
+									imageVector = Icons.AutoMirrored.Filled.Sort,
 									contentDescription = stringResource(id = R.string.menu_option_sort_order)
+								)
+							},
+						)
+						DropdownMenuItem(
+							text = { Text(text = stringResource(R.string.menu_option_search)) },
+							onClick = onNavigateToSearch,
+							leadingIcon = {
+								Icon(
+									imageVector = Icons.Default.Search,
+									contentDescription = stringResource(R.string.menu_option_search)
 								)
 							},
 						)
@@ -221,8 +247,7 @@ class BooleanPreviewParams :
 @PreviewLightDark
 @Composable
 private fun RecordingsTopBarSelectedPreview(
-	@PreviewParameter(BooleanPreviewParams::class)
-	isSelectedMode: Boolean,
+	@PreviewParameter(BooleanPreviewParams::class) isSelectedMode: Boolean,
 ) = RecorderAppTheme {
 	RecordingsScreenTopBar(
 		isSelectedMode = isSelectedMode,
@@ -234,6 +259,6 @@ private fun RecordingsTopBarSelectedPreview(
 				imageVector = Icons.AutoMirrored.Default.ArrowBack,
 				contentDescription = stringResource(R.string.back_arrow)
 			)
-		}
+		},
 	)
 }

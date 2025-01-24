@@ -12,9 +12,9 @@ import com.eva.recorderapp.voice_recorder.domain.location.LocationProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.RecorderFileProvider
 import com.eva.recorderapp.voice_recorder.domain.recorder.VoiceRecorder
 import com.eva.recorderapp.voice_recorder.domain.use_cases.BluetoothScoUseCase
-import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUsecase
-import com.eva.recorderapp.voice_recorder.domain.util.BluetoothScoConnect
-import com.eva.recorderapp.voice_recorder.domain.util.PhoneStateObserver
+import com.eva.recorderapp.voice_recorder.domain.use_cases.PhoneStateObserverUseCase
+import com.eva.recorderapp.voice_recorder.domain.interactions.BluetoothScoConnect
+import com.eva.recorderapp.voice_recorder.domain.interactions.PhoneStateObserver
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -80,7 +80,7 @@ object RecorderServiceModule {
 		settingsRepo: RecorderAudioSettingsRepo,
 		phoneStateObserver: PhoneStateObserver,
 		voiceRecorder: VoiceRecorder,
-	): PhoneStateObserverUsecase = PhoneStateObserverUsecase(
+	): PhoneStateObserverUseCase = PhoneStateObserverUseCase(
 		settings = settingsRepo,
 		observer = phoneStateObserver,
 		voiceRecorder = voiceRecorder

@@ -1,6 +1,9 @@
 package com.eva.recorderapp.voice_recorder.presentation.categories.create_category
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
@@ -10,12 +13,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
@@ -23,24 +28,28 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recorderapp.R
 import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.voice_recorder.presentation.util.LocalSnackBarProvider
+import com.eva.recorderapp.voice_recorder.presentation.util.SharedElementTransitionKeys
+import com.eva.recorderapp.voice_recorder.presentation.util.sharedBoundsWrapper
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun CreateOrEditCategoryScreen(
+	categoryId: Long,
 	state: CreateOrUpdateCategoryState,
 	onEvent: (CreateCategoryScreenEvents) -> Unit,
 	modifier: Modifier = Modifier,
@@ -56,20 +65,30 @@ fun CreateOrEditCategoryScreen(
 					if (state.isEditMode) Text(text = stringResource(R.string.edit_category_title))
 					else Text(text = stringResource(id = R.string.create_category_title))
 				},
-				actions = {
-					TextButton(
-						onClick = { onEvent(CreateCategoryScreenEvents.OnCreateOrEditCategory) }
-					) {
-						if (state.isEditMode) Text(text = stringResource(R.string.edit_category_action))
-						else Text(text = stringResource(R.string.create_category_action))
-					}
-				},
 				navigationIcon = navigation,
-				scrollBehavior = scrollBehavior
+				scrollBehavior = scrollBehavior,
 			)
 		},
+		floatingActionButton = {
+			ExtendedFloatingActionButton(
+				onClick = { onEvent(CreateCategoryScreenEvents.OnCreateOrEditCategory) },
+			) {
+				Icon(
+					painter = painterResource(R.drawable.ic_edit),
+					contentDescription = stringResource(R.string.player_action_edit)
+				)
+				Spacer(modifier = Modifier.width(6.dp))
+				if (state.isEditMode) {
+					Text(text = stringResource(R.string.edit_category_action))
+				} else {
+					Text(text = stringResource(R.string.create_category_action))
+				}
+			}
+		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
-		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+		modifier = modifier
+			.nestedScroll(scrollBehavior.nestedScrollConnection)
+			.sharedBoundsWrapper(key = SharedElementTransitionKeys.categoryCardSharedBoundsTransition(categoryId)),
 	) { scPadding ->
 		Column(
 			modifier = Modifier
@@ -94,18 +113,20 @@ fun CreateOrEditCategoryScreen(
 				label = { Text(text = stringResource(id = R.string.rename_label_text)) },
 				isError = state.hasError,
 				shape = MaterialTheme.shapes.medium,
+				textStyle = MaterialTheme.typography.labelLarge,
 				keyboardActions = KeyboardActions(onDone = { }),
 				keyboardOptions = KeyboardOptions(
 					keyboardType = KeyboardType.Text,
-					imeAction = ImeAction.Done
+					imeAction = ImeAction.Done,
+					capitalization = KeyboardCapitalization.Words
 				),
 				modifier = Modifier.fillMaxWidth()
 			)
 			Spacer(modifier = Modifier.height(2.dp))
 			AnimatedVisibility(
 				visible = state.hasError,
-				enter = slideInVertically(),
-				exit = slideOutVertically()
+				enter = slideInVertically() + fadeIn(),
+				exit = slideOutVertically() + fadeOut(),
 			) {
 				Text(
 					text = state.error,
@@ -121,11 +142,11 @@ fun CreateOrEditCategoryScreen(
 				selectedColor = state.color,
 				onColorChange = { onEvent(CreateCategoryScreenEvents.OnCategoryColorSelect(it)) })
 			Text(
-				text = stringResource(R.string.category_type_title),
+				text = stringResource(R.string.category_icon_picker_title),
 				style = MaterialTheme.typography.titleMedium
 			)
 			CategoryTypePicker(
-				selected = state.type,
+				selectedCategory = state.type,
 				onSelectionChange = { onEvent(CreateCategoryScreenEvents.OnCategoryTypeChange(it)) })
 		}
 	}
@@ -136,6 +157,7 @@ fun CreateOrEditCategoryScreen(
 @Composable
 private fun CreateCategoryDialogContentPreview() = RecorderAppTheme {
 	CreateOrEditCategoryScreen(
+		categoryId = -1,
 		state = CreateOrUpdateCategoryState(),
 		onEvent = {},
 		navigation = {

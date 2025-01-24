@@ -48,7 +48,7 @@ fun RecordingsInteractiveList(
 	recordings: ImmutableList<SelectableTrashRecordings>,
 	onItemSelect: (TrashRecordingModel) -> Unit,
 	modifier: Modifier = Modifier,
-	contentPadding: PaddingValues = PaddingValues(0.dp)
+	contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
 	val isLocalInspectionMode = LocalInspectionMode.current
 
@@ -103,12 +103,12 @@ fun RecordingsInteractiveList(
 			) {
 				Image(
 					painter = painterResource(id = R.drawable.ic_bin),
-					contentDescription = stringResource(R.string.no_recordings),
+					contentDescription = stringResource(id = R.string.no_recordings_in_bin),
 					colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary)
 				)
 				Spacer(modifier = Modifier.height(20.dp))
 				Text(
-					text = stringResource(id = R.string.no_recordings),
+					text = stringResource(id = R.string.no_recordings_in_bin),
 					style = MaterialTheme.typography.titleMedium,
 					color = MaterialTheme.colorScheme.tertiary
 				)

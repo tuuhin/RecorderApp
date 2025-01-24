@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -57,7 +57,7 @@ fun AudioSettingsScreen(
 				actions = {
 					IconButton(onClick = onNavigateToInfo) {
 						Icon(
-							painter = painterResource(id = R.drawable.ic_info),
+							imageVector = Icons.Outlined.Info,
 							contentDescription = stringResource(R.string.extras_info)
 						)
 					}
@@ -97,7 +97,7 @@ private class SettingsTabPreviewParams :
 @Composable
 private fun AudioSettingsScreenPreview(
 	@PreviewParameter(SettingsTabPreviewParams::class)
-	initialTab: SettingsTabs
+	initialTab: SettingsTabs,
 ) = RecorderAppTheme {
 	AudioSettingsScreen(
 		audioSettings = RecorderAudioSettings(),

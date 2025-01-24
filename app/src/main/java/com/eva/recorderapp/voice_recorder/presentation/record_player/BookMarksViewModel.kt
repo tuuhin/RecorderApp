@@ -11,7 +11,7 @@ import com.eva.recorderapp.common.UIEvents
 import com.eva.recorderapp.common.roundToClosestSeconds
 import com.eva.recorderapp.voice_recorder.domain.bookmarks.AudioBookmarkModel
 import com.eva.recorderapp.voice_recorder.domain.bookmarks.RecordingBookmarksProvider
-import com.eva.recorderapp.voice_recorder.domain.util.ShareRecordingsUtil
+import com.eva.recorderapp.voice_recorder.domain.interactions.ShareRecordingsUtil
 import com.eva.recorderapp.voice_recorder.presentation.navigation.util.NavRoutes
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.BookMarkEvents
 import com.eva.recorderapp.voice_recorder.presentation.record_player.util.CreateOrEditBookMarkState

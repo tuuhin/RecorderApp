@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.glance.appwidget.updateAll
 import com.eva.recorderapp.voice_recorder.domain.recorder.emums.RecorderState
-import com.eva.recorderapp.voice_recorder.domain.util.AppWidgetsRepository
+import com.eva.recorderapp.voice_recorder.domain.interactions.AppWidgetsRepository
 import com.eva.recorderapp.voice_recorder.widgets.recorder.AppRecorderWidget
 import com.eva.recorderapp.voice_recorder.widgets.recorder.RecorderWidgetDefinition
 import com.eva.recorderapp.voice_recorder.widgets.recordings.AppRecordingsWidget

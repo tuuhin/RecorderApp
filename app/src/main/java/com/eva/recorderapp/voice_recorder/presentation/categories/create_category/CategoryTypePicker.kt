@@ -3,8 +3,11 @@ package com.eva.recorderapp.voice_recorder.presentation.categories.create_catego
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
@@ -14,10 +17,14 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -28,13 +35,13 @@ import com.eva.recorderapp.ui.theme.RecorderAppTheme
 import com.eva.recorderapp.ui.theme.RoundedPolygonShape
 import com.eva.recorderapp.voice_recorder.domain.categories.models.CategoryType
 import com.eva.recorderapp.voice_recorder.presentation.util.imageVector
+import com.eva.recorderapp.voice_recorder.presentation.util.label
 
 @Composable
 fun CategoryTypePicker(
-	onSelectionChange: (CategoryType) -> Unit,
+	selectedCategory: CategoryType = CategoryType.CATEGORY_NONE,
+	onSelectionChange: (CategoryType) -> Unit = {},
 	modifier: Modifier = Modifier,
-	selected: CategoryType = CategoryType.CATEGORY_NONE,
-	columns: Int = 4,
 	contentPadding: PaddingValues = PaddingValues(10.dp),
 ) {
 	val polygon = remember {
@@ -51,7 +58,7 @@ fun CategoryTypePicker(
 	}
 
 	LazyVerticalGrid(
-		columns = GridCells.Fixed(count = columns),
+		columns = GridCells.Fixed(count = 4),
 		horizontalArrangement = Arrangement.spacedBy(12.dp),
 		verticalArrangement = Arrangement.spacedBy(12.dp),
 		userScrollEnabled = false,
@@ -60,34 +67,65 @@ fun CategoryTypePicker(
 	) {
 		itemsIndexed(items = allowedType) { _, type ->
 
-			val borderModifier = if (type == selected)
-				Modifier.border(
-					width = 3.dp,
-					color = MaterialTheme.colorScheme.onPrimaryContainer,
-					shape = RoundedPolygonShape(polygon)
-				)
-			else Modifier
+			val shape = remember(polygon) { RoundedPolygonShape(polygon = polygon) }
 
-			Box(
-				modifier = Modifier
-					.aspectRatio(1f)
-					.then(borderModifier)
-					.clickable(role = Role.Button) { onSelectionChange(type) }
-					.background(
-						color = MaterialTheme.colorScheme.surfaceContainerHigh,
-						shape = RoundedPolygonShape(polygon)
-					),
-				contentAlignment = Alignment.Center,
-			) {
-				Icon(
-					painter = type.imageVector,
-					contentDescription = null,
-					modifier = Modifier.size(32.dp),
-					tint = MaterialTheme.colorScheme.onPrimaryContainer
-				)
-			}
+			CategoryTypeSelector(
+				categoryType = type,
+				selected = type == selectedCategory,
+				onSelectionChange = onSelectionChange,
+				shape = shape
+			)
 		}
 	}
+}
+
+@Composable
+private fun CategoryTypeSelector(
+	categoryType: CategoryType,
+	onSelectionChange: (CategoryType) -> Unit,
+	selected: Boolean,
+	shape: Shape = MaterialTheme.shapes.small,
+	modifier: Modifier = Modifier,
+	containerColor: Color = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+	contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+) {
+	val interactionSource = remember { MutableInteractionSource() }
+
+	val borderModifier = if (selected) Modifier.border(
+		width = 3.dp,
+		shape = shape,
+		color = MaterialTheme.colorScheme.onSurfaceVariant,
+	) else Modifier
+
+
+	Column(
+		modifier = modifier,
+		verticalArrangement = Arrangement.spacedBy(4.dp),
+		horizontalAlignment = Alignment.CenterHorizontally
+	) {
+		Box(
+			modifier = Modifier
+				.aspectRatio(1f)
+				.then(borderModifier)
+				.clickable(role = Role.Button) { onSelectionChange(categoryType) }
+				.background(color = containerColor, shape = shape)
+				.indication(interactionSource = interactionSource, indication = null),
+			contentAlignment = Alignment.Center,
+		) {
+			Icon(
+				painter = categoryType.imageVector,
+				contentDescription = categoryType.label,
+				modifier = Modifier.size(32.dp),
+				tint = contentColor
+			)
+		}
+		Text(
+			text = categoryType.label,
+			style = MaterialTheme.typography.labelMedium,
+			color = contentColor
+		)
+	}
+
 }
 
 @PreviewLightDark
@@ -95,7 +133,7 @@ fun CategoryTypePicker(
 private fun CategoryTypePickerPreview() = RecorderAppTheme {
 	Surface {
 		CategoryTypePicker(
-			selected = CategoryType.CATEGORY_STUDY,
+			selectedCategory = CategoryType.CATEGORY_STUDY,
 			onSelectionChange = {},
 		)
 	}

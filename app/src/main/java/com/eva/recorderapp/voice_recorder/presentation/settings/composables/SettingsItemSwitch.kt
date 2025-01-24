@@ -1,23 +1,16 @@
 package com.eva.recorderapp.voice_recorder.presentation.settings.composables
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -35,45 +28,24 @@ fun SettingsItemWithSwitch(
 	shadowElevation: Dp = 0.dp,
 	tonalElevation: Dp = 0.dp,
 ) {
-	Surface(
-		onClick = { onSelect(!isSelected) },
-		enabled = enabled,
-		tonalElevation = tonalElevation,
-		shadowElevation = shadowElevation,
-		shape = MaterialTheme.shapes.medium,
-		modifier = modifier.fillMaxWidth()
-	) {
-		Row(
-			modifier = Modifier.padding(8.dp),
-			horizontalArrangement = Arrangement.SpaceBetween,
-			verticalAlignment = Alignment.CenterVertically
-		) {
-			leading?.let { content ->
-				Box(
-					modifier = Modifier
-						.defaultMinSize(32.dp, 32.dp)
-						.padding(horizontal = 12.dp),
-					contentAlignment = Alignment.Center
-				) {
-					content()
-				}
-			}
-			Column(
-				modifier = Modifier.weight(1f)
-			) {
-				Text(
-					text = title,
-					style = MaterialTheme.typography.bodyLarge,
-					color = if (enabled) MaterialTheme.colorScheme.onBackground
-					else MaterialTheme.colorScheme.onSurfaceVariant
-				)
-				Text(
-					text = text,
-					style = MaterialTheme.typography.labelLarge,
-					color = if (enabled) MaterialTheme.colorScheme.onBackground
-					else MaterialTheme.colorScheme.onSurfaceVariant
-				)
-			}
+	ListItem(
+		headlineContent = {
+			Text(
+				text = title,
+				style = MaterialTheme.typography.titleMedium,
+				color = if (enabled) MaterialTheme.colorScheme.onBackground
+				else MaterialTheme.colorScheme.onSurfaceVariant
+			)
+		},
+		supportingContent = {
+			Text(
+				text = text,
+				style = MaterialTheme.typography.labelMedium,
+				color = if (enabled) MaterialTheme.colorScheme.onBackground
+				else MaterialTheme.colorScheme.onSurfaceVariant
+			)
+		},
+		trailingContent = {
 			Switch(
 				checked = isSelected,
 				enabled = enabled,
@@ -83,20 +55,24 @@ fun SettingsItemWithSwitch(
 					checkedThumbColor = MaterialTheme.colorScheme.onSecondary,
 				)
 			)
-		}
-	}
+		},
+		leadingContent = leading,
+		modifier = modifier
+			.clip(shape = MaterialTheme.shapes.medium)
+			.clickable { onSelect(!isSelected) },
+		tonalElevation = tonalElevation,
+		shadowElevation = shadowElevation,
+		colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+	)
 }
 
 @PreviewLightDark
 @Composable
 private fun SettingsItemSwitchPreview() = RecorderAppTheme {
-
-	SettingsItemWithSwitch(isSelected = false,
+	SettingsItemWithSwitch(
+		isSelected = false,
 		title = "Title",
 		text = "Supporting Text",
 		onSelect = { },
-		leading = {
-			Icon(imageVector = Icons.Default.ArrowUpward, contentDescription = null)
-		})
-
+	)
 }

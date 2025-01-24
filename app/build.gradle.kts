@@ -17,8 +17,8 @@ android {
 		applicationId = "com.eva.recorderapp"
 		minSdk = 29
 		targetSdk = 35
-		versionCode = 6
-		versionName = "1.2.1"
+		versionCode = 7
+		versionName = "1.2.2"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -65,7 +65,10 @@ composeCompiler {
 //	featureFlags = setOf(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 	reportsDestination = layout.buildDirectory.dir("compose_compiler")
 	metricsDestination = layout.buildDirectory.dir("compose_compiler")
-	stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
+
+	stabilityConfigurationFiles.add(
+		rootProject.layout.projectDirectory.file("stability_config.conf")
+	)
 }
 
 dependencies {
@@ -79,9 +82,9 @@ dependencies {
 	implementation(libs.androidx.ui.graphics)
 	implementation(libs.androidx.ui.tooling.preview)
 	implementation(libs.androidx.material3)
-	//icons & shapes
-	implementation(libs.material.icons.extended)
+	//shapes
 	implementation(libs.androidx.graphics.shapes)
+	implementation(libs.androidx.icons.extended)
 	//navigation
 	implementation(libs.androidx.navigation.compose)
 	implementation(libs.androidx.hilt.navigation.compose)
@@ -96,6 +99,7 @@ dependencies {
 	implementation(libs.kotlinx.collections.immutable)
 	//location
 	implementation(libs.gms.play.services.location)
+	// futures to coroutine
 	implementation(libs.androidx.concurrent.futures.ktx)
 	//hilt
 	ksp(libs.hilt.android.compiler)
@@ -146,11 +150,11 @@ dependencies {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:4.27.3"
+		artifact = libs.protobuf.protoc.get().toString()
 	}
 	plugins {
 		create("java") {
-			artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+			artifact = libs.protobuf.gen.javalite.get().toString()
 		}
 	}
 
