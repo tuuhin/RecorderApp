@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/widget_recorder_description"
+  android:initialLayout="@layout/glance_default_loading_layout"
+  android:minWidth="@dimen/recorder_widget_min_width"
+  android:minHeight="@dimen/recorder_widget_min_height"
+  android:previewImage="@drawable/recorder_widget_preview_image"
+  android:updatePeriodMillis="0"
+  android:widgetCategory="home_screen" />
