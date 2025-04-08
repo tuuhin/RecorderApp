@@ -3,9 +3,7 @@ package com.eva.recorder.di
 import android.content.Context
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationProvider
-import com.eva.recorder.data.RecorderWidgetInteracterImpl
 import com.eva.recorder.data.VoiceRecorderImpl
-import com.eva.recorder.domain.RecorderWidgetInteractor
 import com.eva.recorder.domain.VoiceRecorder
 import com.eva.recordings.domain.provider.RecorderFileProvider
 import dagger.Module
@@ -32,9 +30,4 @@ object RecorderServiceModule {
 		settings = settings,
 		locationProvider = locationProvider
 	)
-
-	@Provides
-	@ServiceScoped
-	fun providesInteracter(@ApplicationContext context: Context): RecorderWidgetInteractor =
-		RecorderWidgetInteracterImpl(context)
 }

@@ -1,0 +1,27 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <receiver
+      android:name=".receivers.RecordingsWidgetReceiver"
+      android:enabled="true"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/recordings_widget_provider" />
+    </receiver>
+
+    <receiver
+      android:name=".receivers.RecorderWidgetReceiver"
+      android:enabled="true"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/recorder_widget" />
+    </receiver>
+  </application>
+</manifest>

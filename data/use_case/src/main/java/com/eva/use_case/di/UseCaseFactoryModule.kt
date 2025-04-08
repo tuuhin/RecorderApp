@@ -3,8 +3,6 @@ package com.eva.use_case.di
 import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.recordings.domain.provider.RecordingsSecondaryDataProvider
 import com.eva.recordings.domain.provider.VoiceRecordingsProvider
-import com.eva.recordings.domain.widgets.RecordingWidgetInteractor
-import com.eva.use_case.usecases.GetRecordingsOfCurrentAppUseCase
 import com.eva.use_case.usecases.PlayerFileProviderFromIdUseCase
 import com.eva.use_case.usecases.RecordingsFromCategoriesUseCase
 import com.eva.use_case.usecases.RenameRecordingUseCase
@@ -40,12 +38,4 @@ object UseCaseFactoryModule {
 	): PlayerFileProviderFromIdUseCase =
 		PlayerFileProviderFromIdUseCase(playerFileProvider, secondaryDataProvider)
 
-	@Provides
-	@ViewModelScoped
-	fun providesGetCurrentAppRecordingsUseCase(
-		recordingsProvider: VoiceRecordingsProvider,
-		secondaryDataProvider: RecordingsSecondaryDataProvider,
-		widgetInteractor: RecordingWidgetInteractor,
-	): GetRecordingsOfCurrentAppUseCase =
-		GetRecordingsOfCurrentAppUseCase(recordingsProvider, secondaryDataProvider, widgetInteractor)
 }

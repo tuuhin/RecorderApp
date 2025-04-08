@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.annotation.DrawableRes
 import androidx.media3.common.Player
 import androidx.media3.session.CommandButton
+import androidx.media3.session.CommandButton.ICON_UNDEFINED
 import androidx.media3.session.SessionCommand
 import com.eva.player.R
 
@@ -28,24 +29,28 @@ internal object PlayerSessionCommands {
 		extras: Bundle = Bundle.EMPTY,
 	): CommandButton {
 		val sessionCommand = SessionCommand(action, extras)
-		return CommandButton.Builder(icon)
+		return CommandButton.Builder(ICON_UNDEFINED)
+			.setCustomIconResId(icon)
 			.setDisplayName(displayName)
+			.setCustomIconResId(icon)
 			.setSessionCommand(sessionCommand)
 			.setEnabled(true)
 			.build()
 	}
 
 	fun playPauseButton(
-		showPauseButton: Boolean, extras: Bundle = Bundle.EMPTY, displayName: String = "",
+		showPauseButton: Boolean,
+		extras: Bundle = Bundle.EMPTY,
+		displayName: String = "",
 	): CommandButton {
 		val resId = if (showPauseButton) R.drawable.ic_pause
 		else R.drawable.ic_play
 
-		return CommandButton.Builder(resId)
+		return CommandButton.Builder(ICON_UNDEFINED)
+			.setCustomIconResId(resId)
 			.setPlayerCommand(Player.COMMAND_PLAY_PAUSE)
 			.setExtras(extras)
 			.setDisplayName(displayName)
 			.build()
 	}
-
 }

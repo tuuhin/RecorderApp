@@ -13,7 +13,7 @@ import dagger.hilt.android.scopes.ServiceScoped
 
 @Module
 @InstallIn(ServiceComponent::class)
-abstract class UseCaseServiceModule {
+object UseCaseServiceModule {
 
 	@Provides
 	@ServiceScoped
