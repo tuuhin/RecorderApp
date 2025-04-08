@@ -7,4 +7,5 @@ plugins {
 	alias(libs.plugins.hilt) apply false
 	alias(libs.plugins.androidx.room) apply false
 	alias(libs.plugins.google.protobuf) apply false
+	alias(libs.plugins.android.library) apply false
 }

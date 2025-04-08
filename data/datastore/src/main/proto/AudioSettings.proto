@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_package = "com.eva.datastore.proto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+message RecorderSettingsProto {
+  RecorderQualityProto quality = 1;
+  RecorderEncodingFormatsProto encoder = 2;
+  bool pauseDuringCalls = 3;
+  bool skipSilences = 5;
+  bool isStereoMode = 6;
+  bool useBluetoothMic = 7;
+  bool allowLocationInfoIfAvailable = 8;
+}
+
+enum RecorderQualityProto{
+  QUALITY_NORMAL = 0;
+  QUALITY_HIGH = 1;
+  QUALITY_LOW = 2;
+}
+
+enum RecorderEncodingFormatsProto{
+  ENCODER_ACC = 0;
+  ENCODER_AMR_NB = 1;
+  ENCODER_AMR_WB = 2;
+  ENCODER_OPTUS = 3;
+}
