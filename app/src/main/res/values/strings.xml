@@ -118,7 +118,7 @@
   <string name="recording_settings_name_format_date_time" translatable="false">%s_2022–12–31–00:00:00</string>
   <string name="recording_settings_name_format_count" translatable="false">%s_001</string>
   <string name="recording_settings_pause_recorder_on_calls">Pause Recorder</string>
-  <string name="recording_settings_pause_recorder_on_call_text">Pause recorder on incomming call</string>
+  <string name="recording_settings_pause_recorder_on_call_text">Pause recorder on incoming call</string>
   <string name="storage_statistics">Storage</string>
   <string name="storage_statistics_total">Total</string>
   <string name="storage_statistics_used">Used</string>
