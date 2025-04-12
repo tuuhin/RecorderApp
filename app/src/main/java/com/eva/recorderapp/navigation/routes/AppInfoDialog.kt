@@ -38,7 +38,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.dialog
 import com.eva.recorderapp.BuildConfig
-import com.eva.recorderapp.R
+import com.eva.ui.R
 import com.eva.ui.navigation.NavDialogs
 import com.eva.ui.theme.RecorderAppTheme
 

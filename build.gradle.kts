@@ -1,3 +1,7 @@
+import dev.iurysouza.modulegraph.ModuleType
+import dev.iurysouza.modulegraph.Orientation
+import dev.iurysouza.modulegraph.Theme
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
 	alias(libs.plugins.android.application) apply false
@@ -17,4 +21,13 @@ moduleGraphConfig {
 	setStyleByModuleType = true
 	showFullPath = true
 	nestingEnabled = true
+	rootModulesRegex = ":app"
+	orientation = Orientation.TOP_TO_BOTTOM
+	theme = Theme.BASE(
+		moduleTypes = listOf(
+			ModuleType.AndroidApp("#98FB98"),
+			ModuleType.AndroidLibrary("#4169E1"),
+			ModuleType.Kotlin("#720e9e")
+		),
+	)
 }
