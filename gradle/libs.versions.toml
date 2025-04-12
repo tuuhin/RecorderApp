@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.2"
+agp = "8.9.1"
 concurrentFuturesKtx = "1.2.0"
 datastore = "1.1.4"
 coreSplashscreen = "1.0.1"
@@ -7,7 +7,7 @@ glance = "1.1.1"
 graphicsShapes = "1.0.1"
 hiltNavigation = "1.2.0"
 kotlin = "2.1.20"
-coreKtx = "1.15.0"
+coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
@@ -16,18 +16,18 @@ kotlinxDatetime = "0.6.2"
 kotlinxSerializationJson = "1.8.0"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
-composeBom = "2025.03.01"
+composeBom = "2025.04.00"
 ksp = "2.1.20-1.0.31"
-hilt = "2.56"
+hilt = "2.56.1"
 media3Common = "1.6.0"
 navigationCompose = "2.8.9"
 playServicesLocationVersion = "21.3.0"
-roomCompiler = "2.6.1"
+roomCompiler = "2.7.0"
 uiTextGoogleFonts = "1.7.8"
 workRuntimeKtxVersion = "2.10.0"
 hiltWork = "1.2.0"
 protobufJavalite = "4.30.1"
-protobuf_version = "0.9.4"
+protobuf_version = "0.9.5"
 protobuf_gen_java_lite = "3.0.0"
 materialIconExtended = "1.7.8"
 
@@ -51,9 +51,13 @@ androidx-media3-session = { module = "androidx.media3:media3-session", version.r
 androidx-media3-transformer = { module = "androidx.media3:media3-transformer", version.ref = "media3Common" }
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3Common" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+
+#room
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomCompiler" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomCompiler" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomCompiler" }
+
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 gms-play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocationVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -85,6 +89,13 @@ protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", ve
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobufJavalite" }
 protobuf-gen-javalite = { module = "com.google.protobuf:protoc-gen-javalite", version.ref = "protobuf_gen_java_lite" }
 
+#gradle
+android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
+kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-compiler-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
+ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
+room-gradlePlugin = { group = "androidx.room", name = "room-gradle-plugin", version.ref = "roomCompiler" }
+protobuf-gradlePlugin = { group = "com.google.protobuf", name = "protobuf-gradle-plugin", version.ref = "protobuf_version" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -97,3 +108,10 @@ androidx_room = { id = "androidx.room", version.ref = "roomCompiler" }
 google_protobuf = { id = "com.google.protobuf", version.ref = "protobuf_version" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+
+#custom plugins
+recorderapp-room = { id = "recorderapp.room.plugin", version = "unspecified" }
+recorderapp-hilt = { id = "recorderapp.hilt.plugin", version = "unspecified" }
+recorderapp-android-library = { id = "recorderapp.android.library.plugin", version = "unspecified" }
+recorderapp-protobuf = { id = "recorderapp.protobuf.plugin", version = "unspecified" }
+recorderapp-compose-compiler = { id = "recorderapp.compose.compiler.plugin", version = "unspecified" }

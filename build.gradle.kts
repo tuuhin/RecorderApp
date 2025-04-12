@@ -9,4 +9,12 @@ plugins {
 	alias(libs.plugins.androidx.room) apply false
 	alias(libs.plugins.google.protobuf) apply false
 	alias(libs.plugins.android.library) apply false
+	id("dev.iurysouza.modulegraph") version "0.12.0"
+}
+
+moduleGraphConfig {
+	readmePath = "${rootDir}/module_graph.md"
+	setStyleByModuleType = true
+	showFullPath = true
+	nestingEnabled = true
 }

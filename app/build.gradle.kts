@@ -117,7 +117,6 @@ dependencies {
 	//data
 	implementation(project(":data:worker"))
 	implementation(project(":data:interactions"))
-	implementation(project(":data:recorder"))
 
 	// feature
 	implementation(project(":feature:categories"))
@@ -127,13 +126,5 @@ dependencies {
 	implementation(project(":feature:editor"))
 	implementation(project(":feature:settings"))
 	implementation(project(":feature:widget"))
-
-
-	// testing
-	testImplementation(libs.junit)
-	androidTestImplementation(libs.androidx.junit)
-	androidTestImplementation(libs.androidx.espresso.core)
-	androidTestImplementation(platform(libs.androidx.compose.bom))
-	androidTestImplementation(libs.androidx.ui.test.junit4)
 
 }
