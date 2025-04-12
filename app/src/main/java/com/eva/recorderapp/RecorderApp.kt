@@ -7,12 +7,13 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.eva.recorderapp.common.NotificationConstants
-import com.eva.recorderapp.voice_recorder.data.worker.RemoveTrashRecordingWorker
-import com.eva.recorderapp.voice_recorder.data.worker.UpdateRecordingPathWorker
-import com.eva.recorderapp.voice_recorder.domain.interactions.AppShortcutFacade
+import com.eva.interactions.domain.AppShortcutFacade
+import com.eva.utils.NotificationConstants
+import com.eva.worker.RemoveTrashRecordingWorker
+import com.eva.worker.UpdateRecordingPathWorker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
+
 
 @HiltAndroidApp
 class RecorderApp : Application(), Configuration.Provider {

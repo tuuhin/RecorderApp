@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_package = "com.eva.datastore.proto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+message  FileSettingsProto{
+  string prefix = 1;
+  NamingFormatProto format = 2;
+  bool allowExternalRead = 3;
+}
+
+enum NamingFormatProto{
+  FORMAT_VIA_DATE = 0;
+  FORMAT_VIA_COUNT = 1;
+}

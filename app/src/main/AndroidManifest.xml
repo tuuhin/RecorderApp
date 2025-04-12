@@ -2,36 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools">
 
-  <uses-permission android:name="android.permission.RECORD_AUDIO" />
-  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-
-  <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-
-  <uses-permission
-    android:name="android.permission.READ_EXTERNAL_STORAGE"
-    android:maxSdkVersion="32" />
-  <uses-permission
-    android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-    android:maxSdkVersion="32"
-    tools:ignore="ScopedStorage" />
-  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-
-  <uses-feature
-    android:name="android.hardware.microphone"
-    android:required="true" />
-
-  <uses-feature
-    android:name="android.hardware.telephony"
-    android:required="false" />
-
   <application
     android:name=".RecorderApp"
     android:allowBackup="true"
@@ -45,51 +15,6 @@
     android:supportsRtl="true"
     android:theme="@style/Theme.App.Starting"
     tools:targetApi="33">
-
-    <service
-      android:name="androidx.work.impl.foreground.SystemForegroundService"
-      android:foregroundServiceType="dataSync"
-      tools:node="merge" />
-
-    <service
-      android:name=".voice_recorder.data.service.MediaPlayerService"
-      android:enabled="true"
-      android:exported="false"
-      android:foregroundServiceType="mediaPlayback">
-      <intent-filter>
-        <action android:name="androidx.media3.session.MediaSessionService" />
-      </intent-filter>
-    </service>
-
-    <service
-      android:name=".voice_recorder.data.service.VoiceRecorderService"
-      android:enabled="true"
-      android:exported="false"
-      android:foregroundServiceType="microphone" />
-
-    <receiver
-      android:name=".voice_recorder.widgets.recordings.RecordingsWidgetReceiver"
-      android:enabled="true"
-      android:exported="true">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-      </intent-filter>
-      <meta-data
-        android:name="android.appwidget.provider"
-        android:resource="@xml/recordings_widget_provider" />
-    </receiver>
-
-    <receiver
-      android:name=".voice_recorder.widgets.recorder.RecorderWidgetReceiver"
-      android:enabled="true"
-      android:exported="true">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-      </intent-filter>
-      <meta-data
-        android:name="android.appwidget.provider"
-        android:resource="@xml/recorder_widget" />
-    </receiver>
 
     <activity
       android:name=".MainActivity"

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="recorder_action_pause">Pause</string>
+  <string name="recorder_action_resume">Resume</string>
+  <string name="recorder_action_stop">Stop</string>
+  <string name="recorder_action_cancel">Cancel</string>
+  <string name="recorder_notification_text_running">Recorder is running</string>
+  <string name="recorder_notification_text_paused">Recorder Paused</string>
+  <string name="recorder_recording_completed">Recording Completed</string>
+  <string name="recorder_recording_completed_text">Saved to external storage</string>
+  <string name="recorder_recording_notification_title_canceled">Recording Cancelled</string>
+  <string name="recorder_recording_notification_canceled_text">Recording canceled by the user</string>
+  <string name="toast_recording_bluetooth">Using bluetooth mic</string>
+  <string name="toast_incoming_call">Incoming call</string>
+  <string name="bookmarks_saved">Bookmarks Added</string>
+</resources>

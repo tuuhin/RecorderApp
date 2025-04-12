@@ -10,8 +10,8 @@ import androidx.compose.material3.Surface
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.eva.recorderapp.ui.theme.RecorderAppTheme
-import com.eva.recorderapp.voice_recorder.presentation.navigation.AppNavHost
+import com.eva.recorderapp.navigation.AppNavHost
+import com.eva.ui.theme.RecorderAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

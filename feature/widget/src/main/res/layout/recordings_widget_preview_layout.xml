@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:minWidth="@dimen/recordings_widget_min_width"
+  android:minHeight="@dimen/recordings_widget_min_height"
+  android:layout_gravity="center"
+  android:background="@drawable/widget_base_shape"
+  android:orientation="vertical"
+  android:padding="10dp">
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="4dp"
+    android:gravity="center_vertical">
+
+    <ImageView
+      android:layout_width="32dp"
+      android:layout_height="32dp"
+      android:layout_marginStart="2dp"
+      android:contentDescription="@string/recording_top_bar_title"
+      android:src="@drawable/ic_widget_recorder"
+      android:tint="@color/primary" />
+
+    <TextView
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_marginHorizontal="8dp"
+      android:layout_weight="1"
+      android:text="@string/recording_top_bar_title"
+      android:textColor="@color/on_surface"
+      android:textFontWeight="500"
+      android:maxLines="1"
+      android:textSize="20sp" />
+
+    <ImageView
+      android:layout_width="24dp"
+      android:layout_height="24dp"
+      android:contentDescription="@string/widget_refresh"
+      android:src="@drawable/ic_widget_refresh"
+      android:tint="@color/primary" />
+
+  </LinearLayout>
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="4dp"
+    android:background="@drawable/rounded_shape_primary_cont_color"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="8dp">
+
+    <RelativeLayout
+      android:layout_width="32dp"
+      android:layout_height="32dp"
+      android:background="@drawable/rounded_shape_primary_color">
+
+      <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:contentDescription="@string/recording_top_bar_title"
+        android:src="@drawable/ic_microphone"
+        android:tint="@color/on_primary" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="4dp"
+      android:layout_weight="1"
+      android:minWidth="180dp"
+      android:orientation="vertical">
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingHorizontal="4dp"
+        android:text="@string/widget_recordings_preview_name"
+        android:textColor="@color/on_primary_container"
+        android:textFontWeight="500"
+        android:textSize="20sp" />
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="4dp"
+        android:text="@string/widget_recordings_preview_duration"
+        android:textColor="@color/on_primary_container"
+        android:textFontWeight="400"
+        android:textSize="16sp" />
+
+
+    </LinearLayout>
+
+  </LinearLayout>
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="4dp"
+    android:background="@drawable/rounded_shape_primary_cont_color"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="8dp">
+
+    <RelativeLayout
+      android:layout_width="32dp"
+      android:layout_height="32dp"
+      android:background="@drawable/rounded_shape_primary_color">
+
+      <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:contentDescription="@string/recording_top_bar_title"
+        android:src="@drawable/ic_microphone"
+        android:tint="@color/on_primary" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="4dp"
+      android:layout_weight="1"
+      android:orientation="vertical">
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingHorizontal="4dp"
+        android:text="@string/widget_recordings_preview_name"
+        android:textColor="@color/on_primary_container"
+        android:textFontWeight="500"
+        android:textSize="20sp"/>
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="4dp"
+        android:text="@string/widget_recordings_preview_duration"
+        android:textColor="@color/on_primary_container"
+        android:textFontWeight="400"
+        android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <ImageView
+      android:layout_width="24dp"
+      android:layout_height="24dp"
+      android:contentDescription="@string/recording_top_bar_title"
+      android:src="@drawable/ic_star_outlined"
+      android:tint="@color/on_primary_container" />
+
+  </LinearLayout>
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="4dp"
+    android:background="@drawable/rounded_shape_primary_cont_color"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="8dp">
+
+    <RelativeLayout
+      android:layout_width="32dp"
+      android:layout_height="32dp"
+      android:background="@drawable/rounded_shape_primary_color">
+
+      <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:contentDescription="@string/recording_top_bar_title"
+        android:src="@drawable/ic_microphone"
+        android:tint="@color/on_primary" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="4dp"
+      android:layout_weight="1"
+      android:orientation="vertical">
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingHorizontal="4dp"
+        android:text="@string/widget_recordings_preview_name"
+        android:textColor="@color/on_primary_container"
+        android:textFontWeight="500"
+        android:textSize="20sp" />
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="4dp"
+        android:text="@string/widget_recordings_preview_duration"
+        android:textColor="@color/on_primary_container"
+        android:textFontWeight="400"
+        android:textSize="16sp" />
+
+    </LinearLayout>
+
+  </LinearLayout>
+
+</LinearLayout>

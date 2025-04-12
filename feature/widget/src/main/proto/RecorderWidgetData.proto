@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_package = "com.eva.feature_widget.proto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+import "google/protobuf/duration.proto";
+
+message RecorderWidgetDataProto{
+  RecordingModeProto mode = 1;
+  google.protobuf.Duration duration = 2;
+}
+
+enum RecordingModeProto{
+  IDLE_OR_COMPLETED = 0;
+  RECORDING = 1;
+  PAUSED = 2;
+}
