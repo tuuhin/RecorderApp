@@ -4,6 +4,7 @@ import android.content.Context
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationProvider
 import com.eva.recorder.data.VoiceRecorderImpl
+import com.eva.recorder.data.service.NotificationHelper
 import com.eva.recorder.domain.VoiceRecorder
 import com.eva.recordings.domain.provider.RecorderFileProvider
 import dagger.Module
@@ -15,7 +16,7 @@ import dagger.hilt.android.scopes.ServiceScoped
 
 @Module
 @InstallIn(ServiceComponent::class)
-object RecorderServiceModule {
+internal object RecorderServiceModule {
 
 	@Provides
 	@ServiceScoped
@@ -30,4 +31,9 @@ object RecorderServiceModule {
 		settings = settings,
 		locationProvider = locationProvider
 	)
+
+	@Provides
+	@ServiceScoped
+	fun providesNotificationHelper(@ApplicationContext context: Context): NotificationHelper =
+		NotificationHelper(context)
 }

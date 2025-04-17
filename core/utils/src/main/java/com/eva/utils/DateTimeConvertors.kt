@@ -4,28 +4,31 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Duration
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
+import kotlin.time.Duration.Companion.milliseconds
 
-fun LocalDateTime.toMillis(): Long {
-	return toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-}
+const val HALF_OF_SECOND_IN_NANOS = 500_000_000
 
-fun LocalDateTime.toDuration(): Duration {
-	return toMillis().toDuration(DurationUnit.MILLISECONDS)
-}
 
 fun LocalTime.roundToClosestSeconds(): LocalTime {
-	return LocalTime.fromSecondOfDay(this.toSecondOfDay())
+	return if (nanosecond >= HALF_OF_SECOND_IN_NANOS)
+		LocalTime(hour, minute, second + 1)
+	else LocalTime(hour, minute, second)
 }
 
-val Duration.asLocalTime: LocalTime
-	get() = LocalTime.fromNanosecondOfDay(toLong(DurationUnit.NANOSECONDS))
 
 fun Duration.toLocalDateTime(): LocalDateTime {
 	return Instant.fromEpochMilliseconds(inWholeMilliseconds)
 		.toLocalDateTime(TimeZone.currentSystemDefault())
 }
+
+fun Duration.toLocalTime(): LocalTime {
+	return LocalTime(
+		hour = inWholeHours.toInt(),
+		minute = inWholeMinutes.toInt() % 60,
+		second = inWholeSeconds.toInt() % 60
+	)
+}
+
+fun LocalTime.toDuration(): Duration = toMillisecondOfDay().milliseconds

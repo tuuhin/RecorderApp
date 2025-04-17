@@ -11,12 +11,12 @@ import com.eva.datastore.domain.enums.RecordQuality
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationProvider
 import com.eva.recorder.data.reader.BufferedAmplitudeReader
-import com.eva.recorder.domain.MicrophoneDataPoint
 import com.eva.recorder.domain.VoiceRecorder
 import com.eva.recorder.domain.exceptions.RecorderNotConfiguredException
 import com.eva.recorder.domain.models.RecordEncoderAndFormat
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.domain.stopwatch.RecorderStopWatch
+import com.eva.recorder.utils.DurationToAmplitudeList
 import com.eva.recordings.domain.provider.RecorderFileProvider
 import com.eva.utils.RecorderConstants
 import com.eva.utils.Resource
@@ -30,6 +30,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
@@ -81,11 +83,13 @@ internal class VoiceRecorderImpl(
 		get() = stopWatch.elapsedTime
 
 	@OptIn(ExperimentalCoroutinesApi::class)
-	override val dataPoints: Flow<List<MicrophoneDataPoint>>
-		get() = recorderState.flatMapLatest { state ->
-			_bufferReader?.readAmplitudeBuffered(state)
-				?: emptyFlow()
-		}
+	override val dataPoints: Flow<DurationToAmplitudeList>
+		get() = recorderState
+			.flatMapLatest { state -> _bufferReader?.readAmplitudeBuffered(state) ?: emptyFlow() }
+			.map { points ->
+				points.map { (millis, amp) -> millis.milliseconds to amp }
+			}
+			.flowOn(Dispatchers.Default)
 
 	private val _errorListener = MediaRecorder.OnErrorListener { _, _, _ ->
 		Log.e(LOGGER_TAG, "SOME ERROR OCCURRED WITH RECORDER")
@@ -359,6 +363,5 @@ internal class VoiceRecorderImpl(
 		// resetting the stopwatch
 		Log.d(LOGGER_TAG, "RESETTING STOPWATCH")
 		stopWatch.reset()
-
 	}
 }

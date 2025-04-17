@@ -16,11 +16,11 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.eva.feature_recorder.util.DeferredLocalTimeList
-import com.eva.feature_recorder.util.DeferredRecordingDataPointList
 import com.eva.feature_recorder.util.RecorderPreviewFakes
 import com.eva.recorder.domain.models.RecorderAction
 import com.eva.recorder.domain.models.RecorderState
+import com.eva.recorder.utils.DeferredDurationList
+import com.eva.recorder.utils.DeferredRecordingDataPointList
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import kotlinx.datetime.LocalTime
@@ -29,7 +29,7 @@ import kotlinx.datetime.LocalTime
 internal fun RecorderContent(
 	timer: LocalTime,
 	recordingPointsCallback: DeferredRecordingDataPointList,
-	bookMarksDeferred: DeferredLocalTimeList,
+	bookMarksDeferred: DeferredDurationList,
 	recorderState: RecorderState,
 	onRecorderAction: (RecorderAction) -> Unit,
 	modifier: Modifier = Modifier,

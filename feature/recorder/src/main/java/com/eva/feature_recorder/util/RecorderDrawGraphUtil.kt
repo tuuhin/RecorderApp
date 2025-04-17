@@ -13,9 +13,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import com.eva.utils.LocalTimeFormats
-import kotlinx.datetime.LocalTime
+import com.eva.utils.toLocalTime
 import kotlinx.datetime.format
-
+import kotlin.time.Duration
 
 internal fun DrawScope.drawAmplitudeGraph(
 	amplitudes: List<Float>,
@@ -40,9 +40,12 @@ internal fun DrawScope.drawAmplitudeGraph(
 				cap = StrokeCap.Round
 			)
 		}
+		// debug lines to show the limit range
 		if (idx + 1 == amplitudes.size && debug) {
 			drawLine(
-				color = Color.Red, start = start, end = end, strokeWidth = 2.dp.toPx()
+				color = Color.Red,
+				start = start, end = end,
+				strokeWidth = 2.dp.toPx()
 			)
 		}
 	}
@@ -50,8 +53,8 @@ internal fun DrawScope.drawAmplitudeGraph(
 
 internal fun DrawScope.drawRecorderTimeline(
 	image: Painter,
-	timeline: Collection<LocalTime>,
-	bookMarks: Collection<LocalTime>,
+	timeline: Collection<Duration>,
+	bookMarks: Collection<Duration>,
 	textMeasurer: TextMeasurer,
 	outlineColor: Color = Color.Gray,
 	outlineVariant: Color = Color.Gray,
@@ -62,14 +65,16 @@ internal fun DrawScope.drawRecorderTimeline(
 	textStyle: TextStyle = TextStyle(),
 	textColor: Color = Color.Black,
 ) {
-	timeline.forEachIndexed { idx, time ->
+	timeline.forEachIndexed { idx, duration ->
 		val xAxis = spikesWidth * idx.toFloat()
-		val timeInMillis = time.toMillisecondOfDay()
+		val timeInMillis = duration.inWholeMilliseconds
 
 		if (timeInMillis.mod(2_000) == 0 || idx == 0) {
 
-			val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
-			val layoutResult = textMeasurer.measure(readable, style = textStyle)
+			val readableTime = duration.toLocalTime()
+				.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
+
+			val layoutResult = textMeasurer.measure(readableTime, style = textStyle)
 			val textOffset = with(layoutResult) {
 				Offset(size.width / 2f, size.height / 2f)
 			}
@@ -110,7 +115,7 @@ internal fun DrawScope.drawRecorderTimeline(
 			)
 		}
 
-		if (time in bookMarks) {
+		if (duration in bookMarks) {
 
 			drawLine(
 				color = bookMarkColor,
@@ -121,7 +126,8 @@ internal fun DrawScope.drawRecorderTimeline(
 			)
 
 			drawCircle(
-				color = bookMarkColor, radius = 3.dp.toPx(), center = Offset(xAxis, 2.dp.toPx())
+				color = bookMarkColor, radius = 3.dp.toPx(),
+				center = Offset(xAxis, 2.dp.toPx())
 			)
 
 			val imageSize = 12.dp
