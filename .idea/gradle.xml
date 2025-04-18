@@ -31,6 +31,7 @@
             <option value="$PROJECT_DIR$/data/categories" />
             <option value="$PROJECT_DIR$/data/database" />
             <option value="$PROJECT_DIR$/data/datastore" />
+            <option value="$PROJECT_DIR$/data/editor" />
             <option value="$PROJECT_DIR$/data/interactions" />
             <option value="$PROJECT_DIR$/data/location" />
             <option value="$PROJECT_DIR$/data/player" />
