@@ -3,12 +3,11 @@ package com.eva.editor.domain
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Duration
 
 interface SimpleAudioPlayer {
 
-	val isPlaying: StateFlow<Boolean>
+	val isPlaying: Flow<Boolean>
 
 	val trackInfoAsFlow: Flow<PlayerTrackData>
 
@@ -24,5 +23,5 @@ interface SimpleAudioPlayer {
 
 	suspend fun stopPlayer()
 
-	suspend fun cleanUp()
+	fun cleanUp()
 }

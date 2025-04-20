@@ -7,8 +7,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
 data class PlayerTrackData(
-	private val current: Duration = 0.seconds,
-	private val total: Duration = 0.seconds,
+	val current: Duration = 0.seconds,
+	val total: Duration = 0.seconds,
 ) {
 	val currentAsLocalTime: LocalTime
 		get() = LocalTime.fromMillisecondOfDay(current.toInt(DurationUnit.MILLISECONDS))

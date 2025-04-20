@@ -5,13 +5,13 @@ import kotlin.time.Duration
 
 interface AudioTrimmer {
 
-	val transformationProgress: Flow<TransformationProgress>
+	val progress: Flow<TransformationProgress>
 
 	fun trimAudioFile(fileUri: String, start: Duration, end: Duration)
 
 	fun prepareTransformer()
 
-	fun cleanUp()
-
 	fun cancelTransformation()
+
+	fun cleanUp()
 }

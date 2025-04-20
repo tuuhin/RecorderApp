@@ -13,7 +13,7 @@ class PlayerFileProviderFromIdUseCase(
 	private val metadataProvider: RecordingsSecondaryDataProvider,
 ) {
 	operator fun invoke(audioId: Long): Flow<Resource<AudioFileModel, Exception>> {
-		val fileDataFlow = playerFileProvider.getAudioFileInfo(audioId)
+		val fileDataFlow = playerFileProvider.getAudioFileFromIdFlow(audioId)
 		val metaDataflow = metadataProvider.getRecordingFromIdAsFlow(audioId)
 			.catch { err -> err.printStackTrace() }
 

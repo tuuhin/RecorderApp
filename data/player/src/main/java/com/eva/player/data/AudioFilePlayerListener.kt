@@ -4,22 +4,16 @@ import android.util.Log
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import com.eva.player.data.util.computePlayerTrackData
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerPlayBackSpeed
 import com.eva.player.domain.model.PlayerState
 import com.eva.player.domain.model.PlayerTrackData
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
-import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "AUDIO_PLAYER_LISTENER"
 
@@ -78,7 +72,7 @@ internal class AudioFilePlayerListener(private val player: Player) : Player.List
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	val trackInfoAsFlow: Flow<PlayerTrackData>
-		get() = _playerState.flatMapLatest(::computeMusicTrackInfo)
+		get() = player.computePlayerTrackData()
 
 	val playerMetaDataFlow: Flow<PlayerMetaData>
 		get() = combine(
@@ -96,33 +90,6 @@ internal class AudioFilePlayerListener(private val player: Player) : Player.List
 				isMuted = muted
 			)
 		}
-
-	private fun computeMusicTrackInfo(state: PlayerState): Flow<PlayerTrackData> {
-		return flow {
-			Log.d(TAG, "CURRENT PLAYER STATE: $state")
-			// If the player can advertise positions ie, its ready or play or paused
-			// then continue the loop
-			try {
-				while (state.canAdvertiseCurrentPosition) {
-
-					val current = player.currentPosition.milliseconds
-					val total = player.duration.milliseconds
-
-					if (current.isNegative() || total.isNegative())
-						continue
-
-					val trackData = PlayerTrackData(current = current, total = total)
-					emit(trackData)
-					delay(100.milliseconds)
-				}
-			} catch (e: CancellationException) {
-				throw e
-			} catch (e: Exception) {
-				e.printStackTrace()
-			}
-		}.filter { it.allPositiveAndFinite }.distinctUntilChanged()
-	}
-
 
 	fun updateStateFromCurrentPlayerConfig() {
 		Log.d(TAG, "UPDATING PLAYER CONFIG")

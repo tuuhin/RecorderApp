@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import java.io.File
 import kotlin.time.Duration
@@ -31,27 +32,25 @@ private const val TAG = "AudioTrimmerTransformer"
 @UnstableApi
 internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer {
 
-	private val isTransforming = MutableStateFlow(false)
+	private val _isTransforming = MutableStateFlow(false)
 
 	private var _transformer: Transformer? = null
-
-	private val _tempFile: File
-		get() = File.createTempFile("temp", "tmp", context.cacheDir)
+	private var _resultsFile: File? = null
 
 	@OptIn(ExperimentalCoroutinesApi::class)
-	override val transformationProgress: Flow<TransformationProgress>
-		get() = isTransforming.flatMapLatest(::updateTransformerProgress)
+	override val progress: Flow<TransformationProgress>
+		get() = _isTransforming.flatMapLatest(::updateTransformerProgress)
+			.onStart { emit(TransformationProgress.Idle) }
 			.distinctUntilChanged()
 
 
 	private val _transformListener = object : Transformer.Listener {
 		override fun onCompleted(composition: Composition, exportResult: ExportResult) {
 			super.onCompleted(composition, exportResult)
-
-			isTransforming.update { false }
 			Log.d(TAG, "COMPOSITION COMPLETE")
-			// do something here with the content of the file.
 
+			_isTransforming.update { false }
+			// do something here with the content of the file.
 		}
 
 		override fun onError(
@@ -60,9 +59,12 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer {
 			exportException: ExportException
 		) {
 			super.onError(composition, exportResult, exportException)
-
-			isTransforming.update { false }
 			Log.d(TAG, "COMPOSITION FAILED")
+
+			_isTransforming.update { false }
+			// we don't want the temp file anymore
+			_resultsFile?.delete()
+			_resultsFile = null
 		}
 	}
 
@@ -71,14 +73,15 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer {
 		_transformer = Transformer.Builder(context)
 			.setAudioMimeType(MimeTypes.AUDIO_MP4)
 			.experimentalSetTrimOptimizationEnabled(true)
-			.build().apply {
-				addListener(_transformListener)
-			}
+			.build()
+		_transformer?.addListener(_transformListener)
 	}
 
 	override fun trimAudioFile(uri: String, start: Duration, end: Duration) {
 
-		if (isTransforming.value) {
+		if (_transformer == null) prepareTransformer()
+
+		if (_isTransforming.value) {
 			Log.d(TAG, "TRANSFORMATION RUNNING CANNOT EDIT..")
 			return
 		}
@@ -93,11 +96,13 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer {
 			.setClippingConfiguration(clippingConfig)
 			.build()
 
-		// run the transformer on media item for clipping
-		if (_transformer != null) {
-			_transformer?.start(mediaItem, _tempFile.path)
-			isTransforming.update { true }
+		val file = _resultsFile ?: run {
+			_resultsFile = File.createTempFile("temp", ".tmp", context.cacheDir)
+			_resultsFile!!
 		}
+		Log.d(TAG, "BEGINNING TRANSFORMATION ")
+		_transformer?.start(mediaItem, file.path)
+		_isTransforming.update { true }
 	}
 
 

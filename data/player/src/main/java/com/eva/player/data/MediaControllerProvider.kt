@@ -21,12 +21,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
 private const val TAG = "MEDIA_CONTROLLER_PROVIDER"
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class MediaControllerProvider(private val context: Context) {
 
 	private var _controller: MediaController? = null
@@ -36,13 +38,13 @@ class MediaControllerProvider(private val context: Context) {
 	val isControllerConnected: StateFlow<Boolean>
 		get() = _isConnected
 
-	@OptIn(ExperimentalCoroutinesApi::class)
 	val trackInfoAsFlow: Flow<PlayerTrackData>
-		get() = _isConnected.flatMapLatest { _player?.trackInfoAsFlow ?: emptyFlow() }
+		get() = _isConnected.filter { it }
+			.flatMapLatest { _player?.trackInfoAsFlow ?: emptyFlow() }
 
-	@OptIn(ExperimentalCoroutinesApi::class)
 	val playerMetaDataFlow: Flow<PlayerMetaData>
-		get() = _isConnected.flatMapLatest { _player?.playerMetaDataFlow ?: emptyFlow() }
+		get() = _isConnected.filter { it }
+			.flatMapLatest { _player?.playerMetaDataFlow ?: emptyFlow() }
 
 	val player: AudioFilePlayer?
 		get() = _player
@@ -53,11 +55,11 @@ class MediaControllerProvider(private val context: Context) {
 		override fun onDisconnected(controller: MediaController) {
 			super.onDisconnected(controller)
 			Log.i(TAG, "MEDIA CONTROLLER DISCONNECTED")
+			// update is connected
+			_isConnected.update { controller.isConnected }
 			// clear the player
 			_player?.cleanUp()
 			_player = null
-			// update is connected
-			_isConnected.update { controller.isConnected }
 		}
 
 		override fun onError(controller: MediaController, sessionError: SessionError) {

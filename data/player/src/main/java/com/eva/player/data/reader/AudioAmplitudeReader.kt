@@ -10,7 +10,7 @@ import androidx.core.net.toUri
 import com.eva.player.domain.RMSValues
 import com.eva.player.domain.WaveformsReader
 import com.eva.player.domain.exceptions.InvalidMimeTypeException
-import com.eva.recordings.domain.provider.PlayerFileProvider
+import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.utils.RecorderConstants
 import com.eva.utils.Resource
 import kotlinx.coroutines.Dispatchers
@@ -37,11 +37,7 @@ private const val TWO_POWER_15 = 32_768f
 private const val TWO_POWER_31 = 2_147_483_648L
 private const val TWO_POWER_7 = 128f
 
-
-internal class AudioAmplitudeReader(
-	private val context: Context,
-	private val fileProvider: PlayerFileProvider,
-) : WaveformsReader {
+internal class AudioAmplitudeReader(private val context: Context) : WaveformsReader {
 
 	private var extractor: MediaExtractor? = null
 	private var mediaCodec: MediaCodec? = null
@@ -88,15 +84,14 @@ internal class AudioAmplitudeReader(
 			.distinctUntilChanged()
 
 
-	override suspend fun performWaveformsReading(audioId: Long): Resource<Unit, Exception> {
+	override suspend fun readWaveformsFromFile(audio: AudioFileModel): Resource<Unit, Exception> {
 		return try {
 			// clearing the values
 			resetAll()
 			// get the audio uri
-			val audioUri = fileProvider.providesAudioFileUri(audioId)
-			Log.d(TAG, "EVALUATING FOR URI: $audioUri")
+			Log.d(TAG, "EVALUATING FOR URI: ${audio.fileUri}")
 			// start media codec
-			startMediaDecoder(audioUri.toUri())
+			startMediaDecoder(audio.fileUri.toUri())
 			Resource.Success(Unit)
 		} catch (e: Exception) {
 			e.printStackTrace()

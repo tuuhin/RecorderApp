@@ -59,7 +59,7 @@ internal class PlayerFileProviderImpl(
 		return ContentUris.withAppendedId(RecordingsConstants.AUDIO_VOLUME_URI, audioId).toString()
 	}
 
-	override fun getAudioFileInfo(id: Long): Flow<ResourcedDetailedRecordingModel> {
+	override fun getAudioFileFromIdFlow(id: Long): Flow<ResourcedDetailedRecordingModel> {
 		return callbackFlow {
 
 			var updateJob: Job? = null
@@ -69,7 +69,7 @@ internal class PlayerFileProviderImpl(
 			// send the data
 			launch(Dispatchers.IO) {
 				// evaluate it and send
-				val first = getPlayerInfoFromAudioId(id)
+				val first = getAudioFileFromId(id)
 				send(first)
 			}
 
@@ -79,7 +79,7 @@ internal class PlayerFileProviderImpl(
 					// cancel the previous job and run new one
 					updateJob?.cancel()
 					updateJob = launch(Dispatchers.IO) {
-						val update = getPlayerInfoFromAudioId(id)
+						val update = getAudioFileFromId(id)
 						send(update)
 					}
 				}
@@ -97,7 +97,7 @@ internal class PlayerFileProviderImpl(
 		}
 	}
 
-	override suspend fun getPlayerInfoFromAudioId(id: Long): ResourcedDetailedRecordingModel {
+	override suspend fun getAudioFileFromId(id: Long): ResourcedDetailedRecordingModel {
 		val selection = "${MediaStore.Audio.AudioColumns._ID} = ?"
 		val selectionArgs = arrayOf("$id")
 
