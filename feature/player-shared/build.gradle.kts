@@ -2,29 +2,27 @@ plugins {
 	alias(libs.plugins.recorderapp.android.library)
 	alias(libs.plugins.recorderapp.hilt)
 	alias(libs.plugins.recorderapp.compose.compiler)
-
-	alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
-	namespace = "com.eva.ui"
+	namespace = "com.eva.feature_player_core"
+
 	buildFeatures {
 		compose = true
 	}
 }
 
 dependencies {
-	// navigation
+	//navigation
 	implementation(libs.androidx.navigation.compose)
-	implementation(libs.kotlinx.serialization.json)
-
-	// hilt viewmodel
 	implementation(libs.androidx.hilt.navigation.compose)
 
-	//dynamic font
-	implementation(libs.androidx.ui.text.google.fonts)
+	// core
+	implementation(project(":core:ui"))
+	implementation(project(":core:utils"))
 
-	//commons
-	api(libs.kotlinx.collections.immutable)
-	api(libs.androidx.graphics.shapes)
+	implementation(project(":data:player"))
+	implementation(project(":data:recordings"))
+	implementation(project(":data:interactions"))
+	implementation(project(":data:use_case"))
 }

@@ -15,6 +15,8 @@ import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.Resource
 import com.eva.utils.roundToClosestSeconds
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -38,7 +40,7 @@ internal class BookMarksViewModel @Inject constructor(
 	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
-	private val route: NavRoutes.AudioPlayer
+	val route: NavRoutes.AudioPlayer
 		get() = savedStateHandle.toRoute<NavRoutes.AudioPlayer>()
 
 	private val audioId: Long

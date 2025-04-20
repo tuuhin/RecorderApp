@@ -1,8 +1,10 @@
-package com.eva.feature_player.composable
+package com.eva.player_shared.composables
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
@@ -21,13 +23,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.eva.feature_player.state.ContentLoadState
-import com.eva.recordings.domain.models.AudioFileModel
+import com.eva.player_shared.state.ContentLoadState
 
 @Composable
-internal fun ContentStateAnimatedContainer(
-	loadState: ContentLoadState,
-	onSuccess: @Composable BoxScope.(AudioFileModel) -> Unit,
+fun <T> ContentStateAnimatedContainer(
+	loadState: ContentLoadState<T>,
+	onSuccess: @Composable BoxScope.(T) -> Unit,
+	onFailed: @Composable BoxScope.() -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	AnimatedContent(
@@ -47,15 +49,13 @@ internal fun ContentStateAnimatedContainer(
 					modifier = Modifier.align(Alignment.Center)
 				)
 
-				ContentLoadState.Unknown -> AudioFileNotFoundBox(
-					modifier = Modifier.align(Alignment.Center)
-				)
+				ContentLoadState.Unknown -> onFailed()
 			}
 		}
 	}
 }
 
-private fun AnimatedContentTransitionScope<ContentLoadState>.animateLoadState(
+private fun <T> AnimatedContentTransitionScope<ContentLoadState<T>>.animateLoadState(
 	loadContentTransition: FiniteAnimationSpec<Float> = tween(
 		durationMillis = 800,
 		easing = FastOutSlowInEasing
@@ -66,6 +66,15 @@ private fun AnimatedContentTransitionScope<ContentLoadState>.animateLoadState(
 		easing = FastOutLinearInEasing
 	)
 ): ContentTransform {
+
+	// no transition is this case
+	if (initialState is ContentLoadState.Content && targetState is ContentLoadState.Content) {
+		return ContentTransform(
+			targetContentEnter = EnterTransition.None,
+			initialContentExit = ExitTransition.None
+		)
+	}
+
 	return if (initialState is ContentLoadState.Loading && targetState is ContentLoadState.Content) {
 		fadeIn(animationSpec = loadContentTransition) + expandVertically(
 			animationSpec = spring(

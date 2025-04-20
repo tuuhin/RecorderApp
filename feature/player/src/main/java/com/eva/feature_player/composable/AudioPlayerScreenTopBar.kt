@@ -40,7 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.eva.feature_player.state.ContentLoadState
+import com.eva.player_shared.state.ContentLoadState
 import com.eva.feature_player.util.PlayerPreviewFakes
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
@@ -51,7 +51,7 @@ import com.eva.ui.theme.RecorderAppTheme
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun AudioPlayerScreenTopBar(
-	state: ContentLoadState,
+	state: ContentLoadState<out AudioFileModel>,
 	modifier: Modifier = Modifier,
 	onEdit: () -> Unit,
 	navigation: @Composable () -> Unit = {},

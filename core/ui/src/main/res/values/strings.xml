@@ -242,4 +242,6 @@
   <string name="no_search_results">No search results</string>
   <string name="voice_recognizer" translatable="false">Mic Input</string>
   <string name="voice_search_prompt" translatable="false">Speak your search query</string>
+  <string name="media_editor_title">Edit</string>
+  <string name="action_save">Save</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.eva.feature_player.composable
+package com.eva.player_shared.composables
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -58,7 +58,7 @@ private fun PlayerDurationText(
 }
 
 @Composable
-internal fun PlayerDurationText(
+fun PlayerDurationText(
 	track: PlayerTrackData,
 	modifier: Modifier = Modifier,
 ) {

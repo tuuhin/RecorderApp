@@ -12,11 +12,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.eva.ui.viewmodel.UIEvents
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun UiEventsHandler(
-	eventsFlow: () -> SharedFlow<UIEvents>,
+	eventsFlow: () -> Flow<UIEvents>,
 	onNavigateBack: () -> Unit = {},
 ) {
 

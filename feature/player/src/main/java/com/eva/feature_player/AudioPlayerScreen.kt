@@ -35,30 +35,35 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.bookmarks.domain.AudioBookmarkModel
 import com.eva.feature_player.composable.AudioFileMetaDataSheetContent
+import com.eva.feature_player.composable.AudioFileNotFoundBox
 import com.eva.feature_player.composable.AudioPlayerScreenTopBar
-import com.eva.feature_player.composable.ContentStateAnimatedContainer
 import com.eva.feature_player.composable.PlayerActionsAndSlider
 import com.eva.feature_player.composable.PlayerAmplitudeGraph
 import com.eva.feature_player.composable.PlayerBookMarks
-import com.eva.feature_player.composable.PlayerDurationText
-import com.eva.feature_player.state.AudioFileEvent
+import com.eva.player_shared.composables.PlayerDurationText
 import com.eva.feature_player.state.AudioPlayerState
 import com.eva.feature_player.state.BookMarkEvents
-import com.eva.feature_player.state.ContentLoadState
 import com.eva.feature_player.state.CreateOrEditBookMarkState
 import com.eva.feature_player.state.PlayerEvents
 import com.eva.feature_player.util.PlayerGraphData
 import com.eva.feature_player.util.PlayerPreviewFakes
+import com.eva.player_shared.UserAudioAction
+import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
+import com.eva.player_shared.composables.ContentStateAnimatedContainer
 import com.eva.ui.theme.RecorderAppTheme
+import com.eva.player_shared.state.ContentLoadState
 import com.eva.ui.utils.LocalSnackBarProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@OptIn(
+	ExperimentalMaterial3Api::class,
+	ExperimentalSharedTransitionApi::class
+)
 @Composable
 internal fun AudioPlayerScreen(
 	selectedAudioId: Long,
@@ -66,10 +71,10 @@ internal fun AudioPlayerScreen(
 	bookMarkState: CreateOrEditBookMarkState,
 	playerState: AudioPlayerState,
 	bookmarks: ImmutableList<AudioBookmarkModel>,
-	loadState: ContentLoadState,
+	loadState: ContentLoadState<out AudioFileModel>,
 	onPlayerEvents: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
-	onFileEvent: (AudioFileEvent) -> Unit = {},
+	onFileEvent: (UserAudioAction) -> Unit = {},
 	onBookmarkEvent: (BookMarkEvents) -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 	onNavigateToEdit: () -> Unit = {},
@@ -118,9 +123,9 @@ internal fun AudioPlayerScreen(
 					scope.launch { metaDataBottomSheet.show() }
 						.invokeOnCompletion { openMetaDataBottomSheet = true }
 				},
-				onShareOption = { onFileEvent(AudioFileEvent.ShareCurrentAudioFile) },
+				onShareOption = { onFileEvent(UserAudioAction.ShareCurrentAudioFile) },
 				onRenameOption = { model -> onRenameItem(model.id) },
-				onToggleFavourite = { model -> onFileEvent(AudioFileEvent.ToggleIsFavourite(model)) }
+				onToggleFavourite = { model -> onFileEvent(UserAudioAction.ToggleIsFavourite(model)) }
 			)
 		},
 		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
@@ -134,12 +139,8 @@ internal fun AudioPlayerScreen(
 		ContentStateAnimatedContainer(
 			loadState = loadState,
 			modifier = Modifier
-				.padding(
-					start = dimensionResource(id = R.dimen.sc_padding),
-					end = dimensionResource(R.dimen.sc_padding),
-					top = dimensionResource(R.dimen.sc_padding) + scPadding.calculateTopPadding(),
-					bottom = dimensionResource(R.dimen.sc_padding) + scPadding.calculateBottomPadding()
-				)
+				.padding(scPadding)
+				.padding(all = dimensionResource(id = R.dimen.sc_padding))
 				.fillMaxSize(),
 			onSuccess = {
 				PlayerDurationText(
@@ -177,6 +178,9 @@ internal fun AudioPlayerScreen(
 						.fillMaxWidth()
 						.align(Alignment.BottomCenter),
 				)
+			},
+			onFailed = {
+				AudioFileNotFoundBox(modifier = Modifier.align(Alignment.Center))
 			},
 		)
 	}

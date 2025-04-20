@@ -17,20 +17,22 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
 import com.eva.feature_player.composable.ControllerLifeCycleObserver
 import com.eva.feature_player.viewmodel.AudioPlayerViewModel
 import com.eva.feature_player.viewmodel.BookMarksViewModel
+import com.eva.player_shared.PlayerMetadataViewmodel
 import com.eva.ui.R
 import com.eva.ui.navigation.NavDialogs
-import com.eva.ui.navigation.NavRoutes
+import com.eva.ui.navigation.PlayerSubGraph
 import com.eva.ui.navigation.animatedComposable
 import com.eva.ui.utils.LocalSharedTransitionVisibilityScopeProvider
 import com.eva.ui.utils.UiEventsHandler
+import com.eva.ui.utils.sharedViewmodel
 import com.eva.utils.NavDeepLinks
+import kotlinx.coroutines.flow.merge
 
 fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
-	animatedComposable<NavRoutes.AudioPlayer>(
+	animatedComposable<PlayerSubGraph.AudioPlayerRoute>(
 		deepLinks = listOf(
 			navDeepLink {
 				uriPattern = NavDeepLinks.PLAYER_DESTINATION_PATTERN
@@ -40,15 +42,17 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 		sizeTransform = { SizeTransform(clip = false) { _, _ -> tween(durationMillis = 300) } }
 	) { backStackEntry ->
 
-		val route = backStackEntry.toRoute<NavRoutes.AudioPlayer>()
+		val sharedViewModel = backStackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
 
-		val viewModel = hiltViewModel<AudioPlayerViewModel>()
+		val playerViewModel = hiltViewModel<AudioPlayerViewModel>()
 		val bookMarksViewmodel = hiltViewModel<BookMarksViewModel>()
 
+		//shared state
+		val contentState by sharedViewModel.loadState.collectAsStateWithLifecycle()
+
 		//player state
-		val contentState by viewModel.loadState.collectAsStateWithLifecycle()
-		val playerState by viewModel.currentAudioState.collectAsStateWithLifecycle()
-		val waveforms by viewModel.waveforms.collectAsStateWithLifecycle()
+		val playerState by playerViewModel.currentAudioState.collectAsStateWithLifecycle()
+		val waveforms by playerViewModel.waveforms.collectAsStateWithLifecycle()
 
 		// bookmarks state
 		val createOrEditBookMarkState by bookMarksViewmodel.bookmarkState.collectAsStateWithLifecycle()
@@ -57,34 +61,34 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 		// lifeCycleState
 		val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
-		// ui handler for player viewmodel
+		// Handle UI Events
 		UiEventsHandler(
-			eventsFlow = viewModel::uiEvent,
+			eventsFlow = {
+				merge(
+					playerViewModel.uiEvent,
+					sharedViewModel.uiEvent,
+					bookMarksViewmodel.uiEvent
+				)
+			},
 			onNavigateBack = controller::popBackStack
 		)
 
-		// ui handler for bookmarks viewmodel
-		UiEventsHandler(eventsFlow = bookMarksViewmodel::uiEvent)
-
-		ControllerLifeCycleObserver(
-			audioId = route.audioId,
-			onEvent = viewModel::onControllerEvents
-		)
+		ControllerLifeCycleObserver(onEvent = playerViewModel::onControllerEvents)
 
 		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
 			AudioPlayerScreen(
-				selectedAudioId = route.audioId,
+				selectedAudioId = sharedViewModel.audioId,
 				waveforms = { waveforms },
 				loadState = contentState,
 				playerState = playerState,
 				bookmarks = bookMarks,
 				bookMarkState = createOrEditBookMarkState,
-				onPlayerEvents = viewModel::onPlayerEvents,
+				onPlayerEvents = playerViewModel::onPlayerEvents,
 				onBookmarkEvent = bookMarksViewmodel::onBookMarkEvent,
-				onFileEvent = viewModel::onFileEvents,
+				onFileEvent = sharedViewModel::onFileEvent,
 				onNavigateToEdit = dropUnlessResumed {
 					if (lifeCycleState.isAtLeast(state = Lifecycle.State.RESUMED)) {
-						controller.navigate(NavRoutes.AudioEditor)
+						controller.navigate(PlayerSubGraph.AudioEditorRoute)
 					}
 				},
 				onRenameItem = { audioId ->

@@ -1,4 +1,4 @@
-package com.eva.feature_player.composable
+package com.eva.player_shared.composables
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.eva.ui.R
 import com.eva.ui.theme.CustomShapes
@@ -43,12 +44,14 @@ import com.eva.ui.theme.RecorderAppTheme
 import com.eva.ui.theme.RoundedPolygonShape
 
 @Composable
-internal fun AnimatedPlayPauseButton(
+fun AnimatedPlayPauseButton(
 	isPlaying: Boolean,
 	onPause: () -> Unit,
 	onPlay: () -> Unit,
 	modifier: Modifier = Modifier,
 	enabled: Boolean = true,
+	tonalElevation: Dp = 0.dp,
+	shadowElevation: Dp = 0.dp,
 	colors: ButtonColors = ButtonDefaults
 		.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
 ) {
@@ -81,8 +84,13 @@ internal fun AnimatedPlayPauseButton(
 		color = buttonContainerColor,
 		modifier = modifier.graphicsLayer {
 			clip = true
-			shape = RoundedPolygonShape(CustomShapes.ROUNDED_STAR, if (isPlaying) rotation else 0f)
-		}
+			shape = RoundedPolygonShape(
+				polygon = CustomShapes.ROUNDED_STAR_8_CORNERS,
+				rotation = if (isPlaying) rotation else 0f
+			)
+		},
+		tonalElevation = tonalElevation,
+		shadowElevation = shadowElevation,
 	) {
 		Box(
 			modifier = Modifier.sizeIn(
@@ -114,9 +122,7 @@ internal fun AnimatedPlayPauseButton(
 
 private fun isPlayingAnimation(): ContentTransform {
 
-	val fadeSpec = tween<Float>(
-		durationMillis = 400, easing = EaseInBounce
-	)
+	val fadeSpec = tween<Float>(durationMillis = 400, easing = EaseInBounce)
 
 	val scaleSpec = spring<Float>(
 		dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -149,4 +155,3 @@ private fun AnimatedPlayPauseButtonIsPlayingPreview(
 		)
 	}
 }
-

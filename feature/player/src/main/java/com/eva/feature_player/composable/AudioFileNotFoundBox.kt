@@ -3,6 +3,9 @@ package com.eva.feature_player.composable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -22,16 +25,17 @@ import com.eva.ui.theme.RecorderAppTheme
 @Composable
 internal fun AudioFileNotFoundBox(modifier: Modifier = Modifier) {
 	Column(
-		modifier = modifier,
+		modifier = modifier.defaultMinSize(minWidth = 200.dp, minHeight = 260.dp),
 		horizontalAlignment = Alignment.CenterHorizontally,
-		verticalArrangement = Arrangement.spacedBy(8.dp)
+		verticalArrangement = Arrangement.Center,
 	) {
 		Image(
 			painter = painterResource(id = R.drawable.ic_music_file),
 			contentDescription = stringResource(id = R.string.music_file_not_found_title),
 			colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.primary),
-			modifier = Modifier.size(64.dp)
+			modifier = Modifier.size(180.dp)
 		)
+		Spacer(modifier = Modifier.height(12.dp))
 		Text(
 			text = stringResource(id = R.string.music_file_not_found_title),
 			style = MaterialTheme.typography.titleLarge,

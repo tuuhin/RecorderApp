@@ -33,6 +33,7 @@ import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerPlayBackSpeed
 import com.eva.player.domain.model.PlayerState
 import com.eva.ui.R
+import com.eva.player_shared.composables.AnimatedPlayPauseButton
 import com.eva.ui.theme.RecorderAppTheme
 import kotlinx.coroutines.launch
 
