@@ -1,4 +1,4 @@
-package com.eva.feature_player.state
+package com.eva.feature_player.bookmarks.state
 
 import androidx.compose.ui.text.input.TextFieldValue
 import com.eva.bookmarks.domain.AudioBookmarkModel

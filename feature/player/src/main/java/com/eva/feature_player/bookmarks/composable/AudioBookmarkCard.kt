@@ -1,4 +1,4 @@
-package com.eva.feature_player.composable
+package com.eva.feature_player.bookmarks.composable
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.bookmarks.domain.AudioBookmarkModel
-import com.eva.feature_player.util.PlayerPreviewFakes
+import com.eva.feature_player.bookmarks.utils.BookmarksPreviewFakes
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.LocalTimeFormats
@@ -100,7 +100,7 @@ internal fun AudioBookMarkCard(
 private fun AudioBookmarkCardPreview() = RecorderAppTheme {
 	Surface {
 		AudioBookMarkCard(
-			bookmark = PlayerPreviewFakes.FAKE_BOOKMARK_MODEL,
+			bookmark = BookmarksPreviewFakes.FAKE_BOOKMARK_MODEL,
 			onEdit = {},
 			onDelete = {}
 		)

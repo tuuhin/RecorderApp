@@ -34,27 +34,28 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.bookmarks.domain.AudioBookmarkModel
-import com.eva.feature_player.composable.AudioFileMetaDataSheetContent
+import com.eva.feature_player.bookmarks.state.BookMarkEvents
+import com.eva.feature_player.bookmarks.state.CreateBookmarkState
+import com.eva.feature_player.bookmarks.utils.BookmarksPreviewFakes
 import com.eva.feature_player.composable.AudioFileNotFoundBox
 import com.eva.feature_player.composable.AudioPlayerScreenTopBar
+import com.eva.feature_player.composable.FileMetaDataSheetContent
 import com.eva.feature_player.composable.PlayerActionsAndSlider
 import com.eva.feature_player.composable.PlayerAmplitudeGraph
 import com.eva.feature_player.composable.PlayerBookMarks
-import com.eva.player_shared.composables.PlayerDurationText
 import com.eva.feature_player.state.AudioPlayerState
-import com.eva.feature_player.state.BookMarkEvents
-import com.eva.feature_player.state.CreateOrEditBookMarkState
 import com.eva.feature_player.state.PlayerEvents
-import com.eva.feature_player.util.PlayerGraphData
-import com.eva.feature_player.util.PlayerPreviewFakes
 import com.eva.player_shared.UserAudioAction
+import com.eva.player_shared.composables.ContentStateAnimatedContainer
+import com.eva.player_shared.composables.PlayerDurationText
+import com.eva.player_shared.state.ContentLoadState
+import com.eva.player_shared.util.PlayerGraphData
+import com.eva.player_shared.util.PlayerPreviewFakes
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
-import com.eva.player_shared.composables.ContentStateAnimatedContainer
 import com.eva.ui.theme.RecorderAppTheme
-import com.eva.player_shared.state.ContentLoadState
 import com.eva.ui.utils.LocalSnackBarProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -68,7 +69,7 @@ import kotlinx.coroutines.launch
 internal fun AudioPlayerScreen(
 	selectedAudioId: Long,
 	waveforms: PlayerGraphData,
-	bookMarkState: CreateOrEditBookMarkState,
+	bookMarkState: CreateBookmarkState,
 	playerState: AudioPlayerState,
 	bookmarks: ImmutableList<AudioBookmarkModel>,
 	loadState: ContentLoadState<out AudioFileModel>,
@@ -105,7 +106,7 @@ internal fun AudioPlayerScreen(
 			onDismissRequest = { openMetaDataBottomSheet = false },
 		) {
 			loadState.OnContent { audio ->
-				AudioFileMetaDataSheetContent(
+				FileMetaDataSheetContent(
 					audio = audio,
 					contentPadding = PaddingValues(horizontal = dimensionResource(R.dimen.bottom_sheet_padding_lg))
 				)
@@ -192,9 +193,9 @@ private fun AudioPlayerScreenPreview() = RecorderAppTheme {
 	AudioPlayerScreen(
 		selectedAudioId = 0L,
 		waveforms = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
-		playerState = PlayerPreviewFakes.FAKE_AUDIO_INFORMATION,
-		bookmarks = PlayerPreviewFakes.FAKE_BOOKMARKS_LIST,
-		bookMarkState = CreateOrEditBookMarkState(),
+		playerState = AudioPlayerState(isControllerSet = true),
+		bookmarks = BookmarksPreviewFakes.FAKE_BOOKMARKS_LIST,
+		bookMarkState = CreateBookmarkState(),
 		loadState = ContentLoadState.Content(data = PlayerPreviewFakes.FAKE_AUDIO_MODEL),
 		onPlayerEvents = {},
 		navigation = {

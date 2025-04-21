@@ -6,7 +6,6 @@ import androidx.navigation.toRoute
 import com.eva.feature_player.state.AudioPlayerState
 import com.eva.feature_player.state.ControllerEvents
 import com.eva.feature_player.state.PlayerEvents
-import com.eva.feature_player.util.PlayerSliderControl
 import com.eva.player.data.MediaControllerProvider
 import com.eva.player.domain.AudioFilePlayer
 import com.eva.player.domain.WaveformsReader
@@ -56,7 +55,7 @@ internal class AudioPlayerViewModel @Inject constructor(
 	val waveforms = waveformsReader.wavefront
 		.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(8_000),
+			started = SharingStarted.Companion.WhileSubscribed(8_000),
 			initialValue = emptyList()
 		)
 
@@ -69,7 +68,7 @@ internal class AudioPlayerViewModel @Inject constructor(
 	).onStart { readAudioFileFromId() }
 		.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(8_000),
+			started = SharingStarted.Companion.WhileSubscribed(8_000),
 			initialValue = AudioPlayerState()
 		)
 

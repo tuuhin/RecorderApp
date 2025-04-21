@@ -17,9 +17,9 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.navDeepLink
+import com.eva.feature_player.bookmarks.BookMarksViewModel
 import com.eva.feature_player.composable.ControllerLifeCycleObserver
 import com.eva.feature_player.viewmodel.AudioPlayerViewModel
-import com.eva.feature_player.viewmodel.BookMarksViewModel
 import com.eva.player_shared.PlayerMetadataViewmodel
 import com.eva.ui.R
 import com.eva.ui.navigation.NavDialogs

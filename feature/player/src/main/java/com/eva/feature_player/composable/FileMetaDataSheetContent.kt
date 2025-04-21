@@ -14,11 +14,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.eva.feature_player.util.PlayerPreviewFakes
+import com.eva.player_shared.util.PlayerPreviewFakes
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
@@ -27,7 +29,7 @@ import kotlinx.datetime.format
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AudioFileMetaDataSheetContent(
+fun FileMetaDataSheetContent(
 	audio: AudioFileModel,
 	modifier: Modifier = Modifier,
 	contentPadding: PaddingValues = PaddingValues(),
@@ -137,28 +139,32 @@ private fun FileMetaData(
 	title: String,
 	text: String,
 	modifier: Modifier = Modifier,
+	titleStyle: TextStyle = MaterialTheme.typography.labelLarge,
+	textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
+	titleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+	textColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
 	Column(
 		modifier = modifier.padding(vertical = 8.dp, horizontal = 4.dp)
 	) {
 		Text(
 			text = title,
-			style = MaterialTheme.typography.labelLarge,
-			color = MaterialTheme.colorScheme.onSurfaceVariant
+			style = titleStyle,
+			color = titleColor,
 		)
 		Text(
 			text = text,
-			style = MaterialTheme.typography.bodyLarge,
-			color = MaterialTheme.colorScheme.onBackground
+			style = textStyle,
+			color = textColor,
 		)
 	}
 }
 
 @PreviewLightDark
 @Composable
-private fun AudioFileMetaDataPreview() = RecorderAppTheme {
+private fun FileMetaDataSheetPreview() = RecorderAppTheme {
 	Surface(color = MaterialTheme.colorScheme.background) {
-		AudioFileMetaDataSheetContent(
+		FileMetaDataSheetContent(
 			audio = PlayerPreviewFakes.FAKE_AUDIO_MODEL,
 			modifier = Modifier.fillMaxWidth()
 		)

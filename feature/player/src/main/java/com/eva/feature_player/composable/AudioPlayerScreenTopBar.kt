@@ -11,7 +11,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -38,15 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.player_shared.state.ContentLoadState
-import com.eva.feature_player.util.PlayerPreviewFakes
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
-import com.eva.ui.theme.RecorderAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
@@ -209,20 +205,4 @@ private fun favouriteAudioAnimation(): ContentTransform {
 			slideOutVertically(animationSpec = tween(90))
 
 	return enter togetherWith exit
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@PreviewLightDark
-@Composable
-private fun AudioPlayerScreenTopBarPreview() = RecorderAppTheme {
-	AudioPlayerScreenTopBar(
-		state = ContentLoadState.Content(PlayerPreviewFakes.FAKE_AUDIO_MODEL),
-		onEdit = {},
-		navigation = {
-			Icon(
-				imageVector = Icons.AutoMirrored.Default.ArrowBack,
-				contentDescription = stringResource(R.string.back_arrow)
-			)
-		},
-	)
 }

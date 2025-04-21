@@ -28,8 +28,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
 import com.eva.bookmarks.domain.AudioBookmarkModel
-import com.eva.feature_player.state.BookMarkEvents
-import com.eva.feature_player.state.CreateOrEditBookMarkState
+import com.eva.feature_player.bookmarks.composable.AddBookmarkDialogContent
+import com.eva.feature_player.bookmarks.composable.AudioBookmarksList
+import com.eva.feature_player.bookmarks.state.BookMarkEvents
+import com.eva.feature_player.bookmarks.state.CreateBookmarkState
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.ui.R
 import kotlinx.collections.immutable.ImmutableList
@@ -41,7 +43,7 @@ import kotlinx.datetime.LocalTime
 private fun PlayerBookMarks(
 	trackCurrentTime: () -> LocalTime,
 	bookmarks: ImmutableList<AudioBookmarkModel>,
-	bookMarkState: CreateOrEditBookMarkState,
+	bookMarkState: CreateBookmarkState,
 	onBookmarkEvent: (BookMarkEvents) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
@@ -141,7 +143,7 @@ private fun PlayerBookMarks(
 internal fun PlayerBookMarks(
 	trackData: PlayerTrackData,
 	bookmarks: ImmutableList<AudioBookmarkModel>,
-	bookMarkState: CreateOrEditBookMarkState,
+	bookMarkState: CreateBookmarkState,
 	onBookmarkEvent: (BookMarkEvents) -> Unit,
 	modifier: Modifier = Modifier,
 ) {

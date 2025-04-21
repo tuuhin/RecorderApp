@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.feature_player.state.PlayerEvents
-import com.eva.feature_player.util.PlayerPreviewFakes
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.ui.theme.RecorderAppTheme
@@ -79,7 +78,7 @@ internal fun PlayerActionsAndSlider(
 private fun PlayerActionsAndSliderPreview() = RecorderAppTheme {
 	Surface {
 		PlayerActionsAndSlider(
-			metaData = PlayerPreviewFakes.FAKE_AUDIO_INFORMATION.playerMetaData,
+			metaData = PlayerMetaData(isPlaying = true),
 			trackData = PlayerTrackData(),
 			onPlayerAction = {},
 			modifier = Modifier.padding(12.dp)

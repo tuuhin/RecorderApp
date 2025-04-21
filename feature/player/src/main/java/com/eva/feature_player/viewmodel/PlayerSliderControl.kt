@@ -1,4 +1,4 @@
-package com.eva.feature_player.util
+package com.eva.feature_player.viewmodel
 
 import com.eva.player.data.MediaControllerProvider
 import kotlinx.coroutines.FlowPreview
@@ -11,7 +11,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-class PlayerSliderControl(private val controller: MediaControllerProvider) {
+internal class PlayerSliderControl(private val controller: MediaControllerProvider) {
 
 	//seek amount we have certain amount for the player and user
 	private val _seekAmountByUser = MutableStateFlow(0.seconds)

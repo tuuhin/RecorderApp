@@ -1,4 +1,4 @@
-package com.eva.feature_player.viewmodel
+package com.eva.feature_player.bookmarks
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -7,16 +7,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.eva.bookmarks.domain.AudioBookmarkModel
 import com.eva.bookmarks.domain.provider.RecordingBookmarksProvider
-import com.eva.feature_player.state.BookMarkEvents
-import com.eva.feature_player.state.CreateOrEditBookMarkState
+import com.eva.feature_player.bookmarks.state.BookMarkEvents
+import com.eva.feature_player.bookmarks.state.CreateBookmarkState
 import com.eva.interactions.domain.ShareRecordingsUtil
 import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.Resource
 import com.eva.utils.roundToClosestSeconds
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -46,7 +44,7 @@ internal class BookMarksViewModel @Inject constructor(
 	private val audioId: Long
 		get() = route.audioId
 
-	private val _createOrEditBookMarkState = MutableStateFlow(CreateOrEditBookMarkState())
+	private val _createOrEditBookMarkState = MutableStateFlow(CreateBookmarkState())
 	val bookmarkState = _createOrEditBookMarkState.asStateFlow()
 
 	val bookMarksFlow = bookmarksProvider.getRecordingBookmarksFromId(audioId)
@@ -133,7 +131,7 @@ internal class BookMarksViewModel @Inject constructor(
 					_uiEvents.emit(UIEvents.ShowToast(message))
 				}
 
-				is Resource.Success -> _createOrEditBookMarkState.update { CreateOrEditBookMarkState() }
+				is Resource.Success -> _createOrEditBookMarkState.update { CreateBookmarkState() }
 
 				else -> {}
 			}
@@ -150,7 +148,7 @@ internal class BookMarksViewModel @Inject constructor(
 					_uiEvents.emit(UIEvents.ShowToast(message))
 				}
 
-				is Resource.Success -> _createOrEditBookMarkState.update { CreateOrEditBookMarkState() }
+				is Resource.Success -> _createOrEditBookMarkState.update { CreateBookmarkState() }
 
 				else -> {}
 			}

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,8 +33,8 @@ import androidx.compose.ui.unit.dp
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerPlayBackSpeed
 import com.eva.player.domain.model.PlayerState
-import com.eva.ui.R
 import com.eva.player_shared.composables.AnimatedPlayPauseButton
+import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import kotlinx.coroutines.launch
 
@@ -98,6 +99,7 @@ internal fun AudioPlayerActions(
 					isSelected = playerMetaData.isMuted,
 					text = stringResource(id = R.string.player_action_mute),
 					onClick = onMuteStream,
+					enabled = isControllerReady
 				)
 				IconButtonWithText(
 					icon = {
@@ -109,6 +111,7 @@ internal fun AudioPlayerActions(
 					isSelected = playerMetaData.isRepeating,
 					text = stringResource(id = R.string.player_action_repeat),
 					onClick = { onRepeatModeChange(!playerMetaData.isRepeating) },
+					enabled = isControllerReady
 				)
 				IconButtonWithText(
 					icon = {
@@ -126,6 +129,7 @@ internal fun AudioPlayerActions(
 						scope.launch { playBackSpeedBottomSheet.show() }
 							.invokeOnCompletion { openPlayBackSpeedBottomSheet = true }
 					},
+					enabled = isControllerReady
 				)
 			}
 			Row(
@@ -142,12 +146,16 @@ internal fun AudioPlayerActions(
 					},
 					text = stringResource(id = R.string.player_fast_rewind),
 					onClick = onRewind,
+					enabled = isControllerReady
 				)
 				AnimatedPlayPauseButton(
 					isPlaying = playerMetaData.isPlaying,
 					enabled = isControllerReady,
 					onPause = onPause,
-					onPlay = onPlay
+					onPlay = onPlay, colors = ButtonDefaults.buttonColors(
+						containerColor = MaterialTheme.colorScheme.primary,
+						contentColor = MaterialTheme.colorScheme.onPrimary,
+					)
 				)
 				IconButtonWithText(
 					icon = {
@@ -158,6 +166,7 @@ internal fun AudioPlayerActions(
 					},
 					text = stringResource(id = R.string.player_fast_forward),
 					onClick = onForward,
+					enabled = isControllerReady,
 				)
 			}
 		}

@@ -1,4 +1,4 @@
-package com.eva.feature_player.composable
+package com.eva.feature_player.bookmarks.composable
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -46,7 +46,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.eva.bookmarks.domain.AudioBookmarkModel
-import com.eva.feature_player.util.PlayerPreviewFakes
+import com.eva.feature_player.bookmarks.utils.BookmarksPreviewFakes
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -183,7 +183,7 @@ private fun NoBookmarksPlaceHolder(modifier: Modifier = Modifier) {
 private class BooksMarksListPreviewParams :
 	CollectionPreviewParameterProvider<ImmutableList<AudioBookmarkModel>>(
 		listOf(
-			PlayerPreviewFakes.FAKE_BOOKMARKS_LIST,
+			BookmarksPreviewFakes.FAKE_BOOKMARKS_LIST,
 			persistentListOf()
 		)
 	)

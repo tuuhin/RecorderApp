@@ -1,4 +1,4 @@
-package com.eva.feature_player.composable
+package com.eva.feature_player.bookmarks.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
