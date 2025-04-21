@@ -1,11 +1,17 @@
-package com.eva.feature_editor.util
+package com.eva.player_shared.util
 
+import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.datetime.toKotlinLocalDateTime
 import java.time.LocalDateTime
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
-internal object PlayerEditorPreviewFakes {
+object PlayerPreviewFakes {
+
+	val PREVIEW_RECORDER_AMPLITUDES = List(100) { Random.Default.nextFloat() }.toImmutableList()
 
 	val FAKE_AUDIO_MODEL = AudioFileModel(
 		id = 0L,
@@ -23,4 +29,5 @@ internal object PlayerEditorPreviewFakes {
 		isFavourite = true
 	)
 
+	val FAKE_TRACK_DATA = PlayerTrackData(current = 4.seconds, total = 10.seconds)
 }

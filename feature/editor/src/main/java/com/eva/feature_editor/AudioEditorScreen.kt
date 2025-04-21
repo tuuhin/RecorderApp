@@ -26,12 +26,14 @@ import androidx.compose.ui.unit.dp
 import com.eva.feature_editor.composables.EditorActionsAndControls
 import com.eva.feature_editor.composables.EditorTopBar
 import com.eva.feature_editor.composables.PlayerTrimSelector
+import com.eva.feature_editor.event.AudioClipConfig
 import com.eva.feature_editor.event.EditorScreenEvent
-import com.eva.feature_editor.util.PlayerEditorPreviewFakes
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.composables.ContentStateAnimatedContainer
 import com.eva.player_shared.composables.PlayerDurationText
 import com.eva.player_shared.state.ContentLoadState
+import com.eva.player_shared.util.PlayerGraphData
+import com.eva.player_shared.util.PlayerPreviewFakes
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
@@ -42,10 +44,12 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 internal fun AudioEditorScreen(
 	loadState: ContentLoadState<out AudioFileModel>,
-	track: PlayerTrackData,
+	trackData: PlayerTrackData,
+	graphData: PlayerGraphData,
 	onEvent: (EditorScreenEvent) -> Unit,
 	modifier: Modifier = Modifier,
 	isPlaying: Boolean = false,
+	clipConfig: AudioClipConfig? = null,
 	navigation: @Composable () -> Unit = {},
 ) {
 
@@ -75,7 +79,7 @@ internal fun AudioEditorScreen(
 				.fillMaxSize(),
 			onSuccess = {
 				PlayerDurationText(
-					track = track,
+					track = trackData,
 					modifier = Modifier.align(Alignment.TopCenter)
 				)
 				Column(
@@ -87,8 +91,13 @@ internal fun AudioEditorScreen(
 					verticalArrangement = Arrangement.spacedBy(4.dp),
 				) {
 					// we will have an editor implementation
-					PlayerTrimSelector(modifier = Modifier.fillMaxWidth())
-					// other track helper
+					PlayerTrimSelector(
+						graphData = graphData,
+						trackData = trackData,
+						clipConfig = clipConfig,
+						onClipConfigChange = { onEvent(EditorScreenEvent.OnClipConfigChange(it)) },
+						modifier = Modifier.fillMaxWidth()
+					)
 				}
 				Box(
 					modifier = Modifier
@@ -98,13 +107,12 @@ internal fun AudioEditorScreen(
 					contentAlignment = Alignment.Center
 				) {
 					EditorActionsAndControls(
-						trackData = track,
+						trackData = trackData,
 						isMediaPlaying = isPlaying,
 						onEvent = onEvent,
 						modifier = Modifier.fillMaxWidth()
 					)
 				}
-
 			},
 			onFailed = {},
 		)
@@ -116,9 +124,10 @@ internal fun AudioEditorScreen(
 @Composable
 private fun AudioEditorScreenPreview() = RecorderAppTheme {
 	AudioEditorScreen(
-		loadState = ContentLoadState.Content(PlayerEditorPreviewFakes.FAKE_AUDIO_MODEL),
-		track = PlayerTrackData(2.seconds, 20.seconds),
-		onEvent = {},
+		loadState = ContentLoadState.Content(PlayerPreviewFakes.FAKE_AUDIO_MODEL),
+		trackData = PlayerTrackData(2.seconds, 10.seconds),
+		graphData = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
+		onEvent = { },
 		navigation = {
 			Icon(
 				imageVector = Icons.AutoMirrored.Default.ArrowBack,

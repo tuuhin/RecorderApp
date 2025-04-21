@@ -20,29 +20,28 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.eva.feature_player.util.PlayRatio
-import com.eva.feature_player.util.PlayerGraphData
-import com.eva.feature_player.util.PlayerPreviewFakes
-import com.eva.feature_player.util.drawGraph
-import com.eva.feature_player.util.drawTimeLine
-import com.eva.feature_player.util.drawTrackPointer
 import com.eva.player.domain.model.PlayerTrackData
+import com.eva.player_shared.util.PlayRatio
+import com.eva.player_shared.util.PlayerGraphData
+import com.eva.player_shared.util.PlayerPreviewFakes
+import com.eva.player_shared.util.drawGraph
+import com.eva.player_shared.util.drawTimeLineWithBookMarks
+import com.eva.player_shared.util.drawTrackPointer
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.RecorderConstants
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.LocalTime
-import kotlin.time.Duration.Companion.seconds
-
+import kotlin.time.Duration
 
 @Composable
-fun PlayerAmplitudeGraph(
-	totalTrackDuration: LocalTime,
+internal fun PlayerAmplitudeGraph(
+	totalTrackDuration: Duration,
 	playRatio: PlayRatio,
 	graphData: PlayerGraphData,
-	bookMarkTimeStamps: ImmutableList<LocalTime>,
 	modifier: Modifier = Modifier,
+	bookMarkTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
 	plotColor: Color = MaterialTheme.colorScheme.secondary,
 	trackPointerColor: Color = MaterialTheme.colorScheme.primary,
 	bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
@@ -78,7 +77,6 @@ fun PlayerAmplitudeGraph(
 						if (amt > 0f) amt else 2.dp.toPx()
 					}
 
-
 					onDrawBehind {
 						val samples = graphData()
 						val bookMarksAsMillis = bookMarkTimeStamps.map { it.toMillisecondOfDay() }
@@ -94,7 +92,7 @@ fun PlayerAmplitudeGraph(
 								spikesWidth = spikesWidth,
 								color = plotColor
 							)
-							drawTimeLine(
+							drawTimeLineWithBookMarks(
 								totalDuration = totalTrackDuration,
 								textMeasurer = textMeasurer,
 								bookMarks = bookMarksAsMillis,
@@ -108,6 +106,7 @@ fun PlayerAmplitudeGraph(
 							)
 						}
 						drawTrackPointer(
+							xAxis = center.x,
 							color = trackPointerColor,
 							radius = spikesWidth,
 							strokeWidth = spikesWidth
@@ -122,8 +121,8 @@ fun PlayerAmplitudeGraph(
 fun PlayerAmplitudeGraph(
 	trackData: PlayerTrackData,
 	graphData: PlayerGraphData,
-	bookMarksTimeStamps: ImmutableList<LocalTime>,
 	modifier: Modifier = Modifier,
+	bookMarksTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
 	plotColor: Color = MaterialTheme.colorScheme.secondary,
 	trackPointerColor: Color = MaterialTheme.colorScheme.primary,
 	bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
@@ -140,7 +139,7 @@ fun PlayerAmplitudeGraph(
 ) {
 	PlayerAmplitudeGraph(
 		playRatio = { trackData.playRatio },
-		totalTrackDuration = trackData.totalAsLocalTime,
+		totalTrackDuration = trackData.total,
 		graphData = graphData,
 		bookMarkTimeStamps = bookMarksTimeStamps,
 		modifier = modifier,
@@ -161,7 +160,7 @@ fun PlayerAmplitudeGraph(
 @Composable
 private fun PlayerAmplitudeGraphPreview() = RecorderAppTheme {
 	PlayerAmplitudeGraph(
-		trackData = PlayerTrackData(current = 5.seconds, total = 10.seconds),
+		trackData = PlayerPreviewFakes.FAKE_TRACK_DATA,
 		graphData = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
 		bookMarksTimeStamps = persistentListOf(
 			LocalTime.fromSecondOfDay(2),

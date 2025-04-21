@@ -10,8 +10,6 @@ import com.eva.player.domain.model.PlayerTrackData
 import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -53,6 +51,7 @@ internal class AudioEditorViewModel @Inject constructor(
 		when (event) {
 			EditorScreenEvent.PauseAudio -> {}
 			EditorScreenEvent.PlayAudio -> {}
+			is EditorScreenEvent.OnClipConfigChange -> {}
 		}
 	}
 

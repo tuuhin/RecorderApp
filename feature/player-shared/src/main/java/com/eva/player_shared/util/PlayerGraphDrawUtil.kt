@@ -1,4 +1,4 @@
-package com.eva.feature_player.util
+package com.eva.player_shared.util
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -12,15 +12,17 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.eva.utils.LocalTimeFormats
 import com.eva.utils.RecorderConstants
 import com.eva.utils.asLocalTime
-import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
-internal fun DrawScope.drawGraph(
+fun DrawScope.drawGraph(
 	waves: List<Float>,
 	centerYAxis: Float,
 	spikesGap: Float = 2f,
@@ -50,18 +52,13 @@ internal fun DrawScope.drawGraph(
 		color = color,
 		strokeWidth = spikesGap
 	)
-
-
 }
 
-internal fun DrawScope.drawTimeLine(
-	totalDuration: LocalTime,
-	bookMarks: List<Int>,
-	bookMarkPainter: Painter,
+fun DrawScope.drawTimeLine(
+	duration: Duration,
 	textMeasurer: TextMeasurer,
 	outlineColor: Color = Color.Gray,
 	outlineVariant: Color = Color.Gray,
-	bookMarkColor: Color = Color.Cyan,
 	spikesWidth: Float = 2f,
 	strokeWidthThick: Float = 2f,
 	strokeWidthLight: Float = 1f,
@@ -69,7 +66,7 @@ internal fun DrawScope.drawTimeLine(
 	textColor: Color = Color.Black,
 ) {
 	// 2000 for extra 2 seconds on the graph
-	val durationAsMillis = totalDuration.toMillisecondOfDay() + 2_000
+	val durationAsMillis = (duration + 2.seconds).inWholeMilliseconds.toInt()
 	val spacing = spikesWidth / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 
 	repeat(durationAsMillis) { millis ->
@@ -120,40 +117,69 @@ internal fun DrawScope.drawTimeLine(
 				cap = StrokeCap.Round,
 			)
 		}
+	}
+}
 
-		if (millis in bookMarks) {
-			val xAxis = millis * spacing
-			drawLine(
-				color = bookMarkColor,
-				start = Offset(xAxis, 2.dp.toPx()),
-				end = Offset(xAxis, size.height - 2.dp.toPx()),
-				strokeWidth = strokeWidthThick,
-				cap = StrokeCap.Round,
-			)
+fun DrawScope.drawTimeLineWithBookMarks(
+	totalDuration: Duration,
+	bookMarks: List<Int>,
+	bookMarkPainter: Painter,
+	imageSize: Dp = 12.dp,
+	textMeasurer: TextMeasurer,
+	outlineColor: Color = Color.Gray,
+	outlineVariant: Color = Color.Gray,
+	bookMarkColor: Color = Color.Cyan,
+	spikesWidth: Float = 2f,
+	strokeWidthThick: Float = 2f,
+	strokeWidthLight: Float = 1f,
+	textStyle: TextStyle = TextStyle(),
+	textColor: Color = Color.Black,
+) {
+	drawTimeLine(
+		duration = totalDuration,
+		textMeasurer = textMeasurer,
+		outlineColor = outlineColor,
+		outlineVariant = outlineVariant,
+		strokeWidthThick = strokeWidthThick,
+		strokeWidthLight = strokeWidthLight,
+		textStyle = textStyle,
+		textColor = textColor,
+		spikesWidth = spikesWidth,
+	)
 
-			drawCircle(
-				color = bookMarkColor,
-				radius = 3.dp.toPx(),
-				center = Offset(xAxis, 2.dp.toPx()),
-			)
+	val spacing = spikesWidth / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 
-			val imageSize = 12.dp
+	bookMarks.forEach { timeInMillis ->
+		val xAxis = timeInMillis * spacing
+		drawLine(
+			color = bookMarkColor,
+			start = Offset(xAxis, 2.dp.toPx()),
+			end = Offset(xAxis, size.height - 2.dp.toPx()),
+			strokeWidth = strokeWidthThick,
+			cap = StrokeCap.Round,
+		)
 
-			translate(
-				left = xAxis - (imageSize.toPx() / 2f), top = size.height + 4.dp.toPx()
-			) {
-				with(bookMarkPainter) {
-					draw(
-						size = Size(imageSize.toPx(), imageSize.toPx()),
-						colorFilter = ColorFilter.tint(bookMarkColor),
-					)
-				}
+		drawCircle(
+			color = bookMarkColor,
+			radius = 3.dp.toPx(),
+			center = Offset(xAxis, 2.dp.toPx()),
+		)
+
+		translate(
+			left = xAxis - (imageSize.toPx() / 2f), top = size.height + 4.dp.toPx()
+		) {
+			with(bookMarkPainter) {
+				draw(
+					size = Size(imageSize.toPx(), imageSize.toPx()),
+					colorFilter = ColorFilter.tint(bookMarkColor),
+				)
 			}
 		}
 	}
 }
 
-internal fun DrawScope.drawTrackPointer(
+fun DrawScope.drawTrackPointer(
+	xAxis: Float,
 	color: Color = Color.Black,
 	radius: Float = 1f,
 	strokeWidth: Float = 1f,
@@ -161,17 +187,17 @@ internal fun DrawScope.drawTrackPointer(
 	drawCircle(
 		color = color,
 		radius = radius,
-		center = Offset(size.width / 2, 0f),
+		center = Offset(xAxis, 0f),
 	)
 	drawCircle(
 		color = color,
 		radius = strokeWidth,
-		center = Offset(size.width / 2, size.height),
+		center = Offset(xAxis, size.height),
 	)
 	drawLine(
 		color = color,
-		start = Offset(size.width / 2, 0f),
-		end = Offset(size.width / 2, size.height),
+		start = Offset(xAxis, 0f),
+		end = Offset(xAxis, size.height),
 		strokeWidth = strokeWidth,
 		cap = StrokeCap.Round,
 	)
