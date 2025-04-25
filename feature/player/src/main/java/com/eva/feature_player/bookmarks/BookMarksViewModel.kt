@@ -2,19 +2,19 @@ package com.eva.feature_player.bookmarks
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.eva.bookmarks.domain.AudioBookmarkModel
 import com.eva.bookmarks.domain.provider.RecordingBookmarksProvider
 import com.eva.feature_player.bookmarks.state.BookMarkEvents
 import com.eva.feature_player.bookmarks.state.CreateBookmarkState
 import com.eva.interactions.domain.ShareRecordingsUtil
-import com.eva.ui.navigation.NavRoutes
+import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.Resource
 import com.eva.utils.roundToClosestSeconds
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -29,20 +29,17 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
-import javax.inject.Inject
+import kotlin.time.Duration
 
-@HiltViewModel
-internal class BookMarksViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = BookmarksViewmodelFactory::class)
+internal class BookMarksViewModel @AssistedInject constructor(
+	@Assisted private val fileModel: AudioFileModel,
 	private val bookmarksProvider: RecordingBookmarksProvider,
 	private val sharingUtil: ShareRecordingsUtil,
-	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
-	val route: NavRoutes.AudioPlayer
-		get() = savedStateHandle.toRoute<NavRoutes.AudioPlayer>()
-
-	private val audioId: Long
-		get() = route.audioId
+	val audioId: Long
+		get() = fileModel.id
 
 	private val _createOrEditBookMarkState = MutableStateFlow(CreateBookmarkState())
 	val bookmarkState = _createOrEditBookMarkState.asStateFlow()
@@ -107,11 +104,12 @@ internal class BookMarksViewModel @Inject constructor(
 		}
 	}
 
-	private fun onAddBookMark(bookMarkText: String?, time: LocalTime) {
+	private fun onAddBookMark(bookMarkText: String?, time: Duration) {
 
 		viewModelScope.launch {
 			// bookmarks should be lesser than recorderTime
-			val bookMarkTime = time.roundToClosestSeconds()
+			val bookMarkTime = LocalTime.fromMillisecondOfDay(time.inWholeMilliseconds.toInt())
+				.roundToClosestSeconds()
 			val presentBookmarkTime = bookmarksProvider.getRecordingBookmarksFromIdAsList(audioId)
 				.map { it.timeStamp }
 

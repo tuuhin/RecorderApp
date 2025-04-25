@@ -12,28 +12,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eva.player.domain.model.PlayerTrackData
+import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.theme.DownloadableFonts
 import com.eva.utils.LocalTimeFormats
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
+import kotlin.time.Duration
 
 @Composable
 private fun PlayerDurationText(
-	playedDuration: LocalTime,
-	totalDuration: LocalTime,
+	playedDuration: Duration,
+	totalDuration: Duration,
 	modifier: Modifier = Modifier,
 ) {
 	val totalDurationText by remember(totalDuration) {
 		derivedStateOf {
-			totalDuration.format(LocalTimeFormats.LOCALTIME_HH_MM_SS_FORMAT)
+			with(LocalTime.fromMillisecondOfDay(totalDuration.inWholeMilliseconds.toInt())) {
+				format(LocalTimeFormats.LOCALTIME_HH_MM_SS_FORMAT)
+			}
 		}
 	}
 
 	val playedDurationText by remember(playedDuration) {
 		derivedStateOf {
-			if (playedDuration.hour > 0)
-				playedDuration.format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
-			playedDuration.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+			with(LocalTime.fromMillisecondOfDay(playedDuration.inWholeMilliseconds.toInt())) {
+				if (hour > 0) format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
+				format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+			}
 		}
 	}
 
@@ -60,11 +65,24 @@ private fun PlayerDurationText(
 @Composable
 fun PlayerDurationText(
 	track: PlayerTrackData,
+	fileModel: AudioFileModel,
+	modifier: Modifier = Modifier
+) {
+	PlayerDurationText(
+		playedDuration = track.current,
+		totalDuration = fileModel.duration,
+		modifier = modifier
+	)
+}
+
+@Composable
+fun PlayerDurationText(
+	track: PlayerTrackData,
 	modifier: Modifier = Modifier,
 ) {
 	PlayerDurationText(
-		playedDuration = track.currentAsLocalTime,
-		totalDuration = track.totalAsLocalTime,
+		playedDuration = track.current,
+		totalDuration = track.total,
 		modifier = modifier
 	)
 }

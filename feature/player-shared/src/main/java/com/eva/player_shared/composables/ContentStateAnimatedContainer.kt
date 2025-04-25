@@ -23,7 +23,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.eva.player_shared.state.ContentLoadState
+import com.eva.player_shared.util.AudioFileModelLoadState
+import com.eva.player_shared.util.PlayerPreviewFakes
 
 @Composable
 fun <T> ContentStateAnimatedContainer(
@@ -31,13 +34,14 @@ fun <T> ContentStateAnimatedContainer(
 	onSuccess: @Composable BoxScope.(T) -> Unit,
 	onFailed: @Composable BoxScope.() -> Unit,
 	modifier: Modifier = Modifier,
+	onLoading: (@Composable BoxScope.() -> Unit)? = null,
 ) {
 	AnimatedContent(
 		targetState = loadState,
-		modifier = modifier,
 		transitionSpec = { animateLoadState() },
 		label = "Animating content state",
-		contentAlignment = Alignment.Center
+		contentAlignment = Alignment.Center,
+		modifier = modifier.fillMaxSize(),
 	) { state ->
 		Box(
 			modifier = Modifier.fillMaxSize()
@@ -45,7 +49,7 @@ fun <T> ContentStateAnimatedContainer(
 			when (state) {
 				is ContentLoadState.Content -> onSuccess(state.data)
 
-				ContentLoadState.Loading -> CircularProgressIndicator(
+				ContentLoadState.Loading -> onLoading?.invoke(this) ?: CircularProgressIndicator(
 					modifier = Modifier.align(Alignment.Center)
 				)
 
@@ -71,7 +75,7 @@ private fun <T> AnimatedContentTransitionScope<ContentLoadState<T>>.animateLoadS
 	if (initialState is ContentLoadState.Content && targetState is ContentLoadState.Content) {
 		return ContentTransform(
 			targetContentEnter = EnterTransition.None,
-			initialContentExit = ExitTransition.None
+			initialContentExit = ExitTransition.None,
 		)
 	}
 
@@ -92,3 +96,11 @@ private fun <T> AnimatedContentTransitionScope<ContentLoadState<T>>.animateLoadS
 		)
 	} else fadeIn(normalTransition) togetherWith fadeOut(normalTransition)
 }
+
+class ContentLoadStatePreviewParams : CollectionPreviewParameterProvider<AudioFileModelLoadState>(
+	listOf(
+		ContentLoadState.Loading,
+		ContentLoadState.Content(PlayerPreviewFakes.FAKE_AUDIO_MODEL),
+		ContentLoadState.Unknown
+	),
+)

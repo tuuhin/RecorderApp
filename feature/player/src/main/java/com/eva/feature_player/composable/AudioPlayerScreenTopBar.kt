@@ -28,7 +28,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,10 +43,13 @@ import com.eva.ui.R
 import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@OptIn(
+	ExperimentalMaterial3Api::class,
+	ExperimentalSharedTransitionApi::class
+)
 @Composable
 internal fun AudioPlayerScreenTopBar(
-	state: ContentLoadState<out AudioFileModel>,
+	loadState: ContentLoadState<AudioFileModel>,
 	modifier: Modifier = Modifier,
 	onEdit: () -> Unit,
 	navigation: @Composable () -> Unit = {},
@@ -61,12 +63,7 @@ internal fun AudioPlayerScreenTopBar(
 ) {
 	var showDropDown by remember { mutableStateOf(false) }
 
-	val isActionEnabled by remember(state) {
-		derivedStateOf {
-			state is ContentLoadState.Content
-		}
-	}
-	state.OnContentOrOther(
+	loadState.OnContentOrOther(
 		content = { model ->
 			TopAppBar(
 				title = {
@@ -124,7 +121,12 @@ internal fun AudioPlayerScreenTopBar(
 						},
 						state = rememberTooltipState(),
 					) {
-						IconButton(onClick = onEdit) {
+						IconButton(
+							onClick = onEdit,
+							modifier = Modifier.sharedBoundsWrapper(
+								key = SharedElementTransitionKeys.RECORDING_EDITOR_SHARED_BOUNDS
+							),
+						) {
 							Icon(
 								painter = painterResource(id = R.drawable.ic_edit),
 								contentDescription = stringResource(id = R.string.player_action_edit)
@@ -147,7 +149,6 @@ internal fun AudioPlayerScreenTopBar(
 						) {
 							DropdownMenuItem(
 								text = { Text(text = stringResource(id = R.string.menu_more_rename)) },
-								enabled = isActionEnabled,
 								onClick = {
 									showDropDown = false
 									onRenameOption(model)
@@ -155,7 +156,6 @@ internal fun AudioPlayerScreenTopBar(
 							)
 							DropdownMenuItem(
 								text = { Text(text = stringResource(id = R.string.menu_option_share)) },
-								enabled = isActionEnabled,
 								onClick = {
 									showDropDown = false
 									onShareOption()
@@ -163,7 +163,6 @@ internal fun AudioPlayerScreenTopBar(
 							)
 							DropdownMenuItem(
 								text = { Text(text = stringResource(id = R.string.menu_option_details)) },
-								enabled = isActionEnabled,
 								onClick = {
 									showDropDown = false
 									onDetailsOptions()
@@ -195,7 +194,6 @@ internal fun AudioPlayerScreenTopBar(
 			)
 		},
 	)
-
 }
 
 private fun favouriteAudioAnimation(): ContentTransform {

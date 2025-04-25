@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.eva.feature_editor.event.EditorScreenEvent
-import com.eva.player_shared.composables.AnimatedPlayPauseButton
 import com.eva.player.domain.model.PlayerTrackData
+import com.eva.player_shared.composables.AnimatedPlayPauseButton
 import com.eva.ui.R
 
 @Composable
@@ -32,7 +32,7 @@ private fun EditorActionsAndControls(
 	onPlay: () -> Unit,
 	onPause: () -> Unit,
 ) {
-	val sliderPercentage by remember(trackData.currentAsLocalTime) {
+	val sliderPercentage by remember(trackData.current) {
 		derivedStateOf(trackData::playRatio)
 	}
 

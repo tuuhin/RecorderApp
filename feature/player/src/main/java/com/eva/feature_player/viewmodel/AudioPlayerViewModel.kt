@@ -1,8 +1,6 @@
 package com.eva.feature_player.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.eva.feature_player.state.AudioPlayerState
 import com.eva.feature_player.state.ControllerEvents
 import com.eva.feature_player.state.PlayerEvents
@@ -10,40 +8,29 @@ import com.eva.player.data.MediaControllerProvider
 import com.eva.player.domain.AudioFilePlayer
 import com.eva.player.domain.WaveformsReader
 import com.eva.recordings.domain.models.AudioFileModel
-import com.eva.recordings.domain.provider.PlayerFileProvider
-import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.Resource
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChangedBy
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-internal class AudioPlayerViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = PlayerViewmodelFactory::class)
+internal class AudioPlayerViewModel @AssistedInject constructor(
+	@Assisted val fileModel: AudioFileModel,
 	private val controller: MediaControllerProvider,
 	private val waveformsReader: WaveformsReader,
-	private val fileProvider: PlayerFileProvider,
-	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
-
-	val route: NavRoutes.AudioPlayer
-		get() = savedStateHandle.toRoute<NavRoutes.AudioPlayer>()
-
-	private val audioId: Long
-		get() = route.audioId
 
 	// audio player instance for calling the underlying app's
 	private val audioPlayer: AudioFilePlayer?
@@ -55,7 +42,7 @@ internal class AudioPlayerViewModel @Inject constructor(
 	val waveforms = waveformsReader.wavefront
 		.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.Companion.WhileSubscribed(8_000),
+			started = SharingStarted.WhileSubscribed(8_000),
 			initialValue = emptyList()
 		)
 
@@ -65,10 +52,13 @@ internal class AudioPlayerViewModel @Inject constructor(
 		controller.playerMetaDataFlow,
 		controller.isControllerConnected,
 		transform = ::AudioPlayerState
-	).onStart { readAudioFileFromId() }
+	).onStart {
+		setControllerIfReady()
+		computeWaveforms()
+	}
 		.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.Companion.WhileSubscribed(8_000),
+			started = SharingStarted.WhileSubscribed(8_000),
 			initialValue = AudioPlayerState()
 		)
 
@@ -79,8 +69,8 @@ internal class AudioPlayerViewModel @Inject constructor(
 
 	fun onControllerEvents(event: ControllerEvents) {
 		when (event) {
-			ControllerEvents.OnAddController -> viewModelScope.launch {
-				controller.prepareController(audioId)
+			is ControllerEvents.OnAddController -> viewModelScope.launch {
+				controller.prepareController(event.audioId)
 			}
 
 			ControllerEvents.OnRemoveController -> controller.releaseController()
@@ -105,45 +95,27 @@ internal class AudioPlayerViewModel @Inject constructor(
 		}
 	}
 
-	private fun readAudioFileFromId() {
-		val audioFileFlow = fileProvider.getAudioFileFromIdFlow(audioId)
-			.map { res ->
-				when (res) {
-					is Resource.Success<AudioFileModel, Exception> -> res.data
-					else -> null
+	private fun setControllerIfReady() {
+		controller.isControllerConnected.onEach { isConnected ->
+			if (!isConnected) return@onEach
+
+			val result = controller.preparePlayer(fileModel) ?: return@onEach
+			when (result) {
+				is Resource.Error -> {
+					val message = result.message ?: result.error.message ?: ""
+					_uiEvents.emit(UIEvents.ShowSnackBar(message))
 				}
-			}.filterNotNull()
-			.distinctUntilChangedBy { it.id }
 
-		// prepare the waveforms
-		audioFileFlow.onEach { computeWaveforms(it) }.launchIn(viewModelScope)
-
-		// prepare the player
-		combine(audioFileFlow, controller.isControllerConnected) { audioFile, isPlayerReady ->
-			if (isPlayerReady) prepareController(audioFile)
-		}.launchIn(viewModelScope)
-	}
-
-
-	private suspend fun prepareController(audio: AudioFileModel) {
-		val isConnected = controller.isControllerConnected.value
-		if (!isConnected) return
-
-		// if the controller is set we can load the item to play
-		val result = controller.preparePlayer(audio) ?: return
-		when (result) {
-			is Resource.Error -> {
-				val message = result.message ?: result.error.message ?: ""
-				_uiEvents.emit(UIEvents.ShowSnackBar(message))
+				else -> {}
 			}
 
-			else -> {}
 		}
+			.launchIn(viewModelScope)
 	}
 
 
-	private suspend fun computeWaveforms(audio: AudioFileModel) {
-		val result = waveformsReader.readWaveformsFromFile(audio)
+	private fun computeWaveforms() = viewModelScope.launch {
+		val result = waveformsReader.readWaveformsFromFile(fileModel)
 		// if there is an error show the error
 		if (result is Resource.Error) {
 			val message = result.message ?: result.error.message ?: ""

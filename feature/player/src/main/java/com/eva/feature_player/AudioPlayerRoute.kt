@@ -7,8 +7,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -18,9 +20,12 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.navDeepLink
 import com.eva.feature_player.bookmarks.BookMarksViewModel
+import com.eva.feature_player.bookmarks.BookmarksViewmodelFactory
 import com.eva.feature_player.composable.ControllerLifeCycleObserver
 import com.eva.feature_player.viewmodel.AudioPlayerViewModel
+import com.eva.feature_player.viewmodel.PlayerViewmodelFactory
 import com.eva.player_shared.PlayerMetadataViewmodel
+import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.navigation.NavDialogs
 import com.eva.ui.navigation.PlayerSubGraph
@@ -44,48 +49,21 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 
 		val sharedViewModel = backStackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
 
-		val playerViewModel = hiltViewModel<AudioPlayerViewModel>()
-		val bookMarksViewmodel = hiltViewModel<BookMarksViewModel>()
-
-		//shared state
 		val contentState by sharedViewModel.loadState.collectAsStateWithLifecycle()
-
-		//player state
-		val playerState by playerViewModel.currentAudioState.collectAsStateWithLifecycle()
-		val waveforms by playerViewModel.waveforms.collectAsStateWithLifecycle()
-
-		// bookmarks state
-		val createOrEditBookMarkState by bookMarksViewmodel.bookmarkState.collectAsStateWithLifecycle()
-		val bookMarks by bookMarksViewmodel.bookMarksFlow.collectAsStateWithLifecycle()
-
-		// lifeCycleState
 		val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
 		// Handle UI Events
 		UiEventsHandler(
-			eventsFlow = {
-				merge(
-					playerViewModel.uiEvent,
-					sharedViewModel.uiEvent,
-					bookMarksViewmodel.uiEvent
-				)
-			},
+			eventsFlow = { sharedViewModel.uiEvent },
 			onNavigateBack = controller::popBackStack
 		)
 
-		ControllerLifeCycleObserver(onEvent = playerViewModel::onControllerEvents)
-
 		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
-			AudioPlayerScreen(
-				selectedAudioId = sharedViewModel.audioId,
-				waveforms = { waveforms },
+			AudioPlayerScreenContainer(
+				audioId = sharedViewModel.audioId,
 				loadState = contentState,
-				playerState = playerState,
-				bookmarks = bookMarks,
-				bookMarkState = createOrEditBookMarkState,
-				onPlayerEvents = playerViewModel::onPlayerEvents,
-				onBookmarkEvent = bookMarksViewmodel::onBookMarkEvent,
 				onFileEvent = sharedViewModel::onFileEvent,
+				content = { model -> AudioPlayerContentStateFul(model) },
 				onNavigateToEdit = dropUnlessResumed {
 					if (lifeCycleState.isAtLeast(state = Lifecycle.State.RESUMED)) {
 						controller.navigate(PlayerSubGraph.AudioEditorRoute)
@@ -112,3 +90,46 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 			)
 		}
 	}
+
+
+@Composable
+private fun AudioPlayerContentStateFul(
+	model: AudioFileModel,
+	modifier: Modifier = Modifier
+) {
+	val playerViewModel = hiltViewModel<AudioPlayerViewModel, PlayerViewmodelFactory>(
+		creationCallback = { factory -> factory.create(model) },
+	)
+
+	val bookmarkViewmodel = hiltViewModel<BookMarksViewModel, BookmarksViewmodelFactory>(
+		creationCallback = { factory -> factory.create(model) },
+	)
+
+	// player states
+	val playerState by playerViewModel.currentAudioState.collectAsStateWithLifecycle()
+	val waveforms by playerViewModel.waveforms.collectAsStateWithLifecycle()
+
+	// bookmarks state
+	val bookMarkState by bookmarkViewmodel.bookmarkState.collectAsStateWithLifecycle()
+	val bookMarks by bookmarkViewmodel.bookMarksFlow.collectAsStateWithLifecycle()
+
+	ControllerLifeCycleObserver(
+		audioId = model.id,
+		onEvent = playerViewModel::onControllerEvents
+	)
+
+	UiEventsHandler(
+		eventsFlow = { merge(playerViewModel.uiEvent, bookmarkViewmodel.uiEvent) },
+	)
+
+	AudioPlayerScreenContent(
+		fileModel = model,
+		bookmarks = bookMarks,
+		waveforms = { waveforms },
+		playerState = playerState,
+		bookMarkState = bookMarkState,
+		onPlayerEvents = playerViewModel::onPlayerEvents,
+		onBookmarkEvent = bookmarkViewmodel::onBookMarkEvent,
+		modifier = modifier,
+	)
+}

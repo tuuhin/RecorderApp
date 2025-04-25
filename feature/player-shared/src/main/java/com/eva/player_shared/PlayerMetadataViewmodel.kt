@@ -60,7 +60,7 @@ class PlayerMetadataViewmodel @Inject constructor(
 		get() = _uiEvents
 
 	private fun prepareLoadState(isLoaded: Boolean, audio: AudioFileModel?)
-			: ContentLoadState<out AudioFileModel> {
+			: ContentLoadState<AudioFileModel> {
 		return when {
 			!isLoaded -> ContentLoadState.Loading
 			audio != null -> ContentLoadState.Content(audio)

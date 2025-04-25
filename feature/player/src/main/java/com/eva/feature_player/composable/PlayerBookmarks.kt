@@ -36,12 +36,12 @@ import com.eva.player.domain.model.PlayerTrackData
 import com.eva.ui.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalTime
+import kotlin.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerBookMarks(
-	trackCurrentTime: () -> LocalTime,
+	trackCurrentTime: () -> Duration,
 	bookmarks: ImmutableList<AudioBookmarkModel>,
 	bookMarkState: CreateBookmarkState,
 	onBookmarkEvent: (BookMarkEvents) -> Unit,
@@ -149,7 +149,7 @@ internal fun PlayerBookMarks(
 ) {
 	PlayerBookMarks(
 		bookmarks = bookmarks,
-		trackCurrentTime = { trackData.currentAsLocalTime },
+		trackCurrentTime = { trackData.current },
 		bookMarkState = bookMarkState,
 		onBookmarkEvent = onBookmarkEvent,
 		modifier = modifier.fillMaxWidth()

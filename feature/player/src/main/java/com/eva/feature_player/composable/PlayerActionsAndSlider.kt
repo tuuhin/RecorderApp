@@ -34,7 +34,7 @@ internal fun PlayerActionsAndSlider(
 	contentColor: Color = contentColorFor(backgroundColor = containerColor),
 ) {
 
-	val sliderPercentage by remember(trackData.currentAsLocalTime) {
+	val sliderPercentage by remember(trackData.current) {
 		derivedStateOf(trackData::playRatio)
 	}
 

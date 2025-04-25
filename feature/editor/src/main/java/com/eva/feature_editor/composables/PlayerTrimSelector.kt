@@ -2,7 +2,10 @@ package com.eva.feature_editor.composables
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,33 +27,40 @@ fun PlayerTrimSelector(
 	clipConfig: AudioClipConfig? = null,
 	shape: Shape = MaterialTheme.shapes.small,
 	overlayColor: Color = MaterialTheme.colorScheme.tertiary,
+	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 	contentPadding: PaddingValues = PaddingValues(
 		horizontal = dimensionResource(id = R.dimen.graph_card_padding),
 		vertical = dimensionResource(id = R.dimen.graph_card_padding_other)
 	),
 ) {
-	Box(
-		modifier = modifier.detectClipConfig(
-			onClipChange = onClipConfigChange,
-			totalLength = trackData.total,
-			clipConfig = clipConfig
-		),
+	Surface(
+		color = containerColor,
+		shape = shape,
+		modifier = modifier.aspectRatio(1.7f),
 	) {
-		EditorAmplitudeGraph(
-			playRatio = { trackData.playRatio },
-			totalTrackDuration = trackData.total,
-			graphData = graphData,
-			shape = shape,
-			contentPadding = contentPadding,
-		)
-		EditorTrimOverlay(
-			trackDuration = trackData.total,
-			modifier = Modifier.matchParentSize(),
-			clipConfig = clipConfig,
-			overlayColor = overlayColor,
-			contentPadding = contentPadding,
-			shape = shape,
-		)
+		Box(
+			modifier = Modifier
+				.padding(contentPadding)
+				.detectClipConfig(
+					onClipChange = onClipConfigChange,
+					totalLength = trackData.total,
+					clipConfig = clipConfig
+				),
+		) {
+			EditorAmplitudeGraph(
+				playRatio = { trackData.playRatio },
+				totalTrackDuration = trackData.total,
+				graphData = graphData,
+				modifier = Modifier.matchParentSize(),
+			)
+			EditorTrimOverlay(
+				trackDuration = trackData.total,
+				modifier = Modifier.matchParentSize(),
+				clipConfig = clipConfig,
+				overlayColor = overlayColor,
+				shape = shape,
+			)
+		}
 	}
 }
 

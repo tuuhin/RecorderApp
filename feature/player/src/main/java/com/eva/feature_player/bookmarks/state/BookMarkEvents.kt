@@ -2,7 +2,7 @@ package com.eva.feature_player.bookmarks.state
 
 import androidx.compose.ui.text.input.TextFieldValue
 import com.eva.bookmarks.domain.AudioBookmarkModel
-import kotlinx.datetime.LocalTime
+import kotlin.time.Duration
 
 internal sealed interface BookMarkEvents {
 
@@ -13,7 +13,7 @@ internal sealed interface BookMarkEvents {
 	data object OnCloseDialog : BookMarkEvents
 	data object OpenDialogToCreate : BookMarkEvents
 
-	data class OnAddOrUpdateBookMark(val time: LocalTime) : BookMarkEvents
+	data class OnAddOrUpdateBookMark(val time: Duration) : BookMarkEvents
 
 	data object OnExportBookMarkPoints : BookMarkEvents
 }

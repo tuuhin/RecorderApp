@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 
 @Stable
-sealed class ContentLoadState<T> {
+sealed class ContentLoadState<out T> {
 
 	data object Loading : ContentLoadState<Nothing>()
 
