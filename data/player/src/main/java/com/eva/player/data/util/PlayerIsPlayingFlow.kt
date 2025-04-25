@@ -7,11 +7,17 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 fun Player.computeIsPlayerPlaying(): Flow<Boolean> = callbackFlow {
-	trySend(playbackState == Player.STATE_READY)
+
+	// initially send a false
+	trySend(false)
 
 	val listener = object : Player.Listener {
 		override fun onIsPlayingChanged(isPlaying: Boolean) {
 			trySend(isPlaying)
+		}
+
+		override fun onPlaybackStateChanged(playbackState: Int) {
+			trySend(playbackState == Player.STATE_READY)
 		}
 	}
 	// adding the listener

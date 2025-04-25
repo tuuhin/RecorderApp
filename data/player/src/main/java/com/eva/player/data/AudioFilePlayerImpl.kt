@@ -2,6 +2,7 @@ package com.eva.player.data
 
 import android.util.Log
 import androidx.media3.common.Player
+import com.eva.player.data.util.toMediaItem
 import com.eva.player.domain.AudioFilePlayer
 import com.eva.player.domain.exceptions.CannotStartPlayerException
 import com.eva.player.domain.exceptions.SetPlayerCommandNotFound

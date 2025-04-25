@@ -1,6 +1,5 @@
 package com.eva.player.domain.model
 
-import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -10,11 +9,6 @@ data class PlayerTrackData(
 	val current: Duration = 0.seconds,
 	val total: Duration = 0.seconds,
 ) {
-	val currentAsLocalTime: LocalTime
-		get() = LocalTime.fromMillisecondOfDay(current.toInt(DurationUnit.MILLISECONDS))
-
-	val totalAsLocalTime: LocalTime
-		get() = LocalTime.fromSecondOfDay(total.toInt(DurationUnit.SECONDS))
 
 	val playRatio: Float
 		get() {

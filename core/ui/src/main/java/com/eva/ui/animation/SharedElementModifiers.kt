@@ -43,7 +43,7 @@ fun Modifier.sharedElementWrapper(
 		val state = rememberSharedContentState(key)
 
 		Modifier.sharedElement(
-			state = state,
+			sharedContentState = state,
 			animatedVisibilityScope = visibilityScope,
 			renderInOverlayDuringTransition = renderInOverlayDuringTransition,
 			zIndexInOverlay = zIndexInOverlay,

@@ -1,4 +1,4 @@
-package com.eva.player.data
+package com.eva.player.data.util
 
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
