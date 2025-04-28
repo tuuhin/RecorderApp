@@ -2,6 +2,7 @@ package com.eva.player.data
 
 import android.util.Log
 import androidx.media3.common.Player
+import com.eva.player.data.util.computePlayerTrackData
 import com.eva.player.data.util.toMediaItem
 import com.eva.player.domain.AudioFilePlayer
 import com.eva.player.domain.exceptions.CannotStartPlayerException
@@ -25,7 +26,7 @@ internal class AudioFilePlayerImpl(private val player: Player) : AudioFilePlayer
 		get() = _listener.playerMetaDataFlow
 
 	override val trackInfoAsFlow: Flow<PlayerTrackData>
-		get() = _listener.trackInfoAsFlow
+		get() = player.computePlayerTrackData()
 
 	private val lock = Mutex()
 

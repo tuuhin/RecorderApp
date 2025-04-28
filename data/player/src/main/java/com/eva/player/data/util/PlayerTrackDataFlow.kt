@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
@@ -47,7 +46,7 @@ fun Player.computePlayerTrackData(): Flow<PlayerTrackData> = callbackFlow {
 			job?.cancel()
 			// if playing launch a new job to observe
 			val canLoop = isPlaying && this@callbackFlow.isActive
-			job = launch {
+			job = launch(Dispatchers.Default) {
 				try {
 					// advertise data if its active and canLoop
 					while (canLoop && isActive) {
@@ -84,8 +83,7 @@ fun Player.computePlayerTrackData(): Flow<PlayerTrackData> = callbackFlow {
 		Log.d(TAG, "REMOVING LISTENER")
 		removeListener(listener)
 	}
-}.flowOn(Dispatchers.Default)
-	.filter { it.allPositiveAndFinite }
+}.filter { it.allPositiveAndFinite }
 	.distinctUntilChanged()
 
 

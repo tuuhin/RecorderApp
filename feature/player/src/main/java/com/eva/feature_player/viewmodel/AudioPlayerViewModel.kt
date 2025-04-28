@@ -36,9 +36,6 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 	private val audioPlayer: AudioFilePlayer?
 		get() = controller.player
 
-	//slider info
-	private val playerSliderControls = PlayerSliderControl(controller)
-
 	val waveforms = waveformsReader.wavefront
 		.stateIn(
 			scope = viewModelScope,
@@ -48,7 +45,7 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 
 	// player information
 	val currentAudioState = combine(
-		playerSliderControls.trackData,
+		controller.trackInfoAsFlow,
 		controller.playerMetaDataFlow,
 		controller.isControllerConnected,
 		transform = ::AudioPlayerState
@@ -90,8 +87,7 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 			is PlayerEvents.OnPlayerSpeedChange -> audioPlayer?.setPlayBackSpeed(event.speed)
 			is PlayerEvents.OnRepeatModeChange -> audioPlayer?.setPlayLooping(event.canRepeat)
 			PlayerEvents.OnMutePlayer -> audioPlayer?.onMuteDevice()
-			is PlayerEvents.OnSeekPlayer -> playerSliderControls.onSliderSlide(event.amount)
-			PlayerEvents.OnSeekComplete -> playerSliderControls.onSliderSlideComplete()
+			is PlayerEvents.OnSeekPlayer -> audioPlayer?.onSeekDuration(event.amount)
 		}
 	}
 

@@ -4,14 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -20,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.eva.feature_player.state.PlayerEvents
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerTrackData
+import com.eva.player_shared.composables.PlayerSlider
 import com.eva.ui.theme.RecorderAppTheme
 
 @Composable
@@ -33,28 +29,14 @@ internal fun PlayerActionsAndSlider(
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 	contentColor: Color = contentColorFor(backgroundColor = containerColor),
 ) {
-
-	val sliderPercentage by remember(trackData.current) {
-		derivedStateOf(trackData::playRatio)
-	}
-
 	Column(
 		modifier = modifier,
 		verticalArrangement = Arrangement.spacedBy(8.dp)
 	) {
-		Slider(
-			value = sliderPercentage,
-			onValueChange = { seekAmt ->
-				val seek = trackData.calculateSeekAmount(seekAmt)
-				onPlayerAction(PlayerEvents.OnSeekPlayer(seek))
-			},
-			onValueChangeFinished = { onPlayerAction(PlayerEvents.OnSeekComplete) },
-			colors = SliderDefaults.colors(
-				activeTrackColor = MaterialTheme.colorScheme.primary,
-				thumbColor = MaterialTheme.colorScheme.primary,
-				inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant
-			),
-			enabled = isControllerSet,
+		PlayerSlider(
+			trackData = trackData,
+			onSeekComplete = { amount -> onPlayerAction(PlayerEvents.OnSeekPlayer(amount)) },
+			enabled = isControllerSet
 		)
 		AudioPlayerActions(
 			playerMetaData = metaData,

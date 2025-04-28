@@ -4,12 +4,9 @@ import android.util.Log
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
-import com.eva.player.data.util.computePlayerTrackData
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerPlayBackSpeed
 import com.eva.player.domain.model.PlayerState
-import com.eva.player.domain.model.PlayerTrackData
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -69,10 +66,6 @@ internal class AudioFilePlayerListener(private val player: Player) : Player.List
 		// need to check for exceptions
 		Log.e(TAG, error.message ?: "PLAYER_ERROR", error)
 	}
-
-	@OptIn(ExperimentalCoroutinesApi::class)
-	val trackInfoAsFlow: Flow<PlayerTrackData>
-		get() = player.computePlayerTrackData()
 
 	val playerMetaDataFlow: Flow<PlayerMetaData>
 		get() = combine(
