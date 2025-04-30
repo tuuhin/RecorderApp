@@ -27,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -52,8 +53,10 @@ fun AnimatedPlayPauseButton(
 	enabled: Boolean = true,
 	tonalElevation: Dp = 0.dp,
 	shadowElevation: Dp = 0.dp,
-	colors: ButtonColors = ButtonDefaults
-		.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+	colors: ButtonColors = ButtonDefaults.buttonColors(
+		containerColor = MaterialTheme.colorScheme.secondary,
+		contentColor = MaterialTheme.colorScheme.onSecondary,
+	),
 ) {
 
 	val buttonContainerColor = if (enabled) colors.containerColor
@@ -74,11 +77,10 @@ fun AnimatedPlayPauseButton(
 		label = "Amount of rotation for the play button",
 	)
 
+	val currentOnClick by rememberUpdatedState(if (isPlaying) onPause else onPlay)
+
 	Surface(
-		onClick = {
-			if (isPlaying) onPause()
-			else onPlay()
-		},
+		onClick = currentOnClick,
 		enabled = enabled,
 		contentColor = contentColorFor(buttonContainerColor),
 		color = buttonContainerColor,
@@ -122,7 +124,7 @@ fun AnimatedPlayPauseButton(
 
 private fun isPlayingAnimation(): ContentTransform {
 
-	val fadeSpec = tween<Float>(durationMillis = 400, easing = EaseInBounce)
+	val fadeSpec = tween<Float>(durationMillis = 200, easing = EaseInBounce)
 
 	val scaleSpec = spring<Float>(
 		dampingRatio = Spring.DampingRatioMediumBouncy,

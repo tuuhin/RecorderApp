@@ -44,8 +44,9 @@ import com.eva.feature_player.composable.FileMetadataDetailsSheet
 import com.eva.feature_player.composable.PlayerActionsAndSlider
 import com.eva.feature_player.composable.PlayerAmplitudeGraph
 import com.eva.feature_player.composable.PlayerBookMarks
-import com.eva.feature_player.state.AudioPlayerState
 import com.eva.feature_player.state.PlayerEvents
+import com.eva.player.domain.model.PlayerMetaData
+import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.UserAudioAction
 import com.eva.player_shared.composables.ContentLoadStatePreviewParams
 import com.eva.player_shared.composables.ContentStateAnimatedContainer
@@ -151,11 +152,13 @@ internal fun AudioPlayerScreenContent(
 	fileModel: AudioFileModel,
 	waveforms: PlayerGraphData,
 	bookMarkState: CreateBookmarkState,
-	playerState: AudioPlayerState,
+	trackData: PlayerTrackData,
+	playerMetaData: PlayerMetaData,
 	bookmarks: ImmutableList<AudioBookmarkModel>,
 	onPlayerEvents: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
 	onBookmarkEvent: (BookMarkEvents) -> Unit = {},
+	isControllerReady: Boolean = false,
 ) {
 	val bookMarkTimeStamps by remember(bookmarks) {
 		derivedStateOf {
@@ -167,7 +170,7 @@ internal fun AudioPlayerScreenContent(
 		modifier = modifier.fillMaxSize()
 	) {
 		PlayerDurationText(
-			track = playerState.trackData,
+			track = trackData,
 			fileModel = fileModel,
 			modifier = Modifier.align(Alignment.TopCenter),
 		)
@@ -180,13 +183,13 @@ internal fun AudioPlayerScreenContent(
 			verticalArrangement = Arrangement.spacedBy(4.dp),
 		) {
 			PlayerAmplitudeGraph(
-				trackData = playerState.trackData,
+				trackData = trackData,
 				bookMarksTimeStamps = bookMarkTimeStamps,
 				graphData = waveforms,
 				modifier = Modifier.fillMaxWidth()
 			)
 			PlayerBookMarks(
-				trackData = playerState.trackData,
+				trackData = trackData,
 				bookmarks = bookmarks,
 				bookMarkState = bookMarkState,
 				onBookmarkEvent = onBookmarkEvent,
@@ -194,9 +197,9 @@ internal fun AudioPlayerScreenContent(
 			)
 		}
 		PlayerActionsAndSlider(
-			metaData = playerState.playerMetaData,
-			trackData = playerState.trackData,
-			isControllerSet = playerState.isControllerSet,
+			metaData = playerMetaData,
+			trackData = trackData,
+			isControllerSet = isControllerReady,
 			onPlayerAction = onPlayerEvents,
 			modifier = Modifier
 				.fillMaxWidth()
@@ -219,7 +222,8 @@ private fun AudioPlayerScreenPreview(
 			AudioPlayerScreenContent(
 				fileModel = model,
 				waveforms = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
-				playerState = AudioPlayerState(isControllerSet = true),
+				trackData = PlayerTrackData(total = model.duration),
+				playerMetaData = PlayerMetaData(),
 				bookMarkState = CreateBookmarkState(),
 				bookmarks = BookmarksPreviewFakes.FAKE_BOOKMARKS_LIST,
 				onPlayerEvents = {},

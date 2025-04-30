@@ -25,6 +25,7 @@ import com.eva.feature_player.composable.ControllerLifeCycleObserver
 import com.eva.feature_player.viewmodel.AudioPlayerViewModel
 import com.eva.feature_player.viewmodel.PlayerViewmodelFactory
 import com.eva.player_shared.PlayerMetadataViewmodel
+import com.eva.player_shared.util.PlayerGraphData
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.navigation.NavDialogs
@@ -50,6 +51,7 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 		val sharedViewModel = backStackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
 
 		val contentState by sharedViewModel.loadState.collectAsStateWithLifecycle()
+		val audioVisuals by sharedViewModel.audioVisualization.collectAsStateWithLifecycle()
 		val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
 		// Handle UI Events
@@ -63,7 +65,12 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 				audioId = sharedViewModel.audioId,
 				loadState = contentState,
 				onFileEvent = sharedViewModel::onFileEvent,
-				content = { model -> AudioPlayerContentStateFul(model) },
+				content = { model ->
+					AudioPlayerContentStateFul(
+						model = model,
+						visualization = { audioVisuals },
+					)
+				},
 				onNavigateToEdit = dropUnlessResumed {
 					if (lifeCycleState.isAtLeast(state = Lifecycle.State.RESUMED)) {
 						controller.navigate(PlayerSubGraph.AudioEditorRoute)
@@ -95,6 +102,7 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 @Composable
 private fun AudioPlayerContentStateFul(
 	model: AudioFileModel,
+	visualization: PlayerGraphData,
 	modifier: Modifier = Modifier
 ) {
 	val playerViewModel = hiltViewModel<AudioPlayerViewModel, PlayerViewmodelFactory>(
@@ -106,8 +114,9 @@ private fun AudioPlayerContentStateFul(
 	)
 
 	// player states
-	val playerState by playerViewModel.currentAudioState.collectAsStateWithLifecycle()
-	val waveforms by playerViewModel.waveforms.collectAsStateWithLifecycle()
+	val trackData by playerViewModel.trackData.collectAsStateWithLifecycle()
+	val playerMetadata by playerViewModel.playerMetaData.collectAsStateWithLifecycle()
+	val isControllerReady by playerViewModel.isControllerReady.collectAsStateWithLifecycle()
 
 	// bookmarks state
 	val bookMarkState by bookmarkViewmodel.bookmarkState.collectAsStateWithLifecycle()
@@ -125,8 +134,10 @@ private fun AudioPlayerContentStateFul(
 	AudioPlayerScreenContent(
 		fileModel = model,
 		bookmarks = bookMarks,
-		waveforms = { waveforms },
-		playerState = playerState,
+		waveforms = visualization,
+		trackData = trackData,
+		playerMetaData = playerMetadata,
+		isControllerReady = isControllerReady,
 		bookMarkState = bookMarkState,
 		onPlayerEvents = playerViewModel::onPlayerEvents,
 		onBookmarkEvent = bookmarkViewmodel::onBookMarkEvent,

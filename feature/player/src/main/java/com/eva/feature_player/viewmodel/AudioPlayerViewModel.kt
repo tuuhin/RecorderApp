@@ -1,12 +1,12 @@
 package com.eva.feature_player.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.eva.feature_player.state.AudioPlayerState
 import com.eva.feature_player.state.ControllerEvents
 import com.eva.feature_player.state.PlayerEvents
 import com.eva.player.data.MediaControllerProvider
 import com.eva.player.domain.AudioFilePlayer
-import com.eva.player.domain.WaveformsReader
+import com.eva.player.domain.model.PlayerMetaData
+import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -29,34 +28,32 @@ import kotlinx.coroutines.launch
 internal class AudioPlayerViewModel @AssistedInject constructor(
 	@Assisted val fileModel: AudioFileModel,
 	private val controller: MediaControllerProvider,
-	private val waveformsReader: WaveformsReader,
 ) : AppViewModel() {
 
 	// audio player instance for calling the underlying app's
 	private val audioPlayer: AudioFilePlayer?
 		get() = controller.player
 
-	val waveforms = waveformsReader.wavefront
-		.stateIn(
-			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(8_000),
-			initialValue = emptyList()
-		)
 
-	// player information
-	val currentAudioState = combine(
-		controller.trackInfoAsFlow,
-		controller.playerMetaDataFlow,
-		controller.isControllerConnected,
-		transform = ::AudioPlayerState
-	).onStart {
-		setControllerIfReady()
-		computeWaveforms()
-	}
-		.stateIn(
+	val playerMetaData = controller.playerMetaDataFlow.stateIn(
+		scope = viewModelScope,
+		started = SharingStarted.Lazily,
+		initialValue = PlayerMetaData()
+	)
+
+	val trackData = controller.trackInfoAsFlow.stateIn(
+		scope = viewModelScope,
+		started = SharingStarted.WhileSubscribed(5_000),
+		initialValue = PlayerTrackData(total = fileModel.duration)
+	)
+
+	val isControllerReady = controller.isControllerConnected
+		.onStart {
+			setControllerIfReady()
+		}.stateIn(
 			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(8_000),
-			initialValue = AudioPlayerState()
+			started = SharingStarted.Eagerly,
+			initialValue = false
 		)
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
@@ -110,18 +107,8 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 	}
 
 
-	private fun computeWaveforms() = viewModelScope.launch {
-		val result = waveformsReader.readWaveformsFromFile(fileModel)
-		// if there is an error show the error
-		if (result is Resource.Error) {
-			val message = result.message ?: result.error.message ?: ""
-			_uiEvents.emit(UIEvents.ShowSnackBar(message))
-		}
-	}
 
 	override fun onCleared() {
-		//clear resources associated with reader
-		waveformsReader.clearResources()
 		// cleanup for controller
 		controller.releaseController()
 		super.onCleared()

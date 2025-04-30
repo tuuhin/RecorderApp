@@ -7,8 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -21,11 +19,14 @@ import androidx.compose.ui.unit.dp
 import com.eva.feature_editor.event.EditorScreenEvent
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.composables.AnimatedPlayPauseButton
+import com.eva.player_shared.composables.PlayerSlider
 import com.eva.ui.R
+import kotlin.time.Duration
 
 @Composable
 private fun EditorActionsAndControls(
 	trackData: PlayerTrackData,
+	onSeek: (Duration) -> Unit,
 	isMediaPlaying: Boolean,
 	modifier: Modifier = Modifier,
 	onTrimMedia: () -> Unit,
@@ -41,16 +42,7 @@ private fun EditorActionsAndControls(
 		verticalArrangement = Arrangement.spacedBy(40.dp),
 		horizontalAlignment = Alignment.CenterHorizontally
 	) {
-		Slider(
-			value = sliderPercentage,
-			onValueChange = { seekAmt -> },
-			onValueChangeFinished = { },
-			colors = SliderDefaults.colors(
-				activeTrackColor = MaterialTheme.colorScheme.primary,
-				thumbColor = MaterialTheme.colorScheme.primary,
-				inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant
-			),
-		)
+		PlayerSlider(trackData = trackData, onSeekComplete = onSeek)
 		//actions
 		Row(
 			horizontalArrangement = Arrangement.spacedBy(40.dp),
@@ -92,8 +84,9 @@ fun EditorActionsAndControls(
 		isMediaPlaying = isMediaPlaying,
 		trackData = trackData,
 		modifier = modifier,
+		onSeek = { onEvent(EditorScreenEvent.OnSeekTrack(it)) },
 		onPlay = { onEvent(EditorScreenEvent.PlayAudio) },
-		onPause = { EditorScreenEvent.PauseAudio },
-		onTrimMedia = {},
+		onPause = { onEvent(EditorScreenEvent.PauseAudio) },
+		onTrimMedia = { onEvent(EditorScreenEvent.TrimSelectedArea) },
 	)
 }

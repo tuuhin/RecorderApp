@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.eva.interactions.domain.AppShortcutFacade
 import com.eva.interactions.domain.ShareRecordingsUtil
+import com.eva.player.domain.AudioVisualizer
 import com.eva.player_shared.state.ContentLoadState
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.recordings.domain.provider.RecordingsSecondaryDataProvider
@@ -12,6 +13,7 @@ import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.use_case.usecases.PlayerFileProviderFromIdUseCase
+import com.eva.utils.RecorderConstants
 import com.eva.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -34,6 +37,7 @@ class PlayerMetadataViewmodel @Inject constructor(
 	private val metadataProvider: RecordingsSecondaryDataProvider,
 	private val shareRecording: ShareRecordingsUtil,
 	private val shortcutFacade: AppShortcutFacade,
+	private val visualizer: AudioVisualizer,
 	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
@@ -45,6 +49,23 @@ class PlayerMetadataViewmodel @Inject constructor(
 
 	private val _currentAudio = MutableStateFlow<AudioFileModel?>(null)
 	private val _isAudioLoaded = MutableStateFlow(false)
+
+
+	val audioVisualization = visualizer.visualization
+		.map { it.toList() }
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(2_000),
+			initialValue = emptyList()
+		)
+
+	val compressedVisualization =
+		visualizer.compressedVisualisation(RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE)
+			.map { it.toList() }.stateIn(
+				scope = viewModelScope,
+				started = SharingStarted.WhileSubscribed(2_000),
+				initialValue = emptyList()
+			)
 
 	val loadState = combine(_isAudioLoaded, _currentAudio, transform = ::prepareLoadState)
 		.onStart { loadAudioFile() }
@@ -84,6 +105,9 @@ class PlayerMetadataViewmodel @Inject constructor(
 					// set shortcut only when resource is loaded
 					// this ensures shortcut is only added if the content is properly
 					shortcutFacade.addLastPlayedShortcut(model.id)
+					// load the visualization
+					prepareVisuals(model)
+
 				}
 			}
 		}.launchIn(viewModelScope)
@@ -93,6 +117,15 @@ class PlayerMetadataViewmodel @Inject constructor(
 		when (event) {
 			UserAudioAction.ShareCurrentAudioFile -> shareCurrentAudioFile()
 			is UserAudioAction.ToggleIsFavourite -> toggleIsFavourite(event.file)
+		}
+	}
+
+	private fun prepareVisuals(model: AudioFileModel) {
+		viewModelScope.launch {
+			visualizer.prepareVisualization(
+				model = model,
+				timePerPointInMs = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
+			)
 		}
 	}
 

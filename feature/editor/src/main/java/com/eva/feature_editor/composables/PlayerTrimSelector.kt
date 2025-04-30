@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.eva.feature_editor.event.AudioClipConfig
+import com.eva.editor.data.AudioClipConfig
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.util.PlayerPreviewFakes
 import com.eva.ui.R

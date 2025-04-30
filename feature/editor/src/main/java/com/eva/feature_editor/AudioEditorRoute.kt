@@ -16,6 +16,7 @@ import androidx.navigation.NavGraphBuilder
 import com.eva.feature_editor.viewmodel.AudioEditorViewModel
 import com.eva.feature_editor.viewmodel.EditorViewmodelFactory
 import com.eva.player_shared.PlayerMetadataViewmodel
+import com.eva.player_shared.util.PlayerGraphData
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.navigation.PlayerSubGraph
@@ -29,13 +30,19 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 		val sharedViewmodel = backstackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
 
 		val loadState by sharedViewmodel.loadState.collectAsStateWithLifecycle()
+		val visualization by sharedViewmodel.compressedVisualization.collectAsStateWithLifecycle()
 
 		// ui events handler
 		UiEventsHandler(eventsFlow = sharedViewmodel::uiEvent)
 
 		AudioEditorScreenContainer(
 			loadState = loadState,
-			content = { model -> AudioEditorScreenStateful(model) },
+			content = { model ->
+				AudioEditorScreenStateful(
+					fileModel = model,
+					visualization = { visualization },
+				)
+			},
 			navigation = {
 				if (controller.previousBackStackEntry?.destination?.route != null) {
 					IconButton(
@@ -52,7 +59,11 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 	}
 
 @Composable
-fun AudioEditorScreenStateful(fileModel: AudioFileModel, modifier: Modifier = Modifier) {
+fun AudioEditorScreenStateful(
+	fileModel: AudioFileModel,
+	visualization: PlayerGraphData,
+	modifier: Modifier = Modifier
+) {
 
 	val editorViewModel = hiltViewModel<AudioEditorViewModel, EditorViewmodelFactory>(
 		creationCallback = { factory -> factory.create(fileModel) },
@@ -63,14 +74,15 @@ fun AudioEditorScreenStateful(fileModel: AudioFileModel, modifier: Modifier = Mo
 	val isPlaying by editorViewModel.isPlayerPlaying.collectAsStateWithLifecycle()
 	val trackData by editorViewModel.trackData.collectAsStateWithLifecycle()
 	val clipConfig by editorViewModel.clipConfig.collectAsStateWithLifecycle()
-	val visualization by editorViewModel.visuals.collectAsStateWithLifecycle()
+	val transformationProgress by editorViewModel.transformInfo.collectAsStateWithLifecycle()
 
 	AudioEditorScreenContent(
 		fileModel = fileModel,
 		isPlaying = isPlaying,
 		clipConfig = clipConfig,
 		trackData = trackData,
-		graphData = { visualization },
+		transformation = transformationProgress,
+		graphData = visualization,
 		onEvent = editorViewModel::onEvent,
 		modifier = modifier,
 	)

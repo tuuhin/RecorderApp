@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -152,10 +151,7 @@ internal fun AudioPlayerActions(
 					isPlaying = playerMetaData.isPlaying,
 					enabled = isControllerReady,
 					onPause = onPause,
-					onPlay = onPlay, colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primary,
-						contentColor = MaterialTheme.colorScheme.onPrimary,
-					)
+					onPlay = onPlay,
 				)
 				IconButtonWithText(
 					icon = {

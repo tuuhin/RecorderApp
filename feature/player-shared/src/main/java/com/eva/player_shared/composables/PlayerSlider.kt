@@ -9,23 +9,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.eva.player.domain.model.PlayerTrackData
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlin.math.round
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(FlowPreview::class)
 @Composable
 fun PlayerSlider(
 	trackData: PlayerTrackData,
@@ -34,22 +31,18 @@ fun PlayerSlider(
 	enabled: Boolean = true
 ) {
 	val controller = remember { PlayerSliderController() }
-	var sliderPosition by remember { mutableFloatStateOf(trackData.playRatio) }
+	var sliderPosition by remember { mutableFloatStateOf(.0f) }
 
 	val isUserControlled by controller.isSeekByUser.collectAsStateWithLifecycle(false)
 	val seekAmountByUser by controller.seekAmountByUser.collectAsStateWithLifecycle()
 
-	LaunchedEffect(trackData.playRatio, isUserControlled, seekAmountByUser) {
+	LaunchedEffect(trackData, isUserControlled, seekAmountByUser) {
 		val newTrackData = if (isUserControlled) {
 			trackData.copy(current = seekAmountByUser)
 		} else trackData
 
-		snapshotFlow { newTrackData }
-			.map { it.playRatio.roundToNDecimals() }
-			.distinctUntilChanged()
-			.collectLatest {
-				sliderPosition = it
-			}
+		val playRatio = newTrackData.playRatio.roundToNDecimals()
+		sliderPosition = playRatio
 	}
 
 	Slider(
@@ -59,8 +52,8 @@ fun PlayerSlider(
 			controller.onSliderSlide(playerSeekAmount)
 		},
 		onValueChangeFinished = {
-			val finalAmount = controller.onSliderSlideComplete()
-			onSeekComplete(finalAmount)
+			onSeekComplete(seekAmountByUser)
+			controller.sliderCleanUp()
 		},
 		colors = SliderDefaults.colors(
 			activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -81,19 +74,21 @@ private fun Float.roundToNDecimals(decimals: Int = 2): Float {
 @OptIn(FlowPreview::class)
 private class PlayerSliderController {
 
-	val seekAmountByUser = MutableStateFlow(0.seconds)
-	private val _isSeekByUser = MutableStateFlow(false)
+	private val _seekAmountByUser = MutableStateFlow(Duration.ZERO)
+	val seekAmountByUser = _seekAmountByUser.asStateFlow()
 
-	val isSeekByUser = _isSeekByUser.debounce(120.milliseconds)
-		.distinctUntilChanged()
+	private val _isSeekByUser = MutableStateFlow(false)
+	val isSeekByUser = _isSeekByUser.debounce { controlled ->
+		if (controlled) 0.seconds
+		else 110.milliseconds
+	}.distinctUntilChanged()
 
 	fun onSliderSlide(amount: Duration) {
 		_isSeekByUser.update { true }
-		seekAmountByUser.update { amount }
+		_seekAmountByUser.update { amount }
 	}
 
-	fun onSliderSlideComplete(): Duration {
+	fun sliderCleanUp() {
 		_isSeekByUser.update { false }
-		return seekAmountByUser.value
 	}
 }
