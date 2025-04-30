@@ -41,6 +41,21 @@ fun Player.computePlayerTrackData(): Flow<PlayerTrackData> = callbackFlow {
 			}
 		}
 
+		override fun onPositionDiscontinuity(
+			oldPosition: Player.PositionInfo,
+			newPosition: Player.PositionInfo,
+			reason: Int
+		) {
+			if (reason != Player.DISCONTINUITY_REASON_SEEK) return
+			// on seek update the current position to the final seek position
+			launch {
+				val newPosDuration = newPosition.positionMs.milliseconds
+				val trackData = this@computePlayerTrackData.toTrackData()
+					.copy(current = newPosDuration)
+				if (trackData.allPositiveAndFinite) send(trackData)
+			}
+		}
+
 		override fun onIsPlayingChanged(isPlaying: Boolean) {
 			// cancel the old coroutine
 			job?.cancel()

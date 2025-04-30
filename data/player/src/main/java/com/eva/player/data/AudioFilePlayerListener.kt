@@ -10,7 +10,9 @@ import com.eva.player.domain.model.PlayerState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "AUDIO_PLAYER_LISTENER"
 
@@ -21,11 +23,36 @@ internal class AudioFilePlayerListener(private val player: Player) : Player.List
 	private val _isLooping = MutableStateFlow(false)
 	private val _isStreamMuted = MutableStateFlow(false)
 	private val _isPlaying = MutableStateFlow(false)
+	private val _isSeeking = MutableStateFlow(false)
+	private val _userPlay = MutableStateFlow(false)
 
 	override fun onIsPlayingChanged(isPlaying: Boolean) {
-		// only updates to play or pause mode
+		// only updates to play or pause mode can be done both by the player or the user
 		_isPlaying.update { isPlaying }
 		Log.d(TAG, "PLAYER IS PLAYING :$isPlaying")
+	}
+
+	override fun onPositionDiscontinuity(
+		oldPosition: Player.PositionInfo,
+		newPosition: Player.PositionInfo,
+		reason: Int
+	) {
+		val message = buildString {
+			append("PLAYER IS SEEK ")
+			append("${oldPosition.positionMs.milliseconds}")
+			append(" -> ")
+			append("${newPosition.positionMs.milliseconds}")
+		}
+
+		Log.d(TAG, message)
+		_isSeeking.update { reason == Player.DISCONTINUITY_REASON_SEEK }
+	}
+
+	override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+		if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST) {
+			Log.d(TAG, "PLAY REQUESTED BY THE USER")
+			_userPlay.update { playWhenReady }
+		}
 	}
 
 	override fun onPlaybackStateChanged(playbackState: Int) {
@@ -36,6 +63,9 @@ internal class AudioFilePlayerListener(private val player: Player) : Player.List
 			else -> return
 		}
 		// only updates idle ready and ended
+		if (playbackState == Player.STATE_READY) {
+			_isSeeking.update { false }
+		}
 		_playerState.update { newState }
 		Log.d(TAG, "PLAYER STATE :$newState")
 	}
@@ -67,22 +97,27 @@ internal class AudioFilePlayerListener(private val player: Player) : Player.List
 		Log.e(TAG, error.message ?: "PLAYER_ERROR", error)
 	}
 
-	val playerMetaDataFlow: Flow<PlayerMetaData>
-		get() = combine(
-			_isPlaying,
-			_playerState,
-			_isLooping,
-			_playBackSpeed,
-			_isStreamMuted
-		) { playing, state, repeat, speed, muted ->
-			PlayerMetaData(
-				isPlaying = playing,
-				playerState = state,
-				isRepeating = repeat,
-				playBackSpeed = speed,
-				isMuted = muted
-			)
-		}
+	private val _isPlayingOrSeeking =
+		combine(_userPlay, _isPlaying, _isSeeking) { playByUser, isPlaying, isSeeking ->
+			// play is dependent on user action then the player
+			playByUser && (isPlaying || isSeeking)
+		}.distinctUntilChanged()
+
+	val playerMetaDataFlow: Flow<PlayerMetaData> = combine(
+		_isPlayingOrSeeking,
+		_playerState,
+		_isLooping,
+		_playBackSpeed,
+		_isStreamMuted
+	) { playing, state, repeat, speed, muted ->
+		PlayerMetaData(
+			isPlaying = playing,
+			playerState = state,
+			isRepeating = repeat,
+			playBackSpeed = speed,
+			isMuted = muted
+		)
+	}
 
 	fun updateStateFromCurrentPlayerConfig() {
 		Log.d(TAG, "UPDATING PLAYER CONFIG")
@@ -106,5 +141,7 @@ internal class AudioFilePlayerListener(private val player: Player) : Player.List
 		_isPlaying.update { player.isPlaying }
 		// update volume
 		_isStreamMuted.update { player.volume == 0f }
+		// user is playing
+		_userPlay.update { player.playWhenReady }
 	}
 }

@@ -17,7 +17,9 @@ internal val MediaFormat.pcmEncoding: Int
 	} else 16
 
 internal val MediaFormat.channels: Int
-	get() = getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+	get() = if (containsKey(MediaFormat.KEY_CHANNEL_COUNT)) {
+		getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+	} else 1
 
 internal val MediaFormat.sampleRate: Int
 	get() = getInteger(MediaFormat.KEY_SAMPLE_RATE)
@@ -28,5 +30,5 @@ internal val MediaFormat.duration: Duration
 internal val MediaFormat.mimeType: String?
 	get() = getString(MediaFormat.KEY_MIME)
 
-internal val MediaCodec.BufferInfo.isEof: Boolean
+internal val MediaCodec.BufferInfo.isEndOfStream: Boolean
 	get() = flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0

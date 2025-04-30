@@ -16,6 +16,12 @@ fun Player.computeIsPlayerPlaying(): Flow<Boolean> = callbackFlow {
 			trySend(isPlaying)
 		}
 
+		override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+			if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST) {
+				trySend(playWhenReady)
+			}
+		}
+
 		override fun onPlaybackStateChanged(playbackState: Int) {
 			trySend(playbackState == Player.STATE_READY)
 		}
