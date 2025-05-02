@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "PLAYER_TRACK_DATA_FLOW"
 
@@ -81,9 +82,25 @@ fun Player.computePlayerTrackData(): Flow<PlayerTrackData> = callbackFlow {
 		}
 
 		override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-			launch {
-				val trackData = this@computePlayerTrackData.toTrackData()
-				if (trackData.allPositiveAndFinite) send(trackData)
+			if (reason in arrayOf(
+					Player.MEDIA_ITEM_TRANSITION_REASON_AUTO,
+					Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
+				)
+			) {
+				launch {
+					val trackData = this@computePlayerTrackData.toTrackData()
+					if (trackData.allPositiveAndFinite) send(trackData)
+				}
+			}
+			if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
+				launch {
+					val newItemDurationMs = mediaItem?.mediaMetadata?.durationMs
+					val trackData = PlayerTrackData(
+						0.seconds,
+						newItemDurationMs?.milliseconds ?: 0.seconds
+					)
+					if (trackData.allPositiveAndFinite) send(trackData)
+				}
 			}
 		}
 	}

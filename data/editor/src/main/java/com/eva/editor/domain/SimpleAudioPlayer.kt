@@ -1,5 +1,6 @@
 package com.eva.editor.domain
 
+import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.flow.Flow
@@ -13,9 +14,11 @@ interface SimpleAudioPlayer {
 
 	fun onSeekDuration(duration: Duration)
 
-	suspend fun preparePlayer(audio: AudioFileModel)
+	suspend fun prepareAudioFile(audio: AudioFileModel)
 
-	suspend fun trimMediaItem(start: Duration, end: Duration)
+	suspend fun cropMediaPortion(audio: AudioFileModel, config: AudioClipConfig)
+
+	suspend fun cutMediaPortion(audio: AudioFileModel, config: AudioClipConfig)
 
 	suspend fun pausePlayer()
 

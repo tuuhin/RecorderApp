@@ -1,46 +1,44 @@
 package com.eva.editor.data
 
 import android.content.Context
-import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
-import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
-import com.eva.editor.domain.AudioTrimmer
+import com.eva.editor.data.util.toCropComposition
+import com.eva.editor.data.util.toCutComposition
+import com.eva.editor.data.util.transformerProgress
+import com.eva.editor.domain.AudioTransformer
 import com.eva.editor.domain.TransformationProgress
 import com.eva.editor.domain.exceptions.MediaUnsupportedException
 import com.eva.editor.domain.exceptions.TransformRunningException
 import com.eva.editor.domain.exceptions.TransformerConfigException
+import com.eva.editor.domain.model.AudioClipConfig
+import com.eva.editor.domain.model.AudioEditAction
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
-import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "AUDIO_TRIMMER"
 
 @UnstableApi
-internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer,
+internal class AudioTransformerImpl(private val context: Context) : AudioTransformer,
 	CoroutineScope by MainScope() {
 
 	private val _isTransforming = MutableStateFlow(false)
@@ -54,8 +52,9 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer,
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	override val progress: Flow<TransformationProgress>
-		get() = _isTransforming.flatMapLatest(::updateTransformerProgress)
-			.onStart { emit(TransformationProgress.Idle) }
+		get() = _isTransforming.flatMapLatest {
+			_transformer?.transformerProgress(it) ?: emptyFlow()
+		}.onStart { emit(TransformationProgress.Idle) }
 			.distinctUntilChanged()
 
 
@@ -68,7 +67,7 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer,
 			_resultsFile?.let {
 				Log.d(TAG, "FILE CREATED :${it.path} ${it.length()}")
 			}
-			// do something here with the content of the file.
+			// TODO: do something here with the content of the file.
 		}
 
 		override fun onError(
@@ -92,13 +91,13 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer,
 
 
 	fun prepareTransformer(mimeType: String): Result<Unit> {
-		val options = arrayOf(
+		val transformerMimetypes = arrayOf(
 			MimeTypes.AUDIO_AAC,
 			MimeTypes.AUDIO_AMR_NB,
 			MimeTypes.AUDIO_AMR_WB
 		)
 
-		val mimeType = options.find { it == mimeType } ?: MimeTypes.AUDIO_AAC
+		val mimeType = transformerMimetypes.find { it == mimeType } ?: MimeTypes.AUDIO_AAC
 
 		return try {
 			_transformer = Transformer.Builder(context)
@@ -117,8 +116,11 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer,
 		}
 	}
 
-	override fun trimAudioFile(model: AudioFileModel, clipConfig: AudioClipConfig): Result<Unit> {
-
+	override fun transformAudio(
+		model: AudioFileModel,
+		clipConfig: AudioClipConfig,
+		action: AudioEditAction
+	): Result<Unit> {
 		if (_transformer == null) prepareTransformer(model.mimeType)
 
 		if (_isTransforming.value) {
@@ -126,25 +128,18 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer,
 			return Result.failure(TransformRunningException())
 		}
 
-		val clippingConfig = MediaItem.ClippingConfiguration.Builder()
-			.setStartPositionMs(clipConfig.start.inWholeMilliseconds)
-			.setEndPositionMs(clipConfig.end.inWholeMilliseconds)
-			.build()
-
-		val mediaItem = MediaItem.Builder()
-			.setUri(model.fileUri)
-			.setClippingConfiguration(clippingConfig)
-			.build()
+		val composition = when (action) {
+			AudioEditAction.CROP -> model.toCropComposition(clipConfig)
+			AudioEditAction.CUT -> model.toCutComposition(clipConfig)
+		}
 
 		return try {
-
 			val file = _resultsFile ?: run {
 				_resultsFile = File.createTempFile("temp_", ".tmp", context.cacheDir)
 				_resultsFile!!
 			}
-
 			Log.d(TAG, "BEGINNING TRANSFORMATION ")
-			_transformer?.start(mediaItem, file.path)
+			_transformer?.start(composition, file.path)
 			_isTransforming.update { true }
 			Result.success(Unit)
 		} catch (_: IllegalArgumentException) {
@@ -166,25 +161,4 @@ internal class AudioTrimmerImpl(private val context: Context) : AudioTrimmer,
 		_transformer = null
 		cancel()
 	}
-
-	private fun updateTransformerProgress(isTransformerRunning: Boolean) = flow {
-		val holder = ProgressHolder()
-		while (isTransformerRunning) {
-			val state = withContext(Dispatchers.Main) { _transformer?.getProgress(holder) }
-			when (state) {
-				Transformer.PROGRESS_STATE_AVAILABLE -> {
-					val progress = holder.progress
-					emit(TransformationProgress.Progress(progress))
-				}
-
-				Transformer.PROGRESS_STATE_NOT_STARTED -> emit(TransformationProgress.Idle)
-				Transformer.PROGRESS_STATE_UNAVAILABLE -> emit(TransformationProgress.UnAvailable)
-				Transformer.PROGRESS_STATE_WAITING_FOR_AVAILABILITY ->
-					emit(TransformationProgress.Waiting)
-
-				else -> {}
-			}
-			delay(2.milliseconds)
-		}
-	}.flowOn(Dispatchers.IO)
 }

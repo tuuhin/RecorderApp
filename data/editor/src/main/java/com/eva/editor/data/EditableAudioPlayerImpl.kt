@@ -1,9 +1,16 @@
 package com.eva.editor.data
 
+import android.content.Context
 import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.ConcatenatingMediaSource2
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
 import com.eva.editor.domain.SimpleAudioPlayer
+import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.player.data.util.computeIsPlayerPlaying
 import com.eva.player.data.util.computePlayerTrackData
 import com.eva.player.domain.model.PlayerTrackData
@@ -14,9 +21,14 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.time.Duration
 
-private const val TAG = "SimpleAudioPlayer"
+private const val TAG = "EDITABLE_ITEM_PLAYER"
 
-class ClippablePlayerImpl(val player: Player) : SimpleAudioPlayer {
+internal class EditableAudioPlayerImpl(
+	private val player: Player,
+	private val sourceFactory: MediaSource.Factory
+) : SimpleAudioPlayer {
+
+	constructor(player: Player, context: Context) : this(player, DefaultMediaSourceFactory(context))
 
 	private val _lock = Mutex()
 
@@ -41,7 +53,7 @@ class ClippablePlayerImpl(val player: Player) : SimpleAudioPlayer {
 		}
 	}
 
-	override suspend fun preparePlayer(audio: AudioFileModel) {
+	override suspend fun prepareAudioFile(audio: AudioFileModel) {
 		val command = player.isCommandAvailable(Player.COMMAND_SET_MEDIA_ITEM)
 		if (!command) return
 
@@ -54,31 +66,82 @@ class ClippablePlayerImpl(val player: Player) : SimpleAudioPlayer {
 				if (player.playbackState == Player.STATE_IDLE) {
 					player.prepare()
 					Log.d(TAG, "PLAYER PREPARED AND READY TO PLAY AUDIO")
-					player.playWhenReady = true
+					player.playWhenReady = false
 				}
 			},
 		)
 	}
 
-	override suspend fun trimMediaItem(start: Duration, end: Duration) {
-		if (end <= start) {
+	override suspend fun cropMediaPortion(audio: AudioFileModel, config: AudioClipConfig) {
+		if (!config.validate(audio.duration)) {
 			Log.d(TAG, "END IS LESSER THAN START NOT ALLOWED")
+			return
 		}
 
 		return _lock.checkLockAndPerformOperation(
 			action = {
-				val mediaItem = player.currentMediaItem ?: return@checkLockAndPerformOperation
+				val mediaItem = player.currentMediaItem ?: MediaItem.fromUri(audio.fileUri)
+					.buildUpon()
+					.setMediaId("${audio.id}")
+					.build()
 
 				val clippingConfig = MediaItem.ClippingConfiguration.Builder()
-					.setStartPositionMs(start.inWholeMilliseconds)
-					.setEndPositionMs(end.inWholeMilliseconds)
+					.setStartPositionMs(config.start.inWholeMilliseconds)
+					.setEndPositionMs(config.end.inWholeMilliseconds)
 					.build()
 
 				val clippedMediaItem = mediaItem.buildUpon()
 					.setClippingConfiguration(clippingConfig)
 					.build()
-				// set the new clipped media
-				player.setMediaItem(clippedMediaItem)
+				Log.d(TAG, "CHANGING CURRENT MEDIA ITEM WITH CLIP CONFIG : $config")
+				// set the new clipped media and start position to 0
+				player.setMediaItem(clippedMediaItem, 0L)
+			},
+		)
+	}
+
+	@UnstableApi
+	override suspend fun cutMediaPortion(audio: AudioFileModel, config: AudioClipConfig) {
+		if (!config.validate(audio.duration)) {
+			Log.d(TAG, "END IS LESSER THAN START NOT ALLOWED")
+			return
+		}
+		return _lock.checkLockAndPerformOperation(
+			action = {
+				val mediaItem = player.currentMediaItem ?: MediaItem.fromUri(audio.fileUri)
+					.buildUpon()
+					.setMediaId("${audio.id}")
+					.build()
+
+				val totalDurationInMs = mediaItem.mediaMetadata.durationMs
+					?: audio.duration.inWholeMilliseconds
+
+				val firstPartClip = mediaItem.buildUpon()
+					.setClippingConfiguration(
+						MediaItem.ClippingConfiguration.Builder()
+							.setStartPositionMs(0)
+							.setEndPositionMs(config.start.inWholeMilliseconds)
+							.build()
+					).build()
+
+				val secondClip = mediaItem.buildUpon()
+					.setClippingConfiguration(
+						MediaItem.ClippingConfiguration.Builder()
+							.setStartPositionMs(config.end.inWholeMilliseconds)
+							.setEndPositionMs(totalDurationInMs)
+							.build()
+					).build()
+
+
+				val concatSources = ConcatenatingMediaSource2.Builder()
+					.setMediaSourceFactory(sourceFactory)
+					.add(firstPartClip)
+					.add(secondClip)
+					.build()
+
+				Log.d(TAG, "CHANGING CURRENT MEDIA ITEM WITH CUT :${concatSources.mediaItem}")
+				// only allow this if this is a exoplayer instance
+				(player as? ExoPlayer)?.setMediaSource(concatSources, 0L)
 			},
 		)
 	}
@@ -136,7 +199,7 @@ class ClippablePlayerImpl(val player: Player) : SimpleAudioPlayer {
 			try {
 				action()
 			} catch (e: Exception) {
-				e.printStackTrace()
+				Log.e(TAG, "SOME ERROR", e)
 				onError(e)
 			}
 		}

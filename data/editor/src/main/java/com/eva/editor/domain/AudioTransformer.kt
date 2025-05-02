@@ -1,17 +1,22 @@
 package com.eva.editor.domain
 
-import com.eva.editor.data.AudioClipConfig
+import com.eva.editor.domain.model.AudioClipConfig
+import com.eva.editor.domain.model.AudioEditAction
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
-interface AudioTrimmer {
+interface AudioTransformer {
 
 	val progress: Flow<TransformationProgress>
 
 	val errorsFlow: SharedFlow<Exception>
 
-	fun trimAudioFile(model: AudioFileModel, clipConfig: AudioClipConfig): Result<Unit>
+	fun transformAudio(
+		model: AudioFileModel,
+		clipConfig: AudioClipConfig,
+		action: AudioEditAction
+	): Result<Unit>
 
 	fun cancelTransformation()
 
