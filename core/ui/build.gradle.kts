@@ -27,4 +27,6 @@ dependencies {
 	//commons
 	api(libs.kotlinx.collections.immutable)
 	api(libs.androidx.graphics.shapes)
+	//icons
+	api(libs.androidx.icons.extended)
 }

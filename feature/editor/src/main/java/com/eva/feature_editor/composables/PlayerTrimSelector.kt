@@ -12,19 +12,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.eva.editor.data.AudioClipConfig
+import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.player.domain.model.PlayerTrackData
+import com.eva.player_shared.util.PlayerGraphData
 import com.eva.player_shared.util.PlayerPreviewFakes
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
+import com.eva.utils.RecorderConstants
 
 @Composable
 fun PlayerTrimSelector(
-	graphData: () -> List<Float>,
+	graphData: PlayerGraphData,
 	trackData: PlayerTrackData,
 	onClipConfigChange: (AudioClipConfig) -> Unit,
 	modifier: Modifier = Modifier,
 	clipConfig: AudioClipConfig? = null,
+	maxGraphPoints: Int = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE,
 	shape: Shape = MaterialTheme.shapes.small,
 	overlayColor: Color = MaterialTheme.colorScheme.tertiary,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -38,27 +41,29 @@ fun PlayerTrimSelector(
 		shape = shape,
 		modifier = modifier.aspectRatio(1.7f),
 	) {
-		Box(
-			modifier = Modifier
-				.padding(contentPadding)
-				.detectClipConfig(
-					onClipChange = onClipConfigChange,
-					totalLength = trackData.total,
-					clipConfig = clipConfig
-				),
-		) {
+		Box(modifier = Modifier.padding(contentPadding)) {
 			EditorAmplitudeGraph(
 				playRatio = { trackData.playRatio },
 				totalTrackDuration = trackData.total,
+				maxGraphPoints = maxGraphPoints,
 				graphData = graphData,
-				modifier = Modifier.matchParentSize(),
-			)
-			EditorTrimOverlay(
-				trackDuration = trackData.total,
-				modifier = Modifier.matchParentSize(),
-				clipConfig = clipConfig,
-				overlayColor = overlayColor,
-				shape = shape,
+				modifier = Modifier
+					.matchParentSize()
+					.trimOverlay(
+						graph = graphData,
+						trackDuration = trackData.total,
+						clipConfig = clipConfig,
+						maxGraphPoints = maxGraphPoints,
+						overlayColor = overlayColor,
+						shape = shape,
+					)
+					.detectClipConfig(
+						graph = graphData,
+						onClipChange = onClipConfigChange,
+						totalLength = trackData.total,
+						clipConfig = clipConfig,
+						maxGraphPoints = maxGraphPoints
+					),
 			)
 		}
 	}

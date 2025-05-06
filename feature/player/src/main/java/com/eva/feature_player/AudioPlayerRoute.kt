@@ -25,6 +25,7 @@ import com.eva.feature_player.composable.ControllerLifeCycleObserver
 import com.eva.feature_player.viewmodel.AudioPlayerViewModel
 import com.eva.feature_player.viewmodel.PlayerViewmodelFactory
 import com.eva.player_shared.PlayerMetadataViewmodel
+import com.eva.player_shared.PlayerVisualizerViewmodel
 import com.eva.player_shared.util.PlayerGraphData
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
@@ -48,27 +49,30 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 		sizeTransform = { SizeTransform(clip = false) { _, _ -> tween(durationMillis = 300) } }
 	) { backStackEntry ->
 
-		val sharedViewModel = backStackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
+		val metaDataViewmodel = backStackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
+		val visualizerViewModel =
+			backStackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
 
-		val contentState by sharedViewModel.loadState.collectAsStateWithLifecycle()
-		val audioVisuals by sharedViewModel.audioVisualization.collectAsStateWithLifecycle()
+		val contentState by metaDataViewmodel.loadState.collectAsStateWithLifecycle()
 		val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+
+		val visuals by visualizerViewModel.fullVisualization.collectAsStateWithLifecycle()
 
 		// Handle UI Events
 		UiEventsHandler(
-			eventsFlow = { sharedViewModel.uiEvent },
+			eventsFlow = { merge(metaDataViewmodel.uiEvent, visualizerViewModel.uiEvent) },
 			onNavigateBack = controller::popBackStack
 		)
 
 		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
 			AudioPlayerScreenContainer(
-				audioId = sharedViewModel.audioId,
+				audioId = metaDataViewmodel.audioId,
 				loadState = contentState,
-				onFileEvent = sharedViewModel::onFileEvent,
+				onFileEvent = metaDataViewmodel::onFileEvent,
 				content = { model ->
 					AudioPlayerContentStateFul(
 						model = model,
-						visualization = { audioVisuals },
+						visualization = { visuals },
 					)
 				},
 				onNavigateToEdit = dropUnlessResumed {

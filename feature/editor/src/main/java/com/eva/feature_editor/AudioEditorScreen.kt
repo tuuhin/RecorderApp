@@ -33,12 +33,12 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.eva.editor.data.AudioClipConfig
 import com.eva.editor.domain.TransformationProgress
+import com.eva.editor.domain.model.AudioClipConfig
+import com.eva.feature_editor.composables.AudioClipChipRow
 import com.eva.feature_editor.composables.EditorActionsAndControls
 import com.eva.feature_editor.composables.EditorTopBar
 import com.eva.feature_editor.composables.PlayerTrimSelector
-import com.eva.feature_editor.composables.TransformationChip
 import com.eva.feature_editor.event.EditorScreenEvent
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.composables.ContentStateAnimatedContainer
@@ -52,7 +52,6 @@ import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.ui.utils.LocalSnackBarProvider
-import kotlin.time.Duration.Companion.seconds
 
 @OptIn(
 	ExperimentalMaterial3Api::class,
@@ -121,7 +120,6 @@ internal fun AudioEditorScreenContent(
 	) {
 		PlayerDurationText(
 			track = trackData,
-			fileModel = fileModel,
 			modifier = Modifier.align(Alignment.TopCenter)
 		)
 		Column(
@@ -139,9 +137,10 @@ internal fun AudioEditorScreenContent(
 				onClipConfigChange = { onEvent(EditorScreenEvent.OnClipConfigChange(it)) },
 				modifier = Modifier.fillMaxWidth()
 			)
-			TransformationChip(
-				progress = transformation,
-				modifier = Modifier.align(Alignment.CenterHorizontally)
+			AudioClipChipRow(
+				clipConfig = clipConfig,
+				onEvent = onEvent,
+				trackDuration = trackData.total
 			)
 		}
 		Box(
@@ -169,9 +168,10 @@ private fun AudioEditorScreenPreview() = RecorderAppTheme {
 		content = { model ->
 			AudioEditorScreenContent(
 				fileModel = model,
-				trackData = PlayerTrackData(total = 10.seconds),
-				graphData = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
+				trackData = PlayerTrackData(total = model.duration),
+				graphData = { PlayerPreviewFakes.loadAmplitudeGraph(model.duration) },
 				onEvent = {},
+				clipConfig = AudioClipConfig(end = model.duration)
 			)
 		},
 		navigation = {

@@ -27,7 +27,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -77,10 +76,8 @@ fun AnimatedPlayPauseButton(
 		label = "Amount of rotation for the play button",
 	)
 
-	val currentOnClick by rememberUpdatedState(if (isPlaying) onPause else onPlay)
-
 	Surface(
-		onClick = currentOnClick,
+		onClick = { if (isPlaying) onPause() else onPlay() },
 		enabled = enabled,
 		contentColor = contentColorFor(buttonContainerColor),
 		color = buttonContainerColor,

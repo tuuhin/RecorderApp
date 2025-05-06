@@ -23,12 +23,14 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 fun DrawScope.drawGraph(
-	waves: List<Float>,
-	centerYAxis: Float,
+	waves: FloatArray,
 	spikesGap: Float = 2f,
 	spikesWidth: Float = 2f,
 	color: Color = Color.Gray,
+	drawPoints: Boolean = true,
 ) {
+	val centerYAxis = size.height * .5f
+
 	val dots = mutableListOf<Offset>()
 	waves.forEachIndexed { idx, value ->
 		val sizeFactor = value * .8f
@@ -43,9 +45,9 @@ fun DrawScope.drawGraph(
 				strokeWidth = spikesGap,
 				cap = StrokeCap.Round
 			)
-		} else dots.add(start)
+		} else if (drawPoints) dots.add(start)
 	}
-
+	if (!drawPoints) return
 	drawPoints(
 		points = dots,
 		pointMode = PointMode.Points,
@@ -54,9 +56,115 @@ fun DrawScope.drawGraph(
 	)
 }
 
-fun DrawScope.drawTimeLine(
-	duration: Duration,
+fun DrawScope.drawGraphCompressed(
+	waves: FloatArray,
+	color: Color = Color.Gray,
+	drawPoints: Boolean = true,
+	spikesWidth: Float = 2f,
+) {
+	val totalWidth = size.width
+	val centerYAxis = size.height / 2f
+	val wavesSize = waves.size
+
+	if (wavesSize == 0) return
+
+	val spacing = totalWidth.toFloat() / (wavesSize + 1)
+	val pointsList = mutableListOf<Offset>()
+
+	waves.forEachIndexed { index, wave ->
+		val xAxis = (index + 1) * spacing
+		val sizeFactor = wave * .8f
+		val start = Offset(xAxis, centerYAxis * (1 - sizeFactor))
+		val end = Offset(xAxis, centerYAxis * (1 + sizeFactor))
+		if (start.y != end.y) {
+			drawLine(
+				color = color,
+				start = start,
+				end = end,
+				strokeWidth = spikesWidth,
+				cap = StrokeCap.Round
+			)
+		} else if (drawPoints) pointsList.add(end)
+	}
+
+	if (!drawPoints) return
+	drawPoints(
+		points = pointsList,
+		pointMode = PointMode.Points,
+		color = color,
+		strokeWidth = spikesWidth,
+		cap = StrokeCap.Round
+	)
+
+}
+
+fun DrawScope.drawTimeLineCompressed(
+	totalDuration: Duration,
 	textMeasurer: TextMeasurer,
+	sampleSize: Int = 100,
+	outlineColor: Color = Color.Gray,
+	outlineVariant: Color = Color.Gray,
+	strokeWidthThick: Float = 2f,
+	strokeWidthLight: Float = 1f,
+	textStyle: TextStyle = TextStyle(),
+	textColor: Color = Color.Black,
+) {
+	val blockTime = totalDuration.inWholeMilliseconds / sampleSize
+	val spacing = size.width.toFloat() / sampleSize
+
+	repeat(sampleSize + 20) { idx ->
+		val xAxis = idx * spacing
+		if (idx % 20 == 0) {
+			val time = (blockTime * idx).milliseconds.asLocalTime
+			val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
+
+			val layoutResult = textMeasurer.measure(readable, style = textStyle)
+			val textOffset = with(layoutResult) {
+				Offset(size.width / 2f, size.height / 2f)
+			}
+
+			drawText(
+				textLayoutResult = layoutResult,
+				topLeft = Offset(xAxis, -1 * 8.dp.toPx()) - textOffset,
+				color = textColor,
+			)
+
+			drawLine(
+				color = outlineColor,
+				start = Offset(xAxis, 0f),
+				end = Offset(xAxis, 8.dp.toPx()),
+				strokeWidth = strokeWidthThick,
+				cap = StrokeCap.Round,
+			)
+			drawLine(
+				color = outlineColor,
+				start = Offset(xAxis, size.height - 8.dp.toPx()),
+				end = Offset(xAxis, size.height),
+				strokeWidth = strokeWidthThick,
+			)
+		} else if (idx % 5 == 0) {
+			drawLine(
+				color = outlineVariant,
+				start = Offset(xAxis, 0f),
+				end = Offset(xAxis, 4.dp.toPx()),
+				strokeWidth = strokeWidthLight,
+				cap = StrokeCap.Round,
+			)
+			drawLine(
+				color = outlineVariant,
+				start = Offset(xAxis, size.height - 4.dp.toPx()),
+				end = Offset(xAxis, size.height),
+				strokeWidth = strokeWidthLight,
+				cap = StrokeCap.Round,
+			)
+		}
+	}
+}
+
+fun DrawScope.drawTimeLine(
+	totalDuration: Duration,
+	textMeasurer: TextMeasurer,
+	sampleSize: Int = 100,
 	outlineColor: Color = Color.Gray,
 	outlineVariant: Color = Color.Gray,
 	spikesWidth: Float = 2f,
@@ -66,13 +174,13 @@ fun DrawScope.drawTimeLine(
 	textColor: Color = Color.Black,
 ) {
 	// 2000 for extra 2 seconds on the graph
-	val durationAsMillis = (duration + 2.seconds).inWholeMilliseconds.toInt()
-	val spacing = spikesWidth / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
+	val durationAsMillis = (totalDuration + 2.seconds).inWholeMilliseconds.toInt()
+	val spacing = spikesWidth / sampleSize
 
 	repeat(durationAsMillis) { millis ->
+		val xAxis = millis * spacing
 		if (millis % 2_000 == 0) {
 
-			val xAxis = millis * spacing
 			val time = millis.milliseconds.asLocalTime
 			val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
 
@@ -101,7 +209,6 @@ fun DrawScope.drawTimeLine(
 				strokeWidth = strokeWidthThick,
 			)
 		} else if (millis % 500 == 0) {
-			val xAxis = millis * spacing
 			drawLine(
 				color = outlineVariant,
 				start = Offset(xAxis, 0f),
@@ -136,7 +243,7 @@ fun DrawScope.drawTimeLineWithBookMarks(
 	textColor: Color = Color.Black,
 ) {
 	drawTimeLine(
-		duration = totalDuration,
+		totalDuration = totalDuration,
 		textMeasurer = textMeasurer,
 		outlineColor = outlineColor,
 		outlineVariant = outlineVariant,
@@ -191,7 +298,7 @@ fun DrawScope.drawTrackPointer(
 	)
 	drawCircle(
 		color = color,
-		radius = strokeWidth,
+		radius = radius,
 		center = Offset(xAxis, size.height),
 	)
 	drawLine(

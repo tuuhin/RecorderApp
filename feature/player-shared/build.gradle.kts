@@ -22,6 +22,7 @@ dependencies {
 	implementation(project(":core:utils"))
 
 	implementation(project(":data:player"))
+	implementation(project(":data:editor"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:interactions"))
 	implementation(project(":data:use_case"))

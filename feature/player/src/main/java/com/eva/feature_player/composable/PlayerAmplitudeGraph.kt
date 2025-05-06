@@ -18,7 +18,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.util.PlayRatio
@@ -70,8 +70,6 @@ internal fun PlayerAmplitudeGraph(
 				.defaultMinSize(minHeight = dimensionResource(id = R.dimen.line_graph_min_height))
 				.drawWithCache {
 
-					val centerYAxis = size.height / 2f
-
 					val spikesWidth = size.width / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 					val spikeSpace = (spikesWidth - 1.5.dp.toPx()).let { amt ->
 						if (amt > 0f) amt else 2.dp.toPx()
@@ -87,7 +85,6 @@ internal fun PlayerAmplitudeGraph(
 						translate(left = translate) {
 							drawGraph(
 								waves = samples,
-								centerYAxis = centerYAxis,
 								spikesGap = spikeSpace,
 								spikesWidth = spikesWidth,
 								color = plotColor
@@ -156,7 +153,7 @@ fun PlayerAmplitudeGraph(
 	)
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun PlayerAmplitudeGraphPreview() = RecorderAppTheme {
 	PlayerAmplitudeGraph(
