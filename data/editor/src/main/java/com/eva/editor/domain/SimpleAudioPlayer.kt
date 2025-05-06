@@ -12,6 +12,8 @@ interface SimpleAudioPlayer {
 
 	val trackInfoAsFlow: Flow<PlayerTrackData>
 
+	val isMediaItemChanged: Flow<Boolean>
+
 	fun onSeekDuration(duration: Duration)
 
 	suspend fun prepareAudioFile(audio: AudioFileModel)

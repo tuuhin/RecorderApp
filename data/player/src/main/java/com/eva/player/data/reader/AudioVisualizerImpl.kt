@@ -1,8 +1,10 @@
 package com.eva.player.data.reader
 
+import android.content.ContentUris
 import android.content.Context
 import android.media.MediaCodec
 import android.media.MediaExtractor
+import android.provider.MediaStore
 import android.util.Log
 import androidx.core.net.toUri
 import com.eva.player.domain.AudioVisualizer
@@ -34,21 +36,27 @@ class AudioVisualizerImpl(private val context: Context) : AudioVisualizer,
 		get() = _isReady
 
 	private val _visualization = MutableStateFlow<FloatArray>(floatArrayOf())
-	override val visualization: Flow<FloatArray>
+	override val normalizedVisualization: Flow<FloatArray>
 		get() = _visualization.map { array -> array.normalize() }
 			.flowOn(Dispatchers.Default)
 
-	override fun compressedVisualisation(length: Int): Flow<FloatArray> {
-		return visualization.map { array -> array.compressFloatArray(length) }
-			.flowOn(Dispatchers.Default)
+	override suspend fun prepareVisualization(model: AudioFileModel, timePerPointInMs: Int)
+			: Result<Unit> = prepareVisualization(fileUri = model.fileUri, timePerPointInMs)
+
+	override suspend fun prepareVisualization(fileId: Long, timePerPointInMs: Int): Result<Unit> {
+		val uri = ContentUris.withAppendedId(
+			MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
+			fileId.toLong()
+		)
+		return prepareVisualization(fileUri = uri.toString(), timePerPointInMs)
 	}
 
-	override suspend fun prepareVisualization(model: AudioFileModel, timePerPointInMs: Int)
+	override suspend fun prepareVisualization(fileUri: String, timePerPointInMs: Int)
 			: Result<Unit> {
 		val result = async(Dispatchers.IO) {
 			try {
 				_extractor = MediaExtractor().apply {
-					setDataSource(context, model.fileUri.toUri(), null)
+					setDataSource(context, fileUri.toUri(), null)
 				}
 				val format = _extractor?.getTrackFormat(0)
 				val mimetype = format?.mimeType

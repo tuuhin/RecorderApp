@@ -20,7 +20,12 @@ data class PlayerTrackData(
 		}
 
 	val allPositiveAndFinite: Boolean
-		get() = current.isFinite() && current.isPositive() && total.isFinite() && total.isPositive()
+		get() {
+			val isCurrentValid = current.isFinite() && current >= 0.seconds
+			val isTotalValid = total.isFinite() && total.isPositive()
+
+			return isCurrentValid && isTotalValid
+		}
 
 	fun calculateSeekAmount(seek: Float): Duration {
 		try {

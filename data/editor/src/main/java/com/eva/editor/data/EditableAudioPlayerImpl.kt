@@ -13,6 +13,7 @@ import com.eva.editor.domain.SimpleAudioPlayer
 import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.player.data.util.computeIsPlayerPlaying
 import com.eva.player.data.util.computePlayerTrackData
+import com.eva.player.data.util.isMediaItemChange
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG = "EDITABLE_ITEM_PLAYER"
 
@@ -34,6 +36,9 @@ internal class EditableAudioPlayerImpl(
 
 	override val isPlaying: Flow<Boolean>
 		get() = player.computeIsPlayerPlaying()
+
+	override val isMediaItemChanged: Flow<Boolean>
+		get() = player.isMediaItemChange()
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	override val trackInfoAsFlow: Flow<PlayerTrackData>
@@ -90,8 +95,13 @@ internal class EditableAudioPlayerImpl(
 					.setEndPositionMs(config.end.inWholeMilliseconds)
 					.build()
 
+				val metaData = mediaItem.mediaMetadata.buildUpon()
+					.setDurationMs(config.end.inWholeMilliseconds - config.start.inWholeMilliseconds)
+					.build()
+
 				val clippedMediaItem = mediaItem.buildUpon()
 					.setClippingConfiguration(clippingConfig)
+					.setMediaMetadata(metaData)
 					.build()
 				Log.d(TAG, "CHANGING CURRENT MEDIA ITEM WITH CLIP CONFIG : $config")
 				// set the new clipped media and start position to 0
@@ -132,8 +142,16 @@ internal class EditableAudioPlayerImpl(
 							.build()
 					).build()
 
+				val concatItemDuration = firstPartClip.clippingConfiguration.clipDuration +
+						secondClip.clippingConfiguration.clipDuration
+
+				Log.d(TAG, "CONCAT ITEM DURATION :$concatItemDuration")
+
+				val concatMetaData = mediaItem.mediaMetadata.buildUpon()
+					.setDurationMs(concatItemDuration.inWholeMilliseconds).build()
 
 				val concatSources = ConcatenatingMediaSource2.Builder()
+					.setMediaItem(mediaItem.buildUpon().setMediaMetadata(concatMetaData).build())
 					.setMediaSourceFactory(sourceFactory)
 					.add(firstPartClip)
 					.add(secondClip)
@@ -204,4 +222,13 @@ internal class EditableAudioPlayerImpl(
 			}
 		}
 	}
+
+	private val MediaItem.ClippingConfiguration.clipDuration: Duration
+		get() {
+			val end = endPositionMs.milliseconds
+			val start = startPositionMs.milliseconds
+			val diff = end - start
+			return if (diff.inWholeMicroseconds > 0L) diff
+			else 0.milliseconds
+		}
 }

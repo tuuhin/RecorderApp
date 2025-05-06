@@ -8,12 +8,14 @@ interface AudioVisualizer {
 
 	val isVisualReady: StateFlow<Boolean>
 
-	val visualization: Flow<FloatArray>
-
-	fun compressedVisualisation(length: Int): Flow<FloatArray>
+	val normalizedVisualization: Flow<FloatArray>
 
 	suspend fun prepareVisualization(model: AudioFileModel, timePerPointInMs: Int = 10)
 			: Result<Unit>
+
+	suspend fun prepareVisualization(fileUri: String, timePerPointInMs: Int): Result<Unit>
+
+	suspend fun prepareVisualization(fileId: Long, timePerPointInMs: Int): Result<Unit>
 
 	fun cleanUp()
 }

@@ -2,6 +2,7 @@ package com.eva.player.data.util
 
 import android.util.Log
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import com.eva.player.domain.model.PlayerTrackData
 import kotlinx.coroutines.CancellationException
@@ -93,15 +94,18 @@ fun Player.computePlayerTrackData(): Flow<PlayerTrackData> = callbackFlow {
 				}
 			}
 			if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
+				val itemDuration = mediaItem?.mediaMetadata?.durationMs?.milliseconds ?: return
+				Log.d(TAG, "MEDIA ITEM TRANSITION NEW DURATION :$itemDuration")
 				launch {
-					val newItemDurationMs = mediaItem?.mediaMetadata?.durationMs
-					val trackData = PlayerTrackData(
-						0.seconds,
-						newItemDurationMs?.milliseconds ?: 0.seconds
-					)
+					val trackData = PlayerTrackData(0.seconds, itemDuration)
 					if (trackData.allPositiveAndFinite) send(trackData)
 				}
 			}
+		}
+
+		override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+			val itemDuration = mediaMetadata.durationMs?.milliseconds ?: return
+			Log.d(TAG, "MEDIA ITEM METADATA CHANGED NEW DURATION :$itemDuration")
 		}
 	}
 
