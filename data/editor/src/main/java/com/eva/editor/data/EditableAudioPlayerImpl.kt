@@ -10,6 +10,7 @@ import androidx.media3.exoplayer.source.ConcatenatingMediaSource2
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import com.eva.editor.domain.SimpleAudioPlayer
+import com.eva.editor.domain.exceptions.AudioClipException
 import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.player.data.util.computeIsPlayerPlaying
 import com.eva.player.data.util.computePlayerTrackData
@@ -77,13 +78,12 @@ internal class EditableAudioPlayerImpl(
 		)
 	}
 
-	override suspend fun cropMediaPortion(audio: AudioFileModel, config: AudioClipConfig) {
-		if (!config.validate(audio.duration)) {
-			Log.d(TAG, "END IS LESSER THAN START NOT ALLOWED")
-			return
-		}
+	override suspend fun cropMediaPortion(audio: AudioFileModel, config: AudioClipConfig)
+			: Result<Unit> {
+		if (!config.validate(audio.duration))
+			return Result.failure(AudioClipException())
 
-		return _lock.checkLockAndPerformOperation(
+		return _lock.runOtherwiseCancelIfLocked(
 			action = {
 				val mediaItem = player.currentMediaItem ?: MediaItem.fromUri(audio.fileUri)
 					.buildUpon()
@@ -111,12 +111,12 @@ internal class EditableAudioPlayerImpl(
 	}
 
 	@UnstableApi
-	override suspend fun cutMediaPortion(audio: AudioFileModel, config: AudioClipConfig) {
-		if (!config.validate(audio.duration)) {
-			Log.d(TAG, "END IS LESSER THAN START NOT ALLOWED")
-			return
-		}
-		return _lock.checkLockAndPerformOperation(
+	override suspend fun cutMediaPortion(audio: AudioFileModel, config: AudioClipConfig)
+			: Result<Unit> {
+		if (!config.validate(audio.duration))
+			return Result.failure(AudioClipException())
+
+		return _lock.runOtherwiseCancelIfLocked(
 			action = {
 				val mediaItem = player.currentMediaItem ?: MediaItem.fromUri(audio.fileUri)
 					.buildUpon()
@@ -219,6 +219,26 @@ internal class EditableAudioPlayerImpl(
 			} catch (e: Exception) {
 				Log.e(TAG, "SOME ERROR", e)
 				onError(e)
+			}
+		}
+	}
+
+	private suspend inline fun Mutex.runOtherwiseCancelIfLocked(
+		action: () -> Unit,
+		onError: (Exception) -> Unit = {},
+	): Result<Unit> {
+		if (holdsLock(this)) {
+			Log.d(TAG, "CANNOT PERFORM OPERATION")
+			return Result.failure(Exception("Cannot perform operation"))
+		}
+		return withLock {
+			try {
+				action()
+				Result.success(Unit)
+			} catch (e: Exception) {
+				Log.e(TAG, "SOME ERROR", e)
+				onError(e)
+				Result.failure(e)
 			}
 		}
 	}

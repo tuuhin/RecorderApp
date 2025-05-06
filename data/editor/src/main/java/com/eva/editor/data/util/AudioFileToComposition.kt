@@ -1,69 +1,68 @@
 package com.eva.editor.data.util
 
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.EditedMediaItemSequence
-import com.eva.editor.domain.model.AudioClipConfig
+import com.eva.editor.domain.AudioConfigToActionList
+import com.eva.editor.domain.EditorComposer
 import com.eva.recordings.domain.models.AudioFileModel
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.math.abs
+import kotlin.time.Duration
 
 @OptIn(UnstableApi::class)
-internal fun AudioFileModel.toCropComposition(clipConfig: AudioClipConfig): Composition {
-	val clippingConfig = MediaItem.ClippingConfiguration.Builder()
-		.setStartPositionMs(clipConfig.start.inWholeMilliseconds)
-		.setEndPositionMs(clipConfig.end.inWholeMilliseconds)
-		.build()
+internal fun AudioFileModel.toComposition(
+	configs: AudioConfigToActionList,
+	gap: Duration = Duration.ZERO
+): Composition {
+	val composedConfigs = EditorComposer.applyLogicalEditSequence(duration, configs)
 
-	val mediaItem = MediaItem.Builder()
-		.setUri(fileUri)
-		.setClippingConfiguration(clippingConfig)
-		.build()
+	val message = buildString {
+		composedConfigs.forEach { config ->
+			append("[${config.start} --> ${config.end}]  ")
+		}
+	}
 
-	val editableItem = EditedMediaItem.Builder(mediaItem).build()
+	Log.d("COMPOSITION", message)
 
-	val itemSequence = EditedMediaItemSequence.Builder(editableItem).build()
+	val editableItems = buildList {
+		composedConfigs.forEach { config ->
+			val startMs = config.start.inWholeMilliseconds
+			val endMs = config.end.inWholeMilliseconds
 
-	return Composition.Builder(itemSequence).build()
-}
+			val duration = abs(endMs - startMs)
 
-@OptIn(UnstableApi::class)
-internal fun AudioFileModel.toCutComposition(clipConfig: AudioClipConfig): Composition {
-	val itemBuilder = MediaItem.Builder().setUri(fileUri)
+			if (duration >= 0L) {
+				val clippingConfig = MediaItem.ClippingConfiguration.Builder()
+					.setStartPositionMs(startMs)
+					.setEndPositionMs(endMs)
+					.build()
 
-	val startMediaItem = itemBuilder.setClippingConfiguration(
-		MediaItem.ClippingConfiguration.Builder()
-			.setStartPositionMs(0)
-			.setEndPositionMs(clipConfig.start.inWholeMilliseconds)
-			.build()
-	).build()
+				val mediaItem = MediaItem.Builder()
+					.setUri(fileUri)
+					.setClippingConfiguration(clippingConfig)
+					.build()
 
-	val endMediaItem = itemBuilder.setClippingConfiguration(
-		MediaItem.ClippingConfiguration.Builder()
-			.setStartPositionMs(clipConfig.end.inWholeMilliseconds)
-			.setEndPositionMs(duration.inWholeMilliseconds)
-			.build()
-	).build()
+				val editableItem = EditedMediaItem.Builder(mediaItem)
+					.build()
 
-	val editableItem1 = EditedMediaItem.Builder(startMediaItem)
-		.setDurationUs(clipConfig.start.inWholeMicroseconds)
-		.build()
+				add(editableItem)
+			}
+		}
+	}
+	val itemSequenceBuilder = EditedMediaItemSequence.Builder()
 
-	val editableItem2 = EditedMediaItem.Builder(endMediaItem)
-		.setDurationUs(duration.inWholeMicroseconds - clipConfig.end.inWholeMicroseconds)
-		.build()
+	editableItems.forEach {
+		itemSequenceBuilder.addItem(it)
+		if (gap > Duration.ZERO)
+			itemSequenceBuilder.addGap(gap.inWholeMicroseconds)
+	}
 
-	// create a proper sequence
-	val mediaSequence = EditedMediaItemSequence.Builder()
-		.addItem(editableItem1)
-		.addGap(1.milliseconds.inWholeMicroseconds)
-		.addItem(editableItem2)
-		.setIsLooping(false)
-		.build()
+	val itemSequence = itemSequenceBuilder.build()
 
-	return Composition.Builder(mediaSequence)
-		.setTransmuxAudio(true)
+	return Composition.Builder(itemSequence)
 		.build()
 }

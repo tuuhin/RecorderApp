@@ -1,5 +1,5 @@
 [versions]
-agp = "8.9.2"
+agp = "8.10.0"
 concurrentFuturesKtx = "1.2.0"
 datastore = "1.1.5"
 coreSplashscreen = "1.0.1"

@@ -1,23 +1,23 @@
 package com.eva.editor.data
 
 import android.content.Context
+import android.text.format.Formatter
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
+import androidx.media3.transformer.TransformationRequest
 import androidx.media3.transformer.Transformer
-import com.eva.editor.data.util.toCropComposition
-import com.eva.editor.data.util.toCutComposition
+import com.eva.editor.data.util.toComposition
 import com.eva.editor.data.util.transformerProgress
+import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.editor.domain.AudioTransformer
 import com.eva.editor.domain.TransformationProgress
 import com.eva.editor.domain.exceptions.MediaUnsupportedException
 import com.eva.editor.domain.exceptions.TransformRunningException
 import com.eva.editor.domain.exceptions.TransformerConfigException
-import com.eva.editor.domain.model.AudioClipConfig
-import com.eva.editor.domain.model.AudioEditAction
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 
-private const val TAG = "AUDIO_TRIMMER"
+private const val TAG = "AUDIO_TRANSFORMER"
 
 @UnstableApi
 internal class AudioTransformerImpl(private val context: Context) : AudioTransformer,
@@ -64,8 +64,11 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 			Log.d(TAG, "COMPOSITION COMPLETE")
 
 			_isTransforming.update { false }
+
+
 			_resultsFile?.let {
-				Log.d(TAG, "FILE CREATED :${it.path} ${it.length()}")
+				val fileSize = Formatter.formatFileSize(context, it.length())
+				Log.d(TAG, "FILE CREATED :${it.path} $fileSize")
 			}
 			// TODO: do something here with the content of the file.
 		}
@@ -87,6 +90,15 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 				launch { _errors.emit(it) }
 			}
 		}
+
+		override fun onFallbackApplied(
+			composition: Composition,
+			originalTransformationRequest: TransformationRequest,
+			fallbackTransformationRequest: TransformationRequest
+		) {
+
+			Log.d(TAG,"ORIGINAL ${originalTransformationRequest.audioMimeType} FALLBACK:${fallbackTransformationRequest.audioMimeType}")
+		}
 	}
 
 
@@ -101,7 +113,7 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 
 		return try {
 			_transformer = Transformer.Builder(context)
-				.setAudioMimeType(mimeType)
+//				.setAudioMimeType(mimeType)
 				.experimentalSetTrimOptimizationEnabled(true)
 				.build()
 
@@ -118,8 +130,7 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 
 	override fun transformAudio(
 		model: AudioFileModel,
-		clipConfig: AudioClipConfig,
-		action: AudioEditAction
+		actionsList: AudioConfigToActionList
 	): Result<Unit> {
 		if (_transformer == null) prepareTransformer(model.mimeType)
 
@@ -128,10 +139,7 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 			return Result.failure(TransformRunningException())
 		}
 
-		val composition = when (action) {
-			AudioEditAction.CROP -> model.toCropComposition(clipConfig)
-			AudioEditAction.CUT -> model.toCutComposition(clipConfig)
-		}
+		val composition = model.toComposition(actionsList)
 
 		return try {
 			val file = _resultsFile ?: run {
@@ -150,7 +158,6 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 			Result.failure(e)
 		}
 	}
-
 
 	override fun cancelTransformation() {
 		_transformer?.cancel()

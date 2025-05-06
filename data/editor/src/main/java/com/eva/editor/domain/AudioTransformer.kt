@@ -6,17 +6,17 @@ import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
+typealias AudioConfigToAction = Pair<AudioClipConfig, AudioEditAction>
+typealias AudioConfigToActionList = List<AudioConfigToAction>
+typealias AudioConfigsList = List<AudioClipConfig>
+
 interface AudioTransformer {
 
 	val progress: Flow<TransformationProgress>
 
 	val errorsFlow: SharedFlow<Exception>
 
-	fun transformAudio(
-		model: AudioFileModel,
-		clipConfig: AudioClipConfig,
-		action: AudioEditAction
-	): Result<Unit>
+	fun transformAudio(model: AudioFileModel, actionsList: AudioConfigToActionList): Result<Unit>
 
 	fun cancelTransformation()
 

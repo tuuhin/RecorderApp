@@ -18,9 +18,9 @@ interface SimpleAudioPlayer {
 
 	suspend fun prepareAudioFile(audio: AudioFileModel)
 
-	suspend fun cropMediaPortion(audio: AudioFileModel, config: AudioClipConfig)
+	suspend fun cropMediaPortion(audio: AudioFileModel, config: AudioClipConfig): Result<Unit>
 
-	suspend fun cutMediaPortion(audio: AudioFileModel, config: AudioClipConfig)
+	suspend fun cutMediaPortion(audio: AudioFileModel, config: AudioClipConfig): Result<Unit>
 
 	suspend fun pausePlayer()
 

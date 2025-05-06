@@ -19,4 +19,7 @@ dependencies {
 	implementation(project(":core:utils"))
 	implementation(project(":data:player"))
 	implementation(project(":data:recordings"))
+
+	//test
+	testImplementation(kotlin("test"))
 }
