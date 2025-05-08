@@ -25,7 +25,7 @@ import com.eva.ui.R
 import kotlin.time.Duration
 
 @Composable
-fun Modifier.trimOverlay(
+internal fun Modifier.trimOverlay(
 	graph: PlayerGraphData,
 	trackDuration: Duration,
 	maxGraphPoints: Int = 100,

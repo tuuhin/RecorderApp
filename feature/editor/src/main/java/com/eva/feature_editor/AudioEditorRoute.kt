@@ -6,7 +6,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -16,8 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import com.eva.editor.domain.model.AudioClipConfig
-import com.eva.editor.domain.model.AudioEditAction
+import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.feature_editor.viewmodel.AudioEditorViewModel
 import com.eva.feature_editor.viewmodel.EditorViewmodelFactory
 import com.eva.player_shared.PlayerMetadataViewmodel
@@ -44,9 +45,7 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 
 		// ui events handler
 		UiEventsHandler(
-			eventsFlow = {
-				merge(sharedViewmodel.uiEvent, visualizerViewmodel.uiEvent)
-			},
+			eventsFlow = { merge(sharedViewmodel.uiEvent, visualizerViewmodel.uiEvent) },
 		)
 
 		AudioEditorScreenContainer(
@@ -55,20 +54,20 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 				AudioEditorScreenStateful(
 					fileModel = model,
 					visualization = { compressedVisuals },
-					onClipDataUpdate = visualizerViewmodel::updateClipConfigs
+					onClipDataUpdate = visualizerViewmodel::updateClipConfigs,
+					navigation = {
+						if (controller.previousBackStackEntry?.destination?.route != null) {
+							IconButton(
+								onClick = dropUnlessResumed(block = controller::popBackStack),
+							) {
+								Icon(
+									imageVector = Icons.AutoMirrored.Default.ArrowBack,
+									contentDescription = stringResource(R.string.back_arrow)
+								)
+							}
+						}
+					},
 				)
-			},
-			navigation = {
-				if (controller.previousBackStackEntry?.destination?.route != null) {
-					IconButton(
-						onClick = dropUnlessResumed(block = controller::popBackStack),
-					) {
-						Icon(
-							imageVector = Icons.AutoMirrored.Default.ArrowBack,
-							contentDescription = stringResource(R.string.back_arrow)
-						)
-					}
-				}
 			},
 		)
 	}
@@ -77,8 +76,9 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 fun AudioEditorScreenStateful(
 	fileModel: AudioFileModel,
 	visualization: PlayerGraphData,
-	onClipDataUpdate: (List<Pair<AudioClipConfig, AudioEditAction>>) -> Unit,
-	modifier: Modifier = Modifier
+	onClipDataUpdate: (AudioConfigToActionList) -> Unit,
+	modifier: Modifier = Modifier,
+	navigation: @Composable () -> Unit = {},
 ) {
 
 	val lifecyleOwner = LocalLifecycleOwner.current
@@ -99,14 +99,23 @@ fun AudioEditorScreenStateful(
 	val isPlaying by viewModel.isPlayerPlaying.collectAsStateWithLifecycle()
 	val trackData by viewModel.trackData.collectAsStateWithLifecycle()
 	val clipConfig by viewModel.clipConfig.collectAsStateWithLifecycle()
+	val transformationState by viewModel.transformationState.collectAsStateWithLifecycle()
+
+	val totalConfigs by viewModel.clipConfigs.collectAsStateWithLifecycle()
+	val isMediaEdited by remember(totalConfigs) {
+		derivedStateOf { totalConfigs.count() >= 1 }
+	}
 
 	AudioEditorScreenContent(
 		fileModel = fileModel,
+		graphData = visualization,
 		isPlaying = isPlaying,
 		clipConfig = clipConfig,
 		trackData = trackData,
-		graphData = visualization,
+		isMediaEdited = isMediaEdited,
+		transformationState = transformationState,
 		onEvent = viewModel::onEvent,
 		modifier = modifier,
+		navigation = navigation,
 	)
 }

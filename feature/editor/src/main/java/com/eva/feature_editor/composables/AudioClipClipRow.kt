@@ -97,7 +97,7 @@ private fun AudioClipChip(
 }
 
 @Composable
-fun AudioClipChipRow(
+internal fun AudioClipChipRow(
 	trackDuration: Duration,
 	onEvent: (EditorScreenEvent) -> Unit,
 	modifier: Modifier = Modifier,

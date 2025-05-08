@@ -10,7 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.microseconds
 
 @OptIn(UnstableApi::class)
 internal fun Transformer.transformerProgress(isTransformerRunning: Boolean) = flow {
@@ -30,6 +30,6 @@ internal fun Transformer.transformerProgress(isTransformerRunning: Boolean) = fl
 
 			else -> {}
 		}
-		delay(2.milliseconds)
+		delay(10.microseconds)
 	}
 }.flowOn(Dispatchers.IO)

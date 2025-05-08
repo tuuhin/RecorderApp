@@ -1,6 +1,5 @@
 package com.eva.feature_editor
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.EaseOut
@@ -11,35 +10,39 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeGestures
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.eva.editor.domain.TransformationProgress
 import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.feature_editor.composables.AudioClipChipRow
 import com.eva.feature_editor.composables.EditorActionsAndControls
 import com.eva.feature_editor.composables.EditorTopBar
 import com.eva.feature_editor.composables.PlayerTrimSelector
+import com.eva.feature_editor.composables.TransformBottomSheet
 import com.eva.feature_editor.event.EditorScreenEvent
+import com.eva.feature_editor.event.TransformationState
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.composables.ContentStateAnimatedContainer
 import com.eva.player_shared.composables.PlayerDurationText
@@ -52,6 +55,7 @@ import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.ui.utils.LocalSnackBarProvider
+import kotlinx.coroutines.launch
 
 @OptIn(
 	ExperimentalMaterial3Api::class,
@@ -62,46 +66,27 @@ internal fun AudioEditorScreenContainer(
 	loadState: ContentLoadState<AudioFileModel>,
 	content: @Composable BoxScope.(AudioFileModel) -> Unit,
 	modifier: Modifier = Modifier,
-	navigation: @Composable () -> Unit = {},
 ) {
-
-	val snackBarHostProvider = LocalSnackBarProvider.current
-	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-
-	Scaffold(
-		topBar = {
-			AnimatedVisibility(
-				visible = loadState is ContentLoadState.Content
-			) {
-				EditorTopBar(
-					onSave = {},
-					scrollBehavior = scrollBehavior,
-					navigation = navigation
-				)
-			}
-		},
-		snackbarHost = { SnackbarHost(snackBarHostProvider) },
+	Surface(
 		modifier = modifier
-			.nestedScroll(scrollBehavior.nestedScrollConnection)
+			.fillMaxSize()
 			.sharedBoundsWrapper(
 				key = SharedElementTransitionKeys.RECORDING_EDITOR_SHARED_BOUNDS,
 				resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
 				enter = fadeIn(animationSpec = tween(easing = EaseOut, durationMillis = 300)),
 				exit = fadeOut(animationSpec = tween(easing = EaseOut, durationMillis = 300)),
 			)
-	) { scPadding ->
+	) {
 		ContentStateAnimatedContainer(
 			loadState = loadState,
-			modifier = Modifier
-				.padding(scPadding)
-				.padding(all = dimensionResource(id = R.dimen.sc_padding))
-				.fillMaxSize(),
+			modifier = Modifier,
 			onSuccess = content,
 			onFailed = {},
 		)
 	}
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AudioEditorScreenContent(
 	fileModel: AudioFileModel,
@@ -111,51 +96,88 @@ internal fun AudioEditorScreenContent(
 	modifier: Modifier = Modifier,
 	isPlaying: Boolean = false,
 	clipConfig: AudioClipConfig? = null,
-	transformation: TransformationProgress = TransformationProgress.Idle,
+	isMediaEdited: Boolean = false,
+	transformationState: TransformationState = TransformationState(),
+	navigation: @Composable () -> Unit = {},
 ) {
-	Box(
-		modifier = modifier
-			.fillMaxSize()
-			.windowInsetsPadding(WindowInsets.safeGestures),
-	) {
-		PlayerDurationText(
-			track = trackData,
-			modifier = Modifier.align(Alignment.TopCenter)
-		)
-		Column(
-			modifier = Modifier
-				.fillMaxWidth()
-				.align(Alignment.Center)
-				.offset(y = (-80).dp),
-			horizontalAlignment = Alignment.CenterHorizontally,
-			verticalArrangement = Arrangement.spacedBy(4.dp),
-		) {
-			PlayerTrimSelector(
-				graphData = graphData,
-				trackData = trackData,
-				clipConfig = clipConfig,
-				onClipConfigChange = { onEvent(EditorScreenEvent.OnClipConfigChange(it)) },
-				modifier = Modifier.fillMaxWidth()
+	val snackBarHostProvider = LocalSnackBarProvider.current
+	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+	var showSheet by remember { mutableStateOf(false) }
+	val bottomSheetState = rememberModalBottomSheetState()
+	val scope = rememberCoroutineScope()
+
+	TransformBottomSheet(
+		onDismiss = {
+			scope.launch { bottomSheetState.hide() }
+				.invokeOnCompletion { showSheet = false }
+		},
+		state = transformationState,
+		onEvent = onEvent,
+		bottomSheetState = bottomSheetState,
+		showSheet = showSheet
+	)
+
+	Scaffold(
+		topBar = {
+			EditorTopBar(
+				onExport = {
+					scope.launch { bottomSheetState.show() }
+						.invokeOnCompletion { showSheet = true }
+				},
+				scrollBehavior = scrollBehavior,
+				isActionsEnabled = isMediaEdited,
+				navigation = navigation,
 			)
-			AudioClipChipRow(
-				clipConfig = clipConfig,
-				onEvent = onEvent,
-				trackDuration = trackData.total
-			)
-		}
+		},
+		snackbarHost = { SnackbarHost(snackBarHostProvider) },
+		modifier = modifier,
+	) { scPadding ->
 		Box(
 			modifier = Modifier
-				.heightIn(min = 180.dp)
-				.fillMaxWidth()
-				.align(Alignment.BottomCenter),
-			contentAlignment = Alignment.Center
+				.padding(scPadding)
+				.padding(all = dimensionResource(id = R.dimen.sc_padding))
+				.fillMaxSize(),
 		) {
-			EditorActionsAndControls(
-				trackData = trackData,
-				isMediaPlaying = isPlaying,
-				onEvent = onEvent,
-				modifier = Modifier.fillMaxWidth()
+			PlayerDurationText(
+				track = trackData,
+				modifier = Modifier.align(Alignment.TopCenter)
 			)
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.align(Alignment.Center)
+					.offset(y = (-80).dp),
+				horizontalAlignment = Alignment.CenterHorizontally,
+				verticalArrangement = Arrangement.spacedBy(4.dp),
+			) {
+				PlayerTrimSelector(
+					graphData = graphData,
+					trackData = trackData,
+					clipConfig = clipConfig,
+					onClipConfigChange = { onEvent(EditorScreenEvent.OnClipConfigChange(it)) },
+					modifier = Modifier.fillMaxWidth()
+				)
+				AudioClipChipRow(
+					clipConfig = clipConfig,
+					onEvent = onEvent,
+					trackDuration = trackData.total
+				)
+			}
+			Box(
+				modifier = Modifier
+					.heightIn(min = 180.dp)
+					.fillMaxWidth()
+					.align(Alignment.BottomCenter),
+				contentAlignment = Alignment.Center
+			) {
+				EditorActionsAndControls(
+					trackData = trackData,
+					isMediaPlaying = isPlaying,
+					onEvent = onEvent,
+					modifier = Modifier.fillMaxWidth()
+				)
+			}
 		}
 	}
 }
@@ -170,14 +192,14 @@ private fun AudioEditorScreenPreview() = RecorderAppTheme {
 				fileModel = model,
 				trackData = PlayerTrackData(total = model.duration),
 				graphData = { PlayerPreviewFakes.loadAmplitudeGraph(model.duration) },
+				clipConfig = AudioClipConfig(end = model.duration),
 				onEvent = {},
-				clipConfig = AudioClipConfig(end = model.duration)
-			)
-		},
-		navigation = {
-			Icon(
-				imageVector = Icons.AutoMirrored.Default.ArrowBack,
-				contentDescription = ""
+				navigation = {
+					Icon(
+						imageVector = Icons.AutoMirrored.Default.ArrowBack,
+						contentDescription = ""
+					)
+				},
 			)
 		},
 	)

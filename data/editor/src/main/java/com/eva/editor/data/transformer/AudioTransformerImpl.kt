@@ -22,6 +22,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -35,8 +36,11 @@ private const val TAG = "AUDIO_TRANSFORMER"
 @UnstableApi
 internal class AudioTransformerImpl(private val context: Context) : AudioTransformer {
 
-	private val _isTransforming = MutableStateFlow(false)
 	private var _transformer: Transformer? = null
+	private val _isTransforming = MutableStateFlow(false)
+
+	override val isTransformerRunning: StateFlow<Boolean>
+		get() = _isTransforming
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	override val progress: Flow<TransformationProgress>

@@ -4,10 +4,10 @@ import androidx.lifecycle.viewModelScope
 import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.editor.domain.AudioTransformer
 import com.eva.editor.domain.SimpleAudioPlayer
-import com.eva.editor.domain.TransformationProgress
 import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.editor.domain.model.AudioEditAction
 import com.eva.feature_editor.event.EditorScreenEvent
+import com.eva.feature_editor.event.TransformationState
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.viewmodel.AppViewModel
@@ -19,15 +19,12 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
@@ -38,7 +35,7 @@ import kotlin.time.Duration
 @HiltViewModel(assistedFactory = EditorViewmodelFactory::class)
 internal class AudioEditorViewModel @AssistedInject constructor(
 	@Assisted private val fileModel: AudioFileModel,
-	private val trimmer: AudioTransformer,
+	private val transformer: AudioTransformer,
 	private val player: SimpleAudioPlayer,
 ) : AppViewModel() {
 
@@ -46,18 +43,24 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 	val clipConfig = _clipData.asStateFlow()
 
 	private val _allConfigs = MutableStateFlow<AudioConfigToActionList>(emptyList())
-	val clipConfigs = _allConfigs.asSharedFlow()
+	val clipConfigs = _allConfigs.asStateFlow()
 
-	val isAudioEdited = _allConfigs.map { it.count() >= 1 }.stateIn(
-		scope = viewModelScope,
-		started = SharingStarted.Eagerly,
-		initialValue = false
-	)
+	private val _exportFileUri = MutableStateFlow<String?>(null)
 
-	val transformation = trimmer.progress.stateIn(
+	val transformationState = combine(
+		transformer.isTransformerRunning,
+		transformer.progress,
+		_exportFileUri
+	) { isRunning, progress, exportUri ->
+		TransformationState(
+			isTransforming = isRunning,
+			progress = progress,
+			exportFileUri = exportUri
+		)
+	}.stateIn(
 		scope = viewModelScope,
-		started = SharingStarted.Eagerly,
-		initialValue = TransformationProgress.Idle
+		started = SharingStarted.WhileSubscribed(2_000L),
+		initialValue = TransformationState()
 	)
 
 	private val _lastEditAction = MutableStateFlow(AudioEditAction.CROP)
@@ -81,11 +84,7 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
-		get() = _uiEvents.onStart { readTransformationError() }
-			.shareIn(
-				scope = viewModelScope,
-				started = SharingStarted.Eagerly
-			)
+		get() = _uiEvents
 
 
 	fun onEvent(event: EditorScreenEvent) = when (event) {
@@ -95,7 +94,9 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 		is EditorScreenEvent.OnSeekTrack -> player.onSeekDuration(event.duration)
 		EditorScreenEvent.CropSelectedArea -> validateAndCropSection()
 		EditorScreenEvent.RemoveSelectedArea -> validateAndCutSection()
-		EditorScreenEvent.ExportEditedMedia -> finalExport()
+		EditorScreenEvent.BeginTransformation -> finalExport()
+		EditorScreenEvent.OnDismissExportSheet -> _exportFileUri.update { null }
+		EditorScreenEvent.OnSaveExportFile -> onSaveExportFile()
 	}
 
 	suspend fun setPlayerItem() = player.prepareAudioFile(fileModel)
@@ -157,23 +158,22 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 	}
 
 
+	private fun onSaveExportFile() {
+
+	}
+
 	private fun finalExport() = viewModelScope.launch {
 
 		val filterValidConfigs = _allConfigs.value
 			.filter { (config, _) -> config.hasMinimumDuration }
-
-		val result = trimmer.transformAudio(fileModel, filterValidConfigs)
-		result.onFailure {
-			_uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: ""))
-		}
-	}
-
-	private fun readTransformationError() {
-		trimmer.errorsFlow
-			.mapNotNull { it.message }
-			.map { UIEvents.ShowSnackBar(it) }
-			.onEach { event -> _uiEvents.emit(event) }
-			.launchIn(viewModelScope)
+// TODO: If the export is cancelled delete the file
+		val result = transformer.transformAudio(fileModel, filterValidConfigs)
+		result.fold(
+			onSuccess = { _exportFileUri.update { it } },
+			onFailure = {
+				_uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: ""))
+			},
+		)
 	}
 
 

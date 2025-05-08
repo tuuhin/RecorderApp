@@ -21,7 +21,7 @@ import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.RecorderConstants
 
 @Composable
-fun PlayerTrimSelector(
+internal fun PlayerTrimSelector(
 	graphData: PlayerGraphData,
 	trackData: PlayerTrackData,
 	onClipConfigChange: (AudioClipConfig) -> Unit,

@@ -26,10 +26,11 @@ import com.eva.ui.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EditorTopBar(
-	onSave: () -> Unit,
+	onExport: () -> Unit,
 	modifier: Modifier = Modifier,
 	navigation: @Composable () -> Unit = {},
 	scrollBehavior: TopAppBarScrollBehavior? = null,
+	isActionsEnabled: Boolean = true,
 	colors: TopAppBarColors = TopAppBarDefaults
 		.topAppBarColors(actionIconContentColor = MaterialTheme.colorScheme.primary),
 ) {
@@ -40,13 +41,16 @@ internal fun EditorTopBar(
 		title = { Text(text = stringResource(R.string.media_editor_title)) },
 		navigationIcon = navigation,
 		actions = {
-			TextButton(onClick = onSave) {
+			TextButton(onClick = onExport) {
 				Text(text = stringResource(R.string.action_save))
 			}
 			Box {
-				IconButton(onClick = { showDropDown = true }) {
+				IconButton(
+					onClick = { showDropDown = true },
+					enabled = isActionsEnabled
+				) {
 					Icon(
-						Icons.Default.MoreVert,
+						imageVector = Icons.Default.MoreVert,
 						contentDescription = stringResource(R.string.menu_more_option)
 					)
 				}

@@ -137,7 +137,7 @@ private fun EditorActionsAndControls(
 }
 
 @Composable
-fun EditorActionsAndControls(
+internal fun EditorActionsAndControls(
 	trackData: PlayerTrackData,
 	isMediaPlaying: Boolean,
 	onEvent: (EditorScreenEvent) -> Unit,

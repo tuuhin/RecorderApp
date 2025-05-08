@@ -13,5 +13,8 @@ sealed interface EditorScreenEvent {
 
 	data object CropSelectedArea : EditorScreenEvent
 	data object RemoveSelectedArea : EditorScreenEvent
-	data object ExportEditedMedia : EditorScreenEvent
+	data object BeginTransformation : EditorScreenEvent
+
+	data object OnDismissExportSheet : EditorScreenEvent
+	data object OnSaveExportFile : EditorScreenEvent
 }
