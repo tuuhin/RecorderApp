@@ -1,9 +1,8 @@
 package com.eva.player_shared.util
 
 import android.util.Log
+import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.editor.domain.model.AudioEditAction
-import com.eva.player_shared.AudioConfigToActionList
-import com.eva.utils.RecorderConstants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.max
@@ -11,41 +10,49 @@ import kotlin.math.min
 
 private const val TAG = "PLAYER_CONFIG_SETTER"
 
-internal suspend fun FloatArray.updateArrayViaConfigs(configs: AudioConfigToActionList)
-		: FloatArray {
+internal suspend fun FloatArray.updateArrayViaConfigs(
+	configs: AudioConfigToActionList,
+	timeInMillisPerBar: Int = 100
+): FloatArray {
 	return withContext(Dispatchers.Default) {
 		if (configs.isEmpty()) return@withContext this@updateArrayViaConfigs
 		var modifiedArray = copyOf()
 
 		Log.d(TAG, "INITIAL SIZE :${size}")
 
-		val timeInMillisPerBar = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
-
 		// need to apply the config from back to front
-		configs.reversed().forEachIndexed { iter, (config, action) ->
-			val startIdx = (config.start.inWholeMilliseconds / timeInMillisPerBar).toInt()
-			val endIdx = (config.end.inWholeMilliseconds / timeInMillisPerBar).toInt()
+		configs.reversed().forEachIndexed { iteration, (config, action) ->
+			val startSample = (config.start.inWholeMilliseconds / timeInMillisPerBar).toInt()
+			val endSample = (config.end.inWholeMilliseconds / timeInMillisPerBar).toInt()
 
-			val loopStart = max(0, startIdx)
-			val loopEnd = min(size, endIdx + 1)
+			val validStart = max(0, min(startSample, modifiedArray.size))
+			val validEnd = max(0, min(endSample, modifiedArray.size))
 
-			val message = when (action) {
-				AudioEditAction.CROP -> "NEW START :${loopStart} NEW END:$loopEnd"
-				AudioEditAction.CUT -> "START1 :0 END1:$loopStart || START2 :$loopEnd END2: $size"
-			}
+			if (validStart <= validEnd) {
 
-			Log.i(TAG, "ITERATION:$iter $message")
+				val message = when (action) {
+					AudioEditAction.CROP -> "NEW START :${validStart} NEW END:$validEnd"
+					AudioEditAction.CUT -> "START1 :0 END1:$validStart || START2 :$validEnd END2: ${modifiedArray.size}"
+				}
 
-			modifiedArray = when (action) {
-				AudioEditAction.CUT -> modifiedArray.copyOfRange(0, loopStart + 1) +
-						modifiedArray.copyOfRange(loopEnd - 1, size)
+				Log.i(TAG, "ITERATION:$iteration $message")
 
-				AudioEditAction.CROP ->
-					modifiedArray.copyOfRange(loopStart, loopEnd)
+				modifiedArray = when (action) {
+					AudioEditAction.CUT -> {
+						val before = modifiedArray.copyOfRange(0, validStart)
+						val after = modifiedArray.copyOfRange(validEnd, modifiedArray.size)
+						before + after
+					}
+
+					AudioEditAction.CROP ->
+						modifiedArray.copyOfRange(validStart, validEnd)
+				}
+			} else {
+				val error = "Invalid clip: $validStart, $validEnd. $action at index $iteration"
+				Log.w(TAG, error)
 			}
 		}
-		val array = modifiedArray.filterNot { it == -1f }
-		Log.d(TAG, "FINAL ARRAY SIZE AFTER UPDATE${array.size}")
-		array.toFloatArray()
+		Log.d(TAG, "Final array size after processing: ${modifiedArray.size}")
+		modifiedArray
 	}
 }

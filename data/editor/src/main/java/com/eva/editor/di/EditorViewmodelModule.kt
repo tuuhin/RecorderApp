@@ -13,8 +13,8 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.amr.AmrExtractor
 import androidx.media3.extractor.mp3.Mp3Extractor
-import com.eva.editor.data.AudioTransformerImpl
 import com.eva.editor.data.EditableAudioPlayerImpl
+import com.eva.editor.data.transformer.AudioTransformerImpl
 import com.eva.editor.domain.AudioTransformer
 import com.eva.editor.domain.SimpleAudioPlayer
 import dagger.Module
@@ -63,14 +63,14 @@ object EditorViewmodelModule {
 
 	@Provides
 	@ViewModelScoped
-	fun providesAudioTrimmer(@ApplicationContext context: Context): AudioTransformer =
-		AudioTransformerImpl(context)
-
+	fun providesAudioTrimmer(
+		@ApplicationContext context: Context,
+	): AudioTransformer = AudioTransformerImpl(context)
 
 	@Provides
 	@ViewModelScoped
 	fun providesEditorPlayer(
-		@ApplicationContext context: Context,
 		@Named("EDITOR_PLAYER") player: Player,
-	): SimpleAudioPlayer = EditableAudioPlayerImpl(player, context)
+		mediaSourceFactory: MediaSource.Factory,
+	): SimpleAudioPlayer = EditableAudioPlayerImpl(player, mediaSourceFactory)
 }

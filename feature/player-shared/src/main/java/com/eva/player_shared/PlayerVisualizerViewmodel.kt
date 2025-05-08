@@ -3,8 +3,7 @@ package com.eva.player_shared
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.eva.editor.domain.model.AudioClipConfig
-import com.eva.editor.domain.model.AudioEditAction
+import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.player.data.reader.compressFloatArray
 import com.eva.player.domain.AudioVisualizer
 import com.eva.player_shared.util.updateArrayViaConfigs
@@ -27,9 +26,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-typealias AudioConfigToAction = Pair<AudioClipConfig, AudioEditAction>
-typealias AudioConfigToActionList = List<AudioConfigToAction>
 
 @HiltViewModel
 class PlayerVisualizerViewmodel @Inject constructor(
@@ -87,7 +83,10 @@ class PlayerVisualizerViewmodel @Inject constructor(
 
 	private fun updatesOnConfigChange() {
 		combine(visualizer.normalizedVisualization, _clipConfigs) { visuals, configs ->
-			val newVisuals = visuals.updateArrayViaConfigs(configs)
+			val newVisuals = visuals.updateArrayViaConfigs(
+				configs = configs,
+				timeInMillisPerBar = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
+			)
 			_compressedVisualization.update { newVisuals }
 		}.launchIn(viewModelScope)
 	}
