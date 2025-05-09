@@ -8,7 +8,7 @@ import com.eva.interactions.domain.ShareRecordingsUtil
 import com.eva.player_shared.state.ContentLoadState
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.recordings.domain.provider.RecordingsSecondaryDataProvider
-import com.eva.ui.navigation.NavRoutes
+import com.eva.ui.navigation.PlayerSubGraph
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.use_case.usecases.PlayerFileProviderFromIdUseCase
@@ -37,8 +37,8 @@ class PlayerMetadataViewmodel @Inject constructor(
 	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
-	private val route: NavRoutes.AudioPlayer
-		get() = savedStateHandle.toRoute<NavRoutes.AudioPlayer>()
+	private val route: PlayerSubGraph.NavGraph
+		get() = savedStateHandle.toRoute()
 
 	val audioId: Long
 		get() = route.audioId

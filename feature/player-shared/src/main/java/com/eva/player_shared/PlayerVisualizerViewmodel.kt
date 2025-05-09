@@ -7,7 +7,7 @@ import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.player.data.reader.compressFloatArray
 import com.eva.player.domain.AudioVisualizer
 import com.eva.player_shared.util.updateArrayViaConfigs
-import com.eva.ui.navigation.NavRoutes
+import com.eva.ui.navigation.PlayerSubGraph
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.RecorderConstants
@@ -33,8 +33,8 @@ class PlayerVisualizerViewmodel @Inject constructor(
 	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
 
-	private val route: NavRoutes.AudioPlayer
-		get() = savedStateHandle.toRoute<NavRoutes.AudioPlayer>()
+	private val route: PlayerSubGraph.NavGraph
+		get() = savedStateHandle.toRoute()
 
 	val audioId: Long
 		get() = route.audioId

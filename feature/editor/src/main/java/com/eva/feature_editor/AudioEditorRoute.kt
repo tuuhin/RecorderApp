@@ -1,5 +1,7 @@
 package com.eva.feature_editor
 
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -34,11 +36,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.merge
 
 fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
-	animatedComposable<PlayerSubGraph.AudioEditorRoute> { backstackEntry ->
+	animatedComposable<PlayerSubGraph.AudioEditorRoute>(
+		sizeTransform = {
+			SizeTransform(clip = false) { _, _ -> tween(durationMillis = 300) }
+		},
+	) { backstackEntry ->
 
 		val sharedViewmodel = backstackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
-		val visualizerViewmodel =
-			backstackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
+		val visualizerViewmodel = backstackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
 
 		val loadState by sharedViewmodel.loadState.collectAsStateWithLifecycle()
 		val compressedVisuals by visualizerViewmodel.compressedVisuals.collectAsStateWithLifecycle()

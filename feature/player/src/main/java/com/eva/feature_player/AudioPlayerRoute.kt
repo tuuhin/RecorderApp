@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.eva.feature_player.bookmarks.BookMarksViewModel
 import com.eva.feature_player.bookmarks.BookmarksViewmodelFactory
 import com.eva.feature_player.composable.ControllerLifeCycleObserver
@@ -49,6 +50,8 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 		sizeTransform = { SizeTransform(clip = false) { _, _ -> tween(durationMillis = 300) } }
 	) { backStackEntry ->
 
+		val route = backStackEntry.toRoute<PlayerSubGraph.AudioPlayerRoute>()
+
 		val metaDataViewmodel = backStackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
 		val visualizerViewModel =
 			backStackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
@@ -66,7 +69,7 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 
 		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
 			AudioPlayerScreenContainer(
-				audioId = metaDataViewmodel.audioId,
+				audioId = route.audioId,
 				loadState = contentState,
 				onFileEvent = metaDataViewmodel::onFileEvent,
 				content = { model ->
