@@ -1,6 +1,7 @@
 package com.eva.editor.di
 
 import android.content.Context
+import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
 import com.eva.editor.data.EditedItemSaverImpl
 import com.eva.editor.domain.EditedItemSaver
 import dagger.Module
@@ -16,6 +17,8 @@ object EditorSingletonModule {
 
 	@Provides
 	@Singleton
-	fun providesEditorSaver(@ApplicationContext context: Context): EditedItemSaver =
-		EditedItemSaverImpl(context)
+	fun providesEditorSaver(
+		@ApplicationContext context: Context,
+		settings: RecorderFileSettingsRepo
+	): EditedItemSaver = EditedItemSaverImpl(context, settings)
 }

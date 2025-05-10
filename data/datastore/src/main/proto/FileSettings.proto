@@ -8,6 +8,7 @@ message  FileSettingsProto{
   string prefix = 1;
   NamingFormatProto format = 2;
   bool allowExternalRead = 3;
+  string exportedItemPrefix = 4;
 }
 
 enum NamingFormatProto{

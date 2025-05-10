@@ -54,6 +54,14 @@ internal class RecorderFileSettingsRepoImpl(private val context: Context) :
 				.build()
 		}
 	}
+
+	override suspend fun onExportItemPrefixChange(prefix: String) {
+		context.recorderFileSettings.updateData { settings ->
+			settings.toBuilder()
+				.setExportedItemPrefix(prefix)
+				.build()
+		}
+	}
 }
 
 private val Context.recorderFileSettings: DataStore<FileSettingsProto> by dataStore(
@@ -61,7 +69,8 @@ private val Context.recorderFileSettings: DataStore<FileSettingsProto> by dataSt
 	serializer = object : Serializer<FileSettingsProto> {
 
 		override val defaultValue: FileSettingsProto = fileSettingsProto {
-			prefix = "Voice"
+			prefix = RecorderFileSettings.NORMAL_FILE_PREFIX
+			exportedItemPrefix = RecorderFileSettings.EXPORT_FILE_PREFIX
 			format = NamingFormatProto.FORMAT_VIA_DATE
 		}
 

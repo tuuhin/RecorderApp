@@ -256,4 +256,9 @@
   <string name="transforming_media_bottom_sheet_text">Transforming media</string>
   <string name="action_transform">Transform</string>
   <string name="action_transforming">Transforming</string>
+  <string name="rename_export_item_prefix_title">Export Item Prefix</string>
+  <string name="rename_export_item_prefix_text">On exporting an edited item the prefix will be added.</string>
+  <string name="app_settings_files_subtitle_export">Export</string>
+  <string name="app_settings_files_subtitle_recordings">Recordings</string>
+  <string name="rename_export_item_label">Export Prefix</string>
 </resources>

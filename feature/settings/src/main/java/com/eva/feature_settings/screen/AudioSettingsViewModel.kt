@@ -67,6 +67,10 @@ internal class AudioSettingsViewModel @Inject constructor(
 			is FileSettingsChangeEvent.OnRecordingPrefixChange -> fileRepo.onFilePrefixChange(event.prefix)
 			is FileSettingsChangeEvent.OnAllowExternalFiles ->
 				fileRepo.onAllowExternalFileRead(event.isEnabled)
+
+			is FileSettingsChangeEvent.OnExportItemPrefixChange -> {
+				fileRepo.onExportItemPrefixChange(event.prefix)
+			}
 		}
 	}
 }

@@ -20,6 +20,7 @@ dependencies {
 	implementation(project(":data:player"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:worker"))
+	implementation(project(":data:datastore"))
 
 	//test
 	testImplementation(kotlin("test"))

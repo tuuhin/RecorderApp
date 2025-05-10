@@ -24,7 +24,8 @@ internal fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderA
 internal fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSettings(
 	name = prefix,
 	format = format.toDomain,
-	allowExternalRead = allowExternalRead
+	allowExternalRead = allowExternalRead,
+	exportItemPrefix = exportedItemPrefix,
 )
 
 internal val RecorderQualityProto.toDomain: RecordQuality

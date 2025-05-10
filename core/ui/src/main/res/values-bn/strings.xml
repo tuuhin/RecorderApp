@@ -225,5 +225,10 @@
   <string name="transforming_media_bottom_sheet_text">মিডিয়া রূপান্ তর></string>
   <string name="action_transform">রূপান্তর</string>
   <string name="action_transforming">রূপান্তর</string>
+  <string name="rename_export_item_prefix_title">রপ্তানি আইটেম উপসর্গ</string>
+  <string name="rename_export_item_prefix_text">সম্পাদিত আইটেম রপ্তানি করলে উপসর্গটি যোগ করা হবে.</string>
+  <string name="app_settings_files_subtitle_export">রপ্তানি</string>
+  <string name="app_settings_files_subtitle_recordings">রেকর্ডিং</string>
+  <string name="rename_export_item_label">রপ্তানি উপসর্গ</string>
 </resources>
 

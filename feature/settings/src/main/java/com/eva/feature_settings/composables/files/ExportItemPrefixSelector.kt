@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.TextFields
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -29,12 +29,14 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -45,27 +47,20 @@ import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 
 @Composable
-internal fun FilePrefixSelector(
-	prefix: String,
+internal fun ExportItemPrefixSelector(
+	currentPrefix: String,
 	onPrefixChange: (String) -> Unit,
-	modifier: Modifier = Modifier,
+	modifier: Modifier = Modifier
 ) {
 
-	var showDialog by remember {
-		mutableStateOf(false)
-	}
+	var showDialog by rememberSaveable { mutableStateOf(false) }
 
-	var textValue by remember {
-		mutableStateOf(TextFieldValue())
-	}
-
-	RenamePrefixDialog(
+	EditItemPrefixSelectorDialog(
+		prefix = currentPrefix,
 		showDialog = showDialog,
-		textFieldValue = textValue,
-		onTextFieldValueChange = { textValue = it },
 		onDismiss = { showDialog = false },
 		onRename = {
-			onPrefixChange(it.text)
+			onPrefixChange(it)
 			showDialog = false
 		}
 	)
@@ -73,17 +68,17 @@ internal fun FilePrefixSelector(
 	ListItem(
 		headlineContent = {
 			Text(
-				text = stringResource(id = R.string.recording_settings_change_name_prefix),
+				text = stringResource(id = R.string.rename_export_item_prefix_title),
 				style = MaterialTheme.typography.titleMedium
 			)
 		},
 		leadingContent = {
 			Icon(
-				imageVector = Icons.Outlined.TextFields,
-				contentDescription = stringResource(id = R.string.recording_settings_change_name_prefix)
+				imageVector = Icons.Outlined.Edit,
+				contentDescription = "Set edit item prefix"
 			)
 		},
-		supportingContent = { Text(text = prefix) },
+		supportingContent = { Text(text = currentPrefix) },
 		modifier = modifier
 			.clip(shape = MaterialTheme.shapes.medium)
 			.clickable { showDialog = true },
@@ -93,24 +88,31 @@ internal fun FilePrefixSelector(
 	)
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RenamePrefixDialog(
+private fun EditItemPrefixSelectorDialog(
+	prefix: String,
 	showDialog: Boolean,
-	textFieldValue: TextFieldValue,
-	onTextFieldValueChange: (TextFieldValue) -> Unit,
 	onDismiss: () -> Unit,
-	onRename: (TextFieldValue) -> Unit,
-	modifier: Modifier = Modifier, properties: DialogProperties = DialogProperties(),
+	onRename: (String) -> Unit,
+	modifier: Modifier = Modifier,
+	properties: DialogProperties = DialogProperties()
 ) {
 	if (!showDialog) return
 
-	val isRenameEnabled by remember(textFieldValue) {
-		derivedStateOf {
-			textFieldValue.text.isBlank()
-		}
+	var textValue by remember {
+		mutableStateOf(
+			TextFieldValue(
+				text = prefix,
+				selection = TextRange(0, prefix.length )
+			)
+		)
 	}
+
+	val canRenameItem by remember(textValue) {
+		derivedStateOf { textValue.text.isNotBlank() }
+	}
+
 
 	BasicAlertDialog(
 		onDismissRequest = onDismiss,
@@ -125,23 +127,23 @@ private fun RenamePrefixDialog(
 		) {
 			Column(modifier = Modifier.padding(24.dp)) {
 				Text(
-					text = stringResource(id = R.string.rename_recording_prefix_title),
+					text = stringResource(id = R.string.rename_export_item_prefix_title),
 					style = MaterialTheme.typography.headlineSmall,
 					color = AlertDialogDefaults.titleContentColor,
 					modifier = Modifier.padding(12.dp)
 				)
 				Text(
-					text = stringResource(id = R.string.rename_recording_prefix_text),
+					text = stringResource(id = R.string.rename_export_item_prefix_text),
 					color = AlertDialogDefaults.textContentColor,
 					style = MaterialTheme.typography.bodyMedium,
 					modifier = Modifier.padding(vertical = 6.dp),
 				)
 				OutlinedTextField(
-					value = textFieldValue,
-					onValueChange = onTextFieldValueChange,
-					label = { Text(text = stringResource(id = R.string.rename_label_text)) },
+					value = textValue,
+					onValueChange = { textValue = it },
+					label = { Text(text = stringResource(id = R.string.rename_export_item_label)) },
 					shape = MaterialTheme.shapes.large,
-					keyboardActions = KeyboardActions(onDone = { onRename(textFieldValue) }),
+					keyboardActions = KeyboardActions(onDone = { onRename(textValue.text) }),
 					keyboardOptions = KeyboardOptions(
 						keyboardType = KeyboardType.Text, imeAction = ImeAction.Done
 					)
@@ -155,13 +157,12 @@ private fun RenamePrefixDialog(
 						Text(text = stringResource(id = R.string.action_cancel))
 					}
 					Button(
-						onClick = { onRename(textFieldValue) },
-						enabled = !isRenameEnabled
+						onClick = { onRename(textValue.text) },
+						enabled = canRenameItem
 					) {
 						Text(text = stringResource(id = R.string.rename_recording_action))
 					}
 				}
-
 			}
 		}
 	}
@@ -169,12 +170,11 @@ private fun RenamePrefixDialog(
 
 @PreviewLightDark
 @Composable
-private fun RenamePrefixDialogPreview() = RecorderAppTheme {
-	RenamePrefixDialog(
+private fun EditItemPrefixSelectorDialogPreview() = RecorderAppTheme {
+	EditItemPrefixSelectorDialog(
 		showDialog = true,
-		textFieldValue = TextFieldValue(),
-		onTextFieldValueChange = {},
-		onDismiss = { },
-		onRename = {}
+		prefix = "EDITED",
+		onDismiss = {},
+		onRename = {},
 	)
 }
