@@ -245,8 +245,15 @@
   <string name="media_editor_title">Edit</string>
   <string name="action_save">Save</string>
   <string name="action_export">Export</string>
-  <string name="action_cut">Cut</string>
+  <string name="action_cut" translatable="false">Cut</string>
   <string name="tooltip_text_editor_cut">Remove the selected region</string>
-  <string name="action_crop">Crop</string>
+  <string name="action_crop" translatable="false">Crop</string>
   <string name="tooltip_text_editor_crop">"Remove the un selected region "</string>
+  <string name="save_edit_item_work_title">Saving Media</string>
+  <string name="save_edit_item_work_text">Saving edited media to storage</string>
+  <string name="export_bottom_sheet_text">Transformation completed, export the file to save it to storage</string>
+  <string name="transform_bottom_sheet_text">Ready to transform the contents</string>
+  <string name="transforming_media_bottom_sheet_text">Transforming media</string>
+  <string name="action_transform">Transform</string>
+  <string name="action_transforming">Transforming</string>
 </resources>

@@ -3,6 +3,7 @@ package com.eva.feature_editor.viewmodel
 import androidx.lifecycle.viewModelScope
 import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.editor.domain.AudioTransformer
+import com.eva.editor.domain.EditedItemSaver
 import com.eva.editor.domain.SimpleAudioPlayer
 import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.editor.domain.model.AudioEditAction
@@ -15,12 +16,14 @@ import com.eva.ui.viewmodel.UIEvents
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -36,6 +39,7 @@ import kotlin.time.Duration
 internal class AudioEditorViewModel @AssistedInject constructor(
 	@Assisted private val fileModel: AudioFileModel,
 	private val transformer: AudioTransformer,
+	private val saver: EditedItemSaver,
 	private val player: SimpleAudioPlayer,
 ) : AppViewModel() {
 
@@ -45,7 +49,11 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 	private val _allConfigs = MutableStateFlow<AudioConfigToActionList>(emptyList())
 	val clipConfigs = _allConfigs.asStateFlow()
 
+	private val _lastEditAction = MutableStateFlow(AudioEditAction.CROP)
 	private val _exportFileUri = MutableStateFlow<String?>(null)
+
+	private val _exportBegin = Channel<Boolean>()
+	val exportBegun = _exportBegin.consumeAsFlow()
 
 	val transformationState = combine(
 		transformer.isTransformerRunning,
@@ -63,7 +71,6 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 		initialValue = TransformationState()
 	)
 
-	private val _lastEditAction = MutableStateFlow(AudioEditAction.CROP)
 
 	val isPlayerPlaying = player.isPlaying
 		.onStart {
@@ -159,7 +166,9 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 
 
 	private fun onSaveExportFile() {
-
+		val fileUri = _exportFileUri.value ?: return
+		saver.saveItem(fileModel, fileUri)
+		viewModelScope.launch { _exportBegin.send(true) }
 	}
 
 	private fun finalExport() = viewModelScope.launch {
@@ -169,7 +178,7 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 // TODO: If the export is cancelled delete the file
 		val result = transformer.transformAudio(fileModel, filterValidConfigs)
 		result.fold(
-			onSuccess = { _exportFileUri.update { it } },
+			onSuccess = { data -> _exportFileUri.update { data } },
 			onFailure = {
 				_uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: ""))
 			},

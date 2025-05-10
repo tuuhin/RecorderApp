@@ -28,6 +28,7 @@ import com.eva.player_shared.PlayerVisualizerViewmodel
 import com.eva.player_shared.util.PlayerGraphData
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
+import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.navigation.PlayerSubGraph
 import com.eva.ui.navigation.animatedComposable
 import com.eva.ui.utils.UiEventsHandler
@@ -60,6 +61,13 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 					fileModel = model,
 					visualization = { compressedVisuals },
 					onClipDataUpdate = visualizerViewmodel::updateClipConfigs,
+					onExportStarted = dropUnlessResumed {
+						controller.navigate(NavRoutes.VoiceRecordings) {
+							popUpTo<NavRoutes.VoiceRecordings> {
+								inclusive = true
+							}
+						}
+					},
 					navigation = {
 						if (controller.previousBackStackEntry?.destination?.route != null) {
 							IconButton(
@@ -82,12 +90,14 @@ fun AudioEditorScreenStateful(
 	fileModel: AudioFileModel,
 	visualization: PlayerGraphData,
 	onClipDataUpdate: (AudioConfigToActionList) -> Unit,
+	onExportStarted: () -> Unit,
 	modifier: Modifier = Modifier,
 	navigation: @Composable () -> Unit = {},
 ) {
 
 	val lifecyleOwner = LocalLifecycleOwner.current
 	val currentOnClipDataUpdate by rememberUpdatedState(onClipDataUpdate)
+	val currentOnExportStarted by rememberUpdatedState(onExportStarted)
 
 	val viewModel = hiltViewModel<AudioEditorViewModel, EditorViewmodelFactory>(
 		creationCallback = { factory -> factory.create(fileModel) },
@@ -98,6 +108,12 @@ fun AudioEditorScreenStateful(
 	LaunchedEffect(lifecyleOwner) {
 		viewModel.clipConfigs.collectLatest {
 			currentOnClipDataUpdate(it)
+		}
+	}
+
+	LaunchedEffect(lifecyleOwner) {
+		viewModel.exportBegun.collectLatest {
+			currentOnExportStarted()
 		}
 	}
 
