@@ -1,24 +1,27 @@
 package com.eva.player.domain.model
 
-enum class PlayerPlayBackSpeed(val speed: Float) {
+sealed class PlayerPlayBackSpeed(val speed: Float) {
 
-	VERY_SLOW(0.25f),
-	SLOW(.5f),
-	NORMAL(1f),
-	FAST(1.25f),
-	VERY_FAST(1.5f),
-	VERY_VERY_FAST(2f);
+	data object VerySlow : PlayerPlayBackSpeed(.25f)
+	data object Slow : PlayerPlayBackSpeed(.5f)
+	data object Normal : PlayerPlayBackSpeed(1f)
+	data object Fast : PlayerPlayBackSpeed(1.25f)
+	data object VeryFast : PlayerPlayBackSpeed(1.5f)
+	data object VeryVeryFast : PlayerPlayBackSpeed(2f)
+	data class CustomSpeed(val amount: Float) : PlayerPlayBackSpeed(amount.coerceIn(SPEED_RANGE))
 
 	companion object {
+		private val SPEED_RANGE = 0f..2f
+
 		fun fromInt(value: Float): PlayerPlayBackSpeed? {
 			return when (value) {
-				0.25f -> VERY_SLOW
-				.5f -> SLOW
-				1f -> NORMAL
-				1.25f -> FAST
-				1.5f -> VERY_FAST
-				2f -> VERY_VERY_FAST
-				else -> null
+				0.25f -> VerySlow
+				.5f -> Slow
+				1f -> Normal
+				1.25f -> Fast
+				1.5f -> VeryFast
+				2f -> VeryVeryFast
+				else -> CustomSpeed(value)
 			}
 		}
 	}

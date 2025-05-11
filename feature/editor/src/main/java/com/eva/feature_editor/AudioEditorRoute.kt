@@ -44,14 +44,14 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 	) { backstackEntry ->
 
 		val sharedViewmodel = backstackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
-		val visualizerViewmodel = backstackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
+		val visualsViewmodel = backstackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
 
 		val loadState by sharedViewmodel.loadState.collectAsStateWithLifecycle()
-		val compressedVisuals by visualizerViewmodel.compressedVisuals.collectAsStateWithLifecycle()
+		val compressedVisuals by visualsViewmodel.compressedVisuals.collectAsStateWithLifecycle()
 
 		// ui events handler
 		UiEventsHandler(
-			eventsFlow = { merge(sharedViewmodel.uiEvent, visualizerViewmodel.uiEvent) },
+			eventsFlow = { merge(sharedViewmodel.uiEvent, visualsViewmodel.uiEvent) },
 		)
 
 		AudioEditorScreenContainer(
@@ -60,7 +60,7 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 				AudioEditorScreenStateful(
 					fileModel = model,
 					visualization = { compressedVisuals },
-					onClipDataUpdate = visualizerViewmodel::updateClipConfigs,
+					onClipDataUpdate = visualsViewmodel::updateClipConfigs,
 					onExportStarted = dropUnlessResumed {
 						controller.navigate(NavRoutes.VoiceRecordings) {
 							popUpTo<NavRoutes.VoiceRecordings> {
@@ -128,7 +128,6 @@ fun AudioEditorScreenStateful(
 	}
 
 	AudioEditorScreenContent(
-		fileModel = fileModel,
 		graphData = visualization,
 		isPlaying = isPlaying,
 		clipConfig = clipConfig,

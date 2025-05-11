@@ -12,7 +12,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.eva.ui.viewmodel.UIEvents
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 
 @Composable
 fun UiEventsHandler(
@@ -28,7 +30,10 @@ fun UiEventsHandler(
 
 	LaunchedEffect(key1 = lifecyleOwner) {
 		lifecyleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-			eventsFlow().collect { event ->
+			// buffering it to show the last 4 events if extra items
+			// are being processed drop old items
+			// collect is too slow and collect latest is too fast
+			eventsFlow().buffer(4, BufferOverflow.DROP_OLDEST).collect { event ->
 				when (event) {
 					is UIEvents.ShowToast -> {
 						Toast.makeText(context, event.message, Toast.LENGTH_SHORT)

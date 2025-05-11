@@ -19,7 +19,7 @@ private const val TAG = "AUDIO_PLAYER_LISTENER"
 internal class AudioFilePlayerListener(private val player: Player) : Player.Listener {
 
 	private val _playerState = MutableStateFlow(PlayerState.IDLE)
-	private val _playBackSpeed = MutableStateFlow(PlayerPlayBackSpeed.NORMAL)
+	private val _playBackSpeed = MutableStateFlow<PlayerPlayBackSpeed>(PlayerPlayBackSpeed.Normal)
 	private val _isLooping = MutableStateFlow(false)
 	private val _isStreamMuted = MutableStateFlow(false)
 	private val _isPlaying = MutableStateFlow(false)
