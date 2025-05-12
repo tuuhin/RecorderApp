@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.eva.editor.domain.model.AudioEditAction
 import com.eva.feature_editor.event.EditorScreenEvent
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.composables.AnimatedPlayPauseButton
@@ -150,7 +151,7 @@ internal fun EditorActionsAndControls(
 		onSeek = { onEvent(EditorScreenEvent.OnSeekTrack(it)) },
 		onPlay = { onEvent(EditorScreenEvent.PlayAudio) },
 		onPause = { onEvent(EditorScreenEvent.PauseAudio) },
-		onCropMedia = { onEvent(EditorScreenEvent.CropSelectedArea) },
-		onCutMedia = { onEvent(EditorScreenEvent.RemoveSelectedArea) }
+		onCropMedia = { onEvent(EditorScreenEvent.OnEditAction(AudioEditAction.CROP)) },
+		onCutMedia = { onEvent(EditorScreenEvent.OnEditAction(AudioEditAction.CUT)) }
 	)
 }

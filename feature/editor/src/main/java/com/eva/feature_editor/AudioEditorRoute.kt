@@ -121,6 +121,7 @@ fun AudioEditorScreenStateful(
 	val trackData by viewModel.trackData.collectAsStateWithLifecycle()
 	val clipConfig by viewModel.clipConfig.collectAsStateWithLifecycle()
 	val transformationState by viewModel.transformationState.collectAsStateWithLifecycle()
+	val undoRedoState by viewModel.undoRedoState.collectAsStateWithLifecycle()
 
 	val totalConfigs by viewModel.clipConfigs.collectAsStateWithLifecycle()
 	val isMediaEdited by remember(totalConfigs) {
@@ -133,6 +134,7 @@ fun AudioEditorScreenStateful(
 		clipConfig = clipConfig,
 		trackData = trackData,
 		isMediaEdited = isMediaEdited,
+		undoRedoState = undoRedoState,
 		transformationState = transformationState,
 		onEvent = viewModel::onEvent,
 		modifier = modifier,

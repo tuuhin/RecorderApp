@@ -9,6 +9,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ConcatenatingMediaSource2
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
+import com.eva.editor.domain.AudioConfigToActionList
+import com.eva.editor.domain.EditorComposer
 import com.eva.editor.domain.SimpleAudioPlayer
 import com.eva.editor.domain.exceptions.AudioClipException
 import com.eva.editor.domain.model.AudioClipConfig
@@ -17,10 +19,12 @@ import com.eva.player.data.util.computePlayerTrackData
 import com.eva.player.data.util.isMediaItemChange
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -163,6 +167,64 @@ internal class EditableAudioPlayerImpl(
 			},
 		)
 	}
+
+	@UnstableApi
+	override suspend fun editMediaPortions(
+		audio: AudioFileModel,
+		configs: AudioConfigToActionList
+	): Result<Unit> {
+		return _lock.runOtherwiseCancelIfLocked(
+			action = {
+				val composition = withContext(Dispatchers.Default) {
+					EditorComposer.applyLogicalEditSequence(audio.duration, configs)
+				}
+
+				val mediaItem = player.currentMediaItem ?: MediaItem.fromUri(audio.fileUri)
+					.buildUpon()
+					.setMediaId("${audio.id}")
+					.build()
+
+				val message = buildString {
+					composition.forEach { config ->
+						append("${config.start}--${config.end}")
+					}
+				}
+				Log.d(TAG,"CLIPPING :$message")
+
+				val allClippedMedia = composition.map { config ->
+					mediaItem.buildUpon()
+						.setClippingConfiguration(
+							MediaItem.ClippingConfiguration.Builder()
+								.setStartPositionMs(config.start.inWholeMilliseconds)
+								.setEndPositionMs(config.end.inWholeMilliseconds)
+								.build()
+						).build()
+				}
+
+				val totalDurationInMicroSeconds = composition.sumOf { config ->
+					val diff = config.end - config.start
+					val duration = if (diff.inWholeMicroseconds > 0L) diff
+					else 0.milliseconds
+					duration.inWholeMilliseconds
+				}
+
+				val concatMetaData = mediaItem.mediaMetadata.buildUpon()
+					.setDurationMs(totalDurationInMicroSeconds).build()
+
+				val concatSourcesBuilder = ConcatenatingMediaSource2.Builder()
+					.setMediaItem(mediaItem.buildUpon().setMediaMetadata(concatMetaData).build())
+					.setMediaSourceFactory(sourceFactory)
+
+				allClippedMedia.forEach { concatSourcesBuilder.add(it) }
+
+				val finalSource = concatSourcesBuilder.build()
+				// finally play the concatenated source
+				(player as? ExoPlayer)?.setMediaSource(finalSource, 0L)
+			},
+		)
+
+	}
+
 
 	override suspend fun pausePlayer() {
 		val command = player.isCommandAvailable(Player.COMMAND_PLAY_PAUSE)

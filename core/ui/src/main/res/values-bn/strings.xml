@@ -230,5 +230,7 @@
   <string name="app_settings_files_subtitle_export">রপ্তানি</string>
   <string name="app_settings_files_subtitle_recordings">রেকর্ডিং</string>
   <string name="rename_export_item_label">রপ্তানি উপসর্গ</string>
+  <string name="action_undo">পূর্বাবস্থা</string>
+  <string name="action_redo">পুনরায় করা</string>
 </resources>
 

@@ -44,6 +44,7 @@ import com.eva.feature_editor.composables.PlayerTrimSelector
 import com.eva.feature_editor.composables.TransformBottomSheet
 import com.eva.feature_editor.event.EditorScreenEvent
 import com.eva.feature_editor.event.TransformationState
+import com.eva.feature_editor.undoredo.UndoRedoState
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.composables.AudioFileNotFoundBox
 import com.eva.player_shared.composables.ContentLoadStatePreviewParams
@@ -100,6 +101,7 @@ internal fun AudioEditorScreenContent(
 	isPlaying: Boolean = false,
 	clipConfig: AudioClipConfig? = null,
 	isMediaEdited: Boolean = false,
+	undoRedoState: UndoRedoState = UndoRedoState(),
 	transformationState: TransformationState = TransformationState(),
 	navigation: @Composable () -> Unit = {},
 ) {
@@ -130,6 +132,9 @@ internal fun AudioEditorScreenContent(
 				},
 				scrollBehavior = scrollBehavior,
 				isActionsEnabled = isMediaEdited,
+				state = undoRedoState,
+				onRedoAction = { onEvent(EditorScreenEvent.OnRedoEdit) },
+				onUndoAction = { onEvent(EditorScreenEvent.OnUndoEdit) },
 				navigation = navigation,
 			)
 		},

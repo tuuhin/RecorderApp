@@ -261,4 +261,6 @@
   <string name="app_settings_files_subtitle_export">Export</string>
   <string name="app_settings_files_subtitle_recordings">Recordings</string>
   <string name="rename_export_item_label">Export Prefix</string>
+  <string name="action_undo">Undo</string>
+  <string name="action_redo">Redo</string>
 </resources>
