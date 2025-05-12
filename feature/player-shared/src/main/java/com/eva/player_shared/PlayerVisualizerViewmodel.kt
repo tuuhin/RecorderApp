@@ -48,6 +48,12 @@ class PlayerVisualizerViewmodel @Inject constructor(
 
 	private val _clipConfigs = MutableStateFlow<AudioConfigToActionList>(emptyList())
 
+	val isVisualsReady = visualizer.isVisualReady.stateIn(
+		scope = viewModelScope,
+		started = SharingStarted.WhileSubscribed(5_000L),
+		initialValue = false
+	)
+
 	val fullVisualization = visualizer.normalizedVisualization
 		.onStart { prepareVisuals() }
 		.stateIn(

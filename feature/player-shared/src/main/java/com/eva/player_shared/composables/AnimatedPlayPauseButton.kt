@@ -53,8 +53,8 @@ fun AnimatedPlayPauseButton(
 	tonalElevation: Dp = 0.dp,
 	shadowElevation: Dp = 0.dp,
 	colors: ButtonColors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.secondary,
-		contentColor = MaterialTheme.colorScheme.onSecondary,
+		containerColor = MaterialTheme.colorScheme.primary,
+		contentColor = MaterialTheme.colorScheme.onPrimary,
 	),
 ) {
 

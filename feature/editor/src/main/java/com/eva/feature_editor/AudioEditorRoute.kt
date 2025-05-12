@@ -48,6 +48,7 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 
 		val loadState by sharedViewmodel.loadState.collectAsStateWithLifecycle()
 		val compressedVisuals by visualsViewmodel.compressedVisuals.collectAsStateWithLifecycle()
+		val isVisualsReady by visualsViewmodel.isVisualsReady.collectAsStateWithLifecycle()
 
 		// ui events handler
 		UiEventsHandler(
@@ -60,6 +61,7 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 				AudioEditorScreenStateful(
 					fileModel = model,
 					visualization = { compressedVisuals },
+					isVisualsReady = isVisualsReady,
 					onClipDataUpdate = visualsViewmodel::updateClipConfigs,
 					onExportStarted = dropUnlessResumed {
 						controller.navigate(NavRoutes.VoiceRecordings) {
@@ -92,6 +94,7 @@ fun AudioEditorScreenStateful(
 	onClipDataUpdate: (AudioConfigToActionList) -> Unit,
 	onExportStarted: () -> Unit,
 	modifier: Modifier = Modifier,
+	isVisualsReady: Boolean = false,
 	navigation: @Composable () -> Unit = {},
 ) {
 
@@ -130,6 +133,7 @@ fun AudioEditorScreenStateful(
 
 	AudioEditorScreenContent(
 		graphData = visualization,
+		isVisualsReady = isVisualsReady,
 		isPlaying = isPlaying,
 		clipConfig = clipConfig,
 		trackData = trackData,

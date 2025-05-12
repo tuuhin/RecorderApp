@@ -27,6 +27,7 @@ internal fun PlayerTrimSelector(
 	onClipConfigChange: (AudioClipConfig) -> Unit,
 	modifier: Modifier = Modifier,
 	clipConfig: AudioClipConfig? = null,
+	enabled: Boolean = true,
 	maxGraphPoints: Int = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE,
 	shape: Shape = MaterialTheme.shapes.small,
 	overlayColor: Color = MaterialTheme.colorScheme.tertiary,
@@ -51,6 +52,7 @@ internal fun PlayerTrimSelector(
 					.matchParentSize()
 					.trimOverlay(
 						graph = graphData,
+						enabled = enabled,
 						trackDuration = trackData.total,
 						clipConfig = clipConfig,
 						maxGraphPoints = maxGraphPoints,
@@ -59,6 +61,7 @@ internal fun PlayerTrimSelector(
 					)
 					.detectClipConfig(
 						graph = graphData,
+						enabled = enabled,
 						onClipChange = onClipConfigChange,
 						totalLength = trackData.total,
 						clipConfig = clipConfig,

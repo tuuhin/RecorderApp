@@ -36,11 +36,12 @@ internal fun Modifier.detectClipConfig(
 	maxGraphPoints: Int = 100,
 	clipConfig: AudioClipConfig? = null,
 	minClipAmount: Duration = 1.seconds,
+	enabled: Boolean=true,
 	onMinClipAmountCrossed: () -> Unit = {},
 ) = composed {
 
 	// total length if lesser than min clip amount then  no pointer input allowed
-	if (totalLength <= minClipAmount) return@composed Modifier
+	if (totalLength <= minClipAmount || !enabled) return@composed Modifier
 
 	var localClipConfig by remember(totalLength) {
 		val supposeToBe = AudioClipConfig(0.milliseconds, totalLength)

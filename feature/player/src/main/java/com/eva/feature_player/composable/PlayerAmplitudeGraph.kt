@@ -79,7 +79,12 @@ internal fun PlayerAmplitudeGraph(
 						val samples = graphData()
 						val bookMarksAsMillis = bookMarkTimeStamps.map { it.toMillisecondOfDay() }
 
-						val totalSize = samples.size * spikesWidth
+						val sampleSize = maxOf(
+							samples.size.toLong(),
+							totalTrackDuration.inWholeMilliseconds / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
+						)
+
+						val totalSize = sampleSize * spikesWidth
 						val translate = size.width * .5f - (totalSize * playRatio())
 
 						translate(left = translate) {

@@ -31,8 +31,11 @@ internal fun Modifier.trimOverlay(
 	maxGraphPoints: Int = 100,
 	clipConfig: AudioClipConfig? = null,
 	overlayColor: Color = MaterialTheme.colorScheme.tertiary,
+	enabled: Boolean = true,
 	shape: Shape = MaterialTheme.shapes.medium,
 ) = composed {
+
+	if (!enabled) return@composed Modifier
 
 	val cutPainter = painterResource(R.drawable.ic_cut)
 

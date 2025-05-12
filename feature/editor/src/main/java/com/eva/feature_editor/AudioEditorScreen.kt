@@ -101,6 +101,7 @@ internal fun AudioEditorScreenContent(
 	isPlaying: Boolean = false,
 	clipConfig: AudioClipConfig? = null,
 	isMediaEdited: Boolean = false,
+	isVisualsReady: Boolean = false,
 	undoRedoState: UndoRedoState = UndoRedoState(),
 	transformationState: TransformationState = TransformationState(),
 	navigation: @Composable () -> Unit = {},
@@ -162,6 +163,7 @@ internal fun AudioEditorScreenContent(
 				PlayerTrimSelector(
 					graphData = graphData,
 					trackData = trackData,
+					enabled = isVisualsReady,
 					clipConfig = clipConfig,
 					onClipConfigChange = { onEvent(EditorScreenEvent.OnClipConfigChange(it)) },
 					modifier = Modifier.fillMaxWidth()
