@@ -1,4 +1,4 @@
-package com.eva.feature_player.composable
+package com.eva.player_shared.composables
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +23,7 @@ import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 
 @Composable
-internal fun AudioFileNotFoundBox(modifier: Modifier = Modifier) {
+fun AudioFileNotFoundBox(modifier: Modifier = Modifier) {
 	Column(
 		modifier = modifier.defaultMinSize(minWidth = 200.dp, minHeight = 260.dp),
 		horizontalAlignment = Alignment.CenterHorizontally,

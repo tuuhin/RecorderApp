@@ -8,14 +8,17 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -31,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -38,7 +42,6 @@ import com.eva.bookmarks.domain.AudioBookmarkModel
 import com.eva.feature_player.bookmarks.state.BookMarkEvents
 import com.eva.feature_player.bookmarks.state.CreateBookmarkState
 import com.eva.feature_player.bookmarks.utils.BookmarksPreviewFakes
-import com.eva.feature_player.composable.AudioFileNotFoundBox
 import com.eva.feature_player.composable.AudioPlayerScreenTopBar
 import com.eva.feature_player.composable.FileMetadataDetailsSheet
 import com.eva.feature_player.composable.PlayerActionsAndSlider
@@ -48,6 +51,7 @@ import com.eva.feature_player.state.PlayerEvents
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.UserAudioAction
+import com.eva.player_shared.composables.AudioFileNotFoundBox
 import com.eva.player_shared.composables.ContentLoadStatePreviewParams
 import com.eva.player_shared.composables.ContentStateAnimatedContainer
 import com.eva.player_shared.composables.PlayerDurationText
@@ -72,8 +76,15 @@ import kotlinx.coroutines.launch
 internal fun AudioPlayerScreenContainer(
 	audioId: Long,
 	loadState: AudioFileModelLoadState,
-	content: @Composable BoxScope.(AudioFileModel) -> Unit,
+	waveforms: PlayerGraphData,
+	bookMarkState: CreateBookmarkState,
+	trackData: PlayerTrackData,
+	playerMetaData: PlayerMetaData,
+	bookmarks: ImmutableList<AudioBookmarkModel>,
+	onPlayerEvents: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
+	isControllerReady: Boolean = false,
+	onBookmarkEvent: (BookMarkEvents) -> Unit = {},
 	onFileEvent: (UserAudioAction) -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 	onNavigateToEdit: () -> Unit = {},
@@ -124,7 +135,19 @@ internal fun AudioPlayerScreenContainer(
 				.padding(scPadding)
 				.padding(all = dimensionResource(id = R.dimen.sc_padding))
 				.fillMaxSize(),
-			onSuccess = content,
+			onSuccess = { fileModel ->
+				AudioPlayerScreenContent(
+					fileModel = fileModel,
+					bookmarks = bookmarks,
+					waveforms = waveforms,
+					trackData = trackData,
+					playerMetaData = playerMetaData,
+					isControllerReady = isControllerReady,
+					bookMarkState = bookMarkState,
+					onPlayerEvents = onPlayerEvents,
+					onBookmarkEvent = onBookmarkEvent,
+				)
+			},
 			onFailed = {
 				AudioFileNotFoundBox(modifier = Modifier.align(Alignment.Center))
 			},
@@ -162,7 +185,8 @@ internal fun AudioPlayerScreenContent(
 ) {
 	val bookMarkTimeStamps by remember(bookmarks) {
 		derivedStateOf {
-			bookmarks.map(AudioBookmarkModel::timeStamp).toImmutableList()
+			bookmarks.map(AudioBookmarkModel::timeStamp)
+				.toImmutableList()
 		}
 	}
 
@@ -218,16 +242,20 @@ private fun AudioPlayerScreenPreview(
 	AudioPlayerScreenContainer(
 		audioId = 0,
 		loadState = loadState,
-		content = { model ->
-			AudioPlayerScreenContent(
-				fileModel = model,
-				waveforms = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
-				trackData = PlayerTrackData(total = model.duration),
-				playerMetaData = PlayerMetaData(),
-				bookMarkState = CreateBookmarkState(),
-				bookmarks = BookmarksPreviewFakes.FAKE_BOOKMARKS_LIST,
-				onPlayerEvents = {},
-			)
-		},
+		waveforms = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
+		trackData = PlayerTrackData(total = PlayerPreviewFakes.FAKE_AUDIO_MODEL.duration),
+		playerMetaData = PlayerMetaData(),
+		bookMarkState = CreateBookmarkState(),
+		isControllerReady = true,
+		bookmarks = BookmarksPreviewFakes.FAKE_BOOKMARKS_LIST,
+		onPlayerEvents = {},
+		navigation = {
+			IconButton(onClick = {}) {
+				Icon(
+					imageVector = Icons.AutoMirrored.Default.ArrowBack,
+					contentDescription = stringResource(R.string.back_arrow)
+				)
+			}
+		}
 	)
 }

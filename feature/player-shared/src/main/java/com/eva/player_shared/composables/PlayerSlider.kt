@@ -30,8 +30,8 @@ fun PlayerSlider(
 	modifier: Modifier = Modifier,
 	enabled: Boolean = true
 ) {
-	val controller = remember { PlayerSliderController() }
-	var sliderPosition by remember { mutableFloatStateOf(.0f) }
+	val controller = rememberPlayerSliderController()
+	var sliderPosition by remember { mutableFloatStateOf(trackData.playRatio) }
 
 	val isUserControlled by controller.isSeekByUser.collectAsStateWithLifecycle(false)
 	val seekAmountByUser by controller.seekAmountByUser.collectAsStateWithLifecycle()
@@ -71,8 +71,13 @@ private fun Float.roundToNDecimals(decimals: Int = 2): Float {
 	return round(this * multiplier) / multiplier
 }
 
+@Composable
+private fun rememberPlayerSliderController(): PlayerSliderController {
+	return remember { PlayerSliderController() }
+}
+
 @OptIn(FlowPreview::class)
-private class PlayerSliderController {
+private class PlayerSliderController() {
 
 	private val _seekAmountByUser = MutableStateFlow(Duration.ZERO)
 	val seekAmountByUser = _seekAmountByUser.asStateFlow()
@@ -80,7 +85,7 @@ private class PlayerSliderController {
 	private val _isSeekByUser = MutableStateFlow(false)
 	val isSeekByUser = _isSeekByUser.debounce { controlled ->
 		if (controlled) 0.seconds
-		else 110.milliseconds
+		else 75.milliseconds
 	}.distinctUntilChanged()
 
 	fun onSliderSlide(amount: Duration) {

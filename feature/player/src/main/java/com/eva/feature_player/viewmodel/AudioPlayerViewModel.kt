@@ -8,6 +8,7 @@ import com.eva.player.domain.AudioFilePlayer
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
+import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.Resource
@@ -15,18 +16,23 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 
 @HiltViewModel(assistedFactory = PlayerViewmodelFactory::class)
 internal class AudioPlayerViewModel @AssistedInject constructor(
-	@Assisted val fileModel: AudioFileModel,
+	@Assisted private val audioId: Long,
+	private val fileProvider: PlayerFileProvider,
 	private val controller: MediaControllerProvider,
 ) : AppViewModel() {
 
@@ -34,6 +40,11 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 	private val audioPlayer: AudioFilePlayer?
 		get() = controller.player
 
+
+	private val _currentFile = MutableStateFlow<AudioFileModel?>(null)
+	private val _currentFileDistinctById = _currentFile
+		.filterNotNull()
+		.distinctUntilChangedBy { it.id }
 
 	val playerMetaData = controller.playerMetaDataFlow.stateIn(
 		scope = viewModelScope,
@@ -44,11 +55,12 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 	val trackData = controller.trackInfoAsFlow.stateIn(
 		scope = viewModelScope,
 		started = SharingStarted.WhileSubscribed(5_000),
-		initialValue = PlayerTrackData(total = fileModel.duration)
+		initialValue = PlayerTrackData()
 	)
 
 	val isControllerReady = controller.isControllerConnected
 		.onStart {
+			setAudioModel()
 			setControllerIfReady()
 		}.stateIn(
 			scope = viewModelScope,
@@ -89,10 +101,13 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 	}
 
 	private fun setControllerIfReady() {
-		controller.isControllerConnected.onEach { isConnected ->
-			if (!isConnected) return@onEach
+		combine(
+			controller.isControllerConnected,
+			_currentFileDistinctById
+		) { connected, fileModel ->
+			if (!connected) return@combine
 
-			val result = controller.preparePlayer(fileModel) ?: return@onEach
+			val result = controller.preparePlayer(fileModel) ?: return@combine
 			when (result) {
 				is Resource.Error -> {
 					val message = result.message ?: result.error.message ?: ""
@@ -101,12 +116,18 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 
 				else -> {}
 			}
-
-		}
-			.launchIn(viewModelScope)
+		}.launchIn(viewModelScope)
 	}
 
 
+	private fun setAudioModel() = viewModelScope.launch {
+		val result = fileProvider.getAudioFileFromId(audioId)
+		when (result) {
+			is Resource.Success -> _currentFile.updateAndGet { result.data }
+			is Resource.Error -> _uiEvents.emit(UIEvents.ShowSnackBar(result.message ?: ""))
+			else -> {}
+		}
+	}
 
 	override fun onCleared() {
 		// cleanup for controller

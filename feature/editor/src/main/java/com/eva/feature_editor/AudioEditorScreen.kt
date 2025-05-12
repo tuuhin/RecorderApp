@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.feature_editor.composables.AudioClipChipRow
@@ -44,6 +45,8 @@ import com.eva.feature_editor.composables.TransformBottomSheet
 import com.eva.feature_editor.event.EditorScreenEvent
 import com.eva.feature_editor.event.TransformationState
 import com.eva.player.domain.model.PlayerTrackData
+import com.eva.player_shared.composables.AudioFileNotFoundBox
+import com.eva.player_shared.composables.ContentLoadStatePreviewParams
 import com.eva.player_shared.composables.ContentStateAnimatedContainer
 import com.eva.player_shared.composables.PlayerDurationText
 import com.eva.player_shared.state.ContentLoadState
@@ -79,9 +82,10 @@ internal fun AudioEditorScreenContainer(
 	) {
 		ContentStateAnimatedContainer(
 			loadState = loadState,
-			modifier = Modifier,
 			onSuccess = content,
-			onFailed = {},
+			onFailed = {
+				AudioFileNotFoundBox(modifier = Modifier.align(Alignment.Center))
+			},
 		)
 	}
 }
@@ -89,7 +93,6 @@ internal fun AudioEditorScreenContainer(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AudioEditorScreenContent(
-	fileModel: AudioFileModel,
 	trackData: PlayerTrackData,
 	graphData: PlayerGraphData,
 	onEvent: (EditorScreenEvent) -> Unit,
@@ -184,12 +187,14 @@ internal fun AudioEditorScreenContent(
 
 @PreviewLightDark
 @Composable
-private fun AudioEditorScreenPreview() = RecorderAppTheme {
+private fun AudioEditorScreenPreview(
+	@PreviewParameter(ContentLoadStatePreviewParams::class)
+	loadState: ContentLoadState<AudioFileModel>,
+) = RecorderAppTheme {
 	AudioEditorScreenContainer(
-		loadState = ContentLoadState.Content(PlayerPreviewFakes.FAKE_AUDIO_MODEL),
+		loadState = loadState,
 		content = { model ->
 			AudioEditorScreenContent(
-				fileModel = model,
 				trackData = PlayerTrackData(total = model.duration),
 				graphData = { PlayerPreviewFakes.loadAmplitudeGraph(model.duration) },
 				clipConfig = AudioClipConfig(end = model.duration),

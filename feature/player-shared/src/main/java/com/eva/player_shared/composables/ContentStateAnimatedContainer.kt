@@ -3,8 +3,6 @@ package com.eva.player_shared.composables
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
@@ -21,6 +19,9 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -36,8 +37,20 @@ fun <T> ContentStateAnimatedContainer(
 	modifier: Modifier = Modifier,
 	onLoading: (@Composable BoxScope.() -> Unit)? = null,
 ) {
+
+	// This wrapper is needed as if T value changes it will lead to a recomposition
+	val plainState by remember(loadState) {
+		derivedStateOf {
+			when (loadState) {
+				is ContentLoadState.Content -> PlainContentState.IS_SUCCESS
+				ContentLoadState.Loading -> PlainContentState.IS_SUCCESS
+				ContentLoadState.Unknown -> PlainContentState.IS_ERROR
+			}
+		}
+	}
+
 	AnimatedContent(
-		targetState = loadState,
+		targetState = plainState,
 		transitionSpec = { animateLoadState() },
 		label = "Animating content state",
 		contentAlignment = Alignment.Center,
@@ -47,39 +60,40 @@ fun <T> ContentStateAnimatedContainer(
 			modifier = Modifier.fillMaxSize()
 		) {
 			when (state) {
-				is ContentLoadState.Content -> onSuccess(state.data)
+				PlainContentState.IS_LOADING -> onLoading?.invoke(this)
+					?: CircularProgressIndicator(
+						modifier = Modifier.align(Alignment.Center)
+					)
 
-				ContentLoadState.Loading -> onLoading?.invoke(this) ?: CircularProgressIndicator(
-					modifier = Modifier.align(Alignment.Center)
-				)
+				PlainContentState.IS_SUCCESS ->
+					(loadState as? ContentLoadState.Content)?.data?.let { onSuccess(it) }
 
-				ContentLoadState.Unknown -> onFailed()
+				PlainContentState.IS_ERROR -> onFailed()
 			}
 		}
 	}
 }
 
-private fun <T> AnimatedContentTransitionScope<ContentLoadState<T>>.animateLoadState(
-	loadContentTransition: FiniteAnimationSpec<Float> = tween(
+// enums to represent the state
+private enum class PlainContentState {
+	IS_LOADING,
+	IS_SUCCESS,
+	IS_ERROR,
+}
+
+private fun AnimatedContentTransitionScope<PlainContentState>.animateLoadState(): ContentTransform {
+	val loadContentTransition: FiniteAnimationSpec<Float> = tween(
 		durationMillis = 800,
 		easing = FastOutSlowInEasing
-	),
-	normalTransition: FiniteAnimationSpec<Float> = tween(
+	)
+
+	val normalTransition: FiniteAnimationSpec<Float> = tween(
 		durationMillis = 200,
 		delayMillis = 60,
 		easing = FastOutLinearInEasing
 	)
-): ContentTransform {
 
-	// no transition is this case
-	if (initialState is ContentLoadState.Content && targetState is ContentLoadState.Content) {
-		return ContentTransform(
-			targetContentEnter = EnterTransition.None,
-			initialContentExit = ExitTransition.None,
-		)
-	}
-
-	return if (initialState is ContentLoadState.Loading && targetState is ContentLoadState.Content) {
+	return if (initialState == PlainContentState.IS_LOADING && targetState == PlainContentState.IS_SUCCESS) {
 		fadeIn(animationSpec = loadContentTransition) + expandVertically(
 			animationSpec = spring(
 				dampingRatio = Spring.DampingRatioLowBouncy,

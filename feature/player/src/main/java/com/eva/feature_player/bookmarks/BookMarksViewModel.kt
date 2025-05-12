@@ -8,7 +8,6 @@ import com.eva.bookmarks.domain.provider.RecordingBookmarksProvider
 import com.eva.feature_player.bookmarks.state.BookMarkEvents
 import com.eva.feature_player.bookmarks.state.CreateBookmarkState
 import com.eva.interactions.domain.ShareRecordingsUtil
-import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.Resource
@@ -33,13 +32,10 @@ import kotlin.time.Duration
 
 @HiltViewModel(assistedFactory = BookmarksViewmodelFactory::class)
 internal class BookMarksViewModel @AssistedInject constructor(
-	@Assisted private val fileModel: AudioFileModel,
+	@Assisted private val audioId: Long,
 	private val bookmarksProvider: RecordingBookmarksProvider,
 	private val sharingUtil: ShareRecordingsUtil,
 ) : AppViewModel() {
-
-	val audioId: Long
-		get() = fileModel.id
 
 	private val _createOrEditBookMarkState = MutableStateFlow(CreateBookmarkState())
 	val bookmarkState = _createOrEditBookMarkState.asStateFlow()
