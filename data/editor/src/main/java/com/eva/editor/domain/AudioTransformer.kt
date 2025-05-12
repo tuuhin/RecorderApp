@@ -16,11 +16,10 @@ interface AudioTransformer {
 
 	val isTransformerRunning: StateFlow<Boolean>
 
-	suspend fun transformAudio(
-		model: AudioFileModel,
-		actionsList: AudioConfigToActionList
-	): Result<String>
+	suspend fun transformAudio(model: AudioFileModel, actionsList: AudioConfigToActionList)
+			: Result<String>
 
+	suspend fun removeTransformsFile(uri: String): Result<Boolean>
 
 	fun cleanUp()
 }

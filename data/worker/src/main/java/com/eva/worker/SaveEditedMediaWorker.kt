@@ -4,6 +4,8 @@ import android.app.Notification
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.net.Uri
+import android.util.Log
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.hilt.work.HiltWorker
 import androidx.work.Constraints
@@ -25,11 +27,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
+
 @HiltWorker
 class SaveEditedMediaWorker @AssistedInject constructor(
 	@Assisted private val context: Context,
 	@Assisted private val params: WorkerParameters,
-	private val task: SaveEditMediaItemTask
+	private val task: SaveEditMediaItemTask,
 ) : CoroutineWorker(context, params) {
 
 	override suspend fun doWork(): Result {
@@ -59,34 +62,47 @@ class SaveEditedMediaWorker @AssistedInject constructor(
 				)
 			)
 
-		val file = File(fileUri)
+		return try {
+			val file = fileUri.toUri().toFile()
 
-		if (!file.exists()) return Result.failure(
-			workDataOf(
-				WorkerParams.WORK_DATA_REQUIRED_ITEMS_NOT_FOUND to
-						WorkerParams.WORK_DATA_SAVE_EDITED_ITEM_FILE_INVALID
+			if (!file.exists()) return Result.failure(
+				workDataOf(
+					WorkerParams.WORK_DATA_REQUIRED_ITEMS_NOT_FOUND to
+							WorkerParams.WORK_DATA_SAVE_EDITED_ITEM_FILE_INVALID
+				)
 			)
-		)
 
-		val result = task.invoke(fileName, mimeType) { contentUri ->
-			copyStreamData(
-				inputFile = file,
-				outputUri = contentUri.toUri(),
-				onProgress = {
-					val progress = (it * 100).toInt()
-					setProgress(workDataOf(PROGRESS to progress))
-					setForeground(getForegroundInfo(progress))
+			val result = task.invoke(fileName, mimeType) { contentUri ->
+				copyStreamData(
+					inputFile = file,
+					outputUri = contentUri.toUri(),
+					onProgress = {
+						val progress = (it * 100).toInt()
+						setProgress(workDataOf(PROGRESS to progress))
+						setForeground(getForegroundInfo(progress))
+					},
+				)
+			}
+			result.fold(
+				onSuccess = {
+					val isSuccess = removeTransformsFile(file)
+					Log.d(TAG, "REMOVING FILE AFTER COPY :$isSuccess")
+					Result.success(
+						workDataOf(
+							WorkerParams.WORK_SAVE_EDITED_ITEM_GOOD to true,
+							WorkerParams.WORK_SAVE_EDITED_ITEM_REMOVE_EXTRA_FILE to isSuccess
+						)
+					)
+				},
+				onFailure = { exception ->
+					val message = exception.message ?: "Unknown"
+					Result.failure(
+						workDataOf(WorkerParams.WORK_SAVE_EDITED_ITEM_FAILED to message)
+					)
 				},
 			)
-		}
-
-		return if (result.isSuccess) {
-			// after the file is saved on the disk delete the file
-			withContext(Dispatchers.IO) { file.delete() }
-			Result.success()
-		} else {
-			val exception = result.exceptionOrNull()
-			val message = exception?.message ?: "Unknown"
+		} catch (e: Exception) {
+			val message = e.message ?: "Unknown"
 			Result.failure(
 				workDataOf(WorkerParams.WORK_SAVE_EDITED_ITEM_FAILED to message)
 			)
@@ -118,22 +134,36 @@ class SaveEditedMediaWorker @AssistedInject constructor(
 		outputUri: Uri,
 		bufferSize: Int = 2048,
 		onProgress: suspend (Float) -> Unit = {}
-	) {
-		withContext(Dispatchers.IO) {
-			context.contentResolver.openOutputStream(outputUri, "w")?.use { outputStream ->
-				inputFile.inputStream().use { inputStream ->
-					val totalBytes = inputFile.length()
-					var bytesCopied = 0L
-					val buffer = ByteArray(bufferSize)
-					var bytesRead: Int
-					do {
-						bytesRead = inputStream.read(buffer)
-						outputStream.write(buffer)
-						bytesCopied += bytesRead
-						onProgress(bytesCopied.toFloat() / totalBytes)
-					} while (bytesRead >= 0)
-				}
-			} ?: Unit
+	) = withContext(Dispatchers.IO) {
+		context.contentResolver.openOutputStream(outputUri, "w")?.use { outputStream ->
+			inputFile.inputStream().use { inputStream ->
+				val totalBytes = inputFile.length()
+				var bytesCopied = 0L
+				val buffer = ByteArray(bufferSize)
+				var bytesRead: Int
+				do {
+					bytesRead = inputStream.read(buffer)
+					outputStream.write(buffer)
+					bytesCopied += bytesRead
+					onProgress(bytesCopied.toFloat() / totalBytes)
+				} while (bytesRead >= 0)
+				Log.d(TAG, "CONTENT COPIED")
+			}
+		} ?: Unit
+	}
+
+	suspend fun removeTransformsFile(file: File): Boolean {
+		return withContext(Dispatchers.IO) {
+			try {
+				// as this file will be mostly a temp file if not deleted properly
+				// there is less chance of an issue
+				if (!file.exists()) return@withContext false
+				if (file.extension != "tmp") return@withContext false
+				file.delete()
+			} catch (e: Exception) {
+				e.printStackTrace()
+				false
+			}
 		}
 	}
 
@@ -161,6 +191,7 @@ class SaveEditedMediaWorker @AssistedInject constructor(
 			val workRequest = OneTimeWorkRequestBuilder<SaveEditedMediaWorker>()
 				.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
 				.setInputData(data)
+				.addTag(TAG)
 				.setConstraints(constraints)
 				.build()
 

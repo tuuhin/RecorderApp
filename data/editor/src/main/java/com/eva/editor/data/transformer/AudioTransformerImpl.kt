@@ -2,6 +2,8 @@ package com.eva.editor.data.transformer
 
 import android.content.Context
 import android.text.format.Formatter
+import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.Log
@@ -16,6 +18,7 @@ import com.eva.editor.domain.exceptions.TransformerInvalidException
 import com.eva.editor.domain.exceptions.TransformerWrongMimeTypeException
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -65,7 +68,7 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 				.experimentalSetTrimOptimizationEnabled(true)
 				.build()
 
-			Log.d(TAG, "PREPARED TRANSFORMER WITH MIME TYPE:$mimeType AND TRIM:true")
+			Log.d(TAG, "PREPARED TRANSFORMER WITH MIME TYPE:$mimeType")
 			Result.success(Unit)
 		} catch (_: IllegalStateException) {
 			Result.failure(TransformerWrongMimeTypeException())
@@ -110,6 +113,29 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 		}
 	}
 
+	override suspend fun removeTransformsFile(uri: String): Result<Boolean> {
+		return withContext(Dispatchers.IO) {
+			try {
+				val file = uri.toUri().toFile()
+				if (!file.exists())
+					return@withContext Result.failure(Exception("Wrong file provided"))
+				if (file.extension != "tmp")
+					return@withContext Result.failure(Exception("Wrong type provided"))
+				if (!file.absolutePath.startsWith(context.cacheDir.absolutePath)) {
+					Log.w(TAG, "FILE SHOULD BE IN CACHE DIRECTORY ${file.absolutePath}")
+					return@withContext Result.failure(Exception("Wrong path for temporaries"))
+				}
+
+				val delete = file.delete()
+				Log.d(TAG, "TEMP REMOVED :$delete")
+				Result.success(delete)
+			} catch (e: Exception) {
+				e.printStackTrace()
+				Result.failure(e)
+			}
+		}
+	}
+
 
 	private suspend fun createFileAndTransform(
 		model: AudioFileModel,
@@ -119,7 +145,7 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 		try {
 			// if not acc type
 			val composition = model.toComposition(actionsList)
-			val filepath = _transformer?.awaitResults(composition, file.path)
+			_transformer?.awaitResults(composition, file.path)
 				?: return@coroutineScope Result.failure(TransformerWrongMimeTypeException())
 
 			if (file.exists()) {
@@ -127,7 +153,7 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 				Log.d(TAG, "FILE CREATED :${file} $fileSize")
 			}
 
-			Result.success(filepath)
+			Result.success(file.toUri().toString())
 		} catch (e: CancellationException) {
 			// delete the file as this export was cancelled
 			withContext(NonCancellable) { file.delete() }
@@ -164,7 +190,7 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 
 			val endFile = finalFile.await()
 			// final transformation
-			val filePathAfterTransformer = _transformer
+			_transformer
 				?.buildUpon()
 				?.setAudioMimeType(MimeTypes.AUDIO_AAC)
 				?.build()
@@ -178,7 +204,7 @@ internal class AudioTransformerImpl(private val context: Context) : AudioTransfo
 				Log.d(TAG, "FILE CREATED :${endFile.path} $fileSize")
 			}
 
-			Result.success(filePathAfterTransformer)
+			Result.success(endFile.toUri().toString())
 		} catch (e: CancellationException) {
 			// delete the file as this export was cancelled
 			withContext(NonCancellable) { finalFile.await().delete() }

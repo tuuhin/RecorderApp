@@ -101,6 +101,7 @@ internal fun AudioClipChipRow(
 	trackDuration: Duration,
 	onEvent: (EditorScreenEvent) -> Unit,
 	modifier: Modifier = Modifier,
+	minClipLength: Duration = AudioClipConfig.MIN_CLIP_DURATION,
 	clipConfig: AudioClipConfig? = null,
 ) {
 	val localClipConfig by remember(trackDuration, clipConfig) {
@@ -116,7 +117,7 @@ internal fun AudioClipChipRow(
 		AudioClipChip(
 			duration = localClipConfig.start,
 			onPlus = { duration ->
-				if (duration <= trackDuration && duration <= localClipConfig.end)
+				if (duration <= trackDuration && localClipConfig.end - duration >= minClipLength)
 					onEvent(EditorScreenEvent.OnClipConfigChange(localClipConfig.copy(start = duration)))
 			},
 			onMinus = { duration ->
@@ -132,7 +133,7 @@ internal fun AudioClipChipRow(
 				onEvent(EditorScreenEvent.OnClipConfigChange(localClipConfig.copy(end = newEnd)))
 			},
 			onMinus = { duration ->
-				if (duration >= 0.seconds && duration >= localClipConfig.start)
+				if (duration >= 0.seconds && duration - localClipConfig.start >= minClipLength)
 					onEvent(EditorScreenEvent.OnClipConfigChange(localClipConfig.copy(end = duration)))
 			},
 		)
