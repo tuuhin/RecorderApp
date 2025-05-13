@@ -20,20 +20,22 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.eva.feature_recorder.util.DeferredLocalTimeList
-import com.eva.feature_recorder.util.DeferredRecordingDataPointList
 import com.eva.feature_recorder.util.RecorderPreviewFakes
 import com.eva.feature_recorder.util.drawAmplitudeGraph
 import com.eva.feature_recorder.util.drawRecorderTimeline
+import com.eva.recorder.utils.DeferredDurationList
+import com.eva.recorder.utils.DeferredRecordingDataPointList
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.RecorderConstants
-import kotlinx.datetime.LocalTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 internal fun RecorderAmplitudeGraph(
 	amplitudesCallback: DeferredRecordingDataPointList,
-	bookMarksDeferred: DeferredLocalTimeList,
+	bookMarksDeferred: DeferredDurationList,
 	modifier: Modifier = Modifier,
 	chartColor: Color = MaterialTheme.colorScheme.secondary,
 	bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
@@ -116,16 +118,17 @@ internal fun RecorderAmplitudeGraph(
 	}
 }
 
-private fun padListWithExtra(list: List<LocalTime>, blockSize: Int, extra: Int = 10)
-		: List<LocalTime> {
+private fun padListWithExtra(
+	list: List<Duration>,
+	blockSize: Int,
+	extra: Int = 10
+): List<Duration> {
 	val sizeDiff = blockSize - list.size
-	val lastValue = list.lastOrNull() ?: LocalTime.fromMillisecondOfDay(0)
+	val lastValue = list.lastOrNull() ?: 0.milliseconds
 	// extra will create the translation effect properly
 	val amount = if (sizeDiff >= 0) sizeDiff else 0
 	return list + List(amount + extra) {
-		val millis =
-			lastValue.toMillisecondOfDay() + ((it + 1) * RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE)
-		LocalTime.fromMillisecondOfDay(millis)
+		lastValue + ((it + 1) * RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE).milliseconds
 	}
 }
 
@@ -135,12 +138,7 @@ private fun padListWithExtra(list: List<LocalTime>, blockSize: Int, extra: Int =
 private fun RecorderAmplitudeGraphPreview() = RecorderAppTheme {
 	RecorderAmplitudeGraph(
 		amplitudesCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY },
-		bookMarksDeferred = {
-			listOf(
-				LocalTime.fromSecondOfDay(2),
-				LocalTime.fromSecondOfDay(4)
-			)
-		},
+		bookMarksDeferred = { listOf(2.seconds, 5.seconds) },
 		modifier = Modifier.fillMaxWidth(),
 	)
 }

@@ -15,7 +15,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import com.eva.utils.LocalTimeFormats
 import com.eva.utils.RecorderConstants
-import com.eva.utils.asLocalTime
+import com.eva.utils.toLocalTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 import kotlin.time.Duration.Companion.milliseconds
@@ -76,7 +76,7 @@ internal fun DrawScope.drawTimeLine(
 		if (millis % 2_000 == 0) {
 
 			val xAxis = millis * spacing
-			val time = millis.milliseconds.asLocalTime
+			val time = millis.milliseconds.toLocalTime()
 			val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
 
 			val layoutResult = textMeasurer.measure(readable, style = textStyle)

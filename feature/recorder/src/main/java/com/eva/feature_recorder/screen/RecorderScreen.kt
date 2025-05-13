@@ -20,28 +20,36 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.eva.feature_recorder.composable.MicPermissionWrapper
 import com.eva.feature_recorder.composable.RecorderContent
 import com.eva.feature_recorder.composable.RecorderTopBar
 import com.eva.feature_recorder.util.showTopBarActions
 import com.eva.recorder.domain.models.RecorderAction
+import com.eva.recorder.domain.models.RecorderState
+import com.eva.recorder.utils.DeferredDurationList
+import com.eva.recorder.utils.DeferredRecordingDataPointList
 import com.eva.ui.R
 import com.eva.ui.utils.LocalSnackBarProvider
+import kotlinx.datetime.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun VoiceRecorderScreen(
+	isRecorderReady: Boolean,
+	recorderState: RecorderState,
+	recorderTimer: LocalTime,
+	deferredRecordingPoints: DeferredRecordingDataPointList,
+	bookMarksSetDeferred: DeferredDurationList,
 	onRecorderAction: (RecorderAction) -> Unit,
+	onScreenEvent: (RecorderScreenEvent) -> Unit,
 	onShowRecordings: () -> Unit,
 	onNavigateToSettings: () -> Unit,
 	onNavigateToBin: () -> Unit,
@@ -50,12 +58,23 @@ internal fun VoiceRecorderScreen(
 ) {
 
 	val snackBarHostState = LocalSnackBarProvider.current
-	var canShowActions by remember { mutableStateOf(true) }
+	val lifecycleOwner = LocalLifecycleOwner.current
+
+	val currentOnScreenEvent by rememberUpdatedState(onScreenEvent)
+
+	LifecycleStartEffect(key1 = lifecycleOwner) {
+		// bind the service on start
+		currentOnScreenEvent(RecorderScreenEvent.BindRecorderService)
+		onStopOrDispose {
+			// unbind the service on stop
+			currentOnScreenEvent(RecorderScreenEvent.UnBindRecorderService)
+		}
+	}
 
 	Scaffold(
 		topBar = {
 			RecorderTopBar(
-				showActions = canShowActions,
+				showActions = recorderState.showTopBarActions,
 				onNavigateToRecordings = onShowRecordings,
 				onNavigateToSettings = onNavigateToSettings,
 				onNavigateToBin = onNavigateToBin,
@@ -74,44 +93,33 @@ internal fun VoiceRecorderScreen(
 				bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
 			)
 		) {
-			RecorderServiceBinder { service ->
-				AnimatedContent(
-					targetState = service != null,
-					label = "Setting the recorder animation",
-					transitionSpec = { recorderServiceBinderTransition() },
-					modifier = Modifier.fillMaxSize()
-				) { isReady ->
-					if (isReady && service != null) {
+			AnimatedContent(
+				targetState = isRecorderReady,
+				label = "Setting the recorder animation",
+				transitionSpec = { recorderServiceBinderTransition() },
+				modifier = Modifier.fillMaxSize()
+			) { isReady ->
+				if (isReady) {
+					RecorderContent(
+						timer = recorderTimer,
+						recorderState = recorderState,
+						recordingPointsCallback = deferredRecordingPoints,
+						bookMarksDeferred = bookMarksSetDeferred,
+						onRecorderAction = onRecorderAction,
+						modifier = Modifier.fillMaxSize()
+					)
 
-						val timer by service.recorderTime.collectAsStateWithLifecycle()
-						val recorderState by service.recorderState.collectAsStateWithLifecycle()
-						val recorderAmplitude by service.amplitudes.collectAsStateWithLifecycle()
-						val bookMarks by service.bookMarks.collectAsStateWithLifecycle()
-
-						LaunchedEffect(recorderState) {
-							canShowActions = recorderState.showTopBarActions
-						}
-
-						RecorderContent(
-							timer = timer,
-							recorderState = recorderState,
-							recordingPointsCallback = { recorderAmplitude },
-							bookMarksDeferred = { bookMarks },
-							onRecorderAction = onRecorderAction,
-							modifier = Modifier.fillMaxSize()
-						)
-
-					} else Box(
-						modifier = Modifier.fillMaxSize(),
-						contentAlignment = Alignment.Center
-					) {
-						Text(
-							text = stringResource(id = R.string.preparing_recorder),
-							style = MaterialTheme.typography.titleMedium
-						)
-					}
+				} else Box(
+					modifier = Modifier.fillMaxSize(),
+					contentAlignment = Alignment.Center
+				) {
+					Text(
+						text = stringResource(id = R.string.preparing_recorder),
+						style = MaterialTheme.typography.titleMedium
+					)
 				}
 			}
+
 		}
 	}
 }
