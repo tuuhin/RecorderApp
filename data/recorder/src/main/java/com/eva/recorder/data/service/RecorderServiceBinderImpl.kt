@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlin.time.Duration
 
 private const val TAG = "RECORDER_SERVICE_BINDER"
@@ -45,14 +46,14 @@ internal class RecorderServiceBinderImpl(private val context: Context) : Recorde
 		override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
 			val binder = (service as? VoiceRecorderService.LocalBinder)
 			_service = binder?.getService()
-			_isBounded.update { true }
-			Log.d(TAG, "SERVICE CONNECTED")
+			val isBounded = _isBounded.updateAndGet { true }
+			Log.d(TAG, "SERVICE CONNECTED :BOUNDED :$isBounded")
 		}
 
 		override fun onServiceDisconnected(name: ComponentName?) {
-			_isBounded.update { false }
+			val bounded = _isBounded.updateAndGet { false }
 			_service = null
-			Log.d(TAG, "SERVICE DISCONNECTED")
+			Log.d(TAG, "SERVICE DISCONNECTED :BOUNDED:$bounded")
 		}
 	}
 
@@ -70,14 +71,15 @@ internal class RecorderServiceBinderImpl(private val context: Context) : Recorde
 	override fun unBindService() {
 		try {
 			context.unbindService(serviceConnection)
-			Log.d(TAG, "SERVICE UN-BIND")
+			val isBounded = _isBounded.updateAndGet { false }
+			Log.d(TAG, "SERVICE UN-BIND BOUNDED:$isBounded")
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
 	}
 
 	override fun cleanUp() {
-		Log.d(TAG,"SERVICE BINDER CLEANUP")
+		Log.d(TAG, "SERVICE BINDER CLEANUP")
 		_service = null
 		_isBounded.update { false }
 	}

@@ -39,6 +39,7 @@ internal fun RecordButton(
 	onClick: () -> Unit,
 	modifier: Modifier = Modifier,
 	elevation: Dp = 4.dp,
+	enabled: Boolean = true,
 ) {
 	val recorderRed = colorResource(id = R.color.recorder_button_color)
 	val rimColor = colorResource(id = R.color.recorder_button_rim_color)
@@ -68,7 +69,7 @@ internal fun RecordButton(
 				}
 				.size(64.dp)
 				.clip(CircleShape)
-				.clickable(onClick = onClick, role = Role.Button)
+				.clickable(enabled = enabled, onClick = onClick, role = Role.Button)
 				.shadow(elevation = elevation)
 				.drawBehind {
 					drawCircle(color = recorderRed)
