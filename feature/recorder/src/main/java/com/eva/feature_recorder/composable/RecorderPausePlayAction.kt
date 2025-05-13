@@ -39,6 +39,7 @@ internal fun RecorderPausePlayAction(
 	onCancel: () -> Unit,
 	onStop: () -> Unit,
 	modifier: Modifier = Modifier,
+	enabled: Boolean = true,
 ) {
 
 	var showCancelDialog by remember { mutableStateOf(false) }
@@ -71,6 +72,7 @@ internal fun RecorderPausePlayAction(
 			if (isPaused) {
 				IconButton(
 					onClick = onResume,
+					enabled = enabled,
 					colors = IconButtonDefaults.iconButtonColors(
 						containerColor = MaterialTheme.colorScheme.tertiary,
 						contentColor = MaterialTheme.colorScheme.onTertiary
@@ -85,6 +87,7 @@ internal fun RecorderPausePlayAction(
 			} else {
 				IconButton(
 					onClick = onPause,
+					enabled = enabled,
 					colors = IconButtonDefaults.iconButtonColors(
 						containerColor = MaterialTheme.colorScheme.tertiary,
 						contentColor = MaterialTheme.colorScheme.onTertiary
@@ -105,6 +108,7 @@ internal fun RecorderPausePlayAction(
 				onPause()
 				showCancelDialog = true
 			},
+			enabled = enabled,
 			colors = IconButtonDefaults.iconButtonColors(
 				containerColor = MaterialTheme.colorScheme.secondary,
 				contentColor = MaterialTheme.colorScheme.onSecondary
@@ -124,6 +128,7 @@ internal fun RecorderPausePlayAction(
 				onPause()
 				showSaveDialog = true
 			},
+			enabled = enabled,
 			colors = IconButtonDefaults.iconButtonColors(
 				containerColor = MaterialTheme.colorScheme.primary,
 				contentColor = MaterialTheme.colorScheme.onPrimary

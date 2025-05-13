@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.eva.utils.LocalTimeFormats
 import com.eva.utils.RecorderConstants
-import com.eva.utils.asLocalTime
+import com.eva.utils.toLocalTime
 import kotlinx.datetime.format
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -115,7 +115,7 @@ fun DrawScope.drawTimeLineCompressed(
 	repeat(sampleSize + 20) { idx ->
 		val xAxis = idx * spacing
 		if (idx % 20 == 0) {
-			val time = (blockTime * idx).milliseconds.asLocalTime
+			val time = (blockTime * idx).milliseconds.toLocalTime()
 			val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
 
 			val layoutResult = textMeasurer.measure(readable, style = textStyle)
@@ -181,7 +181,7 @@ fun DrawScope.drawTimeLine(
 		val xAxis = millis * spacing
 		if (millis % 2_000 == 0) {
 
-			val time = millis.milliseconds.asLocalTime
+			val time = millis.milliseconds.toLocalTime()
 			val readable = time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
 
 			val layoutResult = textMeasurer.measure(readable, style = textStyle)

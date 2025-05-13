@@ -1,0 +1,42 @@
+name: Android Build CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+
+      - name: Create a debug build
+        run: ./gradlew assembleDebug
+
+      - name: Check if there is any build errors
+        run: |
+          if grep -q "BUILD FAILED" build/outputs/logs/*.txt; then
+            echo "Build failed with errors!"
+            exit 1
+          else
+            echo "Build successful with no errors."
+          fi

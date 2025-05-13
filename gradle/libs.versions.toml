@@ -30,6 +30,7 @@ protobufJavalite = "4.30.1"
 protobuf_version = "0.9.5"
 protobuf_gen_java_lite = "3.0.0"
 materialIconExtended = "1.7.8"
+moduleGrapher = "0.12.0"
 
 [libraries]
 androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrentFuturesKtx" }
@@ -109,6 +110,7 @@ androidx_room = { id = "androidx.room", version.ref = "roomCompiler" }
 google_protobuf = { id = "com.google.protobuf", version.ref = "protobuf_version" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+module-grapher = { id = "dev.iurysouza.modulegraph", version.ref = "moduleGrapher" }
 
 #custom plugins
 recorderapp-room = { id = "recorderapp.room.plugin", version = "unspecified" }
