@@ -31,14 +31,14 @@ interface AudioFilePlayer {
 
 	/**
 	 * Seek the player to a certain duration on the timeline
-	 * @param duration Amount of [kotlin.time.Duration] to be sought on the player
+	 * @param duration Amount of [Duration] to be sought on the player
 	 */
 	fun onSeekDuration(duration: Duration)
 
 	/**
-	 * Prepares the player from a [com.eva.recordings.domain.models.AudioFileModel]
+	 * Prepares the player from a [AudioFileModel]
 	 * @param audio The audio model which will be used to play the recording
-	 * @return [com.eva.utils.Resource.Success] indicating everything went well otherwise [com.eva.utils.Resource.Error]
+	 * @return [Resource.Success] indicating everything went well otherwise [Resource.Error]
 	 */
 	suspend fun preparePlayer(audio: AudioFileModel): Resource<Boolean, Exception>
 

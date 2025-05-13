@@ -20,6 +20,7 @@ import com.eva.feature_recordings.handlers.TrashItemRequestHandler
 import com.eva.ui.R
 import com.eva.ui.navigation.NavDialogs
 import com.eva.ui.navigation.NavRoutes
+import com.eva.ui.navigation.PlayerSubGraph
 import com.eva.ui.navigation.animatedComposable
 import com.eva.ui.utils.LocalSharedTransitionVisibilityScopeProvider
 import com.eva.ui.utils.UiEventsHandler
@@ -74,7 +75,7 @@ fun NavGraphBuilder.recordingsRoute(controller: NavController) =
 				},
 				onRecordingSelect = { record ->
 					if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
-						val audioRoute = NavRoutes.AudioPlayer(record.id)
+						val audioRoute = PlayerSubGraph.NavGraph(record.id)
 						controller.navigate(audioRoute)
 					}
 				},

@@ -20,4 +20,10 @@ dependencies {
 	// core
 	implementation(project(":core:ui"))
 	implementation(project(":core:utils"))
+	implementation(project(":data:editor"))
+	implementation(project(":data:player"))
+	implementation(project(":data:recordings"))
+	implementation(project(":feature:player-shared"))
+
+	// feature
 }

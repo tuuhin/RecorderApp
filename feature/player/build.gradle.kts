@@ -17,12 +17,16 @@ dependencies {
 	implementation(libs.androidx.navigation.compose)
 	implementation(libs.androidx.hilt.navigation.compose)
 
+	//core
 	implementation(project(":core:ui"))
 	implementation(project(":core:utils"))
 
+	//data
 	implementation(project(":data:player"))
 	implementation(project(":data:bookmarks"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:interactions"))
-	implementation(project(":data:use_case"))
+
+	// feature
+	implementation(project(":feature:player-shared"))
 }

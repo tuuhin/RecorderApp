@@ -11,7 +11,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -29,7 +28,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,20 +36,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.eva.feature_player.state.ContentLoadState
-import com.eva.feature_player.util.PlayerPreviewFakes
+import com.eva.player_shared.state.ContentLoadState
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
-import com.eva.ui.theme.RecorderAppTheme
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@OptIn(
+	ExperimentalMaterial3Api::class,
+	ExperimentalSharedTransitionApi::class
+)
 @Composable
 internal fun AudioPlayerScreenTopBar(
-	state: ContentLoadState,
+	loadState: ContentLoadState<AudioFileModel>,
 	modifier: Modifier = Modifier,
 	onEdit: () -> Unit,
 	navigation: @Composable () -> Unit = {},
@@ -65,12 +63,7 @@ internal fun AudioPlayerScreenTopBar(
 ) {
 	var showDropDown by remember { mutableStateOf(false) }
 
-	val isActionEnabled by remember(state) {
-		derivedStateOf {
-			state is ContentLoadState.Content
-		}
-	}
-	state.OnContentOrOther(
+	loadState.OnContentOrOther(
 		content = { model ->
 			TopAppBar(
 				title = {
@@ -128,7 +121,12 @@ internal fun AudioPlayerScreenTopBar(
 						},
 						state = rememberTooltipState(),
 					) {
-						IconButton(onClick = onEdit) {
+						IconButton(
+							onClick = onEdit,
+							modifier = Modifier.sharedBoundsWrapper(
+								key = SharedElementTransitionKeys.RECORDING_EDITOR_SHARED_BOUNDS
+							),
+						) {
 							Icon(
 								painter = painterResource(id = R.drawable.ic_edit),
 								contentDescription = stringResource(id = R.string.player_action_edit)
@@ -151,7 +149,6 @@ internal fun AudioPlayerScreenTopBar(
 						) {
 							DropdownMenuItem(
 								text = { Text(text = stringResource(id = R.string.menu_more_rename)) },
-								enabled = isActionEnabled,
 								onClick = {
 									showDropDown = false
 									onRenameOption(model)
@@ -159,7 +156,6 @@ internal fun AudioPlayerScreenTopBar(
 							)
 							DropdownMenuItem(
 								text = { Text(text = stringResource(id = R.string.menu_option_share)) },
-								enabled = isActionEnabled,
 								onClick = {
 									showDropDown = false
 									onShareOption()
@@ -167,7 +163,6 @@ internal fun AudioPlayerScreenTopBar(
 							)
 							DropdownMenuItem(
 								text = { Text(text = stringResource(id = R.string.menu_option_details)) },
-								enabled = isActionEnabled,
 								onClick = {
 									showDropDown = false
 									onDetailsOptions()
@@ -199,7 +194,6 @@ internal fun AudioPlayerScreenTopBar(
 			)
 		},
 	)
-
 }
 
 private fun favouriteAudioAnimation(): ContentTransform {
@@ -209,20 +203,4 @@ private fun favouriteAudioAnimation(): ContentTransform {
 			slideOutVertically(animationSpec = tween(90))
 
 	return enter togetherWith exit
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@PreviewLightDark
-@Composable
-private fun AudioPlayerScreenTopBarPreview() = RecorderAppTheme {
-	AudioPlayerScreenTopBar(
-		state = ContentLoadState.Content(PlayerPreviewFakes.FAKE_AUDIO_MODEL),
-		onEdit = {},
-		navigation = {
-			Icon(
-				imageVector = Icons.AutoMirrored.Default.ArrowBack,
-				contentDescription = stringResource(R.string.back_arrow)
-			)
-		},
-	)
 }

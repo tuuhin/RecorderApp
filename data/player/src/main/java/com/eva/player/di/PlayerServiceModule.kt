@@ -25,14 +25,16 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
+import javax.inject.Named
 
 @Module
+@UnstableApi
 @InstallIn(ServiceComponent::class)
 object PlayerServiceModule {
 
 	@Provides
 	@ServiceScoped
-	@UnstableApi
+	@Named("SERVICE_PLAYER")
 	fun providesExoPlayer(
 		@ApplicationContext context: Context,
 		settings: RecorderAudioSettingsRepo,
@@ -75,7 +77,7 @@ object PlayerServiceModule {
 	@ServiceScoped
 	fun providesServiceSessions(
 		@ApplicationContext context: Context,
-		player: Player,
+		@Named("SERVICE_PLAYER") player: Player,
 	): MediaSession {
 
 		val callback = AudioPlayerMediaCallBacks()

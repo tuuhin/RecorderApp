@@ -9,6 +9,8 @@ object NotificationConstants {
 
 	const val PLAYER_NOTIFICATION_ID = 4
 
+	const val SAVE_EDITED_MEDIA_FOREGROUND_ID = 5
+
 	// Recorder channel
 	const val RECORDER_CHANNEL_ID = "recorder_channel"
 	const val RECORDER_CHANNEL_NAME = "Recorder Channel"

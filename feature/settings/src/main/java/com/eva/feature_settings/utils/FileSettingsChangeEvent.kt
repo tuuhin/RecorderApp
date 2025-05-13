@@ -8,5 +8,7 @@ internal sealed interface FileSettingsChangeEvent {
 
 	data class OnRecordingPrefixChange(val prefix: String) : FileSettingsChangeEvent
 
+	data class OnExportItemPrefixChange(val prefix: String) : FileSettingsChangeEvent
+
 	data class OnAllowExternalFiles(val isEnabled: Boolean) : FileSettingsChangeEvent
 }

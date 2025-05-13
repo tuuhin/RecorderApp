@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.FlowRowOverflow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -71,7 +70,6 @@ internal fun SearchFilterOptions(
 				FlowRow(
 					horizontalArrangement = Arrangement.spacedBy(8.dp),
 					maxItemsInEachRow = 5,
-					overflow = FlowRowOverflow.Visible
 				) {
 					SearchFilterTimeOption.entries.forEach { timeFilter ->
 						InputChip(
@@ -96,7 +94,6 @@ internal fun SearchFilterOptions(
 				FlowRow(
 					horizontalArrangement = Arrangement.spacedBy(8.dp),
 					maxItemsInEachRow = 5,
-					overflow = FlowRowOverflow.Visible
 				) {
 					categories.forEach { category ->
 						InputChip(

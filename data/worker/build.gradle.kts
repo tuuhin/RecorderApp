@@ -13,6 +13,7 @@ dependencies {
 	implementation(libs.androidx.hilt.work)
 	//local
 	implementation(project(":core:utils"))
+	implementation(project(":core:ui"))
 	implementation(project(":data:recordings"))
 
 }

@@ -18,10 +18,15 @@ dependencies {
 	implementation(libs.androidx.navigation.compose)
 	implementation(libs.kotlinx.serialization.json)
 
+	// hilt viewmodel
+	implementation(libs.androidx.hilt.navigation.compose)
+
 	//dynamic font
 	implementation(libs.androidx.ui.text.google.fonts)
 
 	//commons
 	api(libs.kotlinx.collections.immutable)
 	api(libs.androidx.graphics.shapes)
+	//icons
+	api(libs.androidx.icons.extended)
 }

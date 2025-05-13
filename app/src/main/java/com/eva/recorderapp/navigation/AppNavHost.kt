@@ -13,14 +13,13 @@ import androidx.navigation.compose.rememberNavController
 import com.eva.feature_categories.routes.categoryPickerRoute
 import com.eva.feature_categories.routes.createOrEditCategoryRoute
 import com.eva.feature_categories.routes.manageRecordingCategories
-import com.eva.feature_editor.audioEditorRoute
-import com.eva.feature_player.audioPlayerRoute
 import com.eva.feature_recorder.recorderRoute
 import com.eva.feature_recordings.bin.trashRecordingsRoute
 import com.eva.feature_recordings.recordings.recordingsRoute
 import com.eva.feature_recordings.rename.renameRecordingDialog
 import com.eva.feature_recordings.search.recordingsSearchRoute
 import com.eva.feature_settings.settingsRoute
+import com.eva.recorderapp.navigation.navgraph.playerNavGraph
 import com.eva.recorderapp.navigation.routes.appInfoDialog
 import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.utils.LocalSharedTransitionScopeProvider
@@ -51,14 +50,14 @@ fun AppNavHost(
 				trashRecordingsRoute(controller = navController)
 				recordingsSearchRoute(controller = navController)
 				manageRecordingCategories(controller = navController)
-				audioPlayerRoute(controller = navController)
-				audioEditorRoute(controller = navController)
 				settingsRoute(controller = navController)
 				categoryPickerRoute(controller = navController)
 				createOrEditCategoryRoute(controller = navController)
 				//dialogs
 				appInfoDialog()
 				renameRecordingDialog(controller = navController)
+				// subgraph
+				playerNavGraph(controller = navController)
 			}
 		}
 	}

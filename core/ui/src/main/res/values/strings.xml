@@ -242,4 +242,25 @@
   <string name="no_search_results">No search results</string>
   <string name="voice_recognizer" translatable="false">Mic Input</string>
   <string name="voice_search_prompt" translatable="false">Speak your search query</string>
+  <string name="media_editor_title">Edit</string>
+  <string name="action_save">Save</string>
+  <string name="action_export">Export</string>
+  <string name="action_cut" translatable="false">Cut</string>
+  <string name="tooltip_text_editor_cut">Remove the selected region</string>
+  <string name="action_crop" translatable="false">Crop</string>
+  <string name="tooltip_text_editor_crop">"Remove the un selected region "</string>
+  <string name="save_edit_item_work_title">Saving Media</string>
+  <string name="save_edit_item_work_text">Saving edited media to storage</string>
+  <string name="export_bottom_sheet_text">Transformation completed, export the file to save it to storage</string>
+  <string name="transform_bottom_sheet_text">Ready to transform the contents</string>
+  <string name="transforming_media_bottom_sheet_text">Transforming media</string>
+  <string name="action_transform">Transform</string>
+  <string name="action_transforming">Transforming</string>
+  <string name="rename_export_item_prefix_title">Export Item Prefix</string>
+  <string name="rename_export_item_prefix_text">On exporting an edited item the prefix will be added.</string>
+  <string name="app_settings_files_subtitle_export">Export</string>
+  <string name="app_settings_files_subtitle_recordings">Recordings</string>
+  <string name="rename_export_item_label">Export Prefix</string>
+  <string name="action_undo">Undo</string>
+  <string name="action_redo">Redo</string>
 </resources>

@@ -213,5 +213,24 @@
   <string name="menu_option_search">অনুসন্ধান</string>
   <string name="search_bar_placeholder">ররেকর্ডিং অনুসন্ধান করুন…</string>
   <string name="no_search_results">কোন অনুসন্ধান ফলাফল</string>
+  <string name="media_editor_title">সম্পাদনা</string>
+  <string name="action_save">সংরক্ষণ</string>
+  <string name="action_export">রপ্তানি</string>
+  <string name="tooltip_text_editor_cut">নির্বাচিত অঞ্চল সরান</string>
+  <string name="tooltip_text_editor_crop">অনির্বাচিত অঞ্চলটি সরান</string>
+  <string name="save_edit_item_work_title">মিডিয়া সংরক্ষণ</string>
+  <string name="save_edit_item_work_text">সম্পাদিত মিডিয়া স্টোরেজে সংরক্ষণ করা হচ্ছে</string>
+  <string name="export_bottom_sheet_text">রূপান্তর সম্পন্ন হয়েছে, ফাইলটি স্টোরেজে সংরক্ষণ করতে রপ্তানি করুন।</string>
+  <string name="transform_bottom_sheet_text">বিষয়বস্তু রূপান্তর করতে প্রস্তুত</string>
+  <string name="transforming_media_bottom_sheet_text">মিডিয়া রূপান্ তর></string>
+  <string name="action_transform">রূপান্তর</string>
+  <string name="action_transforming">রূপান্তর</string>
+  <string name="rename_export_item_prefix_title">রপ্তানি আইটেম উপসর্গ</string>
+  <string name="rename_export_item_prefix_text">সম্পাদিত আইটেম রপ্তানি করলে উপসর্গটি যোগ করা হবে.</string>
+  <string name="app_settings_files_subtitle_export">রপ্তানি</string>
+  <string name="app_settings_files_subtitle_recordings">রেকর্ডিং</string>
+  <string name="rename_export_item_label">রপ্তানি উপসর্গ</string>
+  <string name="action_undo">পূর্বাবস্থা</string>
+  <string name="action_redo">পুনরায় করা</string>
 </resources>
 

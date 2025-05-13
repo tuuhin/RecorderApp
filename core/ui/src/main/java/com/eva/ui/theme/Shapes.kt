@@ -50,4 +50,10 @@ object CustomShapes {
 		rounding = CornerRounding(radius = 4f),
 		innerRadius = .6f
 	)
+
+	val ROUNDED_STAR_8_CORNERS =  RoundedPolygon.star(
+		numVerticesPerRadius = 8,
+		rounding = CornerRounding(radius = 4f),
+		innerRadius = .6f
+	)
 }

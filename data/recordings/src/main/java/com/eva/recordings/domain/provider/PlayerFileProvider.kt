@@ -10,7 +10,7 @@ interface PlayerFileProvider {
 
 	fun providesAudioFileUri(audioId: Long): String
 
-	fun getAudioFileInfo(id: Long): Flow<ResourcedDetailedRecordingModel>
+	fun getAudioFileFromIdFlow(id: Long): Flow<ResourcedDetailedRecordingModel>
 
-	suspend fun getPlayerInfoFromAudioId(id: Long): ResourcedDetailedRecordingModel
+	suspend fun getAudioFileFromId(id: Long): ResourcedDetailedRecordingModel
 }

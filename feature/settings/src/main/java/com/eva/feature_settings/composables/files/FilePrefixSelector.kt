@@ -64,7 +64,10 @@ internal fun FilePrefixSelector(
 		textFieldValue = textValue,
 		onTextFieldValueChange = { textValue = it },
 		onDismiss = { showDialog = false },
-		onRename = { onPrefixChange(it.text) }
+		onRename = {
+			onPrefixChange(it.text)
+			showDialog = false
+		}
 	)
 
 	ListItem(

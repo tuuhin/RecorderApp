@@ -5,10 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -39,34 +38,36 @@ internal fun FileNamingFormat(
 		modifier = modifier
 			.wrapContentHeight()
 			.padding(padding),
+		verticalArrangement = Arrangement.spacedBy(4.dp)
 	) {
 		Text(
 			text = stringResource(id = R.string.recording_settings_file_format_title),
 			style = MaterialTheme.typography.titleMedium,
 			color = MaterialTheme.colorScheme.onBackground
 		)
-		Spacer(modifier = Modifier.height(4.dp))
 		Text(
 			text = stringResource(id = R.string.recording_settings_file_format_text),
 			style = MaterialTheme.typography.bodyMedium,
 			color = MaterialTheme.colorScheme.onSurfaceVariant
 		)
 		Column(
-			verticalArrangement = Arrangement.spacedBy(2.dp)
+			verticalArrangement = Arrangement.spacedBy(6.dp)
 		) {
 			AudioFileNamingFormat.entries.forEach { displayFormat ->
 				Row(
 					modifier = Modifier
 						.fillMaxWidth()
+						.padding(vertical = 4.dp)
 						.clip(MaterialTheme.shapes.medium)
 						.clickable(role = Role.RadioButton) { onFormatChange(displayFormat) },
-					verticalAlignment = Alignment.CenterVertically
+					verticalAlignment = Alignment.CenterVertically,
+					horizontalArrangement = Arrangement.spacedBy(8.dp)
 				) {
 					RadioButton(
 						selected = displayFormat == format,
 						onClick = { onFormatChange(displayFormat) },
-						colors = RadioButtonDefaults
-							.colors(selectedColor = MaterialTheme.colorScheme.secondary)
+						modifier = Modifier.size(24.dp),
+						colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.secondary),
 					)
 					Text(
 						text = displayFormat.stringRes(prefix),

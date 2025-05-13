@@ -1,20 +1,14 @@
 package com.eva.player.domain.model
 
-import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
 data class PlayerTrackData(
-	private val current: Duration = 0.seconds,
-	private val total: Duration = 0.seconds,
+	val current: Duration = 0.seconds,
+	val total: Duration = 0.seconds,
 ) {
-	val currentAsLocalTime: LocalTime
-		get() = LocalTime.fromMillisecondOfDay(current.toInt(DurationUnit.MILLISECONDS))
-
-	val totalAsLocalTime: LocalTime
-		get() = LocalTime.fromSecondOfDay(total.toInt(DurationUnit.SECONDS))
 
 	val playRatio: Float
 		get() {
@@ -26,7 +20,12 @@ data class PlayerTrackData(
 		}
 
 	val allPositiveAndFinite: Boolean
-		get() = current.isFinite() && current.isPositive() && total.isFinite() && total.isPositive()
+		get() {
+			val isCurrentValid = current.isFinite() && current >= 0.seconds
+			val isTotalValid = total.isFinite() && total.isPositive()
+
+			return isCurrentValid && isTotalValid
+		}
 
 	fun calculateSeekAmount(seek: Float): Duration {
 		try {

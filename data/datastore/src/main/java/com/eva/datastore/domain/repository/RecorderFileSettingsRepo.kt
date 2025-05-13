@@ -12,6 +12,8 @@ interface RecorderFileSettingsRepo {
 
 	suspend fun onFilePrefixChange(prefix: String)
 
+	suspend fun onExportItemPrefixChange(prefix: String)
+
 	suspend fun onFileNameFormatChange(format: AudioFileNamingFormat)
 
 	suspend fun onAllowExternalFileRead(isAllowed: Boolean)

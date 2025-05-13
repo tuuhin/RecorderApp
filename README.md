@@ -1,15 +1,18 @@
 # :studio_microphone: RecorderApp
 
 An android audio recorder app, designed to simplify the process of capturing and managing
-recordings.With a clean and intuitive interface, this app offers a seamless user experience.
+recordings.
+With a clean and intuitive interface, this app offers a seamless user experience.
 
 ## 💁 About
 
-A fully functioned recorder app with an ability to record over multiple media codec like **acc**,*
-*amr**,**opus** over different quality. The app can continue its recording in the background, so you
+A fully functioned recorder app with an ability to record over multiple media codec like **acc**,\*
+\*amr**,**opus\*\* over different quality. The app can continue its recording in the background, so you
 never miss a moment. Once the recording, you can easily manage your files within the app.
 There `built-in player`, you can listen to your recordings directly within the app or use the
 convenient media notification for playback control.
+Want to remove certain section of your recordings, use the audio editor that allows you to easily
+cut and trim unwanted sections.
 The apps also features creating `category` for the recordings the categories help to keep the
 recording organized, you can also add `bookmarks` to the portion of the recording.
 
@@ -19,10 +22,10 @@ What are the features this app can provide, here's some:
 
 - :musical_keyboard: **Effortless Recording**: Start recording instantly with a single tap of a
   button.
-- :chart_with_upwards_trend: **Visualization**: Watch the amplitude levels fluctuate in real-time as
-  you record or play the media.
-- :loop: **Background Recording**: Keep recording even when you switch to other apps or lock
-  your device.
+- :chart_with_upwards_trend: **Real time Visualization**: Watch the amplitude levels fluctuate in
+  real-time as you record or play the media.
+- :loop: **Background Recording**: Keep recording even when you switch to other apps or lock your
+  device.
 - :bellhop_bell: **Convenient Notifications**: Control your recordings directly from
   notifications,without having to return to the app.
 - :file_cabinet: **File Management**: Organize, delete, share, or rename your own recordings with
@@ -31,6 +34,7 @@ What are the features this app can provide, here's some:
   can easily find the required one.
 - :record_button: **Built-in Player**: Listen to your recordings directly within the app, complete
   with a media notification for easy playback control.
+- 👨‍🍳 **Build in Editor** : Seamlessly trim and cut section of your recording or other files.
 - :bookmark: **Bookmarks** : You can add multiple bookmarks with the recording to easily remember
   the important portions of your recording. You can too export the bookmarks as csv file.
 - :eight_spoked_asterisk: **Widgets And Shortcuts** : App comes with two `widgets` and few
@@ -47,7 +51,7 @@ These are some screen shorts for the app
    <img src="./screenshots/player_base_framed.png" width="24%" />
    <img src="./screenshots/app_settings_framed.png" width="24%" />
    <img src="./screenshots/recordings_search_screen_framed.png" width="24%">
-   <img src="./screenshots/recording_categories_framed.png" width="24%" />
+   <img src="./screenshots/edit_screen_normal.png" width="21%" />
    <img src="./screenshots/player_bookmarks_framed.png" width="24%" />
    <img src="./screenshots/app_widget_preview_framed.png" width="24%" />
 </p>
@@ -73,13 +77,30 @@ playing stuff.
 
 ## :new: What's new
 
-The current version have these new changes added to the app
+This update introduces a **built-in Audio Editor** alongside significant enhancements to the player:
 
-- **Search recordings** Finding old recording was a mess thus a search feature is added, user can
-  search via `time`, `category` and obviously via name
+- **✂️ Unleash Your Inner Editor:** Now you can precisely `trim` and `cut` your recordings directly
+  within the app! Remove unwanted sections and refine your audio effortlessly.
+- 💾 **Save Your Edits:** Preserve your edited masterpieces! The app now allows you to **save the
+  modified audio files** to your device's storage.
+- ⏯️ **Dedicated Editor Player:** A **secondary player** is integrated within the editor, providing
+  you with focused playback control during the editing process, with undo and redo options to
+  reapply your edits.
+- 🚀 **Under the Hood Improvements:** Fix issues with visualization via `new-visualizer` logic. A new
+  speed selected UI is added to the player and others.
 
-- **Transitions** Added some shared bounds transition to the app,animations like
-  `containter-transform` is added.
+This update is all about giving you more control over your recordings, from capture to refinement.
+
+## :next_track_button: What's next
+
+For the time being, RecorderApp encompasses all initially planned features and is considered
+complete. Future releases are not currently scheduled.
+
+If you have any new ideas or suggestions for enhancements, we encourage you to create a
+new [Issue](https://github.com/tuuhin/RecorderApp/issues) on GitHub.
+
+We are considering potential additions to the audio editor, such as audio processors like `db-gain`
+and `low-pass-filter`.
 
 ## :hammer_and_wrench: Getting Started
 
@@ -107,17 +128,16 @@ Contributions are always welcomed from the community
 - Create your feature branch (git checkout -b feature/YourFeature).
 - Commit your changes (git commit -am 'Add some feature').
 - Push to the branch (git push origin feature/YourFeature).
-- Create a new Pull Request.
+- Submit a request to merge your changes onto `dev` branch of main project.
 
 ### :curly_loop: Feedback and Support
 
-Yes, there maybe some issues regarding the app or some unwanted scenario or any new feature that can
-be added to the app. Please add
-an [issue](https://github.com/tuuhin/RecorderApp/issues) if you have one.
+A app is never perfect there may issue here and there which are not caught.If you encounter any
+issues, have suggestions for new features, or just want to share your thoughts, please don't
+hesitate to reach out by creating a new [Issue](https://github.com/tuuhin/RecorderApp/issues) on
+GitHub. Your feedback is invaluable!
 
-### :next_track_button: What's next
+### :end: Conclusion
 
-The app development is complete for now, with the core features fully implemented. Although the
-`edit` feature has not yet been rolled out, a significant amount of time and effort has been
-invested in this project. For the time being, it is considered completed, and further enhancements
-will be addressed as needed in the future.
+The app can be marked as finished for now.A significant amount of time and effort has been invested
+in this project hope you all love it.
