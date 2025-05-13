@@ -11,27 +11,24 @@ import com.eva.recorder.domain.RecorderWidgetInteractor
 import com.eva.recorder.domain.VoiceRecorder
 import com.eva.recorder.domain.models.RecorderAction
 import com.eva.recorder.domain.models.RecorderState
+import com.eva.recorder.utils.DurationToAmplitudeList
 import com.eva.use_case.usecases.BluetoothScoUseCase
 import com.eva.use_case.usecases.PhoneStateObserverUseCase
 import com.eva.utils.NotificationConstants
 import com.eva.utils.Resource
 import com.eva.utils.roundToClosestSeconds
+import com.eva.utils.toDuration
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
@@ -42,7 +39,7 @@ import kotlin.time.Duration.Companion.seconds
 private const val LOGGER_TAG = "VOICE_RECORDER_SERVICE"
 
 @AndroidEntryPoint
-class VoiceRecorderService : LifecycleService() {
+internal class VoiceRecorderService : LifecycleService() {
 
 	@Inject
 	lateinit var voiceRecorder: VoiceRecorder
@@ -59,7 +56,8 @@ class VoiceRecorderService : LifecycleService() {
 	@Inject
 	lateinit var widgetFacade: RecorderWidgetInteractor
 
-	private val _notificationHelper by lazy { NotificationHelper(applicationContext) }
+	@Inject
+	lateinit var notificationHelper: NotificationHelper
 
 	private val binder = LocalBinder()
 
@@ -68,17 +66,13 @@ class VoiceRecorderService : LifecycleService() {
 	@OptIn(ExperimentalCoroutinesApi::class)
 	val bookMarks = _bookMarks.mapLatest { bookMarks ->
 		// convert it to set such that common items are subtracted
-		bookMarks.map(LocalTime::roundToClosestSeconds).toSet()
-	}.stateIn(
-		scope = lifecycleScope,
-		started = SharingStarted.Companion.Lazily,
-		initialValue = emptySet()
-	)
+		bookMarks.map(LocalTime::roundToClosestSeconds)
+			.map(LocalTime::toDuration)
+			.toSet()
+	}
 
-	private val _amplitudes = MutableStateFlow(emptyList<Pair<LocalTime, Float>>())
-
-	val amplitudes: StateFlow<List<Pair<LocalTime, Float>>>
-		get() = _amplitudes.asStateFlow()
+	val amplitudes: Flow<DurationToAmplitudeList>
+		get() = voiceRecorder.dataPoints
 
 	val recorderTime: StateFlow<LocalTime>
 		get() = voiceRecorder.recorderTimer
@@ -119,8 +113,6 @@ class VoiceRecorderService : LifecycleService() {
 			observeChangingPhoneState()
 			// inform bt connect
 			showBluetoothConnectedToast()
-			// updates the amplitudes
-			readAmplitudes()
 			// update the notification
 			readTimerAndUpdateNotification()
 			// update widget state
@@ -144,16 +136,6 @@ class VoiceRecorderService : LifecycleService() {
 	}
 
 
-	private fun readAmplitudes() = lifecycleScope.launch(Dispatchers.Default) {
-		voiceRecorder.dataPoints.collectLatest { array ->
-			val updated = array.map { (time, amp) ->
-				val duration = LocalTime.Companion.fromMillisecondOfDay(time.toInt())
-				duration to amp
-			}
-			_amplitudes.update { updated }
-		}
-	}
-
 	private fun showBluetoothConnectedToast() = lifecycleScope.launch {
 		bluetoothScoUseCase.observeConnectedState(onStateConnected = ::showScoConnectToast)
 	}
@@ -175,9 +157,9 @@ class VoiceRecorderService : LifecycleService() {
 	private fun readTimerAndUpdateNotification() {
 		combine(notificationTimer, recorderState) { time, state ->
 			when (state) {
-				RecorderState.RECORDING -> _notificationHelper.showNotificationDuringRecording(time)
-				RecorderState.COMPLETED -> _notificationHelper.setRecordingsCompletedNotification()
-				RecorderState.CANCELLED -> _notificationHelper.setRecordingCancelNotification()
+				RecorderState.RECORDING -> notificationHelper.showNotificationDuringRecording(time)
+				RecorderState.COMPLETED -> notificationHelper.setRecordingsCompletedNotification()
+				RecorderState.CANCELLED -> notificationHelper.setRecordingCancelNotification()
 				else -> {}
 			}
 		}.launchIn(lifecycleScope)
@@ -196,7 +178,7 @@ class VoiceRecorderService : LifecycleService() {
 			// start foreground service
 			startVoiceRecorderService(
 				NotificationConstants.RECORDER_NOTIFICATION_ID,
-				_notificationHelper.timerNotification
+				notificationHelper.timerNotification
 			)
 		}
 	}
@@ -209,14 +191,14 @@ class VoiceRecorderService : LifecycleService() {
 
 	private fun onResumeRecording() {
 		//update the notification
-		_notificationHelper.setOnResumeNotification()
+		notificationHelper.setOnResumeNotification()
 		//resume recording
 		voiceRecorder.resumeRecording()
 	}
 
 	private fun onPauseRecording() {
 		//update the notification
-		_notificationHelper.setOnPauseNotification()
+		notificationHelper.setOnPauseNotification()
 		//pause recording
 		voiceRecorder.pauseRecording()
 	}
@@ -286,7 +268,11 @@ class VoiceRecorderService : LifecycleService() {
 		// add the coroutines on a different coroutine
 		val job = lifecycleScope.launch {
 			// filter the bookmarks
-			val bookmarks = bookMarks.value.filter { it <= lastRecordedTime }.toSet()
+			val bookmarks = _bookMarks.value
+				.filter { it <= lastRecordedTime }
+				.map { it.roundToClosestSeconds() }
+				.toSet()
+
 			Log.d(LOGGER_TAG, "SAVING ${bookmarks.size} BOOKMARKS ")
 
 			val result = bookmarksProvider.createBookMarks(
