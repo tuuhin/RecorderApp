@@ -1,31 +1,15 @@
 package com.eva.feature_recorder.screen
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.EaseInCubic
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.eva.feature_recorder.composable.MicPermissionWrapper
@@ -93,42 +77,15 @@ internal fun VoiceRecorderScreen(
 				bottom = dimensionResource(id = R.dimen.sc_padding_secondary) + scPadding.calculateBottomPadding()
 			)
 		) {
-			AnimatedContent(
-				targetState = isRecorderReady,
-				label = "Setting the recorder animation",
-				transitionSpec = { recorderServiceBinderTransition() },
+			RecorderContent(
+				timer = recorderTimer,
+				recorderState = recorderState,
+				recordingPointsCallback = deferredRecordingPoints,
+				bookMarksDeferred = bookMarksSetDeferred,
+				onRecorderAction = onRecorderAction,
+				isStartRecordingEnabled = isRecorderReady,
 				modifier = Modifier.fillMaxSize()
-			) { isReady ->
-				if (isReady) {
-					RecorderContent(
-						timer = recorderTimer,
-						recorderState = recorderState,
-						recordingPointsCallback = deferredRecordingPoints,
-						bookMarksDeferred = bookMarksSetDeferred,
-						onRecorderAction = onRecorderAction,
-						modifier = Modifier.fillMaxSize()
-					)
-
-				} else Box(
-					modifier = Modifier.fillMaxSize(),
-					contentAlignment = Alignment.Center
-				) {
-					Text(
-						text = stringResource(id = R.string.preparing_recorder),
-						style = MaterialTheme.typography.titleMedium
-					)
-				}
-			}
-
+			)
 		}
 	}
 }
-
-private fun recorderServiceBinderTransition(
-	scaleTransition: FiniteAnimationSpec<Float> = tween(
-		durationMillis = 200,
-		easing = FastOutSlowInEasing
-	),
-	fadeTransition: FiniteAnimationSpec<Float> = tween(durationMillis = 100, easing = EaseInCubic),
-): ContentTransform = scaleIn(scaleTransition) + fadeIn(fadeTransition) togetherWith
-		scaleOut(scaleTransition) + fadeOut(fadeTransition)

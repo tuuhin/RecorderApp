@@ -33,6 +33,7 @@ internal fun RecorderContent(
 	recorderState: RecorderState,
 	onRecorderAction: (RecorderAction) -> Unit,
 	modifier: Modifier = Modifier,
+	isStartRecordingEnabled: Boolean = true,
 ) {
 	Box(
 		modifier = modifier,
@@ -53,6 +54,7 @@ internal fun RecorderContent(
 		AnimatedRecorderActionTray(
 			recorderState = recorderState,
 			onRecorderAction = onRecorderAction,
+			isStartRecordingEnabled = isStartRecordingEnabled,
 			modifier = Modifier
 				.offset(y = dimensionResource(id = R.dimen.recordings_action_offset))
 				.fillMaxWidth()
