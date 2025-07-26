@@ -4,6 +4,7 @@ import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.eva.recordings.domain.models.AudioFileModel
+import kotlinx.datetime.number
 
 internal fun AudioFileModel.toMediaItem(): MediaItem {
 	// adding much of the metadata available from the given AudioFileModel
@@ -11,8 +12,8 @@ internal fun AudioFileModel.toMediaItem(): MediaItem {
 		.setTitle(title)
 		.setDisplayTitle(displayName)
 		.setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
-		.setRecordingDay(lastModified.dayOfMonth)
-		.setRecordingMonth(lastModified.monthNumber)
+		.setRecordingDay(lastModified.day)
+		.setRecordingMonth(lastModified.month.number)
 		.setRecordingYear(lastModified.year)
 		.setIsBrowsable(false)
 		.build()

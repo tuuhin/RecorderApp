@@ -31,14 +31,16 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.ExperimentalTime
 
 @HiltViewModel
 internal class SearchRecordingsViewmodel @Inject constructor(
@@ -139,7 +141,7 @@ internal class SearchRecordingsViewmodel @Inject constructor(
 		}.launchIn(viewModelScope)
 	}
 
-
+	@OptIn(ExperimentalTime::class)
 	private fun filterSearch(
 		recordings: List<RecordedVoiceModel>,
 		query: String,
@@ -159,8 +161,8 @@ internal class SearchRecordingsViewmodel @Inject constructor(
 				SearchFilterTimeOption.TODAY -> recordedAt == today
 				SearchFilterTimeOption.YESTERDAY -> recordedAt == yesterday
 				SearchFilterTimeOption.WEEK -> with(recordedAt) {
-					val startOfWeek = today.minus(DatePeriod(days = dayOfWeek.value))
-					val endOfWeek = today.plus(DatePeriod(days = 7 - dayOfWeek.value))
+					val startOfWeek = today.minus(DatePeriod(days = dayOfWeek.isoDayNumber))
+					val endOfWeek = today.plus(DatePeriod(days = 7 - dayOfWeek.isoDayNumber))
 					recordedAt in startOfWeek..endOfWeek
 				}
 

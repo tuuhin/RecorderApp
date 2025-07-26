@@ -1,15 +1,15 @@
 package com.eva.utils
 
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
-const val HALF_OF_SECOND_IN_NANOS = 500_000_000
-
+const val HALF_OF_SECOND_IN_NANOS: Int = 1_000_000_000 / 2
 
 fun LocalTime.roundToClosestSeconds(): LocalTime {
 	return if (nanosecond >= HALF_OF_SECOND_IN_NANOS)
@@ -17,7 +17,7 @@ fun LocalTime.roundToClosestSeconds(): LocalTime {
 	else LocalTime(hour, minute, second)
 }
 
-
+@OptIn(ExperimentalTime::class)
 fun Duration.toLocalDateTime(): LocalDateTime {
 	return Instant.fromEpochMilliseconds(inWholeMilliseconds)
 		.toLocalDateTime(TimeZone.currentSystemDefault())

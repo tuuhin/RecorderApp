@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
@@ -10,12 +11,12 @@ plugins {
 
 android {
 	namespace = "com.eva.recorderapp"
-	compileSdk = 35
+	compileSdk = 36
 
 	defaultConfig {
 		applicationId = "com.eva.recorderapp"
 		minSdk = 29
-		targetSdk = 35
+		targetSdk = 36
 		versionCode = 8
 		versionName = "1.3.0"
 
@@ -59,9 +60,6 @@ android {
 		sourceCompatibility = JavaVersion.VERSION_17
 		targetCompatibility = JavaVersion.VERSION_17
 	}
-	kotlinOptions {
-		jvmTarget = "17"
-	}
 	buildFeatures {
 		compose = true
 		buildConfig = true
@@ -70,6 +68,12 @@ android {
 		resources {
 			excludes += "/META-INF/{AL2.0,LGPL2.1}"
 		}
+	}
+}
+
+kotlin {
+	compilerOptions {
+		jvmTarget = JvmTarget.JVM_17
 	}
 }
 

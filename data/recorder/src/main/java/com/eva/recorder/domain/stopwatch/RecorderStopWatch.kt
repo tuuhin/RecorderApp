@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.eva.recorder.domain.stopwatch
 
 import com.eva.recorder.domain.models.RecorderState
@@ -18,11 +20,12 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalTime
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 
 class RecorderStopWatch(
 	private val delayTime: Duration = 80.milliseconds,

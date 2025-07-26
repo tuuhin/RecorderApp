@@ -10,10 +10,11 @@ import com.eva.recordings.domain.tasks.RemoveTrashRecordingTask
 import com.eva.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import kotlin.time.Clock
 import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
 
 private const val TAG = "REMOVE_TRASH_RECORDING_TASK"
 
@@ -56,6 +57,7 @@ class RemoveTrashRecordingTaskImpl(val provider: TrashRecordingsProvider) :
 		}
 	}
 
+	@OptIn(ExperimentalTime::class)
 	private fun evaluateItemsToRemove(items: List<TrashRecordingModel>): Set<TrashRecordingModel> {
 		val currentInstant = Clock.System.now()
 		// delete-now delete is always at future so

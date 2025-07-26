@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.eva.recordings.data.utils
 
 import com.eva.database.entity.RecordingsMetaDataEntity
@@ -5,11 +7,12 @@ import com.eva.database.entity.TrashFileEntity
 import com.eva.recordings.domain.models.ExtraRecordingMetadataModel
 import com.eva.recordings.domain.models.RecordedVoiceModel
 import com.eva.recordings.domain.models.TrashRecordingModel
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
 
 internal fun RecordingsMetaDataEntity.toModel(): ExtraRecordingMetadataModel =
 	ExtraRecordingMetadataModel(

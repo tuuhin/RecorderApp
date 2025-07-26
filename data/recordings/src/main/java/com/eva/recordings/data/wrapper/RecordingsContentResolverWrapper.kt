@@ -22,15 +22,17 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import java.io.File
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 private const val TAG = "RECORDINGS_CONTENT_RESOLVER_WRAPPER"
 
 internal abstract class RecordingsContentResolverWrapper(private val context: Context) {
 
+	@OptIn(ExperimentalTime::class)
 	val epochSeconds: Long
 		get() = Clock.System.now().epochSeconds
 

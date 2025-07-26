@@ -21,18 +21,17 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 
 internal class RecordingsCategoryProviderImpl(
 	private val context: Context,
 	private val categoryDao: RecordingCategoryDao,
 ) : RecordingCategoryProvider {
 
+
 	private val localtimeNow: LocalDateTime
-		get() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+		get() = java.time.LocalDateTime.now().toKotlinLocalDateTime()
 
 	override val recordingCategoryAsResourceFlow: Flow<Resource<RecordingCategoriesModels, Exception>>
 		get() = flow {
