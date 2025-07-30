@@ -20,7 +20,7 @@ import com.eva.feature_recorder.util.RecorderPreviewFakes
 import com.eva.recorder.domain.models.RecorderAction
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.utils.DeferredDurationList
-import com.eva.recorder.utils.DeferredRecordingDataPointList
+import com.eva.recorder.utils.DeferredRecordedPointList
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import kotlinx.datetime.LocalTime
@@ -28,7 +28,7 @@ import kotlinx.datetime.LocalTime
 @Composable
 internal fun RecorderContent(
 	timer: LocalTime,
-	recordingPointsCallback: DeferredRecordingDataPointList,
+	recordingPointsCallback: DeferredRecordedPointList,
 	bookMarksDeferred: DeferredDurationList,
 	recorderState: RecorderState,
 	onRecorderAction: (RecorderAction) -> Unit,
@@ -46,7 +46,7 @@ internal fun RecorderContent(
 		) {
 			RecorderTimerText(time = timer)
 			RecorderAmplitudeGraph(
-				amplitudesCallback = recordingPointsCallback,
+				recoderPointsCallback = recordingPointsCallback,
 				bookMarksDeferred = bookMarksDeferred,
 				modifier = Modifier.fillMaxWidth(),
 			)

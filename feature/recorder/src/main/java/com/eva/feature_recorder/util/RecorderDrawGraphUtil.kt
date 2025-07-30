@@ -12,10 +12,6 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
-import com.eva.utils.LocalTimeFormats
-import com.eva.utils.toLocalTime
-import kotlinx.datetime.format
-import kotlin.time.Duration
 
 internal fun DrawScope.drawAmplitudeGraph(
 	amplitudes: List<Float>,
@@ -53,8 +49,8 @@ internal fun DrawScope.drawAmplitudeGraph(
 
 internal fun DrawScope.drawRecorderTimeline(
 	image: Painter,
-	timeline: Collection<Duration>,
-	bookMarks: Collection<Duration>,
+	timelineInMillis: Collection<Long>,
+	bookMarks: Collection<Long>,
 	textMeasurer: TextMeasurer,
 	outlineColor: Color = Color.Gray,
 	outlineVariant: Color = Color.Gray,
@@ -65,26 +61,37 @@ internal fun DrawScope.drawRecorderTimeline(
 	textStyle: TextStyle = TextStyle(),
 	textColor: Color = Color.Black,
 ) {
-	timeline.forEachIndexed { idx, duration ->
+	timelineInMillis.forEachIndexed { idx, millis ->
 		val xAxis = spikesWidth * idx.toFloat()
-		val timeInMillis = duration.inWholeMilliseconds
-
-		if (timeInMillis.mod(2_000) == 0 || idx == 0) {
-
-			val readableTime = duration.toLocalTime()
-				.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
-
-			val layoutResult = textMeasurer.measure(readableTime, style = textStyle)
-			val textOffset = with(layoutResult) {
-				Offset(size.width / 2f, size.height / 2f)
+		if (millis % 2_000 == 0L || idx == 0) {
+			val readableTime = buildString {
+				val seconds = (millis / 1_000) % 1_000
+				val minutes = (seconds / 60) % 60
+				val hours = (minutes % 60) % 60
+				if (hours > 0) {
+					append("$hours".padStart(2, '0'))
+					append(":")
+				}
+				if (minutes >= 0) {
+					append("$minutes".padStart(2, '0'))
+					append(":")
+				}
+				if (seconds >= 0) {
+					append("$seconds".padStart(2, '0'))
+				}
 			}
 
-			drawText(
-				textLayoutResult = layoutResult,
-				topLeft = Offset(xAxis, -1 * 8.dp.toPx()) - textOffset,
-				color = textColor,
-			)
-
+			if (readableTime.isNotBlank()) {
+				val layoutResult = textMeasurer.measure(readableTime, style = textStyle)
+				val textOffset = with(layoutResult) {
+					Offset(size.width / 2f, size.height / 2f)
+				}
+				drawText(
+					textLayoutResult = layoutResult,
+					topLeft = Offset(xAxis, -1 * 8.dp.toPx()) - textOffset,
+					color = textColor,
+				)
+			}
 			drawLine(
 				color = outlineColor,
 				start = Offset(xAxis, 0f),
@@ -98,7 +105,7 @@ internal fun DrawScope.drawRecorderTimeline(
 				end = Offset(xAxis, size.height),
 				strokeWidth = strokeWidthThick
 			)
-		} else if (timeInMillis.mod(500) == 0) {
+		} else if (millis.mod(500) == 0) {
 			drawLine(
 				color = outlineVariant,
 				start = Offset(xAxis, 0f),
@@ -115,7 +122,7 @@ internal fun DrawScope.drawRecorderTimeline(
 			)
 		}
 
-		if (duration in bookMarks) {
+		if (millis in bookMarks) {
 
 			drawLine(
 				color = bookMarkColor,

@@ -19,7 +19,7 @@ import com.eva.feature_recorder.util.showTopBarActions
 import com.eva.recorder.domain.models.RecorderAction
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.utils.DeferredDurationList
-import com.eva.recorder.utils.DeferredRecordingDataPointList
+import com.eva.recorder.utils.DeferredRecordedPointList
 import com.eva.ui.R
 import com.eva.ui.utils.LocalSnackBarProvider
 import kotlinx.datetime.LocalTime
@@ -30,7 +30,7 @@ internal fun VoiceRecorderScreen(
 	isRecorderReady: Boolean,
 	recorderState: RecorderState,
 	recorderTimer: LocalTime,
-	deferredRecordingPoints: DeferredRecordingDataPointList,
+	deferredRecordingPoints: DeferredRecordedPointList,
 	bookMarksSetDeferred: DeferredDurationList,
 	onRecorderAction: (RecorderAction) -> Unit,
 	onScreenEvent: (RecorderScreenEvent) -> Unit,

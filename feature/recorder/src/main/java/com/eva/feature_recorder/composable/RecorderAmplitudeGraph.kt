@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -24,17 +25,15 @@ import com.eva.feature_recorder.util.RecorderPreviewFakes
 import com.eva.feature_recorder.util.drawAmplitudeGraph
 import com.eva.feature_recorder.util.drawRecorderTimeline
 import com.eva.recorder.utils.DeferredDurationList
-import com.eva.recorder.utils.DeferredRecordingDataPointList
+import com.eva.recorder.utils.DeferredRecordedPointList
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.RecorderConstants
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
 internal fun RecorderAmplitudeGraph(
-	amplitudesCallback: DeferredRecordingDataPointList,
+	recoderPointsCallback: DeferredRecordedPointList,
 	bookMarksDeferred: DeferredDurationList,
 	modifier: Modifier = Modifier,
 	chartColor: Color = MaterialTheme.colorScheme.secondary,
@@ -51,7 +50,7 @@ internal fun RecorderAmplitudeGraph(
 	),
 ) {
 	val textMeasurer = rememberTextMeasurer()
-	val tag = painterResource(R.drawable.ic_bookmark)
+	val bookMarkDrawable = painterResource(R.drawable.ic_bookmark)
 
 	Surface(
 		shape = shape,
@@ -68,38 +67,48 @@ internal fun RecorderAmplitudeGraph(
 
 					val spikesWidth = size.width / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 					val spikesGap = (spikesWidth - 1.5.dp.toPx()).let { amt ->
-						if (amt > 0f) amt else 2.dp.toPx()
+						if (amt >= 0f) amt else 2.dp.toPx()
 					}
 
 					onDrawBehind {
-						val result = amplitudesCallback()
 
-						val amplitudes = result.map { it.second }
+						val result = recoderPointsCallback()
+						val actualResult = result.takeWhile { !it.isPaddingPoint }
 
-						val timeline = result.map { it.first }
-						val paddedTimeline = padListWithExtra(timeline, blockSize)
+						val rmsData = actualResult.map { it.rmsValue }
+						val timelineInMillis = result.map { it.timeInMillis }
 
-						val translateAmount = if (result.size <= blockSize) 0f
-						else (blockSize - result.size) * spikesWidth
+						val translateAmount = if (actualResult.size <= blockSize) 0f
+						else (blockSize - actualResult.size) * spikesWidth
 
-						val bookmarksToDraw = if (timeline.isNotEmpty())
-						// min is required not to draw extra lines and max ensures it doesn't
-						// cross the line
-							bookMarksDeferred().filter { time -> time > timeline.min() && time < timeline.max() }
+						val bookmarksToDraw = if (timelineInMillis.isNotEmpty()) {
+							// min is required not to draw extra lines and max ensures it doesn't
+							// cross the line
+							val range = timelineInMillis.min()..<timelineInMillis.max()
+
+							bookMarksDeferred()
+								.filter { time -> time.inWholeMilliseconds in range }
+								.map { it.inWholeMilliseconds }
+						}
 						// otherwise its empty
 						else emptyList()
 
-						translate(left = translateAmount) {
-							drawAmplitudeGraph(
-								amplitudes = amplitudes,
-								spikesGap = spikesGap,
-								centerYAxis = centerYAxis,
-								spikesWidth = spikesWidth,
-								barColor = chartColor,
-							)
+						// clipping ensure we don't draw extras
+						clipRect(right = size.width + 5.dp.toPx()) {
+							translate(left = translateAmount) {
+								drawAmplitudeGraph(
+									amplitudes = rmsData,
+									spikesGap = spikesGap,
+									centerYAxis = centerYAxis,
+									spikesWidth = spikesWidth,
+									barColor = chartColor,
+								)
+							}
+						}
+						translate(translateAmount) {
 							drawRecorderTimeline(
-								image = tag,
-								timeline = paddedTimeline,
+								image = bookMarkDrawable,
+								timelineInMillis = timelineInMillis,
 								bookMarks = bookmarksToDraw,
 								textMeasurer = textMeasurer,
 								spikesWidth = spikesWidth,
@@ -118,26 +127,12 @@ internal fun RecorderAmplitudeGraph(
 	}
 }
 
-private fun padListWithExtra(
-	list: List<Duration>,
-	blockSize: Int,
-	extra: Int = 10
-): List<Duration> {
-	val sizeDiff = blockSize - list.size
-	val lastValue = list.lastOrNull() ?: 0.milliseconds
-	// extra will create the translation effect properly
-	val amount = if (sizeDiff >= 0) sizeDiff else 0
-	return list + List(amount + extra) {
-		lastValue + ((it + 1) * RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE).milliseconds
-	}
-}
-
 
 @PreviewLightDark
 @Composable
 private fun RecorderAmplitudeGraphPreview() = RecorderAppTheme {
 	RecorderAmplitudeGraph(
-		amplitudesCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY },
+		recoderPointsCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY },
 		bookMarksDeferred = { listOf(2.seconds, 5.seconds) },
 		modifier = Modifier.fillMaxWidth(),
 	)
