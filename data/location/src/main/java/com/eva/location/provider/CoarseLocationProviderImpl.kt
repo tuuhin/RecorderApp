@@ -8,15 +8,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
 import com.eva.location.domain.BaseLocationModel
-import com.eva.location.domain.exceptions.CannotFoundLastLocationException
 import com.eva.location.domain.exceptions.CurrentLocationTimeoutException
 import com.eva.location.domain.exceptions.LocationNotEnabledException
 import com.eva.location.domain.exceptions.LocationPermissionNotFoundException
 import com.eva.location.domain.exceptions.LocationProviderNotFoundException
 import com.eva.location.domain.repository.LocationProvider
-import com.eva.utils.Resource
 import com.google.android.gms.location.CurrentLocationRequest
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LastLocationRequest
 import com.google.android.gms.location.LocationServices
@@ -28,8 +25,7 @@ internal class CoarseLocationProviderImpl(private val context: Context) : Locati
 
 	private val locationManager by lazy { context.getSystemService<LocationManager>() }
 
-	private val locationProvider: FusedLocationProviderClient
-		get() = LocationServices.getFusedLocationProviderClient(context.applicationContext)
+	private val locationProvider by lazy { LocationServices.getFusedLocationProviderClient(context.applicationContext) }
 
 	private val _hasLocationPermission: Boolean
 		get() = ContextCompat.checkSelfPermission(
@@ -60,26 +56,23 @@ internal class CoarseLocationProviderImpl(private val context: Context) : Locati
 		get() = locationManager?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
 
 	@SuppressLint("MissingPermission")
-	private suspend fun getCurrentLocation(): Resource<BaseLocationModel, Exception> {
+	private suspend fun getCurrentLocation(): Result<BaseLocationModel> {
 		return suspendCancellableCoroutine { cont ->
 			locationProvider.getCurrentLocation(currentLocationRequest, null).apply {
 				addOnCompleteListener {
 					addOnSuccessListener { location ->
-						location?.let {
-							val evaluatedLocation = BaseLocationModel(
-								latitude = location.latitude,
-								longitude = location.longitude
-							)
-							cont.resume(value = Resource.Success(evaluatedLocation))
+						if (location == null) {
+							cont.resume(Result.failure(CurrentLocationTimeoutException()))
 							return@addOnSuccessListener
 						}
-						cont.resume(
-							value = Resource.Error(CurrentLocationTimeoutException()),
+						val evaluatedLocation = BaseLocationModel(
+							latitude = location.latitude,
+							longitude = location.longitude
 						)
+						cont.resume(value = Result.success(evaluatedLocation))
+
 					}
-					addOnFailureListener { exp ->
-						cont.resume(value = Resource.Error(exp))
-					}
+					addOnFailureListener { exp -> cont.resume(value = Result.failure(exp)) }
 				}
 				addOnCanceledListener {
 					cont.cancel()
@@ -89,24 +82,23 @@ internal class CoarseLocationProviderImpl(private val context: Context) : Locati
 	}
 
 	@SuppressLint("MissingPermission")
-	private suspend fun getLastKnownLocation(): Resource<BaseLocationModel, Exception> {
+	private suspend fun getLastKnownLocation(): Result<BaseLocationModel> {
 		return suspendCancellableCoroutine { cont ->
 			locationProvider.getLastLocation(lastLocationRequest).apply {
 				addOnCompleteListener {
 					addOnSuccessListener { location ->
-						location?.let {
-							val evaluatedLocation = BaseLocationModel(
-								latitude = location.latitude,
-								longitude = location.longitude
-							)
-							cont.resume(value = Resource.Success(evaluatedLocation))
+						if (location == null) {
+							cont.resume(Result.failure(CurrentLocationTimeoutException()))
 							return@addOnSuccessListener
 						}
-						cont.resume(value = Resource.Error(CannotFoundLastLocationException()))
+						val evaluatedLocation = BaseLocationModel(
+							latitude = location.latitude,
+							longitude = location.longitude
+						)
+						cont.resume(value = Result.success(evaluatedLocation))
+
 					}
-					addOnFailureListener { exp ->
-						cont.resume(value = Resource.Error(exp))
-					}
+					addOnFailureListener { exp -> cont.resume(value = Result.failure(exp)) }
 				}
 				addOnCanceledListener {
 					cont.cancel()
@@ -115,27 +107,17 @@ internal class CoarseLocationProviderImpl(private val context: Context) : Locati
 		}
 	}
 
-	override suspend fun invoke(): Resource<BaseLocationModel, Exception> {
-		if (!_hasLocationPermission) {
-			return Resource.Error(LocationPermissionNotFoundException())
-		}
-		if (!isLocationEnabled) {
-			return Resource.Error(LocationNotEnabledException())
-		}
-		if (!isNetworkProviderEnabled || !isGpsEnabled) {
-			return Resource.Error(LocationProviderNotFoundException())
-		}
-		// has permission so gets the last known location
-		return when (val lastLocation = getLastKnownLocation()) {
-			is Resource.Error -> {
-				// if its cannot found last location then try to get the current location
-				if (lastLocation.error is CannotFoundLastLocationException)
-					getCurrentLocation()
-				else lastLocation
-			}
+	override suspend fun invoke(fetchCurrentIfNotFound: Boolean): Result<BaseLocationModel> {
+		if (!_hasLocationPermission) return Result.failure(LocationPermissionNotFoundException())
+		if (!isLocationEnabled) return Result.failure(LocationNotEnabledException())
+		if (!isNetworkProviderEnabled || !isGpsEnabled)
+			return Result.failure(LocationProviderNotFoundException())
 
-			else -> lastLocation
+		val lastLocation = getLastKnownLocation()
+		lastLocation.onFailure { exp ->
+			if (exp is CurrentLocationTimeoutException && fetchCurrentIfNotFound)
+				getCurrentLocation()
 		}
-
+		return lastLocation
 	}
 }

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package com.eva.recorder.domain.stopwatch
 
 import com.eva.recorder.domain.models.RecorderState
@@ -18,6 +16,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.LocalTime
@@ -41,25 +40,21 @@ class RecorderStopWatch(
 	@OptIn(ExperimentalCoroutinesApi::class)
 	val elapsedTime = _elapsedTime
 		.mapLatest { current -> LocalTime.fromMillisecondOfDay(current) }
+		.onStart { updateElapsedTime() }
 		.stateIn(
 			scope = scope,
-			started = SharingStarted.Companion.WhileSubscribed(2000),
+			started = SharingStarted.WhileSubscribed(5_000L),
 			initialValue = LocalTime(0, 0, 0)
 		)
 
-	init {
-		updateElapsedTime()
-	}
-
 	@OptIn(ExperimentalCoroutinesApi::class)
 	private fun updateElapsedTime() = _state
-		.flatMapLatest { state ->
-			runStopWatch(isRunning = state == RecorderState.RECORDING)
-		}
+		.flatMapLatest { state -> runStopWatch(isRunning = state == RecorderState.RECORDING) }
 		.onEach { add -> _elapsedTime.update { prev -> prev + add } }
 		.launchIn(scope)
 
 
+	@OptIn(ExperimentalTime::class)
 	private fun runStopWatch(isRunning: Boolean): Flow<Int> = flow {
 		var previous = Clock.System.now()
 		while (isRunning) {
