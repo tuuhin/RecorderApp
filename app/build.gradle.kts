@@ -4,19 +4,18 @@ import java.util.Properties
 plugins {
 	alias(libs.plugins.android.application)
 	alias(libs.plugins.jetbrains.kotlin.android)
-
 	alias(libs.plugins.recorderapp.hilt)
 	alias(libs.plugins.recorderapp.compose.compiler)
 }
 
 android {
 	namespace = "com.eva.recorderapp"
-	compileSdk = 36
+	compileSdk = libs.versions.compileSdk.get().toInt()
 
 	defaultConfig {
 		applicationId = "com.eva.recorderapp"
-		minSdk = 29
-		targetSdk = 36
+		minSdk = libs.versions.minSdk.get().toInt()
+		targetSdk = libs.versions.compileSdk.get().toInt()
 		versionCode = 8
 		versionName = "1.3.0"
 

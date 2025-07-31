@@ -6,6 +6,7 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import kotlin.jvm.optionals.getOrNull
 
 class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
@@ -49,9 +50,14 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
 	private fun Project.configureLibrary() = extensions.configure<LibraryExtension> {
 
-		compileSdk = 35
+		val compilerSdkVersion = catalog.findVersion("compileSdk")
+			.getOrNull()?.toString()?.toInt() ?: 36
+		val minSdkVersion = catalog.findVersion("minSdk")
+			.getOrNull()?.toString()?.toInt() ?: 29
+
+		compileSdk = compilerSdkVersion
 		defaultConfig {
-			minSdk = 29
+			minSdk = minSdkVersion
 
 			testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 			consumerProguardFiles("consumer-rules.pro")
