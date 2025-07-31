@@ -42,7 +42,7 @@ private fun AudioClipChip(
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 	contentColor: Color = MaterialTheme.colorScheme.onSurface,
 	cornerShape: CornerBasedShape = MaterialTheme.shapes.small,
-	numberFontFamily: FontFamily? = DownloadableFonts.CLOCK_FACE,
+	numberFontFamily: FontFamily? = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 ) {
 	Row(
 		modifier = modifier.wrapContentWidth(),

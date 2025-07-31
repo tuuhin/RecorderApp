@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.eva.ui.theme.DownloadableFonts
@@ -23,6 +24,7 @@ internal fun RecorderTimerText(
 	modifier: Modifier = Modifier,
 	style: TextStyle = MaterialTheme.typography.displayMedium,
 	color: Color = MaterialTheme.colorScheme.primary,
+	fontFamily: FontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 ) {
 	val timeText by remember(time) {
 		derivedStateOf {
@@ -37,7 +39,7 @@ internal fun RecorderTimerText(
 		modifier = modifier.padding(horizontal = 4.dp),
 		style = style,
 		color = color,
-		fontFamily = DownloadableFonts.CLOCK_FACE,
+		fontFamily = fontFamily,
 		letterSpacing = 2.sp
 	)
 }

@@ -3,9 +3,8 @@
   <string name="app_name">রেকর্ডার অ্যাপ</string>
   <string name="recorder_action_pause">বিরতি</string>
   <string name="recorder_action_resume">পুনরায় শুরু করুন</string>
-  <string name="recorder_action_stop">থামুন</string>
-  <string name="recorder_notification_text_running">রেকর্ডার চলছে</string>
-  <string name="recorder_notification_text_paused">রেকর্ডার পজ করা হয়েছে</string>
+  <string name="recorder_action_stop">বন্ধ করুন</string>
+  <string name="recorder_action_cancel">বাতিল করুন</string>
   <string name="action_paused">বিরতি</string>
   <string name="action_stop">বন্ধ করা</string>
   <string name="allow_permissions">অনুমতি দিন</string>
@@ -15,8 +14,6 @@
   <string name="menu_option_recycle_bin">রিসাইকেল বিন</string>
   <string name="menu_more_option">আরও বিকল্প</string>
   <string name="recorder_top_bar_title">ভয়েস রেকর্ডার</string>
-  <string name="recorder_recording_completed">রেকর্ডিং সম্পন্ন হয়েছে</string>
-  <string name="recorder_recording_completed_text">বাহ্যিক সঞ্চয়স্থানে সংরক্ষণ করা হয়েছে৷</string>
   <string name="recording_action_delete">মুছে দিন</string>
   <string name="selected_recording_count">%d নির্বাচিত</string>
   <string name="cancel_selection">অ্যাকশন বন্ধ করুন</string>
@@ -54,9 +51,6 @@
   <string name="rename_label_text">নতুন নাম</string>
   <string name="rename_recording_action">নাম পরিবর্তন করুন</string>
   <string name="recorder_action_start">রেকর্ড করুন</string>
-  <string name="recorder_action_cancel">বাতিল করুন</string>
-  <string name="recorder_recording_notification_title_canceled">রেকর্ডিং বাতিল</string>
-  <string name="recorder_recording_notification_canceled_text">ব্যবহারকারী দ্বারা রেকর্ডিং বাতিল করা হয়েছে</string>
   <string name="recording_action_restore">পুনরুদ্ধার করুন</string>
   <string name="recording_restore_dialog_title">রেকর্ডিং পুনরুদ্ধার করবেন?</string>
   <string name="recording_restore_dialog_text">নির্বাচিত রেকর্ডিংগুলির প্রদত্ত সেট পুনরুদ্ধার করুন</string>
@@ -128,10 +122,8 @@
   <string name="app_shortcuts_open_last_played_text">শেষ প্লে করা অডিও ফাইল খোলে</string>
   <string name="app_shortcuts_recordings">রেকর্ডিং</string>
   <string name="app_shortcuts_recordings_text">অ্যাপের সমস্ত রেকর্ডিং দেখায়</string>
-  <string name="toast_recording_bluetooth">ব্লুটুথ মাইক ব্যবহার করা</string>
   <string name="recording_settings_use_bt_mic">ব্লুটুথ মাইক</string>
   <string name="recording_settings_use_bt_mic_text">যখন উপলব্ধ থাকবে তখন ব্লুটুথ মাইক ব্যবহার করুন</string>
-  <string name="toast_incoming_call">ইনকামিং কল</string>
   <string name="dialog_action_discard">রেকর্ডিং বাতিল করুন</string>
   <string name="cancel_recording_dialog_title">রেকর্ডিং বাতিল করুন</string>
   <string name="cancel_recording_dialog_text">আপনি কি এই রেকর্ডিং বাতিল করার বিষয়ে নিশ্চিত? বাতিল করা একটি পুনরুদ্ধারযোগ্য নয়৷</string>
@@ -167,7 +159,6 @@
   <string name="app_version_title">সংস্করণ:</string>
   <string name="add_recording_bookmark">বুকমার্ক</string>
   <string name="bookmark_tooltip_text">এক সেকেন্ডের ব্যবধানে আপনার রেকর্ডিংয়ে একটি বুকমার্ক যোগ করুন</string>
-  <string name="bookmarks_saved">বুকমার্ক যোগ করা হয়েছে</string>
   <string name="menu_option_no_favourite">কোন ফেভারিট না</string>
   <string name="enter_your_bookmark">আপনার বুকমার্ক লিখুন</string>
   <string name="delete_bookmark">বুকমার্ক মুছুন</string>

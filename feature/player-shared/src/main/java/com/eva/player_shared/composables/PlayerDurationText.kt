@@ -51,7 +51,7 @@ private fun PlayerDurationText(
 			modifier = modifier,
 			style = MaterialTheme.typography.displayMedium,
 			color = MaterialTheme.colorScheme.primary,
-			fontFamily = DownloadableFonts.CLOCK_FACE,
+			fontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 		)
 		Text(
 			text = totalDurationText,

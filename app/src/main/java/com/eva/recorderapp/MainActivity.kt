@@ -15,7 +15,6 @@ import androidx.compose.material3.Surface
 import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.eva.recorderapp.navigation.AppNavHost
 import com.eva.ui.theme.RecorderAppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,25 +22,24 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-	private lateinit var navController: NavHostController
+	private var navController: NavHostController? = null
 
 	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
 
 		// configure splash screen
 		configureSplashScreen(onAnimationEnd = { enableEdgeToEdge() })
-
-		super.onCreate(savedInstanceState)
-
 		// if enabled edge to edge not applied after animation
 		enableEdgeToEdge()
 
 		setContent {
-
-			navController = rememberNavController()
-
 			RecorderAppTheme {
 				Surface(color = MaterialTheme.colorScheme.background) {
-					AppNavHost(navController = navController)
+					AppNavHost(
+						onSetController = { controller ->
+							if (navController == null) navController = controller
+						},
+					)
 				}
 			}
 		}
@@ -49,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
 	override fun onNewIntent(intent: Intent) {
 		super.onNewIntent(intent)
-		navController.handleDeepLink(intent)
+		navController?.handleDeepLink(intent)
 	}
 }
 
@@ -57,9 +55,9 @@ private fun Activity.configureSplashScreen(onAnimationEnd: () -> Unit = {}) {
 	val splash = installSplashScreen()
 
 	splash.setOnExitAnimationListener { screenView ->
-		// do all the animation is reverse way
+		// do all the animation is a reverse way
 		val interpolator = AccelerateDecelerateInterpolator()
-		val duration = 1000L
+		val duration = 800L
 
 		val scaleXAnimation = ObjectAnimator
 			.ofFloat(screenView.iconView, View.SCALE_X, 1f, 0.5f)
@@ -83,7 +81,9 @@ private fun Activity.configureSplashScreen(onAnimationEnd: () -> Unit = {}) {
 			}
 
 		val animatorSet = AnimatorSet().apply {
-			playTogether(scaleXAnimation, scaleYAnimation, translateAnimation)
+			val items =
+				arrayOf(scaleXAnimation, scaleYAnimation, translateAnimation).filterNotNull()
+			playTogether(items)
 			doOnEnd {
 				screenView.remove()
 				onAnimationEnd()

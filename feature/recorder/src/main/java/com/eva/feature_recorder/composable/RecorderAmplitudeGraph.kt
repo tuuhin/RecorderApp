@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ internal fun RecorderAmplitudeGraph(
 	timelineColor: Color = MaterialTheme.colorScheme.outline,
 	timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
 	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
+	timelineFontFamily: FontFamily = FontFamily.Monospace,
 	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 	shape: Shape = MaterialTheme.shapes.small,
@@ -117,7 +119,7 @@ internal fun RecorderAmplitudeGraph(
 								bookMarkColor = bookMarkColor,
 								outlineColor = timelineColor,
 								outlineVariant = timelineColorVariant,
-								textStyle = timelineTextStyle,
+								textStyle = timelineTextStyle.copy(fontFamily = timelineFontFamily),
 								textColor = timelineTextColor
 							)
 						}
@@ -132,7 +134,7 @@ internal fun RecorderAmplitudeGraph(
 @Composable
 private fun RecorderAmplitudeGraphPreview() = RecorderAppTheme {
 	RecorderAmplitudeGraph(
-		recoderPointsCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY },
+		recoderPointsCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE },
 		bookMarksDeferred = { listOf(2.seconds, 5.seconds) },
 		modifier = Modifier.fillMaxWidth(),
 	)

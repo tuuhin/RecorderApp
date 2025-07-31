@@ -157,7 +157,7 @@ internal class VoiceRecorderService : LifecycleService() {
 		combine(notificationTimer, recorderState) { time, state ->
 			when (state) {
 				RecorderState.RECORDING -> notificationHelper.showNotificationDuringRecording(time)
-				RecorderState.COMPLETED -> notificationHelper.setRecordingsCompletedNotification()
+				RecorderState.COMPLETED -> notificationHelper.showRecordingDoneNotification()
 				else -> {}
 			}
 		}.launchIn(lifecycleScope)
@@ -235,6 +235,8 @@ internal class VoiceRecorderService : LifecycleService() {
 				is Resource.Success -> {
 					val recordingId = result.data ?: return@launch
 					clearAndSaveBookMarks(recordingId, timeBeforeSave)
+					// again show the notification
+					notificationHelper.showCompletedNotificationWithIntent(recordingId)
 				}
 
 				else -> {}
