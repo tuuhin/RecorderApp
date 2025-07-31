@@ -107,7 +107,9 @@ internal class VoiceRecorderService : LifecycleService() {
 		super.onCreate()
 		try {
 			// check use case
-			bluetoothScoUseCase.startConnectionIfAllowed()
+			lifecycleScope.launch {
+				bluetoothScoUseCase.startConnectionIfAllowed()
+			}
 			// read phone states
 			observeChangingPhoneState()
 			// inform bt connect

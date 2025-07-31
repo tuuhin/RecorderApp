@@ -46,7 +46,8 @@ internal class LocationAddressProviderImpl(
 			Log.i(TAG, "GEO CODER API IS NOT FOUND")
 			return null
 		}
-		if (!settings.audioSettings.addLocationInfoInRecording) {
+		val audioSettings = settings.audioSettings()
+		if (!audioSettings.addLocationInfoInRecording) {
 			Log.d(TAG, "NO NEED TO SHOW LOCATION ")
 			return null
 		}

@@ -25,8 +25,8 @@ class BluetoothScoUseCase @Inject constructor(
 	}
 
 
-	fun startConnectionIfAllowed() {
-		val isPermitted = settings.audioSettings.useBluetoothMic
+	suspend fun startConnectionIfAllowed() {
+		val isPermitted = settings.audioSettings().useBluetoothMic
 		if (isPermitted) {
 			bluetoothScoConnect.beginScoConnection()
 			_isScoAdded.update { true }

@@ -7,13 +7,11 @@ import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import com.eva.datastore.domain.enums.RecordQuality
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationProvider
 import com.eva.recorder.data.reader.AudioRecordAmplitudeReader
 import com.eva.recorder.domain.VoiceRecorder
 import com.eva.recorder.domain.exceptions.RecorderNotConfiguredException
-import com.eva.recorder.domain.models.RecordEncoderAndFormat
 import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.domain.stopwatch.RecorderStopWatch
@@ -50,22 +48,12 @@ internal class VoiceRecorderImpl(
 
 	private val _reader by lazy {
 		AudioRecordAmplitudeReader(
+			context = context,
 			stopWatch = _stopWatch,
 			settings = settings,
 			delayRate = RecorderConstants.AMPS_READ_DELAY_RATE
 		)
 	}
-
-	// recording format and encoder
-	private val format: RecordEncoderAndFormat
-		get() = settings.audioSettings.encoders.recordFormat
-
-	private val channelCount: Int
-		get() = if (settings.audioSettings.enableStereo) 2 else 1
-
-	// recorder quality
-	private val quality: RecordQuality
-		get() = settings.audioSettings.quality
 
 	private var _recorder: MediaRecorder? = null
 	private var _recordingFile: File? = null
@@ -124,6 +112,11 @@ internal class VoiceRecorderImpl(
 			if (!isSuccess) return@coroutineScope
 		}
 
+		val audioSettings = settings.audioSettings()
+		val format = audioSettings.encoders.recordFormat
+		val quality = audioSettings.quality
+		val channelCount = if (audioSettings.enableStereo) 2 else 1
+
 		// recorder should be ready by now
 		val recorder = _recorder ?: return@coroutineScope
 		// initiate the amplitude reader
@@ -136,9 +129,8 @@ internal class VoiceRecorderImpl(
 
 		// location deferred for current location if available
 		val locationDeferred = async(Dispatchers.IO) {
-			if (settings.audioSettings.addLocationInfoInRecording)
-				return@async locationProvider.invoke()
-			null
+			if (!audioSettings.addLocationInfoInRecording) return@async null
+			locationProvider.invoke()
 		}
 
 		Log.d(TAG, "CONCURRENTLY FETCHING LOCATION AND PREPARING FILE")
@@ -182,10 +174,13 @@ internal class VoiceRecorderImpl(
 	private suspend fun updateRecordingToExternalStorage(): Resource<Long?, Exception> {
 		// update the file
 		val recordingId = _recordingFile?.let { file ->
-			withContext(Dispatchers.IO) {
-				Log.d(TAG, "RECORDER FILE UPDATED")
-				fileProvider.transferFileDataToStorage(file = file, mimeType = format.mimeType)
-			}
+
+			val audioSettings = settings.audioSettings()
+			val format = audioSettings.encoders.recordFormat
+
+			Log.d(TAG, "RECORDER FILE UPDATED")
+			fileProvider.transferFileDataToStorage(file = file, mimeType = format.mimeType)
+
 		} ?: return Resource.Error(RecorderNotConfiguredException())
 		// set recording uri to null and close the socket
 		_recordingFile = null
@@ -200,7 +195,7 @@ internal class VoiceRecorderImpl(
 		// update the file
 		_recordingFile?.let { file ->
 			// non-cancellable as file should be deleted
-			withContext(NonCancellable + Dispatchers.IO) {
+			withContext(NonCancellable) {
 				fileProvider.deleteCreatedFile(file)
 				Log.d(TAG, "RECORDER FILE DELETED")
 			}

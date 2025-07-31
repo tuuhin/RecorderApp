@@ -1,9 +1,14 @@
 package com.eva.recorder.data.reader
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
+import androidx.core.content.ContextCompat
+import androidx.core.content.PermissionChecker
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.recorder.data.ext.normalize
 import com.eva.recorder.data.ext.padListWithExtra
@@ -38,12 +43,19 @@ private const val TAG = "AmplitudeVisualizer"
 	ExperimentalAtomicApi::class,
 	ExperimentalCoroutinesApi::class
 )
+@SuppressLint("MissingPermission")
 class AudioRecordAmplitudeReader(
+	private val context: Context,
 	private val stopWatch: RecorderStopWatch,
 	private val settings: RecorderAudioSettingsRepo,
 	private val delayRate: Duration = RecorderConstants.AMPS_READ_DELAY_RATE,
 	private val bufferSize: Int = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE,
 ) {
+
+	private val _hasRecordPermission: Boolean
+		get() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+				PermissionChecker.PERMISSION_GRANTED
+
 	private val _buffer = ConcurrentLinkedQueue<RecordedPoint>()
 	private val _lock = Mutex()
 
@@ -53,14 +65,19 @@ class AudioRecordAmplitudeReader(
 	private var _recorder: AudioRecord? = null
 	private var _minBufferSize: Int = 0
 
-	fun initiateRecorder() {
+	suspend fun initiateRecorder() {
+
+		if (!_hasRecordPermission) {
+			Log.d(TAG, "MISSING PERMISSION")
+			return
+		}
 
 		if (_recorder != null) {
 			Log.d(TAG, "RECORDER ALREADY INITIATED")
 			return
 		}
 
-		val audioSettings = settings.audioSettings
+		val audioSettings = settings.audioSettings()
 		val sampleRate = audioSettings.quality.sampleRate
 		val audioFormat = AudioFormat.ENCODING_PCM_16BIT
 		val channelConfig = if (audioSettings.enableStereo) AudioFormat.CHANNEL_IN_STEREO
@@ -90,7 +107,7 @@ class AudioRecordAmplitudeReader(
 		}
 	}
 
-	fun startRecorder() {
+	suspend fun startRecorder() {
 		if (_recorder?.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
 			Log.d(TAG, "RECORDER STATE RECORDING CANNOT START AGAIN")
 			return
