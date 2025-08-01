@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -43,6 +44,7 @@ internal fun EditorAmplitudeGraph(
 	timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
 	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
 	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+	timelineFontFamily: FontFamily = FontFamily.Monospace,
 ) {
 	val textMeasurer = rememberTextMeasurer()
 
@@ -104,7 +106,7 @@ internal fun EditorAmplitudeGraph(
 							sampleSize = maxGraphPoints,
 							outlineColor = timelineColor,
 							outlineVariant = timelineColorVariant,
-							textStyle = timelineTextStyle,
+							textStyle = timelineTextStyle.copy(fontFamily = timelineFontFamily),
 							textColor = timelineTextColor,
 							spikesWidth = eachPointSize,
 						)

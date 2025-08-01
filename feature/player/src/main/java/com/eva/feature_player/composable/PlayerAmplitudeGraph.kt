@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,7 +37,7 @@ import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
 
 @Composable
-internal fun PlayerAmplitudeGraph(
+private fun PlayerAmplitudeGraph(
 	totalTrackDuration: Duration,
 	playRatio: PlayRatio,
 	graphData: PlayerGraphData,
@@ -50,6 +51,7 @@ internal fun PlayerAmplitudeGraph(
 	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
 	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	timelineFontFamily: FontFamily = FontFamily.Monospace,
 	shape: Shape = MaterialTheme.shapes.small,
 	contentPadding: PaddingValues = PaddingValues(
 		horizontal = dimensionResource(id = R.dimen.graph_card_padding),
@@ -102,7 +104,7 @@ internal fun PlayerAmplitudeGraph(
 								spikesWidth = spikesWidth,
 								outlineColor = timelineColor,
 								outlineVariant = timelineColorVariant,
-								textStyle = timelineTextStyle,
+								textStyle = timelineTextStyle.copy(fontFamily = timelineFontFamily),
 								textColor = timelineTextColor,
 								bookMarkColor = bookMarkColor
 							)
@@ -120,7 +122,7 @@ internal fun PlayerAmplitudeGraph(
 }
 
 @Composable
-fun PlayerAmplitudeGraph(
+internal fun PlayerAmplitudeGraph(
 	trackData: PlayerTrackData,
 	graphData: PlayerGraphData,
 	modifier: Modifier = Modifier,
@@ -133,6 +135,7 @@ fun PlayerAmplitudeGraph(
 	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
 	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	timelineFontFamily: FontFamily = FontFamily.Monospace,
 	shape: Shape = MaterialTheme.shapes.small,
 	contentPadding: PaddingValues = PaddingValues(
 		horizontal = dimensionResource(id = R.dimen.graph_card_padding),
@@ -152,6 +155,7 @@ fun PlayerAmplitudeGraph(
 		timelineColorVariant = timelineColorVariant,
 		timelineTextColor = timelineTextColor,
 		timelineTextStyle = timelineTextStyle,
+		timelineFontFamily = timelineFontFamily,
 		contentPadding = contentPadding,
 		shape = shape,
 		containerColor = containerColor,

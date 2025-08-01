@@ -190,7 +190,6 @@ class AudioRecordAmplitudeReader(
 
 				// these are raw bytes
 				val rmsValue = rms(pcmBuffer)
-				Log.d(TAG, "$rmsValue")
 				emit(maxOf(rmsValue, .0f))
 				// check if audio source set otherwise amp is zero
 				// read the values here
