@@ -30,8 +30,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -109,7 +107,7 @@ internal class RecordingsViewmodel @Inject constructor(
 
 	// Load all the recordings categories
 	private suspend fun populateRecordingCategories() {
-		categoriesProvider.recordingCategoriesFlowWithItemCount.collect { res ->
+		categoriesProvider.recordingCategoryAsResourceFlow.collect { res ->
 			when (res) {
 				Resource.Loading -> _isCategoriesLoaded.update { false }
 				is Resource.Error -> {
@@ -126,8 +124,6 @@ internal class RecordingsViewmodel @Inject constructor(
 	@OptIn(ExperimentalCoroutinesApi::class)
 	private suspend fun readRecordingsFromCategory() {
 		_selectedCategory.flatMapLatest(recordingsFromCategoriesUseCase::invoke)
-			.catch { err -> err.printStackTrace() }
-			.cancellable()
 			.collect { res ->
 				when (res) {
 					Resource.Loading -> _isRecordingsLoaded.update { false }

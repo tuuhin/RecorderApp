@@ -16,16 +16,6 @@ internal fun RecordingCategoryEntity.toModel(): RecordingCategoryModel =
 		categoryType = toCategoryType(type),
 	)
 
-internal fun RecordingCategoryEntity.toModel(count: Long): RecordingCategoryModel =
-	RecordingCategoryModel(
-		id = categoryId ?: 0L,
-		name = categoryName,
-		createdAt = createdAt,
-		count = count,
-		categoryColor = toCategoryColor(color),
-		categoryType = toCategoryType(type),
-	)
-
 internal fun RecordingCategoryModel.toEntity(): RecordingCategoryEntity =
 	RecordingCategoryEntity(
 		categoryId = id,
@@ -38,7 +28,7 @@ internal fun RecordingCategoryModel.toEntity(): RecordingCategoryEntity =
 private fun toCategoryType(name: String?): CategoryType = name?.let {
 	try {
 		CategoryType.valueOf(name)
-	} catch (e: IllegalArgumentException) {
+	} catch (_: IllegalArgumentException) {
 		CategoryType.CATEGORY_NONE
 	}
 } ?: CategoryType.CATEGORY_NONE
@@ -46,7 +36,7 @@ private fun toCategoryType(name: String?): CategoryType = name?.let {
 private fun toCategoryColor(name: String?): CategoryColor = name?.let {
 	try {
 		CategoryColor.valueOf(name)
-	} catch (e: IllegalArgumentException) {
+	} catch (_: IllegalArgumentException) {
 		CategoryColor.COLOR_UNKNOWN
 	}
 } ?: CategoryColor.COLOR_UNKNOWN
