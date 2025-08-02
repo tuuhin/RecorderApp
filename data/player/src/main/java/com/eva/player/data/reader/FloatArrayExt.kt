@@ -38,7 +38,7 @@ fun FloatArray.lowPassFilter(sampleRate: Int, cutoffFrequency: Float): FloatArra
 fun FloatArray.compressFloatArray(m: Int): FloatArray {
 	if (m <= 0) throw IllegalArgumentException("m must be a positive integer")
 
-	if (isEmpty()) return FloatArray(m) { 0f }
+	if (isEmpty()) return FloatArray(m)
 
 	val n = size
 	if (m >= n) return copyOf()
@@ -77,7 +77,7 @@ fun FloatArray.compressFloatArray(m: Int): FloatArray {
 	val maxValue = maxOrNull() ?: .0f
 	val minValue = minOrNull() ?: .0f
 
-	if (maxValue == minValue) return FloatArray(size) { .0f }
+	if (maxValue == minValue) return FloatArray(size)
 
 	val finalArray = FloatArray(size)
 	val diff = (maxValue - minValue)

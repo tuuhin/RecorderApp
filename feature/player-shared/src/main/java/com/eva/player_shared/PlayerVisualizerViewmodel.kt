@@ -6,6 +6,7 @@ import androidx.navigation.toRoute
 import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.player.data.reader.compressFloatArray
 import com.eva.player.domain.AudioVisualizer
+import com.eva.player.domain.exceptions.DecoderExistsException
 import com.eva.player_shared.util.updateArrayViaConfigs
 import com.eva.ui.navigation.PlayerSubGraph
 import com.eva.ui.viewmodel.AppViewModel
@@ -81,8 +82,9 @@ class PlayerVisualizerViewmodel @Inject constructor(
 			fileId = audioId,
 			timePerPointInMs = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 		)
-		result.onFailure {
-			_uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: ""))
+		result.onFailure { err ->
+			if (err is DecoderExistsException) return@onFailure
+			_uiEvents.emit(UIEvents.ShowSnackBar(err.message ?: ""))
 		}
 	}
 
@@ -95,6 +97,11 @@ class PlayerVisualizerViewmodel @Inject constructor(
 			)
 			_compressedVisualization.update { newVisuals }
 		}.launchIn(viewModelScope)
+	}
+
+	override fun onCleared() {
+		visualizer.cleanUp()
+		super.onCleared()
 	}
 }
 
