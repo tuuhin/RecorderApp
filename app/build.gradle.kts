@@ -16,29 +16,38 @@ android {
 		applicationId = "com.eva.recorderapp"
 		minSdk = libs.versions.minSdk.get().toInt()
 		targetSdk = libs.versions.compileSdk.get().toInt()
-		versionCode = 8
-		versionName = "1.3.0"
+		versionCode = 9
+		versionName = "1.3.1"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
 			useSupportLibrary = true
 		}
+	}
 
-		rootProject.file("developer.properties").inputStream().use {
-			val localProperties = Properties()
-			localProperties.load(it)
+	signingConfigs {
+		// find if there is a properties file
+		val keySecretFile = rootProject.file("keystore.properties")
+		if (!keySecretFile.exists()) return@signingConfigs
 
-			buildConfigField(
-				"String",
-				"GITHUB_PROFILE_LINK",
-				"\"${localProperties.getProperty("GITHUB_PROFILE_LINK")}\""
-			)
+		// load the properties
+		val properties = Properties()
+		keySecretFile.inputStream().use { properties.load(it) }
 
-			buildConfigField(
-				"String",
-				"GITHUB_PROJECT_LINK",
-				"\"${localProperties.getProperty("GITHUB_PROJECT_LINK")}\""
-			)
+		val userHome = System.getProperty("user.home")
+		val storeFileName = properties.getProperty("STORE_FILE_NAME")
+
+		val keyStoreFolder = File(userHome, "keystore")
+		if (!keyStoreFolder.exists()) return@signingConfigs
+
+		val keyStoreFile = File(keyStoreFolder, storeFileName)
+		if (!keyStoreFile.exists()) return@signingConfigs
+
+		create("release") {
+			storeFile = keyStoreFile
+			keyAlias = properties.getProperty("KEY_ALIAS")
+			keyPassword = properties.getProperty("KEY_PASSWORD")
+			storePassword = properties.getProperty("STORE_PASSWORD")
 		}
 	}
 
@@ -48,7 +57,8 @@ android {
 			applicationIdSuffix = ".release"
 			isShrinkResources = true
 			multiDexEnabled = true
-			signingConfig = signingConfigs.getByName("debug")
+			// change the signing config if release is not found
+			signingConfig = signingConfigs.findByName("release")
 			proguardFiles(
 				getDefaultProguardFile("proguard-android-optimize.txt"),
 				"proguard-rules.pro"
