@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -39,7 +40,7 @@ import kotlin.time.Duration
 @Composable
 private fun PlayerAmplitudeGraph(
 	totalTrackDuration: Duration,
-	playRatio: PlayRatio,
+	trackPlayRatio: PlayRatio,
 	graphData: PlayerGraphData,
 	modifier: Modifier = Modifier,
 	bookMarkTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
@@ -76,26 +77,21 @@ private fun PlayerAmplitudeGraph(
 					val spikeSpace = (spikesWidth - 1.5.dp.toPx()).let { amt ->
 						if (amt > 0f) amt else 2.dp.toPx()
 					}
+					val probableSampleSize = totalTrackDuration.inWholeMilliseconds /
+							RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
+
+					val samples = graphData()
+					val bookMarksAsMillis = bookMarkTimeStamps.map { it.toMillisecondOfDay() }
+
+					val sampleSize = maxOf(samples.size.toLong(), probableSampleSize)
+
+					val totalSize = sampleSize * spikesWidth
 
 					onDrawBehind {
-						val samples = graphData()
-						val bookMarksAsMillis = bookMarkTimeStamps.map { it.toMillisecondOfDay() }
 
-						val sampleSize = maxOf(
-							samples.size.toLong(),
-							totalTrackDuration.inWholeMilliseconds / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
-						)
-
-						val totalSize = sampleSize * spikesWidth
-						val translate = size.width * .5f - (totalSize * playRatio())
+						val translate = size.width * .5f - (totalSize * trackPlayRatio())
 
 						translate(left = translate) {
-							drawGraph(
-								waves = samples,
-								spikesGap = spikeSpace,
-								spikesWidth = spikesWidth,
-								color = plotColor
-							)
 							drawTimeLineWithBookMarks(
 								totalDuration = totalTrackDuration,
 								textMeasurer = textMeasurer,
@@ -109,6 +105,20 @@ private fun PlayerAmplitudeGraph(
 								bookMarkColor = bookMarkColor
 							)
 						}
+
+						if (samples.isNotEmpty()) {
+							clipRect(right = size.width + 5.dp.toPx()) {
+								translate(left = translate) {
+									drawGraph(
+										waves = samples,
+										spikesGap = spikeSpace,
+										spikesWidth = spikesWidth,
+										color = plotColor
+									)
+								}
+							}
+						}
+
 						drawTrackPointer(
 							xAxis = center.x,
 							color = trackPointerColor,
@@ -143,7 +153,7 @@ internal fun PlayerAmplitudeGraph(
 	),
 ) {
 	PlayerAmplitudeGraph(
-		playRatio = { trackData.playRatio },
+		trackPlayRatio = { trackData.playRatio },
 		totalTrackDuration = trackData.total,
 		graphData = graphData,
 		bookMarkTimeStamps = bookMarksTimeStamps,

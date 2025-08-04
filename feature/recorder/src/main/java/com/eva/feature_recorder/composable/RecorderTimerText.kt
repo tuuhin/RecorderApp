@@ -28,9 +28,8 @@ internal fun RecorderTimerText(
 ) {
 	val timeText by remember(time) {
 		derivedStateOf {
-			if (time.hour > 0)
-				time.format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
-			time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+			if (time.hour > 0) time.format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
+			else time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
 		}
 	}
 

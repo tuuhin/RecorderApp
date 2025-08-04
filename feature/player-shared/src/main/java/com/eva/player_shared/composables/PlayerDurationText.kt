@@ -22,30 +22,30 @@ import kotlinx.datetime.format
 @OptIn(FlowPreview::class)
 @Composable
 private fun PlayerDurationText(
-	playedDuration: Long,
-	totalDuration: Long,
+	playedDurationInMillis: Long,
+	totalDurationInMillis: Long,
 	modifier: Modifier = Modifier,
 	fontFamily: FontFamily = FontFamily.Monospace,
 ) {
-	val totalDurationText by remember(totalDuration) {
+	val totalDurationText by remember(totalDurationInMillis) {
 		derivedStateOf {
-			val time = LocalTime.fromMillisecondOfDay(totalDuration.toInt())
-			with(time) {
-				format(LocalTimeFormats.LOCALTIME_HH_MM_SS_FORMAT)
-			}
-		}
-	}
-
-	val playedDurationText by remember(playedDuration) {
-		derivedStateOf {
-			val time = LocalTime.fromMillisecondOfDay(playedDuration.toInt())
+			val time = LocalTime.fromMillisecondOfDay(totalDurationInMillis.toInt())
 			with(time) {
 				if (hour > 0) format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
-				format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+				else format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
 			}
 		}
 	}
 
+	val playedDurationText by remember(playedDurationInMillis) {
+		derivedStateOf {
+			val time = LocalTime.fromMillisecondOfDay(playedDurationInMillis.toInt())
+			with(time) {
+				if (hour > 0) format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
+				else format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+			}
+		}
+	}
 
 
 	Column(
@@ -76,8 +76,8 @@ fun PlayerDurationText(
 	fontFamily: FontFamily = FontFamily.Monospace,
 ) {
 	PlayerDurationText(
-		playedDuration = track.current.inWholeMilliseconds,
-		totalDuration = fileModel.duration.inWholeMilliseconds,
+		playedDurationInMillis = track.current.inWholeMilliseconds,
+		totalDurationInMillis = fileModel.duration.inWholeMilliseconds,
 		fontFamily = fontFamily,
 		modifier = modifier
 	)
@@ -90,8 +90,8 @@ fun PlayerDurationText(
 	fontFamily: FontFamily = FontFamily.Monospace,
 ) {
 	PlayerDurationText(
-		playedDuration = track.current.inWholeMilliseconds,
-		totalDuration = track.total.inWholeMilliseconds,
+		playedDurationInMillis = track.current.inWholeMilliseconds,
+		totalDurationInMillis = track.total.inWholeMilliseconds,
 		modifier = modifier,
 		fontFamily = fontFamily,
 	)

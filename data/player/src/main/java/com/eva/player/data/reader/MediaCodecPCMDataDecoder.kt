@@ -36,7 +36,9 @@ class MediaCodecPCMDataDecoder(
 
 	private val lock = Any()
 	private val _mutex = Mutex()
-	private val batchSize = 100
+
+	// need to play with the size to get the optimal results
+	private val batchSize = 50
 
 	private var currentTimeInMs = 0L
 
@@ -109,7 +111,6 @@ class MediaCodecPCMDataDecoder(
 				val format = codec.outputFormat
 				val pcmEncoding = format.pcmEncoding
 				val channelCount = format.channels
-				val sampleRate = format.sampleRate
 
 				val pcm = outputBuffer?.asFloatArray(info.size, pcmEncoding, channelCount)
 					?: floatArrayOf()
@@ -124,7 +125,7 @@ class MediaCodecPCMDataDecoder(
 				// if there is some pcm data available
 				if (pcm.isNotEmpty()) {
 					val action = scope.async(Dispatchers.Default) {
-						performOperation(pcm, sampleRate, seekDuration)
+						performOperation(pcm)
 					}
 					_operations.plusAssign(action)
 				}
@@ -203,17 +204,8 @@ class MediaCodecPCMDataDecoder(
 		_mediaCodec = null
 	}
 
-	private suspend fun performOperation(
-		samples: FloatArray,
-		sampleRate: Int,
-		timerPerPoints: Int
-	): Float {
+	private suspend fun performOperation(samples: FloatArray): Float {
 		return withContext(Dispatchers.Default) {
-			val cutOffFrequency = 1000f / timerPerPoints
-			val filteredSamples = samples.lowPassFilter(
-				sampleRate = sampleRate,
-				cutoffFrequency = cutOffFrequency
-			)
 			val squaredSum = samples.sumOf { it.toDouble().pow(2) }
 			sqrt(squaredSum / samples.size).toFloat()
 		}

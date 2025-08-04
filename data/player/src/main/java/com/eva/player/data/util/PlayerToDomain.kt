@@ -1,16 +1,21 @@
 package com.eva.player.data.util
 
+import android.os.Looper
+import androidx.media3.common.C
 import androidx.media3.common.Player
 import com.eva.player.domain.model.PlayerTrackData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 suspend fun Player.toTrackData(): PlayerTrackData {
-	// player methods can be called only in main scope
-	return withContext(Dispatchers.Main) {
-		val current = currentPosition.milliseconds
-		val total = duration.milliseconds
-		PlayerTrackData(current = current, total = total)
-	}
+	return if (Looper.myLooper() == Looper.getMainLooper()) readTrackData()
+	else withContext(Dispatchers.Main) { readTrackData() }
+}
+
+private fun Player.readTrackData(): PlayerTrackData {
+	val currentPos = currentPosition.takeIf { it != C.TIME_UNSET }?.milliseconds ?: Duration.ZERO
+	val durationMs = duration.takeIf { it != C.TIME_UNSET }?.milliseconds ?: Duration.ZERO
+	return PlayerTrackData(current = currentPos, total = durationMs)
 }
