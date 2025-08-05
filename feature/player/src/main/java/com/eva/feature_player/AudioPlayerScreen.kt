@@ -62,6 +62,7 @@ import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
+import com.eva.ui.theme.DownloadableFonts
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.ui.utils.LocalSnackBarProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -196,6 +197,7 @@ internal fun AudioPlayerScreenContent(
 		PlayerDurationText(
 			track = trackData,
 			fileModel = fileModel,
+			fontFamily = DownloadableFonts.SPLINE_SANS_MONO_FONT_FAMILY,
 			modifier = Modifier.align(Alignment.TopCenter),
 		)
 		Column(
@@ -210,6 +212,7 @@ internal fun AudioPlayerScreenContent(
 				trackData = trackData,
 				bookMarksTimeStamps = bookMarkTimeStamps,
 				graphData = waveforms,
+				timelineFontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 				modifier = Modifier.fillMaxWidth()
 			)
 			PlayerBookMarks(

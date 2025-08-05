@@ -29,6 +29,7 @@ import com.eva.feature_settings.composables.files.FileSettingsTabContent
 import com.eva.feature_settings.utils.AudioSettingsEvent
 import com.eva.feature_settings.utils.FileSettingsChangeEvent
 import com.eva.feature_settings.utils.SettingsTabs
+import com.eva.recordings.domain.models.DeviceTotalStorageModel
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.ui.utils.LocalSnackBarProvider
@@ -42,6 +43,7 @@ internal fun AudioSettingsScreen(
 	onAudioSettingsChange: (AudioSettingsEvent) -> Unit,
 	modifier: Modifier = Modifier,
 	initialTab: SettingsTabs = SettingsTabs.AUDIO_SETTINGS,
+	storageModel: DeviceTotalStorageModel = DeviceTotalStorageModel(),
 	navigation: @Composable () -> Unit = {},
 	onNavigateToInfo: () -> Unit = {},
 ) {
@@ -79,6 +81,7 @@ internal fun AudioSettingsScreen(
 			filesSettings = {
 				FileSettingsTabContent(
 					settings = fileSettings,
+					model = storageModel,
 					onEvent = onFileSettingsChange,
 					contentPadding = PaddingValues(all = dimensionResource(R.dimen.sc_padding)),
 				)

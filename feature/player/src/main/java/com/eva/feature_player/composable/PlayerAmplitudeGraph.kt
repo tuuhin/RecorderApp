@@ -13,10 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,9 +38,9 @@ import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
 
 @Composable
-internal fun PlayerAmplitudeGraph(
+private fun PlayerAmplitudeGraph(
 	totalTrackDuration: Duration,
-	playRatio: PlayRatio,
+	trackPlayRatio: PlayRatio,
 	graphData: PlayerGraphData,
 	modifier: Modifier = Modifier,
 	bookMarkTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
@@ -50,6 +52,7 @@ internal fun PlayerAmplitudeGraph(
 	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
 	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	timelineFontFamily: FontFamily = FontFamily.Monospace,
 	shape: Shape = MaterialTheme.shapes.small,
 	contentPadding: PaddingValues = PaddingValues(
 		horizontal = dimensionResource(id = R.dimen.graph_card_padding),
@@ -74,26 +77,21 @@ internal fun PlayerAmplitudeGraph(
 					val spikeSpace = (spikesWidth - 1.5.dp.toPx()).let { amt ->
 						if (amt > 0f) amt else 2.dp.toPx()
 					}
+					val probableSampleSize = totalTrackDuration.inWholeMilliseconds /
+							RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
+
+					val samples = graphData()
+					val bookMarksAsMillis = bookMarkTimeStamps.map { it.toMillisecondOfDay() }
+
+					val sampleSize = maxOf(samples.size.toLong(), probableSampleSize)
+
+					val totalSize = sampleSize * spikesWidth
 
 					onDrawBehind {
-						val samples = graphData()
-						val bookMarksAsMillis = bookMarkTimeStamps.map { it.toMillisecondOfDay() }
 
-						val sampleSize = maxOf(
-							samples.size.toLong(),
-							totalTrackDuration.inWholeMilliseconds / RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
-						)
-
-						val totalSize = sampleSize * spikesWidth
-						val translate = size.width * .5f - (totalSize * playRatio())
+						val translate = size.width * .5f - (totalSize * trackPlayRatio())
 
 						translate(left = translate) {
-							drawGraph(
-								waves = samples,
-								spikesGap = spikeSpace,
-								spikesWidth = spikesWidth,
-								color = plotColor
-							)
 							drawTimeLineWithBookMarks(
 								totalDuration = totalTrackDuration,
 								textMeasurer = textMeasurer,
@@ -102,11 +100,25 @@ internal fun PlayerAmplitudeGraph(
 								spikesWidth = spikesWidth,
 								outlineColor = timelineColor,
 								outlineVariant = timelineColorVariant,
-								textStyle = timelineTextStyle,
+								textStyle = timelineTextStyle.copy(fontFamily = timelineFontFamily),
 								textColor = timelineTextColor,
 								bookMarkColor = bookMarkColor
 							)
 						}
+
+						if (samples.isNotEmpty()) {
+							clipRect(right = size.width + 5.dp.toPx()) {
+								translate(left = translate) {
+									drawGraph(
+										waves = samples,
+										spikesGap = spikeSpace,
+										spikesWidth = spikesWidth,
+										color = plotColor
+									)
+								}
+							}
+						}
+
 						drawTrackPointer(
 							xAxis = center.x,
 							color = trackPointerColor,
@@ -120,7 +132,7 @@ internal fun PlayerAmplitudeGraph(
 }
 
 @Composable
-fun PlayerAmplitudeGraph(
+internal fun PlayerAmplitudeGraph(
 	trackData: PlayerTrackData,
 	graphData: PlayerGraphData,
 	modifier: Modifier = Modifier,
@@ -133,6 +145,7 @@ fun PlayerAmplitudeGraph(
 	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
 	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	timelineFontFamily: FontFamily = FontFamily.Monospace,
 	shape: Shape = MaterialTheme.shapes.small,
 	contentPadding: PaddingValues = PaddingValues(
 		horizontal = dimensionResource(id = R.dimen.graph_card_padding),
@@ -140,7 +153,7 @@ fun PlayerAmplitudeGraph(
 	),
 ) {
 	PlayerAmplitudeGraph(
-		playRatio = { trackData.playRatio },
+		trackPlayRatio = { trackData.playRatio },
 		totalTrackDuration = trackData.total,
 		graphData = graphData,
 		bookMarkTimeStamps = bookMarksTimeStamps,
@@ -152,6 +165,7 @@ fun PlayerAmplitudeGraph(
 		timelineColorVariant = timelineColorVariant,
 		timelineTextColor = timelineTextColor,
 		timelineTextStyle = timelineTextStyle,
+		timelineFontFamily = timelineFontFamily,
 		contentPadding = contentPadding,
 		shape = shape,
 		containerColor = containerColor,

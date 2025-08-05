@@ -5,7 +5,10 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -30,8 +33,15 @@ import com.eva.ui.utils.LocalSnackBarProvider
 @Composable
 fun AppNavHost(
 	modifier: Modifier = Modifier,
-	navController: NavHostController = rememberNavController(),
+	onSetController: suspend (NavHostController) -> Unit = {},
 ) {
+	val navController = rememberNavController()
+	val currentOnSetController by rememberUpdatedState(onSetController)
+
+	LaunchedEffect(navController) {
+		currentOnSetController(navController)
+	}
+
 	val snackBarProvider = remember { SnackbarHostState() }
 
 	SharedTransitionLayout {

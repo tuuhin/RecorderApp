@@ -29,8 +29,7 @@ internal class RecorderViewModel @Inject constructor(
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents.asSharedFlow()
 
-	val isServiceReady: StateFlow<Boolean>
-		get() = recorderService.isConnectionReady
+	val isServiceReady: StateFlow<Boolean> = recorderService.isConnectionReady
 
 	val recorderState = recorderService.recorderState
 		.stateIn(

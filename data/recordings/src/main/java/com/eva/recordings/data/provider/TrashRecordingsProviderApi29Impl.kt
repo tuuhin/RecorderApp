@@ -21,6 +21,7 @@ import com.eva.recordings.domain.models.RecordedVoiceModel
 import com.eva.recordings.domain.models.TrashRecordingModel
 import com.eva.recordings.domain.provider.ResourcedTrashRecordingModels
 import com.eva.recordings.domain.provider.TrashRecordingsProvider
+import com.eva.recordings.domain.provider.TrashVoiceRecordings
 import com.eva.utils.Resource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -33,13 +34,14 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.io.File
 import java.io.IOException
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
 
 private const val TAG = "TRASH_RECORDING_PROVIDER"
 
@@ -54,6 +56,7 @@ internal class TrashRecordingsProviderApi29Impl(
 	private val filesDir: File
 		get() = File(context.filesDir, folderName).apply(File::mkdirs)
 
+	@OptIn(ExperimentalTime::class)
 	private val thirtyDaysLater: LocalDateTime
 		get() = Clock.System.now().plus(30.days)
 			.toLocalDateTime(TimeZone.currentSystemDefault())
@@ -63,7 +66,7 @@ internal class TrashRecordingsProviderApi29Impl(
 			.flowOn(Dispatchers.IO)
 			.map { entries ->
 				val result = entries.map(TrashFileEntity::toModel)
-				Resource.Success<com.eva.recordings.domain.provider.TrashVoiceRecordings, Nothing>(result)
+				Resource.Success<TrashVoiceRecordings, Nothing>(result)
 			}
 
 	override suspend fun getTrashedVoiceRecordings(): ResourcedTrashRecordingModels {

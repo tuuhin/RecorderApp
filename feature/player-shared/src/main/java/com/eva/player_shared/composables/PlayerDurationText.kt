@@ -10,37 +10,43 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
-import com.eva.ui.theme.DownloadableFonts
 import com.eva.utils.LocalTimeFormats
+import kotlinx.coroutines.FlowPreview
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
-import kotlin.time.Duration
 
+@OptIn(FlowPreview::class)
 @Composable
 private fun PlayerDurationText(
-	playedDuration: Duration,
-	totalDuration: Duration,
+	playedDurationInMillis: Long,
+	totalDurationInMillis: Long,
 	modifier: Modifier = Modifier,
+	fontFamily: FontFamily = FontFamily.Monospace,
 ) {
-	val totalDurationText by remember(totalDuration) {
+	val totalDurationText by remember(totalDurationInMillis) {
 		derivedStateOf {
-			with(LocalTime.fromMillisecondOfDay(totalDuration.inWholeMilliseconds.toInt())) {
-				format(LocalTimeFormats.LOCALTIME_HH_MM_SS_FORMAT)
+			val time = LocalTime.fromMillisecondOfDay(totalDurationInMillis.toInt())
+			with(time) {
+				if (hour > 0) format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
+				else format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
 			}
 		}
 	}
 
-	val playedDurationText by remember(playedDuration) {
+	val playedDurationText by remember(playedDurationInMillis) {
 		derivedStateOf {
-			with(LocalTime.fromMillisecondOfDay(playedDuration.inWholeMilliseconds.toInt())) {
+			val time = LocalTime.fromMillisecondOfDay(playedDurationInMillis.toInt())
+			with(time) {
 				if (hour > 0) format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
-				format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+				else format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
 			}
 		}
 	}
+
 
 	Column(
 		modifier = modifier.padding(horizontal = 10.dp),
@@ -51,13 +57,13 @@ private fun PlayerDurationText(
 			modifier = modifier,
 			style = MaterialTheme.typography.displayMedium,
 			color = MaterialTheme.colorScheme.primary,
-			fontFamily = DownloadableFonts.CLOCK_FACE,
+			fontFamily = fontFamily,
 		)
 		Text(
 			text = totalDurationText,
 			style = MaterialTheme.typography.headlineSmall,
 			color = MaterialTheme.colorScheme.secondary,
-			fontFamily = DownloadableFonts.NOVA_MONO_FONT_FAMILY
+			fontFamily = fontFamily
 		)
 	}
 }
@@ -66,11 +72,13 @@ private fun PlayerDurationText(
 fun PlayerDurationText(
 	track: PlayerTrackData,
 	fileModel: AudioFileModel,
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
+	fontFamily: FontFamily = FontFamily.Monospace,
 ) {
 	PlayerDurationText(
-		playedDuration = track.current,
-		totalDuration = fileModel.duration,
+		playedDurationInMillis = track.current.inWholeMilliseconds,
+		totalDurationInMillis = fileModel.duration.inWholeMilliseconds,
+		fontFamily = fontFamily,
 		modifier = modifier
 	)
 }
@@ -79,10 +87,12 @@ fun PlayerDurationText(
 fun PlayerDurationText(
 	track: PlayerTrackData,
 	modifier: Modifier = Modifier,
+	fontFamily: FontFamily = FontFamily.Monospace,
 ) {
 	PlayerDurationText(
-		playedDuration = track.current,
-		totalDuration = track.total,
-		modifier = modifier
+		playedDurationInMillis = track.current.inWholeMilliseconds,
+		totalDurationInMillis = track.total.inWholeMilliseconds,
+		modifier = modifier,
+		fontFamily = fontFamily,
 	)
 }

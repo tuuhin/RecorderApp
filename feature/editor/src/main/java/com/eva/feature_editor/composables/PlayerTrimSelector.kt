@@ -17,6 +17,7 @@ import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.util.PlayerGraphData
 import com.eva.player_shared.util.PlayerPreviewFakes
 import com.eva.ui.R
+import com.eva.ui.theme.DownloadableFonts
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.RecorderConstants
 
@@ -48,6 +49,7 @@ internal fun PlayerTrimSelector(
 				totalTrackDuration = trackData.total,
 				maxGraphPoints = maxGraphPoints,
 				graphData = graphData,
+				timelineFontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 				modifier = Modifier
 					.matchParentSize()
 					.trimOverlay(

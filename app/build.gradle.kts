@@ -1,44 +1,53 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
 	alias(libs.plugins.android.application)
 	alias(libs.plugins.jetbrains.kotlin.android)
-
 	alias(libs.plugins.recorderapp.hilt)
 	alias(libs.plugins.recorderapp.compose.compiler)
 }
 
 android {
 	namespace = "com.eva.recorderapp"
-	compileSdk = 35
+	compileSdk = libs.versions.compileSdk.get().toInt()
 
 	defaultConfig {
 		applicationId = "com.eva.recorderapp"
-		minSdk = 29
-		targetSdk = 35
-		versionCode = 8
-		versionName = "1.3.0"
+		minSdk = libs.versions.minSdk.get().toInt()
+		targetSdk = libs.versions.compileSdk.get().toInt()
+		versionCode = 9
+		versionName = "1.3.1"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
 			useSupportLibrary = true
 		}
+	}
 
-		rootProject.file("developer.properties").inputStream().use {
-			val localProperties = Properties()
-			localProperties.load(it)
+	signingConfigs {
+		// find if there is a properties file
+		val keySecretFile = rootProject.file("keystore.properties")
+		if (!keySecretFile.exists()) return@signingConfigs
 
-			buildConfigField(
-				"String",
-				"GITHUB_PROFILE_LINK",
-				"\"${localProperties.getProperty("GITHUB_PROFILE_LINK")}\""
-			)
+		// load the properties
+		val properties = Properties()
+		keySecretFile.inputStream().use { properties.load(it) }
 
-			buildConfigField(
-				"String",
-				"GITHUB_PROJECT_LINK",
-				"\"${localProperties.getProperty("GITHUB_PROJECT_LINK")}\""
-			)
+		val userHome = System.getProperty("user.home")
+		val storeFileName = properties.getProperty("STORE_FILE_NAME")
+
+		val keyStoreFolder = File(userHome, "keystore")
+		if (!keyStoreFolder.exists()) return@signingConfigs
+
+		val keyStoreFile = File(keyStoreFolder, storeFileName)
+		if (!keyStoreFile.exists()) return@signingConfigs
+
+		create("release") {
+			storeFile = keyStoreFile
+			keyAlias = properties.getProperty("KEY_ALIAS")
+			keyPassword = properties.getProperty("KEY_PASSWORD")
+			storePassword = properties.getProperty("STORE_PASSWORD")
 		}
 	}
 
@@ -48,7 +57,8 @@ android {
 			applicationIdSuffix = ".release"
 			isShrinkResources = true
 			multiDexEnabled = true
-			signingConfig = signingConfigs.getByName("debug")
+			// change the signing config if release is not found
+			signingConfig = signingConfigs.findByName("release")
 			proguardFiles(
 				getDefaultProguardFile("proguard-android-optimize.txt"),
 				"proguard-rules.pro"
@@ -59,9 +69,6 @@ android {
 		sourceCompatibility = JavaVersion.VERSION_17
 		targetCompatibility = JavaVersion.VERSION_17
 	}
-	kotlinOptions {
-		jvmTarget = "17"
-	}
 	buildFeatures {
 		compose = true
 		buildConfig = true
@@ -70,6 +77,12 @@ android {
 		resources {
 			excludes += "/META-INF/{AL2.0,LGPL2.1}"
 		}
+	}
+}
+
+kotlin {
+	compilerOptions {
+		jvmTarget = JvmTarget.JVM_17
 	}
 }
 

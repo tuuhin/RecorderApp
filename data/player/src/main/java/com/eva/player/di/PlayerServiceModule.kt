@@ -25,6 +25,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
+import kotlinx.coroutines.runBlocking
 import javax.inject.Named
 
 @Module
@@ -54,9 +55,11 @@ object PlayerServiceModule {
 
 		val mediaSourceFactory = DefaultMediaSourceFactory(context, extractor)
 
+		val audioSettings = runBlocking { settings.audioSettings() }
+
 		return ExoPlayer.Builder(context)
 			.setMediaSourceFactory(mediaSourceFactory)
-			.setSkipSilenceEnabled(settings.audioSettings.skipSilences)
+			.setSkipSilenceEnabled(audioSettings.skipSilences)
 			.setAudioAttributes(attributes, true)
 			.setTrackSelector(DefaultTrackSelector(context))
 			.build()

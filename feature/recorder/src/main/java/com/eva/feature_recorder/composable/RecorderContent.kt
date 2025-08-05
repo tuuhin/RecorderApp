@@ -20,19 +20,21 @@ import com.eva.feature_recorder.util.RecorderPreviewFakes
 import com.eva.recorder.domain.models.RecorderAction
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.utils.DeferredDurationList
-import com.eva.recorder.utils.DeferredRecordingDataPointList
+import com.eva.recorder.utils.DeferredRecordedPointList
 import com.eva.ui.R
+import com.eva.ui.theme.DownloadableFonts
 import com.eva.ui.theme.RecorderAppTheme
 import kotlinx.datetime.LocalTime
 
 @Composable
 internal fun RecorderContent(
 	timer: LocalTime,
-	recordingPointsCallback: DeferredRecordingDataPointList,
+	recordingPointsCallback: DeferredRecordedPointList,
 	bookMarksDeferred: DeferredDurationList,
 	recorderState: RecorderState,
 	onRecorderAction: (RecorderAction) -> Unit,
 	modifier: Modifier = Modifier,
+	isStartRecordingEnabled: Boolean = true,
 ) {
 	Box(
 		modifier = modifier,
@@ -43,16 +45,21 @@ internal fun RecorderContent(
 			verticalArrangement = Arrangement.spacedBy(40.dp),
 			modifier = Modifier.offset(y = dimensionResource(id = R.dimen.graph_offset))
 		) {
-			RecorderTimerText(time = timer)
+			RecorderTimerText(
+				time = timer,
+				fontFamily = DownloadableFonts.SPLINE_SANS_MONO_FONT_FAMILY
+			)
 			RecorderAmplitudeGraph(
-				amplitudesCallback = recordingPointsCallback,
+				recoderPointsCallback = recordingPointsCallback,
 				bookMarksDeferred = bookMarksDeferred,
+				timelineFontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 				modifier = Modifier.fillMaxWidth(),
 			)
 		}
 		AnimatedRecorderActionTray(
 			recorderState = recorderState,
 			onRecorderAction = onRecorderAction,
+			isStartRecordingEnabled = isStartRecordingEnabled,
 			modifier = Modifier
 				.offset(y = dimensionResource(id = R.dimen.recordings_action_offset))
 				.fillMaxWidth()
@@ -81,7 +88,7 @@ private fun RecorderContentPreview(
 			timer = LocalTime(0, 10, 56, 0),
 			recorderState = recorderState,
 			bookMarksDeferred = { listOf() },
-			recordingPointsCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDES_FLOAT_ARRAY },
+			recordingPointsCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE },
 			onRecorderAction = {},
 			modifier = Modifier
 				.padding(horizontal = dimensionResource(R.dimen.sc_padding_secondary))

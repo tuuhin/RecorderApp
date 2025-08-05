@@ -106,6 +106,20 @@ internal class NotificationHelper(private val context: Context) {
 			},
 		)
 
+	private fun buildPendingIntentToPlayer(recordingId: Long): PendingIntent {
+		val intent = Intent().apply {
+			setClassName(context.applicationContext, IntentConstants.MAIN_ACTIVITY)
+			data = NavDeepLinks.audioPlayerDestinationUri(recordingId).toUri()
+			action = Intent.ACTION_VIEW
+		}
+
+		return buildActivityPendingIntent(
+			context,
+			IntentRequestCodes.PLAYER_NOTIFICATION_INTENT,
+			intent
+		)
+	}
+
 	private val recorderCustomView = RemoteViews(
 		context.packageName, R.layout.recorder_remote_view_layout
 	).apply {
@@ -122,13 +136,13 @@ internal class NotificationHelper(private val context: Context) {
 			.setCustomContentView(recorderCustomView)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 			.setPriority(NotificationCompat.PRIORITY_MAX)
-			.setCategory(NotificationCompat.CATEGORY_SERVICE)
+			.setCategory(NotificationCompat.CATEGORY_PROGRESS)
 			.setShowWhen(false)
 			.setOnlyAlertOnce(true)
 			.setOngoing(true)
 			.setContentIntent(recorderScreenPendingIntent)
 
-	private val recordingCompleteNotification: Notification =
+	private val _recordingCompleteNotification =
 		NotificationCompat.Builder(context, NotificationConstants.RECORDING_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_outlined_recording)
 			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -137,17 +151,7 @@ internal class NotificationHelper(private val context: Context) {
 			.setContentText(context.getString(R.string.recorder_recording_completed_text))
 			.setAutoCancel(true)
 			.setContentIntent(recordingsScreenPendingIntent)
-			.build()
 
-	private val recordingCancelNotification: Notification =
-		NotificationCompat.Builder(context, NotificationConstants.RECORDING_CHANNEL_ID)
-			.setSmallIcon(R.drawable.ic_outlined_recording)
-			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-			.setContentTitle(context.getString(R.string.recorder_recording_notification_title_canceled))
-			.setContentText(context.getString(R.string.recorder_recording_notification_canceled_text))
-			.setAutoCancel(true)
-			.build()
 
 	val timerNotification: Notification
 		get() {
@@ -180,19 +184,23 @@ internal class NotificationHelper(private val context: Context) {
 		)
 	}
 
-	fun setRecordingsCompletedNotification() {
+	fun showRecordingDoneNotification() {
 		_notificationManager?.notify(
 			NotificationConstants.RECORDER_NOTIFICATION_SECONDARY_ID,
-			recordingCompleteNotification
+			_recordingCompleteNotification.build()
 		)
 	}
 
-	fun setRecordingCancelNotification() {
+	fun showCompletedNotificationWithIntent(recordingId: Long) {
 		_notificationManager?.notify(
 			NotificationConstants.RECORDER_NOTIFICATION_SECONDARY_ID,
-			recordingCancelNotification
+			_recordingCompleteNotification
+				.setContentText(context.getString(R.string.recorder_recording_completed_text_2))
+				.setContentIntent(buildPendingIntentToPlayer(recordingId))
+				.build()
 		)
 	}
+
 
 	fun setOnPauseNotification() {
 		val updatedRemoteView = recorderCustomView.apply {

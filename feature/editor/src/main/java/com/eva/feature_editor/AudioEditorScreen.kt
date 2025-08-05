@@ -57,6 +57,7 @@ import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.ui.R
 import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
+import com.eva.ui.theme.DownloadableFonts
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.ui.utils.LocalSnackBarProvider
 import kotlinx.coroutines.launch
@@ -150,6 +151,7 @@ internal fun AudioEditorScreenContent(
 		) {
 			PlayerDurationText(
 				track = trackData,
+				fontFamily = DownloadableFonts.SPLINE_SANS_MONO_FONT_FAMILY,
 				modifier = Modifier.align(Alignment.TopCenter)
 			)
 			Column(

@@ -1,7 +1,7 @@
 package com.eva.recorder.domain
 
+import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
-import com.eva.recorder.utils.DurationToAmplitudeList
 import com.eva.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,17 +21,12 @@ interface VoiceRecorder {
 	/**
 	 * A series of data-points for the current recording.
 	 */
-	val dataPoints: Flow<DurationToAmplitudeList>
+	val dataPoints: Flow<List<RecordedPoint>>
 
 	/**
 	 * A flow determining how long the recording has been started
 	 */
 	val recorderTimer: StateFlow<LocalTime>
-
-	/**
-	 * Initiates the recorder to be used
-	 */
-	fun createRecorder()
 
 	/**
 	 * Start recording
@@ -46,12 +41,12 @@ interface VoiceRecorder {
 	/**
 	 * Pause the ongoing recording
 	 */
-	fun pauseRecording()
+	suspend fun pauseRecording()
 
 	/**
 	 * Starts the paused recording
 	 */
-	fun resumeRecording()
+	suspend fun resumeRecording()
 
 	/* Cancels the current running  recording
 	 */

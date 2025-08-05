@@ -15,10 +15,11 @@ import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.datastore.proto.RecorderSettingsProto
 import com.eva.datastore.proto.recorderSettingsProto
 import com.google.protobuf.InvalidProtocolBufferException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -28,8 +29,9 @@ internal class RecorderAudioSettingsRepoImpl(private val context: Context) :
 	override val audioSettingsFlow: Flow<RecorderAudioSettings>
 		get() = context.recorderSettings.data.map(RecorderSettingsProto::toDomain)
 
-	override val audioSettings: RecorderAudioSettings
-		get() = runBlocking { audioSettingsFlow.first() }
+	override suspend fun audioSettings(): RecorderAudioSettings {
+		return withContext(Dispatchers.IO) { audioSettingsFlow.first() }
+	}
 
 	override suspend fun onEncoderChange(encoder: RecordingEncoders) {
 		context.recorderSettings.updateData { settings ->

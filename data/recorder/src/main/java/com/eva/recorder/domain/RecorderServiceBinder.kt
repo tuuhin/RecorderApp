@@ -1,7 +1,7 @@
 package com.eva.recorder.domain
 
+import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
-import com.eva.recorder.utils.DurationToAmplitudeList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalTime
@@ -17,7 +17,7 @@ interface RecorderServiceBinder {
 
 	val bookMarkTimes: Flow<Set<Duration>>
 
-	val amplitudes: Flow<DurationToAmplitudeList>
+	val amplitudes: Flow<List<RecordedPoint>>
 
 	fun bindToService()
 

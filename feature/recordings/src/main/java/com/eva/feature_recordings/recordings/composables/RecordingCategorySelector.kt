@@ -6,12 +6,15 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.categories.domain.models.RecordingCategoryModel
+import com.eva.feature_recordings.recordings.state.SelectableRecordings
 import com.eva.feature_recordings.util.RecordingsPreviewFakes
 import com.eva.ui.theme.RecorderAppTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -20,6 +23,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal fun RecordingsCategorySelector(
 	selected: RecordingCategoryModel,
 	categories: ImmutableList<RecordingCategoryModel>,
+	recordings: ImmutableList<SelectableRecordings>,
 	onCategorySelect: (RecordingCategoryModel) -> Unit,
 	modifier: Modifier = Modifier,
 	contentPadding: PaddingValues = PaddingValues(),
@@ -33,6 +37,12 @@ internal fun RecordingsCategorySelector(
 
 	val contentType: ((Int, RecordingCategoryModel) -> Any?) = remember {
 		{ _, _ -> RecordingCategoryModel::class.simpleName }
+	}
+
+	val selectedCategoryRecordingsCount by remember(selected, recordings) {
+		derivedStateOf {
+			recordings.count { it.recording.categoryId == selected.id }
+		}
 	}
 
 	LazyRow(
@@ -49,6 +59,7 @@ internal fun RecordingsCategorySelector(
 			RecordingCategoryChipSelectorChip(
 				category = category,
 				isSelected = selected == category,
+				selectedCategoryRecordingsCount = selectedCategoryRecordingsCount,
 				onClick = { onCategorySelect(category) },
 				modifier = Modifier.animateItem()
 			)
@@ -63,6 +74,7 @@ private fun RecordingsCategorySelectorPreview() = RecorderAppTheme {
 		RecordingsCategorySelector(
 			selected = RecordingCategoryModel.ALL_CATEGORY,
 			categories = RecordingsPreviewFakes.FAKE_CATEGORIES_WITH_ALL_OPTION,
+			recordings = RecordingsPreviewFakes.FAKE_VOICE_RECORDING_MODELS,
 			onCategorySelect = {},
 		)
 	}

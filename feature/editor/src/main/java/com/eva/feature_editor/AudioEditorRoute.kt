@@ -7,6 +7,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -31,6 +32,7 @@ import com.eva.ui.R
 import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.navigation.PlayerSubGraph
 import com.eva.ui.navigation.animatedComposable
+import com.eva.ui.utils.LocalSharedTransitionVisibilityScopeProvider
 import com.eva.ui.utils.UiEventsHandler
 import com.eva.ui.utils.sharedViewmodel
 import kotlinx.coroutines.flow.collectLatest
@@ -55,36 +57,38 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 			eventsFlow = { merge(sharedViewmodel.uiEvent, visualsViewmodel.uiEvent) },
 		)
 
-		AudioEditorScreenContainer(
-			loadState = loadState,
-			content = { model ->
-				AudioEditorScreenStateful(
-					fileModel = model,
-					visualization = { compressedVisuals },
-					isVisualsReady = isVisualsReady,
-					onClipDataUpdate = visualsViewmodel::updateClipConfigs,
-					onExportStarted = dropUnlessResumed {
-						controller.navigate(NavRoutes.VoiceRecordings) {
-							popUpTo<NavRoutes.VoiceRecordings> {
-								inclusive = true
+		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
+			AudioEditorScreenContainer(
+				loadState = loadState,
+				content = { model ->
+					AudioEditorScreenStateful(
+						fileModel = model,
+						visualization = { compressedVisuals },
+						isVisualsReady = isVisualsReady,
+						onClipDataUpdate = visualsViewmodel::updateClipConfigs,
+						onExportStarted = dropUnlessResumed {
+							controller.navigate(NavRoutes.VoiceRecordings) {
+								popUpTo<NavRoutes.VoiceRecordings> {
+									inclusive = true
+								}
 							}
-						}
-					},
-					navigation = {
-						if (controller.previousBackStackEntry?.destination?.route != null) {
-							IconButton(
-								onClick = dropUnlessResumed(block = controller::popBackStack),
-							) {
-								Icon(
-									imageVector = Icons.AutoMirrored.Default.ArrowBack,
-									contentDescription = stringResource(R.string.back_arrow)
-								)
+						},
+						navigation = {
+							if (controller.previousBackStackEntry?.destination?.route != null) {
+								IconButton(
+									onClick = dropUnlessResumed(block = controller::popBackStack),
+								) {
+									Icon(
+										imageVector = Icons.AutoMirrored.Default.ArrowBack,
+										contentDescription = stringResource(R.string.back_arrow)
+									)
+								}
 							}
-						}
-					},
-				)
-			},
-		)
+						},
+					)
+				},
+			)
+		}
 	}
 
 @Composable

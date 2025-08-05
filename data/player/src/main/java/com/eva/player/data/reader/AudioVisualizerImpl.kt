@@ -2,19 +2,16 @@ package com.eva.player.data.reader
 
 import android.content.ContentUris
 import android.content.Context
-import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.net.toUri
 import com.eva.player.domain.AudioVisualizer
+import com.eva.player.domain.exceptions.DecoderExistsException
 import com.eva.player.domain.exceptions.InvalidMimeTypeException
 import com.eva.recordings.domain.models.AudioFileModel
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,22 +19,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 
 private const val TAG = "PLAIN_VISUALIZER"
 
-class AudioVisualizerImpl(private val context: Context) : AudioVisualizer,
-	CoroutineScope by MainScope() {
+class AudioVisualizerImpl(private val context: Context) : AudioVisualizer {
 
-	private var _mediaCodec: MediaCodec? = null
+	private val _scope = CoroutineScope(Dispatchers.Default)
+
 	private var _extractor: MediaExtractor? = null
+	private var _decoder: MediaCodecPCMDataDecoder? = null
 
 	private val _isReady = MutableStateFlow(false)
 	override val isVisualReady: StateFlow<Boolean>
 		get() = _isReady
 
-	private val _visualization = MutableStateFlow<FloatArray>(floatArrayOf())
+	private val _visualization = MutableStateFlow(floatArrayOf())
 	override val normalizedVisualization: Flow<FloatArray>
-		get() = _visualization.map { array -> array.normalize() }
+		get() = _visualization.map { array -> array.normalize().smoothen(.4f) }
 			.flowOn(Dispatchers.Default)
 
 	override suspend fun prepareVisualization(model: AudioFileModel, timePerPointInMs: Int)
@@ -46,14 +45,19 @@ class AudioVisualizerImpl(private val context: Context) : AudioVisualizer,
 	override suspend fun prepareVisualization(fileId: Long, timePerPointInMs: Int): Result<Unit> {
 		val uri = ContentUris.withAppendedId(
 			MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
-			fileId.toLong()
+			fileId
 		)
 		return prepareVisualization(fileUri = uri.toString(), timePerPointInMs)
 	}
 
 	override suspend fun prepareVisualization(fileUri: String, timePerPointInMs: Int)
 			: Result<Unit> {
-		val result = async(Dispatchers.IO) {
+		return withContext(Dispatchers.IO) {
+			if (_decoder != null) {
+				Log.d(TAG, "CLEAN DECODER TO PREPARE IT AGAIN")
+				return@withContext Result.failure(DecoderExistsException())
+			}
+
 			try {
 				_extractor = MediaExtractor().apply {
 					setDataSource(context, fileUri.toUri(), null)
@@ -62,50 +66,40 @@ class AudioVisualizerImpl(private val context: Context) : AudioVisualizer,
 				val mimetype = format?.mimeType
 				if (mimetype?.startsWith("audio") != true) {
 					Log.e(TAG, "WRONG MIME TYPE")
-					return@async Result.failure(InvalidMimeTypeException())
+					return@withContext Result.failure(InvalidMimeTypeException())
 				}
-
 				_extractor?.selectTrack(0)
 
-				val callback = MediaCodecCallback(
+				_decoder = MediaCodecPCMDataDecoder(
 					extractor = _extractor,
+					scope = _scope,
 					totalTime = format.duration,
 					seekDuration = timePerPointInMs,
-					scope = this@AudioVisualizerImpl,
 					onBufferDecoded = { array ->
 						_isReady.update { true }
-						_visualization.update { array }
+						_visualization.update { it + array }
 					},
 				)
-
 				Log.d(TAG, "MEDIA CODEC SET FOR MIME TYPE:$mimetype")
-				Log.d(TAG, "CALLER THREAD : ${Thread.currentThread().name}")
-				_mediaCodec?.reset()
-				_mediaCodec = MediaCodec.createDecoderByType(mimetype).apply {
-					configure(format, null, null, 0)
-					setCallback(callback)
-				}
-				_mediaCodec?.start()
-
+				_decoder?.initiateCodec(format, mimetype)
 				Result.success(Unit)
-			} catch (e: CancellationException) {
-				Log.i(TAG, "COROUTINE WAS CANCELLED CANNOT MAKE VISUALIZER")
-				throw e
 			} catch (e: Exception) {
 				Log.e(TAG, "Error decoding or processing audio", e)
 				Result.failure(e)
 			}
 		}
-		return result.await()
 	}
 
-
 	override fun cleanUp() {
-		Log.d(TAG, "CLEAN UP FOR PLAIN VISUALIZER")
-		cancel()
+		_scope.cancel()
 		_isReady.update { false }
+
+		Log.d(TAG, "MEDIA CODEC IS RELEASED")
+		_decoder?.cleanUp()
+		_decoder = null
+
+		Log.d(TAG, "MEDIA EXTRACTOR IS RELEASED")
 		_extractor?.release()
-		_mediaCodec?.reset()
-		_mediaCodec?.release()
+		_extractor = null
 	}
 }

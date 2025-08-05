@@ -9,9 +9,9 @@ import androidx.lifecycle.lifecycleScope
 import com.eva.bookmarks.domain.provider.RecordingBookmarksProvider
 import com.eva.recorder.domain.RecorderWidgetInteractor
 import com.eva.recorder.domain.VoiceRecorder
+import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderAction
 import com.eva.recorder.domain.models.RecorderState
-import com.eva.recorder.utils.DurationToAmplitudeList
 import com.eva.use_case.usecases.BluetoothScoUseCase
 import com.eva.use_case.usecases.PhoneStateObserverUseCase
 import com.eva.utils.NotificationConstants
@@ -71,18 +71,19 @@ internal class VoiceRecorderService : LifecycleService() {
 			.toSet()
 	}
 
-	val amplitudes: Flow<DurationToAmplitudeList>
+	val amplitudes: Flow<List<RecordedPoint>>
 		get() = voiceRecorder.dataPoints
-
-	val recorderTime: StateFlow<LocalTime>
-		get() = voiceRecorder.recorderTimer
 
 	val recorderState: StateFlow<RecorderState>
 		get() = voiceRecorder.recorderState
 
 	@OptIn(FlowPreview::class)
 	private val notificationTimer: Flow<LocalTime>
-		get() = voiceRecorder.recorderTimer.sample(800.milliseconds)
+		get() = voiceRecorder.recorderTimer.sample(1.seconds)
+
+	@OptIn(FlowPreview::class)
+	val recorderTime: Flow<LocalTime>
+		get() = voiceRecorder.recorderTimer.sample(100.milliseconds)
 
 	/**
 	 * Recorder timer sampled per 1 seconds
@@ -105,10 +106,10 @@ internal class VoiceRecorderService : LifecycleService() {
 	override fun onCreate() {
 		super.onCreate()
 		try {
-			// preparing the recorder
-			voiceRecorder.createRecorder()
 			// check use case
-			bluetoothScoUseCase.startConnectionIfAllowed()
+			lifecycleScope.launch {
+				bluetoothScoUseCase.startConnectionIfAllowed()
+			}
 			// read phone states
 			observeChangingPhoneState()
 			// inform bt connect
@@ -158,8 +159,7 @@ internal class VoiceRecorderService : LifecycleService() {
 		combine(notificationTimer, recorderState) { time, state ->
 			when (state) {
 				RecorderState.RECORDING -> notificationHelper.showNotificationDuringRecording(time)
-				RecorderState.COMPLETED -> notificationHelper.setRecordingsCompletedNotification()
-				RecorderState.CANCELLED -> notificationHelper.setRecordingCancelNotification()
+				RecorderState.COMPLETED -> notificationHelper.showRecordingDoneNotification()
 				else -> {}
 			}
 		}.launchIn(lifecycleScope)
@@ -193,14 +193,18 @@ internal class VoiceRecorderService : LifecycleService() {
 		//update the notification
 		notificationHelper.setOnResumeNotification()
 		//resume recording
-		voiceRecorder.resumeRecording()
+		lifecycleScope.launch {
+			voiceRecorder.resumeRecording()
+		}
 	}
 
 	private fun onPauseRecording() {
 		//update the notification
 		notificationHelper.setOnPauseNotification()
 		//pause recording
-		voiceRecorder.pauseRecording()
+		lifecycleScope.launch {
+			voiceRecorder.pauseRecording()
+		}
 	}
 
 	private fun onCancelRecording() {
@@ -222,7 +226,7 @@ internal class VoiceRecorderService : LifecycleService() {
 	private fun onStopRecording() {
 		// stop the recording
 		lifecycleScope.launch {
-			val timeBeforeSave = recorderTime.value
+			val timeBeforeSave = voiceRecorder.recorderTimer.value
 			when (val result = voiceRecorder.stopRecording()) {
 				// show an error toast
 				is Resource.Error -> {
@@ -233,6 +237,8 @@ internal class VoiceRecorderService : LifecycleService() {
 				is Resource.Success -> {
 					val recordingId = result.data ?: return@launch
 					clearAndSaveBookMarks(recordingId, timeBeforeSave)
+					// again show the notification
+					notificationHelper.showCompletedNotificationWithIntent(recordingId)
 				}
 
 				else -> {}
@@ -249,9 +255,9 @@ internal class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun addBookMark() {
-		val timeWhenClicked = recorderTime.value
+		val timeWhenClicked = voiceRecorder.recorderTimer.value
 		//should be a multiple of 100
-		val closestSecond = recorderTime.value.roundToClosestSeconds()
+		val closestSecond = timeWhenClicked.roundToClosestSeconds()
 		if (closestSecond <= timeWhenClicked) {
 			// add it to bookmarks
 			Log.d(LOGGER_TAG, "BOOKMARKS ADDED :$closestSecond")

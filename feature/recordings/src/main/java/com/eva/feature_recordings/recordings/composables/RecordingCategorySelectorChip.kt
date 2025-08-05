@@ -1,6 +1,7 @@
 package com.eva.feature_recordings.recordings.composables
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -20,6 +21,7 @@ import com.eva.categories.domain.models.RecordingCategoryModel
 import com.eva.feature_categories.mapper.colorResource
 import com.eva.feature_categories.mapper.painter
 import com.eva.ui.R
+import com.eva.ui.theme.DownloadableFonts
 
 @Composable
 internal fun RecordingCategoryChipSelectorChip(
@@ -27,6 +29,7 @@ internal fun RecordingCategoryChipSelectorChip(
 	category: RecordingCategoryModel,
 	onClick: () -> Unit,
 	modifier: Modifier = Modifier,
+	selectedCategoryRecordingsCount: Int = 0,
 ) {
 	val chipBackground = category.categoryColor.colorResource
 		?: MaterialTheme.colorScheme.surfaceContainer
@@ -54,19 +57,24 @@ internal fun RecordingCategoryChipSelectorChip(
 		},
 		trailingIcon = {
 			AnimatedVisibility(
-				visible = category.hasCount,
+				visible = selectedCategoryRecordingsCount > 0 && isSelected,
 				enter = slideInHorizontally() + fadeIn(),
 				exit = slideOutHorizontally() + fadeOut()
 			) {
-				Text(text = "(${category.count})")
+				Text(
+					text = "(${selectedCategoryRecordingsCount})",
+					style = MaterialTheme.typography.labelMedium,
+					fontFamily = DownloadableFonts.NOVA_MONO_FONT_FAMILY
+				)
 			}
 		},
 		colors = FilterChipDefaults.filterChipColors(
 			selectedContainerColor = chipBackground,
 			selectedLabelColor = chipContentColor,
 			selectedLeadingIconColor = chipContentColor,
+			containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
 			iconColor = chipContentColor
 		),
-		modifier = modifier,
+		modifier = modifier.animateContentSize(),
 	)
 }

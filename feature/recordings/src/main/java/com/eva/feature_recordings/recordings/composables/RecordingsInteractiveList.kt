@@ -70,6 +70,7 @@ internal fun RecordingsInteractiveList(
 		RecordingsCategorySelector(
 			selected = selectedCategory,
 			categories = categories,
+			recordings = recordings,
 			onCategorySelect = onCategorySelect,
 			contentPadding = PaddingValues(horizontal = dimensionResource(id = R.dimen.sc_padding))
 		)

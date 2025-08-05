@@ -3,8 +3,7 @@
   <string name="recorder_action_pause">Pause</string>
   <string name="recorder_action_resume">Resume</string>
   <string name="recorder_action_stop">Stop</string>
-  <string name="recorder_notification_text_running">Recorder is running</string>
-  <string name="recorder_notification_text_paused">Recorder Paused</string>
+  <string name="recorder_action_cancel">Cancel</string>
   <string name="back_arrow" translatable="false">Back Arrow</string>
   <string name="action_paused">Pause</string>
   <string name="action_stop">Stop</string>
@@ -15,8 +14,6 @@
   <string name="menu_option_recycle_bin">Recycle Bin</string>
   <string name="menu_more_option">More Options</string>
   <string name="recorder_top_bar_title">Voice Recorder</string>
-  <string name="recorder_recording_completed">Recording Completed</string>
-  <string name="recorder_recording_completed_text">Saved to external storage</string>
   <string name="recording_action_delete">Delete</string>
   <string name="selected_recording_count">%d selected</string>
   <string name="cancel_selection">Close Action</string>
@@ -54,9 +51,6 @@
   <string name="rename_label_text">Enter category name</string>
   <string name="rename_recording_action">Rename</string>
   <string name="recorder_action_start">Record</string>
-  <string name="recorder_action_cancel">Cancel</string>
-  <string name="recorder_recording_notification_title_canceled">Recording Cancelled</string>
-  <string name="recorder_recording_notification_canceled_text">Recording canceled by the user</string>
   <string name="recording_action_restore">Restore</string>
   <string name="recording_restore_dialog_title">Restore Recordings?</string>
   <string name="recording_restore_dialog_text">Restore the given set of selected recordings</string>
@@ -138,10 +132,8 @@
   <string name="app_shortcuts_open_last_played_text">Opens the last played audio file</string>
   <string name="app_shortcuts_recordings">Recordings</string>
   <string name="app_shortcuts_recordings_text">Shows all the recordings of the app</string>
-  <string name="toast_recording_bluetooth">Using bluetooth mic</string>
   <string name="recording_settings_use_bt_mic">Bluetooth Mic</string>
   <string name="recording_settings_use_bt_mic_text">Use bluetooth mic when available</string>
-  <string name="toast_incoming_call">Incoming call</string>
   <string name="dialog_action_discard">Discard</string>
   <string name="cancel_recording_dialog_title">Cancel Recording</string>
   <string name="cancel_recording_dialog_text">Are you sure you want to cancel this recording.Once\'s cancelled it\'s not recoverable</string>
@@ -179,7 +171,6 @@
   <string name="app_version_title">Version name:</string>
   <string name="add_recording_bookmark">Bookmark</string>
   <string name="bookmark_tooltip_text">Add a bookmark to your recording at a interval of a second</string>
-  <string name="bookmarks_saved">Bookmarks Added</string>
   <string name="menu_option_no_favourite">No Favourite</string>
   <string name="enter_your_bookmark">Enter your bookmark</string>
   <string name="delete_bookmark">Delete Bookmark</string>

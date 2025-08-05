@@ -10,8 +10,6 @@ import androidx.room.Upsert
 import com.eva.database.entity.RecordingCategoryEntity
 import kotlinx.coroutines.flow.Flow
 
-typealias RecordingsCategoryEntitiesWithCount
-		= Map<RecordingCategoryEntity, @MapColumn("R_COUNT") Long>
 
 @Dao
 interface RecordingCategoryDao {
@@ -40,7 +38,8 @@ interface RecordingCategoryDao {
 		GROUP BY RECORDINGS_CATEGORY.CATEGORY_ID
 		"""
 	)
-	fun getCategoriesAsFlowWithCount(): Flow<RecordingsCategoryEntitiesWithCount>
+	fun getCategoriesAsFlowWithCount(): Flow<Map<RecordingCategoryEntity,
+			@MapColumn(columnName = "R_COUNT") Long>>
 
 	@Delete
 	suspend fun deleteCategory(entity: RecordingCategoryEntity)

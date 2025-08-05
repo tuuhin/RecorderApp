@@ -45,6 +45,7 @@ internal fun AnimatedRecorderActionTray(
 	recorderState: RecorderState,
 	onRecorderAction: (RecorderAction) -> Unit,
 	modifier: Modifier = Modifier,
+	isStartRecordingEnabled: Boolean = true,
 ) {
 	val mode by remember(recorderState) {
 		derivedStateOf(recorderState::toAction)
@@ -62,6 +63,7 @@ internal fun AnimatedRecorderActionTray(
 			RecorderActionMode.INIT -> {
 				Box(contentAlignment = Alignment.Center) {
 					RecordButton(
+						enabled = isStartRecordingEnabled,
 						onClick = { onRecorderAction(RecorderAction.StartRecorderAction) },
 					)
 				}

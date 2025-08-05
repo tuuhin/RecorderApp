@@ -8,6 +8,7 @@
   <string name="recorder_notification_text_paused">Recorder Paused</string>
   <string name="recorder_recording_completed">Recording Completed</string>
   <string name="recorder_recording_completed_text">Saved to external storage</string>
+  <string name="recorder_recording_completed_text_2">Click to play</string>
   <string name="recorder_recording_notification_title_canceled">Recording Cancelled</string>
   <string name="recorder_recording_notification_canceled_text">Recording canceled by the user</string>
   <string name="toast_recording_bluetooth">Using bluetooth mic</string>

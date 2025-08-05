@@ -41,10 +41,12 @@ import com.eva.recorderapp.BuildConfig
 import com.eva.ui.R
 import com.eva.ui.navigation.NavDialogs
 import com.eva.ui.theme.RecorderAppTheme
+import com.eva.utils.ApplicationInfo
 
 fun NavGraphBuilder.appInfoDialog() = dialog<NavDialogs.ApplicationInfo> {
 	AppDialogInfoContent()
 }
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -111,7 +113,7 @@ private fun AppDialogInfoContent(
 				) {
 					SuggestionChip(
 						onClick = {
-							context.launchViewIntent(BuildConfig.GITHUB_PROJECT_LINK.toUri())
+							context.launchViewIntent(ApplicationInfo.GITHUB_PROJECT_LINK.toUri())
 						},
 						label = { Text(text = stringResource(id = R.string.app_info_source_code)) },
 						shape = MaterialTheme.shapes.large,
@@ -128,7 +130,7 @@ private fun AppDialogInfoContent(
 					)
 					SuggestionChip(
 						onClick = {
-							context.launchViewIntent(BuildConfig.GITHUB_PROFILE_LINK.toUri())
+							context.launchViewIntent(ApplicationInfo.PROJECT_AUTHOR_LINK.toUri())
 						},
 						label = { Text(text = stringResource(id = R.string.app_info_author)) },
 						shape = MaterialTheme.shapes.large,
@@ -156,7 +158,7 @@ private fun Context.launchViewIntent(uri: Uri) {
 			data = uri
 			startActivity(this)
 		}
-	} catch (e: ActivityNotFoundException) {
+	} catch (_: ActivityNotFoundException) {
 		Toast.makeText(
 			applicationContext,
 			R.string.cannot_launch_activity,

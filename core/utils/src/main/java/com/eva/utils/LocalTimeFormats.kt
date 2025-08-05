@@ -9,7 +9,7 @@ import kotlinx.datetime.format.char
 object LocalTimeFormats {
 
 	val LOCAL_DATETIME_DATE_TIME_FORMAT = LocalDateTime.Format {
-		dayOfMonth()
+		day(padding = Padding.ZERO)
 		char(' ')
 		monthName(MonthNames.ENGLISH_FULL)
 		char(' ')
@@ -56,7 +56,7 @@ object LocalTimeFormats {
 	}
 
 	val RECORDING_RECORD_TIME_FORMAT = LocalDateTime.Format {
-		dayOfMonth()
+		day(padding = Padding.ZERO)
 		char(' ')
 		monthName(MonthNames.ENGLISH_ABBREVIATED)
 		char(' ')

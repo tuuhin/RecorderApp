@@ -9,7 +9,7 @@ interface RecorderAudioSettingsRepo {
 
 	val audioSettingsFlow: Flow<RecorderAudioSettings>
 
-	val audioSettings: RecorderAudioSettings
+	suspend fun audioSettings(): RecorderAudioSettings
 
 	suspend fun onEncoderChange(encoder: RecordingEncoders)
 
