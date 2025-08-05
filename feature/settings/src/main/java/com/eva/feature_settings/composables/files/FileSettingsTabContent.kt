@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.eva.datastore.domain.models.RecorderFileSettings
 import com.eva.feature_settings.composables.SettingsItemWithSwitch
 import com.eva.feature_settings.utils.FileSettingsChangeEvent
+import com.eva.recordings.domain.models.DeviceTotalStorageModel
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 
@@ -26,6 +27,7 @@ internal fun FileSettingsTabContent(
 	settings: RecorderFileSettings,
 	onEvent: (FileSettingsChangeEvent) -> Unit,
 	modifier: Modifier = Modifier,
+	model: DeviceTotalStorageModel = DeviceTotalStorageModel(),
 	contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
 	LazyColumn(
@@ -33,12 +35,12 @@ internal fun FileSettingsTabContent(
 		contentPadding = contentPadding
 	) {
 		item {
-			StorageStatistics(modifier = Modifier.fillMaxWidth())
+			StorageStatistics(model = model, modifier = Modifier.fillMaxWidth())
 		}
 		item {
 			Text(
-				text = stringResource(R.string.app_settings_files_subtitle_recordings)
-				, style = MaterialTheme.typography.titleMedium,
+				text = stringResource(R.string.app_settings_files_subtitle_recordings),
+				style = MaterialTheme.typography.titleMedium,
 				color = MaterialTheme.colorScheme.primary,
 				modifier = Modifier
 					.padding(horizontal = 16.dp)

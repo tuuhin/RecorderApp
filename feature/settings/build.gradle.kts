@@ -21,6 +21,7 @@ dependencies {
 
 	implementation(project(":core:ui"))
 	implementation(project(":core:utils"))
+	implementation(project(":data:recordings"))
 	implementation(project(":data:datastore"))
 
 }

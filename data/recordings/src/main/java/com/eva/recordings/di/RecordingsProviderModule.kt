@@ -10,12 +10,14 @@ import com.eva.recordings.data.RecordingWidgetInteractorImpl
 import com.eva.recordings.data.provider.PlayerFileProviderImpl
 import com.eva.recordings.data.provider.RecorderFileProviderImpl
 import com.eva.recordings.data.provider.RecordingSecondaryDataProviderImpl
+import com.eva.recordings.data.provider.StorageInfoProviderImpl
 import com.eva.recordings.data.provider.TrashRecordingsProviderApi29Impl
 import com.eva.recordings.data.provider.TrashRecordingsProviderImpl
 import com.eva.recordings.data.provider.VoiceRecordingsProviderImpl
 import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.recordings.domain.provider.RecorderFileProvider
 import com.eva.recordings.domain.provider.RecordingsSecondaryDataProvider
+import com.eva.recordings.domain.provider.StorageInfoProvider
 import com.eva.recordings.domain.provider.TrashRecordingsProvider
 import com.eva.recordings.domain.provider.VoiceRecordingsProvider
 import com.eva.recordings.domain.widgets.RecordingWidgetInteractor
@@ -79,5 +81,10 @@ object RecordingsProviderModule {
 	@Singleton
 	fun providesWidgetInteractor(@ApplicationContext context: Context): RecordingWidgetInteractor =
 		RecordingWidgetInteractorImpl(context)
+
+	@Provides
+	@Singleton
+	fun providesStorageInfoProvider(@ApplicationContext context: Context): StorageInfoProvider =
+		StorageInfoProviderImpl(context)
 
 }

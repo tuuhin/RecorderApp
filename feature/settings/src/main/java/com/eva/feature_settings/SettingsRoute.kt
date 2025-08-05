@@ -28,6 +28,7 @@ fun NavGraphBuilder.settingsRoute(controller: NavController) =
 
 		val audioSettings by viewModel.audioSettings.collectAsStateWithLifecycle()
 		val fileSettings by viewModel.fileSettings.collectAsStateWithLifecycle()
+		val storageData by viewModel.storageData.collectAsStateWithLifecycle()
 
 		UiEventsHandler(eventsFlow = viewModel::uiEvent)
 
@@ -35,6 +36,7 @@ fun NavGraphBuilder.settingsRoute(controller: NavController) =
 			AudioSettingsScreen(
 				audioSettings = audioSettings,
 				fileSettings = fileSettings,
+				storageModel = storageData,
 				onAudioSettingsChange = viewModel::onAudioEvent,
 				onFileSettingsChange = viewModel::onFileEvent,
 				onNavigateToInfo = dropUnlessResumed {
