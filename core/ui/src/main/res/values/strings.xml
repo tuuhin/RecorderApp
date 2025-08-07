@@ -254,4 +254,16 @@
   <string name="rename_export_item_label">Export Prefix</string>
   <string name="action_undo">Undo</string>
   <string name="action_redo">Redo</string>
+  <string name="onboarding_page_title_permissions">Permissions</string>
+  <string name="onboarding_page_title_permissions_text">List of permission required to run the app smoothly. There are others which are not important</string>
+  <string name="onboarding_page_permission_mic">Record Audio</string>
+  <string name="onboarding_page_permission_mic_desc">Record audio permission to allow recording</string>
+  <string name="onboarding_page_permission_notification">Post notification</string>
+  <string name="onboarding_page_permission_notification_desc">Show ongoing recording and playing for the audio</string>
+  <string name="onboarding_page_permission_media">Read Audio files</string>
+  <string name="onboarding_page_permission_media_desc">Read audio files in the device</string>
+  <string name="onboarding_page_title_permissions_extras">These permission can be also granted as you progress into your app. So you can continue without allowing</string>
+  <string name="onboarding_page_permission_all_granted">All required permission granted</string>
+  <string name="onboarding_page_feature_title">Record, Play, Edit and Organize</string>
+  <string name="onboarding_page_welcome_page_text">One stop for to easily record, organize, and refine your audio notes.</string>
 </resources>
