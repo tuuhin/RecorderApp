@@ -15,10 +15,11 @@ import com.eva.datastore.proto.FileSettingsProto
 import com.eva.datastore.proto.NamingFormatProto
 import com.eva.datastore.proto.fileSettingsProto
 import com.google.protobuf.InvalidProtocolBufferException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -28,8 +29,9 @@ internal class RecorderFileSettingsRepoImpl(private val context: Context) :
 	override val fileSettingsFlow: Flow<RecorderFileSettings>
 		get() = context.recorderFileSettings.data.map(FileSettingsProto::toDomain)
 
-	override val fileSettings: RecorderFileSettings
-		get() = runBlocking { fileSettingsFlow.first() }
+	override suspend fun fileSettings(): RecorderFileSettings {
+		return withContext(Dispatchers.IO) { fileSettingsFlow.first() }
+	}
 
 	override suspend fun onFileNameFormatChange(format: AudioFileNamingFormat) {
 		context.recorderFileSettings.updateData { settings ->

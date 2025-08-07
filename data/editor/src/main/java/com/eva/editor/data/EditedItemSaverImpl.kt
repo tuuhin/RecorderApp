@@ -11,9 +11,9 @@ internal class EditedItemSaverImpl(
 	private val settings: RecorderFileSettingsRepo
 ) : EditedItemSaver {
 
-	override fun saveItem(model: AudioFileModel, fileUri: String) {
+	override suspend fun saveItem(model: AudioFileModel, fileUri: String) {
 
-		val prefix = settings.fileSettings.exportItemPrefix
+		val prefix = settings.fileSettings().exportItemPrefix
 
 		val fileName = buildString {
 			append(prefix)
