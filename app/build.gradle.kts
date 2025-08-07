@@ -105,5 +105,6 @@ dependencies {
 	implementation(project(":feature:editor"))
 	implementation(project(":feature:settings"))
 	implementation(project(":feature:widget"))
+	implementation(project(":feature:onboarding"))
 
 }
