@@ -1,8 +1,10 @@
 package com.eva.datastore.di
 
 import android.content.Context
+import com.eva.datastore.data.repository.PreferencesSettingsRepoImpl
 import com.eva.datastore.data.repository.RecorderAudioSettingsRepoImpl
 import com.eva.datastore.data.repository.RecorderFileSettingsRepoImpl
+import com.eva.datastore.domain.repository.PreferencesSettingsRepo
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
 import dagger.Module
@@ -18,14 +20,17 @@ object DataStoreModule {
 
 	@Provides
 	@Singleton
-	fun providesRecorderSettings(
-		@ApplicationContext context: Context,
-	): RecorderAudioSettingsRepo = RecorderAudioSettingsRepoImpl(context)
+	fun providesRecorderSettings(@ApplicationContext context: Context): RecorderAudioSettingsRepo =
+		RecorderAudioSettingsRepoImpl(context)
 
 	@Provides
 	@Singleton
-	fun providesFileSettings(
-		@ApplicationContext context: Context,
-	): RecorderFileSettingsRepo = RecorderFileSettingsRepoImpl(context)
+	fun providesFileSettings(@ApplicationContext context: Context): RecorderFileSettingsRepo =
+		RecorderFileSettingsRepoImpl(context)
+
+	@Provides
+	@Singleton
+	fun providesOnBoardingSettings(@ApplicationContext context: Context): PreferencesSettingsRepo =
+		PreferencesSettingsRepoImpl(context)
 
 }
