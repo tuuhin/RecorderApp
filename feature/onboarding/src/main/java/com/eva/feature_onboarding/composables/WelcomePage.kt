@@ -38,22 +38,19 @@ internal fun WelcomePage(
 		verticalArrangement = Arrangement.Center
 	) {
 		Image(
-			painter = painterResource(R.drawable.ic_mic_variant),
+			painter = painterResource(R.drawable.ic_microphone),
 			colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary),
 			contentDescription = "probable logo",
-			modifier = Modifier.size(64.dp),
+			modifier = Modifier.size(128.dp),
 		)
-		Spacer(modifier = Modifier.height(72.dp))
+		Spacer(modifier = Modifier.height(12.dp))
 		Text(
-			text = buildString {
-				append("Welcome to ")
-				append(stringResource(R.string.app_name))
-			},
-			style = MaterialTheme.typography.headlineMedium,
-			fontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
+			text = stringResource(R.string.onboarding_page_welcome_message,stringResource(R.string.app_name)),
+			style = MaterialTheme.typography.headlineLarge,
+			fontFamily = DownloadableFonts.FIRA_SANS_FONT_FAMILY,
 			color = MaterialTheme.colorScheme.primary,
 		)
-		Spacer(modifier = Modifier.height(6.dp))
+		Spacer(modifier = Modifier.height(8.dp))
 		Text(
 			text = stringResource(R.string.onboarding_page_welcome_page_text),
 			style = MaterialTheme.typography.bodyLarge,

@@ -53,7 +53,7 @@ internal fun FeaturesPage(
 			text = stringResource(R.string.onboarding_page_feature_title),
 			style = MaterialTheme.typography.headlineMedium,
 			color = MaterialTheme.colorScheme.primary,
-			fontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
+			fontFamily = DownloadableFonts.FIRA_SANS_FONT_FAMILY,
 		)
 		Spacer(modifier = Modifier.height(12.dp))
 		bullets.forEach { text ->

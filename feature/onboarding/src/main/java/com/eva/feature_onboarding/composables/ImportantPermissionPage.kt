@@ -23,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -97,19 +98,19 @@ internal fun ImportantPermissionsPage(
 			painter = painterResource(R.drawable.ic_security),
 			contentDescription = "Permission security",
 			colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.tertiary),
-			modifier = Modifier.size(80.dp)
+			modifier = Modifier.size(120.dp)
 		)
-		Spacer(modifier = Modifier.height(4.dp))
+		Spacer(modifier = Modifier.height(40.dp))
 		Text(
 			text = stringResource(R.string.onboarding_page_title_permissions),
-			style = MaterialTheme.typography.headlineMedium,
-			fontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
+			style = MaterialTheme.typography.headlineLarge,
+			fontFamily = DownloadableFonts.FIRA_SANS_FONT_FAMILY,
 			color = MaterialTheme.colorScheme.primary,
 		)
-		Spacer(modifier = Modifier.height(6.dp))
+		Spacer(modifier = Modifier.height(12.dp))
 		Text(
 			text = stringResource(R.string.onboarding_page_title_permissions_text),
-			style = MaterialTheme.typography.titleSmall
+			style = MaterialTheme.typography.titleMedium
 		)
 		ListItem(
 			headlineContent = { Text(text = stringResource(R.string.onboarding_page_permission_mic)) },
@@ -117,6 +118,7 @@ internal fun ImportantPermissionsPage(
 			leadingContent = {
 				Icon(imageVector = Icons.Outlined.Mic, contentDescription = null)
 			},
+			colors = ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.secondary)
 		)
 		ListItem(
 			headlineContent = { Text(text = stringResource(R.string.onboarding_page_permission_media)) },
@@ -124,6 +126,7 @@ internal fun ImportantPermissionsPage(
 			leadingContent = {
 				Icon(imageVector = Icons.Outlined.MusicNote, contentDescription = null)
 			},
+			colors = ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.secondary)
 		)
 		ListItem(
 			headlineContent = { Text(text = stringResource(R.string.onboarding_page_permission_notification)) },
@@ -131,6 +134,7 @@ internal fun ImportantPermissionsPage(
 			leadingContent = {
 				Icon(imageVector = Icons.Outlined.Notifications, contentDescription = null)
 			},
+			colors = ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.secondary)
 		)
 		HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
 		Text(
@@ -145,7 +149,7 @@ internal fun ImportantPermissionsPage(
 			if (isGranted) {
 				Text(
 					text = stringResource(R.string.onboarding_page_permission_all_granted),
-					style = MaterialTheme.typography.labelMedium,
+					style = MaterialTheme.typography.labelLarge,
 					color = MaterialTheme.colorScheme.secondary,
 				)
 			} else {

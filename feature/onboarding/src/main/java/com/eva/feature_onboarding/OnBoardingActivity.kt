@@ -16,13 +16,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.eva.feature_onboarding.screen.OnBoardingState
 import com.eva.feature_onboarding.screen.OnBoardingViewmodel
 import com.eva.feature_onboarding.screen.OnboardingScreen
@@ -30,6 +30,7 @@ import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.IntentConstants
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class OnBoardingActivity : ComponentActivity() {
@@ -37,29 +38,28 @@ class OnBoardingActivity : ComponentActivity() {
 	private val viewmodel by viewModels<OnBoardingViewmodel>()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
+
 		val splash = installSplashScreen()
+		splash.setKeepOnScreenCondition { viewmodel.boardingState.value == OnBoardingState.UNKNOWN }
 
 		super.onCreate(savedInstanceState)
 
 		// set enable edge to edge normally
 		enableEdgeToEdge()
+
 		// on splash complete again enable edge to edge
 		splash.animateOnExit(onAnimationEnd = { enableEdgeToEdge() })
 
-		// set activity transitions
-		setTransitions()
-
-		setContent {
-
-			val onBoardingState by viewmodel.boardingState.collectAsStateWithLifecycle()
-			splash.setKeepOnScreenCondition { onBoardingState == OnBoardingState.UNKNOWN }
-
-			LaunchedEffect(onBoardingState) {
-				if (onBoardingState == OnBoardingState.SHOW_CONTENT) {
-					startMainActivityAndFinishCurrent()
+		lifecycleScope.launch {
+			repeatOnLifecycle(Lifecycle.State.STARTED) {
+				viewmodel.boardingState.collect { state ->
+					if (state == OnBoardingState.SHOW_CONTENT)
+						startMainActivityAndFinishCurrent()
 				}
 			}
+		}
 
+		setContent {
 			RecorderAppTheme {
 				Surface(color = MaterialTheme.colorScheme.background) {
 					OnboardingScreen(onContinueToApp = viewmodel::onSetShowFalse)
@@ -75,6 +75,8 @@ class OnBoardingActivity : ComponentActivity() {
 				flags = Intent.FLAG_ACTIVITY_NEW_TASK
 			}
 			applicationContext.startActivity(intent)
+			// set activity transitions
+			setTransitions()
 			// finish onboarding activity
 			finish()
 		} catch (e: Exception) {

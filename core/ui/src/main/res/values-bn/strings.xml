@@ -235,5 +235,10 @@
   <string name="onboarding_page_permission_all_granted">সমস্ত প্রয়োজনীয় অনুমতি দেওয়া হয়েছে</string>
   <string name="onboarding_page_feature_title">রেকর্ড করুন, চালান, সম্পাদনা করুন এবং সংগঠিত করুন</string>
   <string name="onboarding_page_welcome_page_text">আপনার অডিও নোটগুলি সহজেই রেকর্ড করুন, সংগঠিত করুন এবং পরিমার্জন করুন</string>
+  <string name="action_skip">এড়িয়ে যান</string>
+  <string name="action_next">পরবর্তী</string>
+  <string name="action_previous">আগের</string>
+  <string name="action_continue">শুরু করুন</string>
+  <string name="onboarding_page_welcome_message">%s এ স্বাগত</string>
 </resources>
 

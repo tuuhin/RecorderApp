@@ -23,7 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.eva.ui.R
 
 @Composable
 internal fun OnBoardingBottomBar(
@@ -51,7 +54,7 @@ internal fun OnBoardingBottomBar(
 			strokeCap = StrokeCap.Round,
 			modifier = Modifier.fillMaxWidth(),
 		)
-		Spacer(modifier = Modifier.height(4.dp))
+		Spacer(modifier = Modifier.height(16.dp))
 		Row(
 			verticalAlignment = Alignment.CenterVertically,
 			modifier = Modifier.fillMaxWidth(),
@@ -64,12 +67,15 @@ internal fun OnBoardingBottomBar(
 				Button(
 					onClick = onPrevious,
 					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.secondaryContainer,
-						contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+						containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+						contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
 					),
-					shape = MaterialTheme.shapes.medium,
+					shape = MaterialTheme.shapes.extraLarge,
 				) {
-					Text(text = "Previous")
+					Text(
+						text = stringResource(R.string.action_previous),
+						fontWeight = FontWeight.SemiBold
+					)
 				}
 			}
 			Spacer(modifier = Modifier.weight(1f))
@@ -85,19 +91,27 @@ internal fun OnBoardingBottomBar(
 							containerColor = MaterialTheme.colorScheme.primaryContainer,
 							contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
 						),
-						shape = MaterialTheme.shapes.medium,
+						shape = MaterialTheme.shapes.extraLarge,
 					) {
-						Text("Continue")
+						Text(
+							text = stringResource(R.string.action_continue),
+							fontWeight = FontWeight.SemiBold
+						)
 					}
 				} else {
 					Button(
 						onClick = onNext,
 						colors = ButtonDefaults.buttonColors(
-							containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-							contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+							containerColor = MaterialTheme.colorScheme.secondaryContainer,
+							contentColor = MaterialTheme.colorScheme.onSecondaryContainer
 						),
-						shape = MaterialTheme.shapes.medium,
-					) { Text("Next") }
+						shape = MaterialTheme.shapes.extraLarge,
+					) {
+						Text(
+							text = stringResource(R.string.action_next),
+							fontWeight = FontWeight.SemiBold
+						)
+					}
 				}
 			}
 		}

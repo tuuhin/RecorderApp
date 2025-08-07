@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import com.eva.recorderapp.navigation.AppNavHost
 import com.eva.ui.R
@@ -21,11 +22,13 @@ class MainActivity : ComponentActivity() {
 	private var navController: NavHostController? = null
 
 	override fun onCreate(savedInstanceState: Bundle?) {
+		// splash needs to be initiated here
+		installSplashScreen()
+
 		super.onCreate(savedInstanceState)
 
 		// set enable edge to edge normally
 		enableEdgeToEdge()
-
 		// set activity transitions
 		setTransitions()
 

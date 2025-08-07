@@ -266,4 +266,9 @@
   <string name="onboarding_page_permission_all_granted">All required permission granted</string>
   <string name="onboarding_page_feature_title">Record, Play, Edit and Organize</string>
   <string name="onboarding_page_welcome_page_text">One stop for to easily record, organize, and refine your audio notes.</string>
+  <string name="action_skip">Skip</string>
+  <string name="action_next">Next</string>
+  <string name="action_previous">Previous</string>
+  <string name="action_continue">Continue</string>
+  <string name="onboarding_page_welcome_message">Welcome to %s</string>
 </resources>

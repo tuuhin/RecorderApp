@@ -15,6 +15,7 @@ private val provider = GoogleFont.Provider(
 private val PLUS_CODE_LATIN = GoogleFont("M PLUS Code Latin")
 private val NOVA_MONO = GoogleFont("Nova Mono")
 private val SPLINE_SANS_MONO = GoogleFont("Spline Sans Mono")
+private val FIRA_SANS = GoogleFont("Fira Sans")
 
 object DownloadableFonts {
 	val PLUS_CODE_LATIN_FONT_FAMILY = FontFamily(
@@ -35,6 +36,14 @@ object DownloadableFonts {
 	val SPLINE_SANS_MONO_FONT_FAMILY = FontFamily(
 		Font(
 			googleFont = SPLINE_SANS_MONO,
+			fontProvider = provider,
+			weight = FontWeight.Medium
+		)
+	)
+
+	val FIRA_SANS_FONT_FAMILY = FontFamily(
+		Font(
+			googleFont = FIRA_SANS,
 			fontProvider = provider,
 			weight = FontWeight.Medium
 		)
