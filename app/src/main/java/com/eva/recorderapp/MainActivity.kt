@@ -13,6 +13,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import com.eva.recorderapp.navigation.AppNavHost
 import com.eva.ui.R
+import com.eva.ui.activity.animateOnExit
 import com.eva.ui.theme.RecorderAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,12 +24,15 @@ class MainActivity : ComponentActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		// splash needs to be initiated here
-		installSplashScreen()
+		val splash = installSplashScreen()
 
 		super.onCreate(savedInstanceState)
 
 		// set enable edge to edge normally
 		enableEdgeToEdge()
+
+		// on splash complete again enable edge to edge
+		splash.animateOnExit(onAnimationEnd = { enableEdgeToEdge() })
 		// set activity transitions
 		setTransitions()
 
