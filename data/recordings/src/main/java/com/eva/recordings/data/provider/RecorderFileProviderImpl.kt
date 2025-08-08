@@ -108,7 +108,7 @@ internal class RecorderFileProviderImpl(
 	}
 
 	private suspend fun createUriForRecording(mimeType: String): Uri? = coroutineScope {
-		val fileSettings = settings.fileSettings
+		val fileSettings = settings.fileSettings()
 
 		val namingStrategyDeferred = async(Dispatchers.IO) {
 			when (fileSettings.format) {

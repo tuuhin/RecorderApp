@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array name="onboarding_page_features">
+    <item>এক ট্যাপে উচ্চমানের অডিও রেকর্ড করুন</item>
+    <item>নিয়ন্ত্রণের সাহায্যে সহজেই আপনার রেকর্ডিং চালান</item>
+    <item>নির্ভুলতার সাথে রেকর্ডিং ছাঁটাই এবং কাটা করুন</item>
+    <item>আপনার অডিও সুসংগঠিত এবং অ্যাক্সেসযোগ্য রাখুন</item>
+  </string-array>
+</resources>

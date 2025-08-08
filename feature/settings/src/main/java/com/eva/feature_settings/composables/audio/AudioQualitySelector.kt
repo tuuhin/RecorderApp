@@ -21,7 +21,10 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.datastore.domain.enums.RecordQuality
@@ -35,6 +38,10 @@ internal fun AudioQualitySelector(
 	onQualityChanged: (RecordQuality) -> Unit,
 	modifier: Modifier = Modifier,
 	contentPadding: PaddingValues = PaddingValues(0.dp),
+	titleStyle: TextStyle = MaterialTheme.typography.titleLarge,
+	titleColor: Color = MaterialTheme.colorScheme.primary,
+	supportingTextStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+	supportingTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
 	Column(
 		modifier = modifier
@@ -44,25 +51,28 @@ internal fun AudioQualitySelector(
 	) {
 		Text(
 			text = stringResource(id = R.string.recording_settings_quality_title),
-			style = MaterialTheme.typography.titleMedium,
-			color = MaterialTheme.colorScheme.onBackground
+			style = titleStyle,
+			color = titleColor
 		)
 		Text(
 			text = stringResource(id = R.string.recording_settings_quality_text),
-			style = MaterialTheme.typography.bodyMedium,
-			color = MaterialTheme.colorScheme.onSurfaceVariant
+			style = supportingTextStyle,
+			color = supportingTextColor
 		)
 		Spacer(modifier = Modifier.height(2.dp))
 
 		SingleChoiceSegmentedButtonRow(
-			modifier = Modifier.fillMaxWidth()
+			modifier = Modifier.fillMaxWidth(),
 		) {
-
 			RecordQuality.entries.forEachIndexed { idx, entry ->
 				SegmentedButton(
 					selected = quality == entry,
 					onClick = { onQualityChanged(entry) },
 					shape = SegmentedButtonDefaults.itemShape(idx, RecordQuality.entries.size),
+					colors = SegmentedButtonDefaults.colors(
+						activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+						activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+					),
 					label = {
 						TooltipBox(
 							positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
@@ -84,7 +94,7 @@ internal fun AudioQualitySelector(
 							},
 							state = rememberTooltipState()
 						) {
-							Text(text = entry.strRes)
+							Text(text = entry.strRes, fontWeight = FontWeight.SemiBold)
 						}
 					}
 				)

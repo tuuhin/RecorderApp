@@ -9,5 +9,4 @@
     <item name="postSplashScreenTheme">@style/Theme.RecorderApp</item>
     <item name="android:windowSplashScreenBehavior">icon_preferred</item>
   </style>
-
 </resources>

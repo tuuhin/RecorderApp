@@ -88,18 +88,18 @@
   <string name="recording_settings_quality_low">Low</string>
   <string name="recording_settings_quality_normal">Medium</string>
   <string name="recording_settings_quality_title">Quality</string>
-  <string name="recording_settings_quality_text">Change the current audio quality higher quality means higher sample rate and bit rate</string>
+  <string name="recording_settings_quality_text">Change the current audio quality. Higher quality means a higher sample rate and bitrate</string>
   <string name="audio_quality_sample_rate_bit_rate" translatable="false">%.2f kbps - %.2f khz</string>
   <string name="recording_settings_encoder_title">Audio Encoder</string>
-  <string name="recording_settings_encoder_text">Select audio encoder,changing the encoding will vary the quality and size of the recording</string>
+  <string name="recording_settings_encoder_text">Select an audio encoder. Changing the encoding will vary the quality and size of the recording</string>
   <string name="recording_settings_encoder_acc" translatable="false">ACC (*.m4a, *.mp3)</string>
   <string name="recording_settings_encoder_three_gpp" translatable="false">AMR NB (*.amr, .*.3gpp)</string>
   <string name="recording_settings_encoder_amr_wb" translatable="false">AMR WB (*.awb)</string>
   <string name="recording_settings_encoder_optus" translatable="false">OPUS (*.ogg)</string>
-  <string name="recording_settings_encoder_amr_nb_text">Offers smaller file sizes and is well suited for low-bitrate scenarios</string>
-  <string name="recording_settings_encoder_amr_wb_text">Suited for longer recordings with wider range of frequencies</string>
-  <string name="recording_settings_encoder_optus_text">High quality compression and adaptability to different bit-rates</string>
-  <string name="recording_settings_encoder_mpeg_text">Good quality at same bitrate with large file size</string>
+  <string name="recording_settings_encoder_amr_nb_text">Offers smaller file sizes and is well-suited for low-bitrate scenarios</string>
+  <string name="recording_settings_encoder_amr_wb_text">Suited for longer recordings with a wider range of frequencies</string>
+  <string name="recording_settings_encoder_optus_text">High quality compression with adaptability to different bitrates</string>
+  <string name="recording_settings_encoder_mpeg_text">Good quality at the same bitrate, but with larger file sizes</string>
   <string name="recording_settings_skip_silences_title">Skip Silences</string>
   <string name="recording_settings_skip_silences_text">Skip silences while recording</string>
   <string name="recording_settings_enable_stereo">Stereo</string>
@@ -254,4 +254,21 @@
   <string name="rename_export_item_label">Export Prefix</string>
   <string name="action_undo">Undo</string>
   <string name="action_redo">Redo</string>
+  <string name="onboarding_page_title_permissions">Permissions</string>
+  <string name="onboarding_page_title_permissions_text">List of permission required to run the app smoothly. There are others which are not important</string>
+  <string name="onboarding_page_permission_mic">Record Audio</string>
+  <string name="onboarding_page_permission_mic_desc">Record audio permission to allow recording</string>
+  <string name="onboarding_page_permission_notification">Post notification</string>
+  <string name="onboarding_page_permission_notification_desc">Show ongoing recording and playing for the audio</string>
+  <string name="onboarding_page_permission_media">Read Audio files</string>
+  <string name="onboarding_page_permission_media_desc">Read audio files in the device</string>
+  <string name="onboarding_page_title_permissions_extras">These permission can be also granted as you progress into your app. So you can continue without allowing</string>
+  <string name="onboarding_page_permission_all_granted">All required permission granted</string>
+  <string name="onboarding_page_feature_title">Record, Play, Edit and Organize</string>
+  <string name="onboarding_page_welcome_page_text">One stop for to easily record, organize, and refine your audio notes.</string>
+  <string name="action_skip">Skip</string>
+  <string name="action_next">Next</string>
+  <string name="action_previous">Previous</string>
+  <string name="action_continue">Continue</string>
+  <string name="onboarding_page_welcome_message">Welcome to %s</string>
 </resources>

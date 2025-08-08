@@ -11,9 +11,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
@@ -40,6 +45,7 @@ import androidx.navigation.compose.dialog
 import com.eva.recorderapp.BuildConfig
 import com.eva.ui.R
 import com.eva.ui.navigation.NavDialogs
+import com.eva.ui.theme.DownloadableFonts
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.ApplicationInfo
 
@@ -79,7 +85,7 @@ private fun AppDialogInfoContent(
 				Icon(
 					painter = painterResource(id = R.drawable.ic_launcher_foreground),
 					contentDescription = stringResource(R.string.app_name),
-					modifier = Modifier.size(56.dp),
+					modifier = Modifier.size(64.dp),
 					tint = iconColor
 				)
 				Text(
@@ -102,12 +108,14 @@ private fun AppDialogInfoContent(
 						Text(
 							text = BuildConfig.VERSION_NAME,
 							style = MaterialTheme.typography.labelMedium,
+							fontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 							modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)
 						)
 					}
 				}
+				Spacer(modifier = Modifier.height(8.dp))
 				FlowRow(
-					horizontalArrangement = Arrangement.spacedBy(12.dp),
+					horizontalArrangement = Arrangement.spacedBy(16.dp),
 					verticalArrangement = Arrangement.Center,
 					modifier = Modifier.align(Alignment.CenterHorizontally),
 				) {
@@ -119,7 +127,7 @@ private fun AppDialogInfoContent(
 						shape = MaterialTheme.shapes.large,
 						icon = {
 							Icon(
-								painter = painterResource(id = R.drawable.ic_code),
+								imageVector = Icons.Default.Code,
 								contentDescription = stringResource(id = R.string.app_info_source_code)
 							)
 						},
@@ -136,7 +144,7 @@ private fun AppDialogInfoContent(
 						shape = MaterialTheme.shapes.large,
 						icon = {
 							Icon(
-								painter = painterResource(id = R.drawable.ic_author),
+								imageVector = Icons.Default.Draw,
 								contentDescription = stringResource(id = R.string.app_info_author)
 							)
 						},

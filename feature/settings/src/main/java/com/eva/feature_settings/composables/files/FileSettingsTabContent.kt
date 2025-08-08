@@ -40,7 +40,7 @@ internal fun FileSettingsTabContent(
 		item {
 			Text(
 				text = stringResource(R.string.app_settings_files_subtitle_recordings),
-				style = MaterialTheme.typography.titleMedium,
+				style = MaterialTheme.typography.titleLarge,
 				color = MaterialTheme.colorScheme.primary,
 				modifier = Modifier
 					.padding(horizontal = 16.dp)
@@ -76,7 +76,7 @@ internal fun FileSettingsTabContent(
 		item {
 			Text(
 				text = stringResource(R.string.app_settings_files_subtitle_export),
-				style = MaterialTheme.typography.titleMedium,
+				style = MaterialTheme.typography.titleLarge,
 				color = MaterialTheme.colorScheme.primary,
 				modifier = Modifier
 					.padding(horizontal = 16.dp)

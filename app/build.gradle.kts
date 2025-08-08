@@ -16,8 +16,8 @@ android {
 		applicationId = "com.eva.recorderapp"
 		minSdk = libs.versions.minSdk.get().toInt()
 		targetSdk = libs.versions.compileSdk.get().toInt()
-		versionCode = 9
-		versionName = "1.3.1"
+		versionCode = 10
+		versionName = "1.4.0"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -105,5 +105,6 @@ dependencies {
 	implementation(project(":feature:editor"))
 	implementation(project(":feature:settings"))
 	implementation(project(":feature:widget"))
+	implementation(project(":feature:onboarding"))
 
 }

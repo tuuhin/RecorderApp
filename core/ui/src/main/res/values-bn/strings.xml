@@ -223,5 +223,22 @@
   <string name="rename_export_item_label">রপ্তানি উপসর্গ</string>
   <string name="action_undo">পূর্বাবস্থা</string>
   <string name="action_redo">পুনরায় করা</string>
+  <string name="onboarding_page_title_permissions">অনুমতি</string>
+  <string name="onboarding_page_title_permissions_text">অ্যাপ্লিকেশনটি সুচারুভাবে চালানোর জন্য প্রয়োজনীয় অনুমতির তালিকা। আরও কিছু আছে যা গুরুত্বপূর্ণ নয়।</string>
+  <string name="onboarding_page_permission_mic">অডিও রেকর্ড</string>
+  <string name="onboarding_page_permission_mic_desc">রেকর্ডিং করার অনুমতি দেওয়ার জন্য অডিও রেকর্ড করার অনুমতি</string>
+  <string name="onboarding_page_permission_notification">বিজ্ঞপ্তি</string>
+  <string name="onboarding_page_permission_notification_desc">অডিওর জন্য চলমান রেকর্ডিং এবং প্লে করা দেখান</string>
+  <string name="onboarding_page_permission_media">অডিও ফাইল</string>
+  <string name="onboarding_page_permission_media_desc">ডিভাইসে অডিও ফাইল পড়ুন</string>
+  <string name="onboarding_page_title_permissions_extras">আপনার অ্যাপে প্রবেশের সাথে সাথে এই অনুমতিগুলিও মঞ্জুর করা যেতে পারে। তাই আপনি অনুমতি না দিয়েই চালিয়ে যেতে পারেন</string>
+  <string name="onboarding_page_permission_all_granted">সমস্ত প্রয়োজনীয় অনুমতি দেওয়া হয়েছে</string>
+  <string name="onboarding_page_feature_title">রেকর্ড করুন, চালান, সম্পাদনা করুন এবং সংগঠিত করুন</string>
+  <string name="onboarding_page_welcome_page_text">আপনার অডিও নোটগুলি সহজেই রেকর্ড করুন, সংগঠিত করুন এবং পরিমার্জন করুন</string>
+  <string name="action_skip">এড়িয়ে যান</string>
+  <string name="action_next">পরবর্তী</string>
+  <string name="action_previous">আগের</string>
+  <string name="action_continue">শুরু করুন</string>
+  <string name="onboarding_page_welcome_message">%s এ স্বাগত</string>
 </resources>
 

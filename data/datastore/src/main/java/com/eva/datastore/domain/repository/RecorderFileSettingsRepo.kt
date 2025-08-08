@@ -8,7 +8,7 @@ interface RecorderFileSettingsRepo {
 
 	val fileSettingsFlow: Flow<RecorderFileSettings>
 
-	val fileSettings: RecorderFileSettings
+	suspend fun fileSettings(): RecorderFileSettings
 
 	suspend fun onFilePrefixChange(prefix: String)
 

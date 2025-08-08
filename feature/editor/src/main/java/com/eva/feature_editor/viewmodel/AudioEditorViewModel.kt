@@ -206,9 +206,11 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 
 	private fun onSaveExportFile() {
 		val fileUri = _exportFileUri.value ?: return
-		saver.saveItem(fileModel, fileUri)
 		// will trigger a navigation event to recordings screen
-		viewModelScope.launch { _exportBegin.send(true) }
+		viewModelScope.launch {
+			saver.saveItem(fileModel, fileUri)
+			_exportBegin.send(true)
+		}
 	}
 
 	private fun onCancelExport() = viewModelScope.launch {

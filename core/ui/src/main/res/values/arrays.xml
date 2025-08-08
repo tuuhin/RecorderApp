@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array name="onboarding_page_features">
+    <item>Record high-quality audio with a single tap</item>
+    <item>Play your recordings with ease with controls</item>
+    <item>Trim and cut recordings with precision</item>
+    <item>Keep your audio organized and accessible</item>
+  </string-array>
+</resources>
