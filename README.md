@@ -1,13 +1,12 @@
 # :studio_microphone: RecorderApp
 
 An android audio recorder app, designed to simplify the process of capturing and managing
-recordings.
-With a clean and intuitive interface, this app offers a seamless user experience.
+recordings. With a clean and intuitive interface, this app offers a seamless user experience.
 
 ## 💁 About
 
-A fully functioned recorder app with an ability to record over multiple media codec like **acc**,\*
-\*amr**,**opus\*\* over different quality. The app can continue its recording in the background, so you
+A fully functioned recorder app with an ability to record over multiple media codec like **acc**,*
+*amr**,**opus** over different quality. The app can continue its recording in the background, so you
 never miss a moment. Once the recording, you can easily manage your files within the app.
 There `built-in player`, you can listen to your recordings directly within the app or use the
 convenient media notification for playback control.
@@ -77,30 +76,16 @@ playing stuff.
 
 ## :new: What's new
 
-This update introduces a **built-in Audio Editor** alongside significant enhancements to the player:
-
-- **✂️ Unleash Your Inner Editor:** Now you can precisely `trim` and `cut` your recordings directly
-  within the app! Remove unwanted sections and refine your audio effortlessly.
-- 💾 **Save Your Edits:** Preserve your edited masterpieces! The app now allows you to **save the
-  modified audio files** to your device's storage.
-- ⏯️ **Dedicated Editor Player:** A **secondary player** is integrated within the editor, providing
-  you with focused playback control during the editing process, with undo and redo options to
-  reapply your edits.
-- 🚀 **Under the Hood Improvements:** Fix issues with visualization via `new-visualizer` logic. A new
-  speed selected UI is added to the player and others.
-
-This update is all about giving you more control over your recordings, from capture to refinement.
+The latest update to the **RecorderApp** contains a new onboarding screen added with some settings
+route improvements
 
 ## :next_track_button: What's next
 
-For the time being, RecorderApp encompasses all initially planned features and is considered
-complete. Future releases are not currently scheduled.
+For the time being, RecorderApp encompasses all initially planned features and is
+considered complete. Future releases are not currently scheduled.
 
 If you have any new ideas or suggestions for enhancements, we encourage you to create a
 new [Issue](https://github.com/tuuhin/RecorderApp/issues) on GitHub.
-
-We are considering potential additions to the audio editor, such as audio processors like `db-gain`
-and `low-pass-filter`.
 
 ## :hammer_and_wrench: Getting Started
 

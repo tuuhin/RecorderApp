@@ -44,6 +44,7 @@ graph TB
     :feature:settings["settings"]
     :feature:widget["widget"]
     :feature:recorder["recorder"]
+    :feature:onboarding["onboarding"]
     :feature:player["player"]
     :feature:player-shared["player-shared"]
     :feature:categories["categories"]
@@ -56,6 +57,7 @@ graph TB
     :feature:editor["editor"]
     :feature:settings["settings"]
     :feature:widget["widget"]
+    :feature:onboarding["onboarding"]
   end
 
   :data:bookmarks --> :core:utils
@@ -79,6 +81,7 @@ graph TB
   :data:categories --> :data:database
   :feature:settings --> :core:ui
   :feature:settings --> :core:utils
+  :feature:settings --> :data:recordings
   :feature:settings --> :data:datastore
   :feature:widget --> :core:utils
   :feature:widget --> :core:ui
@@ -100,6 +103,9 @@ graph TB
   :data:use_case --> :data:recordings
   :data:use_case --> :data:datastore
   :data:use_case --> :data:categories
+  :feature:onboarding --> :core:ui
+  :feature:onboarding --> :core:utils
+  :feature:onboarding --> :data:datastore
   :data:worker --> :core:utils
   :data:worker --> :core:ui
   :data:worker --> :data:recordings
@@ -144,6 +150,7 @@ graph TB
   :app --> :feature:editor
   :app --> :feature:settings
   :app --> :feature:widget
+  :app --> :feature:onboarding
   :data:datastore --> :core:utils
   :data:interactions --> :core:utils
   :data:interactions --> :data:bookmarks
@@ -173,6 +180,7 @@ class :feature:settings android-library
 class :feature:widget android-library
 class :data:worker android-library
 class :feature:recorder android-library
+class :feature:onboarding android-library
 class :feature:player android-library
 class :feature:categories android-library
 class :feature:editor android-library
