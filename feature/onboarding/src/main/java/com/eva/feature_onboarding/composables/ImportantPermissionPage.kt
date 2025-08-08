@@ -98,9 +98,8 @@ internal fun ImportantPermissionsPage(
 			painter = painterResource(R.drawable.ic_security),
 			contentDescription = "Permission security",
 			colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.tertiary),
-			modifier = Modifier.size(120.dp)
+			modifier = Modifier.size(100.dp)
 		)
-		Spacer(modifier = Modifier.height(40.dp))
 		Text(
 			text = stringResource(R.string.onboarding_page_title_permissions),
 			style = MaterialTheme.typography.headlineLarge,

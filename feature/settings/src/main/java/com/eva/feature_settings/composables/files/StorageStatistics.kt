@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -15,9 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.recordings.domain.models.DeviceTotalStorageModel
@@ -29,6 +33,8 @@ internal fun StorageStatistics(
 	model: DeviceTotalStorageModel,
 	modifier: Modifier = Modifier,
 	padding: PaddingValues = PaddingValues(16.dp),
+	titleStyle: TextStyle = MaterialTheme.typography.titleMedium,
+	titleColor: Color = MaterialTheme.colorScheme.primary,
 ) {
 	val context = LocalContext.current
 
@@ -47,14 +53,14 @@ internal fun StorageStatistics(
 	) {
 		Text(
 			text = stringResource(id = R.string.storage_statistics),
-			style = MaterialTheme.typography.titleMedium,
-			color = MaterialTheme.colorScheme.onBackground
+			style = titleStyle,
+			color = titleColor,
 		)
-
+		Spacer(modifier = Modifier.height(6.dp))
 		LinearProgressIndicator(
 			progress = { model.usedSpacePercentage },
-			color = MaterialTheme.colorScheme.onSecondaryContainer,
-			trackColor = MaterialTheme.colorScheme.secondaryContainer,
+			color = MaterialTheme.colorScheme.secondary,
+			trackColor = MaterialTheme.colorScheme.tertiary,
 			strokeCap = StrokeCap.Round,
 			gapSize = 4.dp,
 			modifier = Modifier.fillMaxWidth()

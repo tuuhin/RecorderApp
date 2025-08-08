@@ -36,8 +36,8 @@ internal fun AudioSettingsTabContent(
 
 	val isIgnoreOptimization = remember(context) {
 		if (isInspectionMode) return@remember false
-		context.getSystemService<PowerManager>()
-			?.isIgnoringBatteryOptimizations(context.packageName) == true
+		val powerManager = context.getSystemService<PowerManager>()
+		powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
 	}
 
 	LazyColumn(
@@ -72,7 +72,7 @@ internal fun AudioSettingsTabContent(
 				text = stringResource(id = R.string.recording_settings_enable_stereo_text),
 				leading = {
 					Icon(
-						painter = painterResource(id = R.drawable.ic_channel),
+						painter = painterResource(id = R.drawable.ic_stereo),
 						contentDescription = stringResource(id = R.string.recording_settings_skip_silences_title),
 					)
 				},
@@ -112,7 +112,7 @@ internal fun AudioSettingsTabContent(
 				text = stringResource(id = R.string.recording_settings_use_bt_mic_text),
 				leading = {
 					Icon(
-						painter = painterResource(id = R.drawable.ic_mic_headset),
+						painter = painterResource(id = R.drawable.ic_bluetooth),
 						contentDescription = stringResource(id = R.string.recording_settings_use_bt_mic),
 					)
 				},

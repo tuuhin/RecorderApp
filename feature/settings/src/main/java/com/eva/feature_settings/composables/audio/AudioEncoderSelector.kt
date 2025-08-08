@@ -18,8 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.datastore.domain.enums.RecordingEncoders
@@ -32,20 +34,24 @@ internal fun AudioEncoderSelector(
 	onEncoderChange: (RecordingEncoders) -> Unit,
 	modifier: Modifier = Modifier,
 	padding: PaddingValues = PaddingValues(0.dp),
+	titleStyle: TextStyle = MaterialTheme.typography.titleLarge,
+	titleColor: Color = MaterialTheme.colorScheme.primary,
+	supportingTextStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+	supportingTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
 	Column(
 		modifier = modifier.padding(padding),
 	) {
 		Text(
 			text = stringResource(id = R.string.recording_settings_encoder_title),
-			style = MaterialTheme.typography.titleMedium,
-			color = MaterialTheme.colorScheme.onBackground
+			style = titleStyle,
+			color = titleColor
 		)
 		Spacer(modifier = Modifier.height(4.dp))
 		Text(
 			text = stringResource(id = R.string.recording_settings_encoder_text),
-			style = MaterialTheme.typography.bodyMedium,
-			color = MaterialTheme.colorScheme.onSurfaceVariant
+			style = supportingTextStyle,
+			color = supportingTextColor
 		)
 		Column(
 			verticalArrangement = Arrangement.spacedBy(2.dp)
