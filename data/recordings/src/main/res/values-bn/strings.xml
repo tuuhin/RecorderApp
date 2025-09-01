@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="categories_create_success">বিভাগ সফলভাবে তৈরি করা হয়েছে</string>
+  <string name="categories_deleted">মুছে ফেলা বিভাগ</string>
+  <string name="recordings_add_to_favourite_success">পছন্দসই চিহ্নিত</string>
+  <string name="recordings_remove_favourite_failed">প্রিয় রেকর্ডিং সরানো হয়েছে</string>
+  <string name="recording_delete_request_success">রেকর্ডিংগুলি সফলভাবে মুছে ফেলা হয়েছে</string>
+  <string name="recording_delete_request_failed">অনুরোধ মুছে ফেলতে ব্যর্থ হয়েছে</string>
+  <string name="rename_recording_success">রেকর্ডিং এর নাম পরিবর্তন করা হয়েছে</string>
+  <string name="restore_recordings_success">নির্বাচিত রেকর্ডিং পুনরুদ্ধার করা হয়েছে</string>
+  <string name="recording_restore_request_failed">পুনরুদ্ধার ব্যর্থ হয়েছে</string>
+  <string name="recording_trash_request_success">রেকর্ডিং ট্র্যাশ</string>
+  <string name="recording_trash_request_failed">রেকর্ডিংগুলি ট্র্যাশে সরানো যাচ্ছে না</string>
+</resources>

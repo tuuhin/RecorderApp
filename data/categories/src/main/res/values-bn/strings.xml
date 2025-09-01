@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="select_category_screen">श्रेणी चुनें</string>
+  <string name="categories_create_success">श्रेणी सफलतापूर्वक बनाई गई</string>
+  <string name="categories_deleted">हटाई गई श्रेणियाँ</string>
+</resources>

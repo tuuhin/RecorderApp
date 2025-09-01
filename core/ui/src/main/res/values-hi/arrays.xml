@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array name="onboarding_page_features">
+    <item>आसानी से उच्च-गुणवत्ता वाला ऑडियो रिकॉर्ड करें</item>
+    <item>नियंत्रणों के साथ आसानी से अपनी रिकॉर्डिंग चलाएँ</item>
+    <item>रिकॉर्डिंग को सटीकता से ट्रिम और कट करें</item>
+    <item>अपने ऑडियो को व्यवस्थित और सुलभ रखें</item>
+  </string-array>
+</resources>
