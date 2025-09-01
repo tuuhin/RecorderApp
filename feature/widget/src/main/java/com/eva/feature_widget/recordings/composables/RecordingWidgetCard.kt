@@ -100,7 +100,7 @@ internal fun RecordingWidgetCard(
 		if (model.isFavorite) {
 			Image(
 				provider = ImageProvider(R.drawable.ic_widget_star_filled),
-				contentDescription = context.getString(R.string.menu_option_favourite),
+				contentDescription = "Favourite",
 				modifier = GlanceModifier.size(16.dp),
 				colorFilter = ColorFilter.tint(colorProvider = GlanceTheme.colors.primary)
 			)

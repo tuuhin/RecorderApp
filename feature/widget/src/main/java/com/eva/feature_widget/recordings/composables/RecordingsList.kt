@@ -48,15 +48,15 @@ internal fun RecordingsList(
 				provider = ImageProvider(R.drawable.ic_widget_recorder),
 				contentDescription = context.getString(R.string.widget_no_recordings),
 				colorFilter = ColorFilter.tint(GlanceTheme.colors.secondary),
-				modifier = GlanceModifier.size(48.dp)
+				modifier = GlanceModifier.size(56.dp)
 			)
-			Spacer(modifier = GlanceModifier.height(4.dp))
+			Spacer(modifier = GlanceModifier.height(8.dp))
 			Text(
 				text = context.getString(R.string.widget_recordings_no_recordings),
 				style = TextStyle(
-					color = GlanceTheme.colors.tertiary,
+					color = GlanceTheme.colors.primary,
 					fontWeight = FontWeight.Medium,
-					fontSize = 16.sp
+					fontSize = 20.sp
 				),
 			)
 		}
