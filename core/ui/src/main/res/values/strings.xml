@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">RecorderApp</string>
+  <string name="app_name" translatable="false">RecorderApp</string>
   <string name="recorder_action_pause">Pause</string>
   <string name="recorder_action_resume">Resume</string>
   <string name="recorder_action_stop">Stop</string>
@@ -24,8 +24,8 @@
   <string name="recording_action_trash">Remove</string>
   <string name="no_recordings">No recording to display</string>
   <string name="no_recordings_in_bin">No recordings present in bin</string>
-  <string name="recording_bin_top_bar_title" translatable="false">Bin</string>
-  <string name="recording_info_expires_at">Expires At: %s</string>
+  <string name="recording_bin_top_bar_title">Bin</string>
+  <string name="recording_info_expires_at">Expiring at: %s</string>
   <string name="recording_delete_request_success">Recordings Deleted Successfully</string>
   <string name="recording_delete_request_failed">Delete request failed</string>
   <string name="recordings_restore_action">Restore</string>
@@ -71,7 +71,7 @@
   <string name="audio_metadata_sample_rate" translatable="false">%.2f khz</string>
   <string name="audio_metadata_sample_rate_title">Sample Rate</string>
   <string name="audio_metadata_path_title">Path</string>
-  <string name="audio_metadata_bitrate_title" translatable="false">Bitrate</string>
+  <string name="audio_metadata_bitrate_title">Bitrate</string>
   <string name="audio_metadata_channel_title">Channel</string>
   <string name="audio_metadata_last_edit_title">Last Modified</string>
   <string name="audio_metadata_mime_type_title">MimeType</string>
@@ -127,7 +127,6 @@
   <string name="recording_settings_change_name_prefix">Naming Prefix</string>
   <string name="app_info_source_code">Code</string>
   <string name="app_info_author">Author</string>
-  <string name="preparing_recorder">Preparing Recorder…</string>
   <string name="app_shortcuts_open_last_played">Last Played Item</string>
   <string name="app_shortcuts_open_last_played_text">Opens the last played audio file</string>
   <string name="app_shortcuts_recordings">Recordings</string>
@@ -229,7 +228,6 @@
   <string name="search_filter_date_created_title">Date Created</string>
   <string name="search_filter_title">Filters</string>
   <string name="menu_option_search">Search</string>
-  <string name="search_bar_placeholder">Search recordings…</string>
   <string name="no_search_results">No search results</string>
   <string name="voice_recognizer" translatable="false">Mic Input</string>
   <string name="voice_search_prompt" translatable="false">Speak your search query</string>

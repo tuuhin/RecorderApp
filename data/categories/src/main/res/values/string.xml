@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-  <string name="categories_updated" translatable="false">Recordings moved to %s category.</string>
-  <string name="select_category_screen">Select Category</string>
-  <string name="categories_create_success">Category Created Successfully</string>
-  <string name="categories_deleted">Deleted Categories</string>
-</resources>

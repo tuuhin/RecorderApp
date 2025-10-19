@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="menu_option_favourite">Favourite</string>
   <string name="widget_refresh" translatable="false">Refresh</string>
   <string name="widget_error_text" translatable="false">Cannot load the widget due to something</string>
   <string name="widget_error_title" translatable="false">Failed to load widget</string>
@@ -15,5 +14,5 @@
   <string name="recorder_state_paused" translatable="false">Paused</string>
   <string name="widget_recorder_widget" translatable="false">Recorder Widget</string>
   <string name="widget_recordings_title" translatable="false">Recordings</string>
-  <string name="widget_no_recordings">No Recordings</string>
+  <string name="widget_no_recordings" translatable="false">No Recordings</string>
 </resources>

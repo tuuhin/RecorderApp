@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="categories_updated" translatable="false">Recordings moved to %s category.</string>
+  <string name="categories_create_success">श्रेणी सफलतापूर्वक बनाई गई</string>
+  <string name="categories_deleted">हटाई गई श्रेणियाँ</string>
+  <string name="recordings_add_to_favourite_success">पसंदीदा में जोड़ा गया</string>
+  <string name="recordings_remove_favourite_failed">पसंदीदा से हटाया गया</string>
+  <string name="recording_delete_request_success">रिकॉर्डिंग्स सफलतापूर्वक हटाई गईं</string>
+  <string name="recording_delete_request_failed">हटाने का अनुरोध असफल रहा</string>
+  <string name="rename_recording_success">रिकॉर्डिंग का नाम सफलतापूर्वक बदला गया</string>
+  <string name="restore_recordings_success">चयनित रिकॉर्डिंग्स पुनर्स्थापित की गईं</string>
+  <string name="recording_restore_request_failed">पुनर्स्थापना असफल रही</string>
+  <string name="recording_trash_request_success">रिकॉर्डिंग्स रिसायकल बिन में भेजी गईं</string>
+  <string name="recording_trash_request_failed">रिकॉर्डिंग्स को रिसायकल बिन में नहीं भेजा जा सकता</string>
+</resources>

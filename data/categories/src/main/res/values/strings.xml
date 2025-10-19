@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="categories_updated" translatable="false">Recordings moved to %s category.</string>
+  <string name="select_category_screen">বিভাগ নির্বাচন</string>
+  <string name="categories_create_success">বিভাগ সফলভাবে তৈরি করা হয়েছে</string>
+  <string name="categories_deleted">ববিভাগ মুছুন</string>
+</resources>

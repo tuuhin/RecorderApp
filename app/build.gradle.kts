@@ -25,6 +25,10 @@ android {
 		}
 	}
 
+	androidResources {
+		localeFilters.addAll(setOf("bn", "hi"))
+	}
+
 	signingConfigs {
 		// find if there is a properties file
 		val keySecretFile = rootProject.file("keystore.properties")

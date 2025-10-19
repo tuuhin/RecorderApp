@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <resources>
-  <string name="app_name">রেকর্ডার অ্যাপ</string>
   <string name="recorder_action_pause">বিরতি</string>
   <string name="recorder_action_resume">পুনরায় শুরু করুন</string>
   <string name="recorder_action_stop">বন্ধ করুন</string>
@@ -117,7 +116,6 @@
   <string name="recording_settings_change_name_prefix">নামকরণ উপসর্গ</string>
   <string name="app_info_source_code">কোড</string>
   <string name="app_info_author">লেখক</string>
-  <string name="preparing_recorder">রেকর্ডার প্রস্তুত করা হচ্ছে…</string>
   <string name="app_shortcuts_open_last_played">শেষ খেলা আইটেম</string>
   <string name="app_shortcuts_open_last_played_text">শেষ প্লে করা অডিও ফাইল খোলে</string>
   <string name="app_shortcuts_recordings">রেকর্ডিং</string>
@@ -202,7 +200,6 @@
   <string name="search_filter_date_created_title">তারিখ তৈরি</string>
   <string name="search_filter_title">ফিল্টার</string>
   <string name="menu_option_search">অনুসন্ধান</string>
-  <string name="search_bar_placeholder">ররেকর্ডিং অনুসন্ধান করুন…</string>
   <string name="no_search_results">কোন অনুসন্ধান ফলাফল</string>
   <string name="media_editor_title">সম্পাদনা</string>
   <string name="action_save">সংরক্ষণ</string>
@@ -241,4 +238,3 @@
   <string name="action_continue">শুরু করুন</string>
   <string name="onboarding_page_welcome_message">%s এ স্বাগত</string>
 </resources>
-
