@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
@@ -65,7 +66,9 @@ private fun EditorActionsAndControls(
 		) {
 			// cut option
 			TooltipBox(
-				positionProvider = TooltipDefaults.rememberRichTooltipPositionProvider(),
+				positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+					TooltipAnchorPosition.Above
+				),
 				tooltip = {
 					RichTooltip(
 						title = {
@@ -77,7 +80,6 @@ private fun EditorActionsAndControls(
 						},
 						text = { Text(text = stringResource(R.string.tooltip_text_editor_cut)) },
 						shape = MaterialTheme.shapes.medium,
-						caretSize = TooltipDefaults.caretSize
 					)
 				},
 				state = rememberTooltipState()
@@ -104,7 +106,9 @@ private fun EditorActionsAndControls(
 
 			//crop option
 			TooltipBox(
-				positionProvider = TooltipDefaults.rememberRichTooltipPositionProvider(),
+				positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+					TooltipAnchorPosition.Above
+				),
 				tooltip = {
 					RichTooltip(
 						title = {

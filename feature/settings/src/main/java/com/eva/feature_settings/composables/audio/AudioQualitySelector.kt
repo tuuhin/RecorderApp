@@ -16,6 +16,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
@@ -75,7 +76,8 @@ internal fun AudioQualitySelector(
 					),
 					label = {
 						TooltipBox(
-							positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+							positionProvider = TooltipDefaults
+								.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
 							tooltip = {
 								PlainTooltip(
 									shape = MaterialTheme.shapes.small,

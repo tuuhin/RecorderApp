@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
@@ -76,7 +77,9 @@ internal fun RecordingsBottomBar(
 			actions = {
 				Box {
 					TooltipBox(
-						positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+						positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+							TooltipAnchorPosition.Above
+						),
 						tooltip = {
 							PlainTooltip {
 								Text(text = stringResource(id = R.string.menu_more_option))
@@ -123,7 +126,9 @@ internal fun RecordingsBottomBar(
 					}
 				}
 				TooltipBox(
-					positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+					positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+						TooltipAnchorPosition.Above
+					),
 					tooltip = {
 						PlainTooltip {
 							Text(text = stringResource(id = R.string.action_share))
@@ -139,7 +144,9 @@ internal fun RecordingsBottomBar(
 					}
 				}
 				TooltipBox(
-					positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+					positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+						TooltipAnchorPosition.Above
+					),
 					tooltip = {
 						PlainTooltip {
 							Text(text = stringResource(id = R.string.menu_option_favourite))

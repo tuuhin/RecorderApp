@@ -21,6 +21,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
@@ -76,7 +77,9 @@ internal fun SearchBarTextField(
 		placeholder = { Text(text = stringResource(R.string.voice_recognizer)) },
 		trailingIcon = {
 			TooltipBox(
-				positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+				positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+					TooltipAnchorPosition.Above
+				),
 				tooltip = {
 					PlainTooltip {
 						Text(text = stringResource(R.string.search_filter_title))

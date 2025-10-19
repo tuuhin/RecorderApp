@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
@@ -92,7 +93,9 @@ internal fun RecorderTopBar(
 					}
 				} else {
 					TooltipBox(
-						positionProvider = TooltipDefaults.rememberRichTooltipPositionProvider(),
+						positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+							TooltipAnchorPosition.Below
+						),
 						tooltip = {
 							RichTooltip {
 								Text(text = stringResource(R.string.bookmark_tooltip_text))

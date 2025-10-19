@@ -18,6 +18,7 @@ import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
@@ -92,7 +93,9 @@ internal fun SearchRecordingsScreen(
 				title = { Text(text = stringResource(R.string.menu_option_search)) },
 				actions = {
 					TooltipBox(
-						positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+						positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+							TooltipAnchorPosition.Below
+						),
 						tooltip = {
 							PlainTooltip {
 								Text(text = stringResource(R.string.search_filter_title))
