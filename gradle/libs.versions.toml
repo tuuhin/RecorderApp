@@ -4,33 +4,36 @@ concurrentFuturesKtx = "1.3.0"
 datastore = "1.1.7"
 coreSplashscreen = "1.0.1"
 glance = "1.1.1"
-graphicsShapes = "1.0.1"
+graphicsShapes = "1.1.0"
 hiltNavigation = "1.3.0"
 kotlin = "2.2.20"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
+runner = "1.7.0"
 espressoCore = "3.7.0"
 kotlinxCollectionsImmutable = "0.4.0"
 kotlinxDatetime = "0.7.1"
 kotlinxSerializationJson = "1.9.0"
 lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
-composeBom = "2025.10.00"
+composeBom = "2025.10.01"
 ksp = "2.2.20-2.0.2"
 hilt = "2.57.2"
 media3Common = "1.8.0"
 navigationCompose = "2.9.5"
 playServicesLocationVersion = "21.3.0"
-roomCompiler = "2.8.2"
-uiTextGoogleFonts = "1.9.3"
-workRuntimeKtxVersion = "2.10.5"
+roomCompiler = "2.8.3"
+uiTextGoogleFonts = "1.9.4"
+workRuntimeKtxVersion = "2.11.0"
 hiltWork = "1.3.0"
 protobufJavalite = "4.33.0"
 protobuf_version = "0.9.5"
 protobuf_gen_java_lite = "3.0.0"
 materialIconExtended = "1.7.8"
 moduleGrapher = "0.13.0"
+mockk = "1.14.6"
+coroutines-test = "1.10.2"
 compileSdk = "36"
 minSdk = "29"
 
@@ -80,9 +83,12 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-test = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines-test" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 androidx-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconExtended" }
@@ -94,6 +100,11 @@ protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", ve
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobufJavalite" }
 protobuf-gen-javalite = { module = "com.google.protobuf:protoc-gen-javalite", version.ref = "protobuf_gen_java_lite" }
 
+#testing
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
+mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockk" }
+
 #gradle
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -101,6 +112,7 @@ compose-compiler-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compos
 ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 room-gradlePlugin = { group = "androidx.room", name = "room-gradle-plugin", version.ref = "roomCompiler" }
 protobuf-gradlePlugin = { group = "com.google.protobuf", name = "protobuf-gradle-plugin", version.ref = "protobuf_version" }
+androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
