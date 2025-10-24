@@ -11,4 +11,6 @@ dependencies {
 	implementation(project(":core:utils"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:database"))
+
+	androidTestImplementation(project(":testing:runtime"))
 }

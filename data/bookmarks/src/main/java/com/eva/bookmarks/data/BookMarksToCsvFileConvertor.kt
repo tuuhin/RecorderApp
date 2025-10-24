@@ -1,64 +1,64 @@
 package com.eva.bookmarks.data
 
-import android.content.Context
-import android.net.Uri
 import android.util.Log
-import androidx.core.content.FileProvider
 import com.eva.bookmarks.domain.AudioBookmarkModel
-import com.eva.bookmarks.domain.provider.ExportBookMarkUriProvider
+import com.eva.bookmarks.domain.provider.BookMarksExportRepository
+import com.eva.bookmarks.domain.provider.ExportURIProvider
 import com.eva.utils.LocalTimeFormats
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.format
 import java.io.File
+import java.util.UUID
 
 private const val TAG = "BOOK_MARKS_EXPORTER"
 
-internal class BookMarksToCsvFileConvertor(private val context: Context) :
-	ExportBookMarkUriProvider {
+internal class BookMarksToCsvFileConvertor(
+	private val provider: ExportURIProvider
+) : BookMarksExportRepository {
 
-	private val filesDir: File
-		// as this files will be a one time export no need to save them to the files dir
-		get() = File(context.cacheDir, "bookmarks").apply(File::mkdirs)
+	override suspend fun invoke(points: List<AudioBookmarkModel>): String? {
 
-	private fun File.toContentUri(): Uri =
-		FileProvider.getUriForFile(context, "${context.packageName}.provider", this)
+		val fileName = "bookmarks_${UUID.randomUUID()}.csv"
+		val file = File(provider.filesDirectory, fileName)
 
-	override suspend operator fun invoke(points: Collection<AudioBookmarkModel>): String? {
-		return withContext(Dispatchers.IO) {
+		if (points.isEmpty()) {
+			Log.e(TAG, "EMPTY FILE CONTENT")
+			return null
+		}
 
-			val content = buildString {
-				append("BOOKMARK_ID,TEXT,TIMESTAMP\n")
-				points.forEach { entry ->
-					val readableTimestamp = entry.timeStamp
-						.format(LocalTimeFormats.LOCALTIME_HH_MM_SS_FORMAT)
-					append("${entry.bookMarkId},${entry.text},$readableTimestamp\n")
+		return try {
+			withContext(Dispatchers.IO) {
+				val isNewFile = file.createNewFile()
+				Log.d(TAG, "IS NEW FILE :$isNewFile")
+
+				file.outputStream().bufferedWriter().use { writer ->
+					writer.write("\"BOOKMARK_ID\",\"TEXT\",\"TIMESTAMP\"")
+					writer.newLine()
+					points.forEach { entry ->
+						val timestamp =
+							entry.timeStamp.format(LocalTimeFormats.LOCALTIME_HH_MM_SS_FORMAT)
+						writer.write(escapeCsv("${entry.bookMarkId},${entry.text},$timestamp"))
+						writer.newLine()
+					}
 				}
+				Log.d(TAG, "CONTENT COPIED TO FILE")
+				val contentUri = provider.getURIFromFile(file)
+				contentUri.toString()
 			}
-			Log.d(TAG, "CONTENT PREPARED")
-			Log.d(TAG, content)
-
-			try {
-				val file = File(filesDir, "bookmarks.csv").apply(File::createNewFile)
-
-				if (file.exists())
-				// just a log message to check if the file is present or not
-					Log.d(TAG, "FILE_WAS_PRESENT_THIS_WILL_BE_OVERRIDE")
-
-				// write new contents to the file
-				file.writeText(content)
-				Log.d(TAG, "FILE_WRITTEN")
-
-				val contentUri = file.toContentUri()
-
-				Log.d(TAG, "CONTENT URI :$contentUri")
-
-				return@withContext contentUri.toString()
-			} catch (e: Exception) {
-				e.printStackTrace()
-				null
+		} catch (e: CancellationException) {
+			withContext(NonCancellable) {
+				if (file.exists()) file.delete()
 			}
+			throw e
+		} catch (e: Exception) {
+			e.printStackTrace()
+			null
 		}
 	}
 
+	private fun escapeCsv(value: String) =
+		"\"${value.replace("\"", "\"\"")}\""
 }
