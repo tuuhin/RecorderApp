@@ -26,7 +26,7 @@ import kotlinx.coroutines.asExecutor
 		RecordingCategoryEntity::class,
 		RecordingBookMarkEntity::class,
 	],
-	version = 5,
+	version = 6,
 	exportSchema = true,
 	autoMigrations = [
 		AutoMigration(from = 1, to = 2),
@@ -68,6 +68,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 				)
 					.addTypeConverter(localtimeConvertor)
 					.addTypeConverter(localDateTimeConvertor)
+					.addMigrations(DBMigrations.MIGRATE_5_6)
 					.setQueryExecutor(Dispatchers.IO.asExecutor())
 					.build()
 					.also { db -> instance = db }
@@ -78,6 +79,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 			return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
 				.addTypeConverter(localtimeConvertor)
 				.addTypeConverter(localDateTimeConvertor)
+				.addMigrations(DBMigrations.MIGRATE_5_6)
 				.setQueryExecutor(Dispatchers.IO.asExecutor())
 				.build()
 		}

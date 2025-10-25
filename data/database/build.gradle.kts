@@ -9,4 +9,5 @@ android {
 
 dependencies {
 	implementation(project(":core:utils"))
+	androidTestImplementation(project(":testing:runtime"))
 }

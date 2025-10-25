@@ -1,4 +1,5 @@
 import androidx.room.gradle.RoomExtension
+import com.android.build.gradle.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.getByType
@@ -9,6 +10,7 @@ class ConfigureRoomPlugin : Plugin<Project> {
 		target.addPlugins()
 		target.addDependencies()
 		target.configureRoom()
+		target.configureRoomTesting()
 	}
 
 	private fun Project.addPlugins() = plugins.apply {
@@ -48,6 +50,14 @@ class ConfigureRoomPlugin : Plugin<Project> {
 	private fun Project.configureRoom() = extensions.getByType<RoomExtension>()
 		.apply {
 			schemaDirectory("$projectDir/schemas")
+		}
+
+	private fun Project.configureRoomTesting() = extensions.getByType<LibraryExtension>()
+		.apply {
+			sourceSets {
+				val androidTestSourceSet = getByName("androidTest")
+				androidTestSourceSet.assets.srcDir("$projectDir/schemas")
+			}
 		}
 
 }

@@ -14,7 +14,7 @@ import kotlin.time.Instant
 internal class LocalDateTimeConvertors {
 
 	private val timeZone: TimeZone
-		get() = TimeZone.currentSystemDefault()
+		get() = TimeZone.UTC
 
 	@TypeConverter
 	fun fromLocalDateTime(dateTime: LocalDateTime): Long = dateTime.toInstant(timeZone)
@@ -22,8 +22,7 @@ internal class LocalDateTimeConvertors {
 
 
 	@TypeConverter
-	fun toLocalDateTime(seconds: Long) =
-		Instant.fromEpochMilliseconds(seconds).toLocalDateTime(timeZone)
-
+	fun toLocalDateTime(milliSeconds: Long) =
+		Instant.fromEpochMilliseconds(milliSeconds).toLocalDateTime(timeZone)
 
 }
