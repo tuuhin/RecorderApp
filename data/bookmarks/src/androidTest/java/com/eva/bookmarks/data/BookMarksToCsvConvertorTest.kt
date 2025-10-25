@@ -3,15 +3,18 @@ package com.eva.bookmarks.data
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.eva.bookmarks.domain.AudioBookmarkModel
 import com.eva.bookmarks.domain.provider.BookMarksExportRepository
+import com.eva.bookmarks.domain.provider.ExportURIProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalTime
 import org.junit.Rule
 import org.junit.runner.RunWith
 import javax.inject.Inject
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -27,8 +30,16 @@ class BookMarksToCsvConvertorTest {
 	@Inject
 	lateinit var exporter: BookMarksExportRepository
 
+	@Inject
+	lateinit var uriProvider: ExportURIProvider
+
 	@BeforeTest
 	fun setUp() = hiltRule.inject()
+
+	@AfterTest
+	fun tearDown() = runBlocking {
+		uriProvider.clearAll()
+	}
 
 	@Test
 	fun check_if_export_bookmarks_creates_a_file() = runTest {

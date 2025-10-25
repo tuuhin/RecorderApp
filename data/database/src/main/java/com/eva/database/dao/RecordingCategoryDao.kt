@@ -1,5 +1,6 @@
 package com.eva.database.dao
 
+import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -9,7 +10,6 @@ import androidx.room.Query
 import androidx.room.Upsert
 import com.eva.database.entity.RecordingCategoryEntity
 import kotlinx.coroutines.flow.Flow
-
 
 @Dao
 interface RecordingCategoryDao {
@@ -46,4 +46,8 @@ interface RecordingCategoryDao {
 
 	@Delete
 	suspend fun deleteCategoriesBulk(entities: Collection<RecordingCategoryEntity>)
+
+	@VisibleForTesting
+	@Query("DELETE FROM RECORDINGS_CATEGORY")
+	suspend fun deleteAllCategories()
 }

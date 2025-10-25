@@ -10,11 +10,13 @@ import com.eva.utils.Resource
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalTime
 import org.junit.Rule
 import org.junit.runner.RunWith
 import javax.inject.Inject
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -36,8 +38,10 @@ class RecordingsBookmarkProviderTest {
 	lateinit var bookmarkDao: RecordingsBookmarkDao
 
 	@BeforeTest
-	fun setup() = runTest {
-		hiltRule.inject()
+	fun setUp() = hiltRule.inject()
+
+	@AfterTest
+	fun tearDown() = runBlocking {
 		bookmarkDao.clearAllBookmarkData()
 	}
 

@@ -40,7 +40,12 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 			}
 		}
 
-		val testImplementations = listOf("junit", "kotlin.test", "kotlinx.coroutines.test")
+		val testImplementations = listOf(
+			"junit",
+			"kotlin.test",
+			"kotlinx.coroutines.test",
+			"turbine"
+		)
 
 		testImplementations.forEach {
 			catalog.findLibrary(it).ifPresent { dependency ->
@@ -52,7 +57,8 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 			"androidx.junit",
 			"androidx.espresso.core",
 			"kotlin.test",
-			"kotlinx.coroutines.test"
+			"kotlinx.coroutines.test",
+			"turbine"
 		)
 
 		androidTestImplementations.forEach {
