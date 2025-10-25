@@ -13,4 +13,5 @@ dependencies {
 	implementation(project(":data:database"))
 
 	androidTestImplementation(project(":testing:runtime"))
+	androidTestImplementation(libs.turbine)
 }

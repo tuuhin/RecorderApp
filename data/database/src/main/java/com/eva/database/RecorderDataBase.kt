@@ -60,20 +60,26 @@ abstract class RecorderDataBase : RoomDatabase() {
 		private val localtimeConvertor = LocalTimeConvertors()
 
 		fun createDataBase(context: Context): RecorderDataBase {
-			return synchronized(this) {
-				if (instance == null) {
-					instance = Room.databaseBuilder(
-						context,
-						RecorderDataBase::class.java,
-						DataBaseConstants.DATABASE_NAME
-					)
-						.addTypeConverter(localtimeConvertor)
-						.addTypeConverter(localDateTimeConvertor)
-						.setQueryExecutor(Dispatchers.IO.asExecutor())
-						.build()
-				}
-				instance!!
+			return instance ?: synchronized(this) {
+				Room.databaseBuilder(
+					context,
+					RecorderDataBase::class.java,
+					DataBaseConstants.DATABASE_NAME
+				)
+					.addTypeConverter(localtimeConvertor)
+					.addTypeConverter(localDateTimeConvertor)
+					.setQueryExecutor(Dispatchers.IO.asExecutor())
+					.build()
+					.also { db -> instance = db }
 			}
+		}
+
+		fun createInMemoryDatabase(context: Context): RecorderDataBase {
+			return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
+				.addTypeConverter(localtimeConvertor)
+				.addTypeConverter(localDateTimeConvertor)
+				.setQueryExecutor(Dispatchers.IO.asExecutor())
+				.build()
 		}
 	}
 }

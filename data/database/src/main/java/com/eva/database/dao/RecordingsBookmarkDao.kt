@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Upsert
 import com.eva.database.entity.RecordingBookMarkEntity
 import kotlinx.coroutines.flow.Flow
+import org.jetbrains.annotations.VisibleForTesting
 
 @Dao
 interface RecordingsBookmarkDao {
@@ -34,4 +35,7 @@ interface RecordingsBookmarkDao {
 	@Delete
 	suspend fun deleteBookMarks(bookmarks: Collection<RecordingBookMarkEntity>)
 
+	@VisibleForTesting
+	@Query("DELETE FROM RECORDING_BOOKMARK_TABLE")
+	suspend fun clearAllBookmarkData()
 }

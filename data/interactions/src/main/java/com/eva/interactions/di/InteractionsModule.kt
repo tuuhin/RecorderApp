@@ -2,7 +2,7 @@ package com.eva.interactions.di
 
 import android.content.Context
 import android.os.Build
-import com.eva.bookmarks.domain.provider.ExportBookMarkUriProvider
+import com.eva.bookmarks.domain.provider.BookMarksExportRepository
 import com.eva.interactions.data.AppShortcutsUtilsImpl
 import com.eva.interactions.data.ShareRecordingsUtilImpl
 import com.eva.interactions.data.bluetooth.BluetoothScoConnectImpl
@@ -49,6 +49,6 @@ object InteractionsModule {
 	@Singleton
 	fun providesShareRecordingHelper(
 		@ApplicationContext context: Context,
-		bookmarkProvider: ExportBookMarkUriProvider,
+		bookmarkProvider: BookMarksExportRepository,
 	): ShareRecordingsUtil = ShareRecordingsUtilImpl(context, bookmarkProvider)
 }
