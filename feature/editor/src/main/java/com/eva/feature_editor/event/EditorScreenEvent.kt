@@ -18,6 +18,7 @@ sealed interface EditorScreenEvent {
 	data object OnRedoEdit : EditorScreenEvent
 
 	data object BeginTransformation : EditorScreenEvent
+	data object OnCancelTransformation : EditorScreenEvent
 	data object OnDismissExportSheet : EditorScreenEvent
 	data object OnSaveExportFile : EditorScreenEvent
 }

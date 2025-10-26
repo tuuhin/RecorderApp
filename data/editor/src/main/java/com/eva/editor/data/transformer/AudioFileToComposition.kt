@@ -16,58 +16,61 @@ import com.eva.recordings.domain.models.AudioFileModel
 import kotlin.math.abs
 import kotlin.time.Duration
 
-private const val TAG = "AUDIO_FILE_COMPOSER"
+private const val TAG = "AUDIO_COMPOSER"
 
 @OptIn(UnstableApi::class)
 internal fun AudioFileModel.toComposition(
-	configs: AudioConfigToActionList,
+	actions: AudioConfigToActionList,
 	gap: Duration = Duration.ZERO,
 ): Composition {
 
-	val composedConfigs = EditorComposer.applyLogicalEditSequence(duration, configs)
+	val composedConfigs = EditorComposer.applyLogicalEditSequence(duration, actions)
+	val ranges = mutableListOf<ClosedRange<Duration>>()
 
 	val editableItems = buildList {
-		composedConfigs.forEach { config ->
+		for (config in composedConfigs) {
 			val startMs = (config.start.inWholeMilliseconds / 10) * 10
 			val endMs = (config.end.inWholeMilliseconds / 10) * 10
 
 			val duration = abs(endMs - startMs)
 
-			if (duration >= 0L) {
-				val clippingConfig = MediaItem.ClippingConfiguration.Builder()
-					.setStartPositionMs(startMs)
-					.setEndPositionMs(endMs)
-					.build()
+			// duration should not be empty ensuring its least one millisecond
+			if (duration <= 0) continue
 
-				Log.d(TAG, "CLIPPING APPLIED :$startMs->$endMs")
+			val clippingConfig = MediaItem.ClippingConfiguration.Builder()
+				.setStartPositionMs(startMs)
+				.setEndPositionMs(endMs)
+				.build()
 
-				val mediaItem = MediaItem.Builder()
-					.setUri(fileUri)
-					.setClippingConfiguration(clippingConfig)
-					.build()
+			ranges.add(config.start..config.end)
 
-				val videoEffects = emptyList<Effect>()
-				val audioEffect = listOf<AudioProcessor>()
+			val mediaItem = MediaItem.Builder()
+				.setUri(fileUri)
+				.setClippingConfiguration(clippingConfig)
+				.build()
 
-				val editableItem = EditedMediaItem.Builder(mediaItem)
-					.setEffects(Effects(audioEffect, videoEffects))
-					.build()
+			val videoEffects = emptyList<Effect>()
+			val audioEffect = listOf<AudioProcessor>()
 
-				add(editableItem)
-			}
+			val editableItem = EditedMediaItem.Builder(mediaItem)
+				.setEffects(Effects(audioEffect, videoEffects))
+				.build()
+
+			add(editableItem)
 		}
 	}
-	val itemSequenceBuilder = EditedMediaItemSequence.Builder()
 
-	editableItems.forEach {
-		itemSequenceBuilder.addItem(it)
-		if (gap > Duration.ZERO)
-			itemSequenceBuilder.addGap(gap.inWholeMicroseconds)
-	}
+	Log.d(TAG, "CLIPPING :${ranges.joinToString("|")}")
 
+	val itemSequence = EditedMediaItemSequence.Builder().also { builder ->
+		editableItems.forEachIndexed { idx, item ->
+			builder.addItem(item)
+			if (gap > Duration.ZERO && idx + 1 < editableItems.size)
+				builder.addGap(gap.inWholeMicroseconds)
+		}
+	}.build()
 
-	val itemSequence = itemSequenceBuilder.build()
-
-	return Composition.Builder(itemSequence).build()
+	return Composition.Builder(itemSequence)
+		.build()
 
 }

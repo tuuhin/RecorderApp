@@ -20,9 +20,10 @@ private fun TransformBottomSheet(
 	onTransform: () -> Unit,
 	onExport: () -> Unit,
 	modifier: Modifier = Modifier,
+	onCancelTransform: () -> Unit = {},
 	showSheet: Boolean = true,
 	state: TransformationState = TransformationState(),
-	sheetState: SheetState = rememberModalBottomSheetState()
+	sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
 	if (!showSheet) return
 
@@ -36,6 +37,7 @@ private fun TransformBottomSheet(
 			state = state,
 			onExport = onExport,
 			onTransform = onTransform,
+			onCancelTransform = onCancelTransform,
 			contentPadding = PaddingValues(dimensionResource(R.dimen.bottom_sheet_padding_lg))
 		)
 	}
@@ -62,6 +64,7 @@ internal fun TransformBottomSheet(
 		state = state,
 		onTransform = { onEvent(EditorScreenEvent.BeginTransformation) },
 		onExport = { onEvent(EditorScreenEvent.OnSaveExportFile) },
+		onCancelTransform = { onEvent(EditorScreenEvent.OnCancelTransformation) },
 		modifier = modifier,
 	)
 }

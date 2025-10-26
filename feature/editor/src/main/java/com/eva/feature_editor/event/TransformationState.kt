@@ -4,7 +4,7 @@ import com.eva.editor.domain.TransformationProgress
 
 data class TransformationState(
 	val isTransforming: Boolean = false,
-	val progress: TransformationProgress = TransformationProgress.Idle,
+	val progress: () -> TransformationProgress = { TransformationProgress.Idle },
 	val exportFileUri: String? = null,
 ) {
 	val isExportFileReady: Boolean
