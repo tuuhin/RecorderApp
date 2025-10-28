@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.DialogProperties
 import com.eva.bookmarks.domain.AudioBookmarkModel
 import com.eva.feature_player.bookmarks.composable.AddBookmarkDialogContent
@@ -43,9 +43,11 @@ import kotlin.time.Duration
 private fun PlayerBookMarks(
 	trackCurrentTime: () -> Duration,
 	bookmarks: ImmutableList<AudioBookmarkModel>,
-	bookMarkState: CreateBookmarkState,
 	onBookmarkEvent: (BookMarkEvents) -> Unit,
 	modifier: Modifier = Modifier,
+	showCreateDialog: Boolean = false,
+	textFieldState: TextFieldValue = TextFieldValue(),
+	isBookmarkUpdate: Boolean = false,
 ) {
 	val scope = rememberCoroutineScope()
 	val bookmarkSheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -67,14 +69,14 @@ private fun PlayerBookMarks(
 		}
 	}
 
-	if (bookMarkState.showDialog) {
+	if (showCreateDialog) {
 		BasicAlertDialog(
 			onDismissRequest = { onBookmarkEvent(BookMarkEvents.OnCloseDialog) },
 			properties = DialogProperties(dismissOnClickOutside = false)
 		) {
 			AddBookmarkDialogContent(
-				isUpdate = bookMarkState.isUpdate,
-				textFieldValue = bookMarkState.textValue,
+				isUpdate = isBookmarkUpdate,
+				textFieldValue = textFieldState,
 				onValueChange = { onBookmarkEvent(BookMarkEvents.OnUpdateTextField(it)) },
 				onDismiss = { onBookmarkEvent(BookMarkEvents.OnCloseDialog) },
 				onConfirm = {
@@ -89,7 +91,7 @@ private fun PlayerBookMarks(
 		modifier = modifier,
 		horizontalArrangement = Arrangement.SpaceBetween
 	) {
-		AssistChip(
+		SuggestionChip(
 			onClick = {
 				scope.launch { bookmarkSheet.show() }
 					.invokeOnCompletion { isSheetOpen = true }
@@ -100,18 +102,22 @@ private fun PlayerBookMarks(
 					style = MaterialTheme.typography.labelMedium,
 				)
 			},
-			leadingIcon = {
+			icon = {
 				Icon(
 					painter = painterResource(R.drawable.ic_list),
 					contentDescription = stringResource(id = R.string.player_action_show_bookmarks),
 					modifier = Modifier.size(AssistChipDefaults.IconSize)
 				)
 			},
+			border = SuggestionChipDefaults.suggestionChipBorder(
+				enabled = true,
+				borderColor = MaterialTheme.colorScheme.onSecondaryContainer
+			),
 			shape = MaterialTheme.shapes.medium,
-			colors = AssistChipDefaults.assistChipColors(
+			colors = SuggestionChipDefaults.suggestionChipColors(
 				containerColor = MaterialTheme.colorScheme.secondaryContainer,
 				labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-				leadingIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+				iconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
 			),
 		)
 		SuggestionChip(
@@ -130,6 +136,10 @@ private fun PlayerBookMarks(
 				)
 			},
 			shape = MaterialTheme.shapes.medium,
+			border = SuggestionChipDefaults.suggestionChipBorder(
+				enabled = true,
+				borderColor = MaterialTheme.colorScheme.onTertiaryContainer
+			),
 			colors = SuggestionChipDefaults.suggestionChipColors(
 				containerColor = MaterialTheme.colorScheme.tertiaryContainer,
 				labelColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -141,7 +151,7 @@ private fun PlayerBookMarks(
 
 @Composable
 internal fun PlayerBookMarks(
-	trackData: PlayerTrackData,
+	trackData: () -> PlayerTrackData,
 	bookmarks: ImmutableList<AudioBookmarkModel>,
 	bookMarkState: CreateBookmarkState,
 	onBookmarkEvent: (BookMarkEvents) -> Unit,
@@ -149,8 +159,10 @@ internal fun PlayerBookMarks(
 ) {
 	PlayerBookMarks(
 		bookmarks = bookmarks,
-		trackCurrentTime = { trackData.current },
-		bookMarkState = bookMarkState,
+		trackCurrentTime = { trackData().current },
+		showCreateDialog = bookMarkState.showDialog,
+		textFieldState = bookMarkState.textValue,
+		isBookmarkUpdate = bookMarkState.isUpdate,
 		onBookmarkEvent = onBookmarkEvent,
 		modifier = modifier.fillMaxWidth()
 	)

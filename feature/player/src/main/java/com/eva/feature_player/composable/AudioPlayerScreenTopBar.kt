@@ -64,8 +64,9 @@ internal fun AudioPlayerScreenTopBar(
 ) {
 	var showDropDown by remember { mutableStateOf(false) }
 
-	loadState.OnContentOrOther(
-		content = { model ->
+	when (loadState) {
+		is ContentLoadState.Content -> {
+			val model = loadState.data
 			TopAppBar(
 				title = {
 					Text(
@@ -190,8 +191,9 @@ internal fun AudioPlayerScreenTopBar(
 				navigationIcon = navigation,
 				modifier = modifier,
 			)
-		},
-		onOther = {
+		}
+
+		ContentLoadState.Unknown -> {
 			TopAppBar(
 				title = {},
 				colors = colors,
@@ -199,8 +201,10 @@ internal fun AudioPlayerScreenTopBar(
 				navigationIcon = navigation,
 				modifier = modifier,
 			)
-		},
-	)
+		}
+
+		else -> {}
+	}
 }
 
 private fun favouriteAudioAnimation(): ContentTransform {

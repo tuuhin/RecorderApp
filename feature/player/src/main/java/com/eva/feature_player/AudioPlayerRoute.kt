@@ -1,8 +1,6 @@
 package com.eva.feature_player
 
 import android.content.Intent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -43,7 +41,6 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 				action = Intent.ACTION_VIEW
 			},
 		),
-		sizeTransform = { SizeTransform(clip = false) { _, _ -> tween(durationMillis = 300) } }
 	) { backStackEntry ->
 
 		val route = backStackEntry.toRoute<PlayerSubGraph.AudioPlayerRoute>()
@@ -93,12 +90,12 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 		val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
 		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
-			AudioPlayerScreenContainer(
+			AudioPlayerScreen(
 				audioId = route.audioId,
 				loadState = contentState,
 				bookmarks = bookMarks,
 				waveforms = { visuals },
-				trackData = trackData,
+				trackData = { trackData },
 				playerMetaData = playerMetadata,
 				isControllerReady = isControllerReady,
 				bookMarkState = bookMarkState,

@@ -31,8 +31,8 @@ private fun PlayerDurationText(
 		derivedStateOf {
 			val time = LocalTime.fromMillisecondOfDay(totalDurationInMillis.toInt())
 			with(time) {
-				if (hour > 0) format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
-				else format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+				if (hour > 0) format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS)
+				else format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS)
 			}
 		}
 	}
@@ -85,13 +85,16 @@ fun PlayerDurationText(
 
 @Composable
 fun PlayerDurationText(
-	track: PlayerTrackData,
+	track: () -> PlayerTrackData,
 	modifier: Modifier = Modifier,
 	fontFamily: FontFamily = FontFamily.Monospace,
 ) {
+	val playedDuration by remember { derivedStateOf { track().current.inWholeMilliseconds } }
+	val totalDuration by remember { derivedStateOf { track().total.inWholeMilliseconds } }
+
 	PlayerDurationText(
-		playedDurationInMillis = track.current.inWholeMilliseconds,
-		totalDurationInMillis = track.total.inWholeMilliseconds,
+		playedDurationInMillis = playedDuration,
+		totalDurationInMillis = totalDuration,
 		modifier = modifier,
 		fontFamily = fontFamily,
 	)

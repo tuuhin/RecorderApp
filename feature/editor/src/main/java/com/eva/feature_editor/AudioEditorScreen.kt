@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -25,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -94,8 +96,8 @@ internal fun AudioEditorScreenContainer(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AudioEditorScreenContent(
-	trackData: PlayerTrackData,
+internal fun AudioEditorScreen(
+	trackData: () -> PlayerTrackData,
 	graphData: PlayerGraphData,
 	onEvent: (EditorScreenEvent) -> Unit,
 	modifier: Modifier = Modifier,
@@ -113,6 +115,8 @@ internal fun AudioEditorScreenContent(
 	var showSheet by remember { mutableStateOf(false) }
 	val bottomSheetState = rememberModalBottomSheetState()
 	val scope = rememberCoroutineScope()
+
+	val totalTrackDuration by remember { derivedStateOf { trackData().total } }
 
 	TransformBottomSheet(
 		onDismiss = {
@@ -160,7 +164,7 @@ internal fun AudioEditorScreenContent(
 					.align(Alignment.Center)
 					.offset(y = (-80).dp),
 				horizontalAlignment = Alignment.CenterHorizontally,
-				verticalArrangement = Arrangement.spacedBy(4.dp),
+				verticalArrangement = Arrangement.spacedBy(12.dp),
 			) {
 				PlayerTrimSelector(
 					graphData = graphData,
@@ -168,19 +172,24 @@ internal fun AudioEditorScreenContent(
 					enabled = isVisualsReady,
 					clipConfig = clipConfig,
 					onClipConfigChange = { onEvent(EditorScreenEvent.OnClipConfigChange(it)) },
-					modifier = Modifier.fillMaxWidth()
+					modifier = Modifier.fillMaxWidth(),
+					contentPadding = PaddingValues(
+						horizontal = dimensionResource(R.dimen.graph_card_padding),
+						vertical = dimensionResource(R.dimen.graph_card_padding_other)
+					)
 				)
 				AudioClipChipRow(
 					clipConfig = clipConfig,
 					onEvent = onEvent,
-					trackDuration = trackData.total
+					trackDuration = totalTrackDuration
 				)
 			}
 			Box(
 				modifier = Modifier
 					.heightIn(min = 180.dp)
 					.fillMaxWidth()
-					.align(Alignment.BottomCenter),
+					.align(Alignment.BottomCenter)
+					.offset(y = (-20).dp),
 				contentAlignment = Alignment.Center
 			) {
 				EditorActionsAndControls(
@@ -203,8 +212,8 @@ private fun AudioEditorScreenPreview(
 	AudioEditorScreenContainer(
 		loadState = loadState,
 		content = { model ->
-			AudioEditorScreenContent(
-				trackData = PlayerTrackData(total = model.duration),
+			AudioEditorScreen(
+				trackData = { PlayerTrackData(total = model.duration) },
 				graphData = { PlayerPreviewFakes.loadAmplitudeGraph(model.duration) },
 				clipConfig = AudioClipConfig(end = model.duration),
 				onEvent = {},

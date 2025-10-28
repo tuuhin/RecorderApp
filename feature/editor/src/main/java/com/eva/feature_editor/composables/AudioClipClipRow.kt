@@ -1,5 +1,7 @@
 package com.eva.feature_editor.composables
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -7,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
@@ -15,22 +16,25 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.feature_editor.event.EditorScreenEvent
 import com.eva.ui.composables.DurationText
 import com.eva.ui.theme.DownloadableFonts
+import com.eva.ui.theme.RecorderAppTheme
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -45,53 +49,78 @@ private fun AudioClipChip(
 	numberFontFamily: FontFamily? = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 ) {
 	Row(
-		modifier = modifier.wrapContentWidth(),
-		verticalAlignment = Alignment.CenterVertically
+		modifier = modifier,
+		verticalAlignment = Alignment.CenterVertically,
+		horizontalArrangement = Arrangement.spacedBy(4.dp),
 	) {
-		Surface(
-			onClick = { onMinus(duration - 1.seconds) },
-			shape = cornerShape.copy(topStart = CornerSize(24.dp), bottomStart = CornerSize(24.dp)),
-			color = containerColor,
-			contentColor = contentColor,
-			modifier = Modifier.sizeIn(minWidth = 32.dp, minHeight = 32.dp),
-		) {
-			Box(contentAlignment = Alignment.Center) {
-				Icon(
-					imageVector = Icons.Default.Remove,
-					contentDescription = "Subtract  Action",
-					modifier = Modifier.size(24.dp)
+		Box(
+			contentAlignment = Alignment.Center,
+			modifier = Modifier
+				.clip(
+					cornerShape.copy(
+						topStart = CornerSize(24.dp),
+						bottomStart = CornerSize(24.dp)
+					),
 				)
-			}
-		}
-		Surface(
-			color = containerColor,
-			contentColor = contentColor,
-			shape = cornerShape,
-			modifier = Modifier.sizeIn(minHeight = 32.dp),
-		) {
-			Box(contentAlignment = Alignment.Center) {
-				DurationText(
-					duration = duration,
-					fontFamily = numberFontFamily,
-					modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+				.clickable(onClick = { onMinus(duration - 1.seconds) })
+				.background(
+					color = containerColor,
+					shape = cornerShape.copy(
+						topStart = CornerSize(24.dp),
+						bottomStart = CornerSize(24.dp)
+					)
 				)
-			}
+				.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
+		) {
+			Icon(
+				imageVector = Icons.Default.Remove,
+				contentDescription = "Subtract  Action",
+				tint = contentColor,
+				modifier = Modifier.size(24.dp)
+			)
 		}
 
-		Surface(
-			onClick = { onPlus(duration + 1.seconds) },
-			shape = cornerShape.copy(topEnd = CornerSize(24.dp), bottomEnd = CornerSize(24.dp)),
-			color = containerColor,
-			contentColor = contentColor,
-			modifier = Modifier.sizeIn(minWidth = 32.dp, minHeight = 32.dp),
+		Box(
+			contentAlignment = Alignment.Center,
+			modifier = Modifier
+				.clip(cornerShape)
+				.background(color = containerColor, shape = cornerShape)
+				.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
 		) {
-			Box(contentAlignment = Alignment.Center) {
-				Icon(
-					imageVector = Icons.Default.Add,
-					contentDescription = "Add Action",
-					modifier = Modifier.size(24.dp)
+			DurationText(
+				duration = duration,
+				fontFamily = numberFontFamily,
+				color = contentColor,
+				style = MaterialTheme.typography.bodyMedium,
+				modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+			)
+		}
+
+		Box(
+			contentAlignment = Alignment.Center,
+			modifier = Modifier
+				.clip(
+					cornerShape.copy(
+						topEnd = CornerSize(24.dp),
+						bottomEnd = CornerSize(24.dp)
+					),
 				)
-			}
+				.clickable(onClick = { onPlus(duration + 1.seconds) })
+				.background(
+					color = containerColor,
+					shape = cornerShape.copy(
+						topEnd = CornerSize(24.dp),
+						bottomEnd = CornerSize(24.dp)
+					)
+				)
+				.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
+		) {
+			Icon(
+				imageVector = Icons.Default.Add,
+				contentDescription = "Add Action",
+				tint = contentColor,
+				modifier = Modifier.size(24.dp)
+			)
 		}
 	}
 }
@@ -138,4 +167,10 @@ internal fun AudioClipChipRow(
 			},
 		)
 	}
+}
+
+@PreviewLightDark
+@Composable
+private fun AudioClipChipRowPreview() = RecorderAppTheme {
+	AudioClipChipRow(trackDuration = 10.minutes, onEvent = {})
 }

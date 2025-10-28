@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -54,15 +53,16 @@ internal fun AudioBookMarkCard(
 		verticalAlignment = Alignment.CenterVertically,
 		modifier = modifier.padding(contentPadding),
 	) {
-		Badge(
-			containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-			contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+		Surface(
+			color = MaterialTheme.colorScheme.tertiaryContainer,
+			contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+			shape = MaterialTheme.shapes.medium,
 		) {
 			Text(
 				text = timeText,
 				style = MaterialTheme.typography.labelMedium,
 				fontWeight = FontWeight.SemiBold,
-				modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+				modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
 			)
 		}
 		Box(

@@ -8,29 +8,26 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.eva.player.domain.model.PlayerTrackData
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.update
+import com.eva.player_shared.state.PlayerSliderController
+import kotlinx.coroutines.launch
 import kotlin.math.round
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun PlayerSlider(
+fun PlayerTrackSlider(
 	trackData: PlayerTrackData,
 	onSeekComplete: (Duration) -> Unit,
 	modifier: Modifier = Modifier,
 	enabled: Boolean = true
 ) {
-	val controller = rememberPlayerSliderController()
+	val controller = remember { PlayerSliderController() }
+	val scope = rememberCoroutineScope()
+
 	var sliderPosition by remember { mutableFloatStateOf(trackData.playRatio) }
 
 	val isUserControlled by controller.isSeekByUser.collectAsStateWithLifecycle(false)
@@ -48,12 +45,17 @@ fun PlayerSlider(
 	Slider(
 		value = sliderPosition,
 		onValueChange = { newPosition ->
-			val playerSeekAmount = trackData.calculateSeekAmount(newPosition)
-			controller.onSliderSlide(playerSeekAmount)
+			scope.launch {
+				val playerSeekAmount = trackData.calculateSeekAmount(newPosition)
+				controller.onSliderSlide(playerSeekAmount)
+			}
 		},
 		onValueChangeFinished = {
-			onSeekComplete(seekAmountByUser)
-			controller.sliderCleanUp()
+			scope.launch {
+				controller.sliderCleanUp {
+					onSeekComplete(seekAmountByUser)
+				}
+			}
 		},
 		colors = SliderDefaults.colors(
 			activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -69,31 +71,4 @@ private fun Float.roundToNDecimals(decimals: Int = 2): Float {
 	var multiplier = 1.0f
 	repeat(decimals) { multiplier *= 10 }
 	return round(this * multiplier) / multiplier
-}
-
-@Composable
-private fun rememberPlayerSliderController(): PlayerSliderController {
-	return remember { PlayerSliderController() }
-}
-
-@OptIn(FlowPreview::class)
-private class PlayerSliderController() {
-
-	private val _seekAmountByUser = MutableStateFlow(Duration.ZERO)
-	val seekAmountByUser = _seekAmountByUser.asStateFlow()
-
-	private val _isSeekByUser = MutableStateFlow(false)
-	val isSeekByUser = _isSeekByUser.debounce { controlled ->
-		if (controlled) 0.seconds
-		else 75.milliseconds
-	}.distinctUntilChanged()
-
-	fun onSliderSlide(amount: Duration) {
-		_isSeekByUser.update { true }
-		_seekAmountByUser.update { amount }
-	}
-
-	fun sliderCleanUp() {
-		_isSeekByUser.update { false }
-	}
 }

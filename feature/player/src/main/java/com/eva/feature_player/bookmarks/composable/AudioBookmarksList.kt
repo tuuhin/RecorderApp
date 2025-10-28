@@ -1,9 +1,5 @@
 package com.eva.feature_player.bookmarks.composable
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,7 +36,6 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -91,66 +86,59 @@ internal fun AudioBookmarksList(
 		) {
 			Text(
 				text = stringResource(R.string.bookmarks_list_title),
-				style = MaterialTheme.typography.titleLarge,
+				style = MaterialTheme.typography.headlineMedium,
 				color = MaterialTheme.colorScheme.primary,
-				fontWeight = FontWeight.Bold,
 			)
-			AnimatedVisibility(
-				visible = canExportBookmarks,
-			) {
-				TooltipBox(
-					positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-						TooltipAnchorPosition.Start
-					),
-					tooltip = {
-						PlainTooltip {
-							Text(text = stringResource(R.string.bookmark_action_export))
-						}
-					},
-					state = rememberTooltipState()
-				) {
-					IconButton(
-						onClick = onExportBookmarks,
-						colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-					) {
-						Icon(
-							painter = painterResource(R.drawable.ic_export),
-							contentDescription = stringResource(R.string.bookmark_action_export)
-						)
+
+			TooltipBox(
+				positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+					TooltipAnchorPosition.Below
+				),
+				tooltip = {
+					PlainTooltip {
+						Text(text = stringResource(R.string.bookmark_action_export))
 					}
+				},
+				state = rememberTooltipState()
+			) {
+				IconButton(
+					onClick = onExportBookmarks,
+					enabled = canExportBookmarks,
+					colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+				) {
+					Icon(
+						painter = painterResource(R.drawable.ic_export),
+						contentDescription = stringResource(R.string.bookmark_action_export)
+					)
 				}
 			}
 		}
-		Crossfade(
-			targetState = canExportBookmarks,
-			label = "Bookmarks empty ot fill animation",
-			modifier = modifier,
-			animationSpec = tween(
-				durationMillis = 600,
-				delayMillis = 100,
-				easing = FastOutSlowInEasing
-			)
-		) { isNotEmpty ->
-			if (isNotEmpty) {
-				LazyColumn(
-					verticalArrangement = Arrangement.spacedBy(4.dp),
-				) {
-					itemsIndexed(
-						items = bookmarks,
-						key = keys,
-						contentType = contentType
-					) { _, bookmark ->
-						AudioBookMarkCard(
-							bookmark = bookmark,
-							onDelete = { onDeleteBookMark(bookmark) },
-							onEdit = { onEditBookMark(bookmark) },
-							modifier = Modifier
-								.fillMaxWidth()
-								.animateItem()
-						)
-					}
+		LazyColumn(
+			verticalArrangement = Arrangement.spacedBy(4.dp),
+			contentPadding = PaddingValues(vertical = 4.dp)
+		) {
+			if (bookmarks.isNotEmpty()) {
+				itemsIndexed(
+					items = bookmarks,
+					key = keys,
+					contentType = contentType
+				) { _, bookmark ->
+					AudioBookMarkCard(
+						bookmark = bookmark,
+						onDelete = { onDeleteBookMark(bookmark) },
+						onEdit = { onEditBookMark(bookmark) },
+						modifier = Modifier
+							.fillMaxWidth()
+							.animateItem()
+					)
 				}
-			} else NoBookmarksPlaceHolder()
+			} else {
+				item(key = "absent_items") {
+					NoBookmarksPlaceHolder(modifier = Modifier
+						.padding(top = 40.dp)
+						.animateItem())
+				}
+			}
 		}
 	}
 }
