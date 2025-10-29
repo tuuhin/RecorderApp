@@ -1,8 +1,9 @@
 package com.eva.player.di
 
 import android.content.Context
-import com.eva.player.data.MediaControllerProvider
+import com.eva.player.data.player.MediaControllerProvider
 import com.eva.player.data.reader.AudioVisualizerImpl
+import com.eva.player.domain.AudioFilePlayer
 import com.eva.player.domain.AudioVisualizer
 import dagger.Module
 import dagger.Provides
@@ -18,7 +19,7 @@ object PlayerControllerModule {
 	@Provides
 	@ViewModelScoped
 	fun providesMediaControllerProvider(@ApplicationContext context: Context)
-			: MediaControllerProvider = MediaControllerProvider(context)
+			: AudioFilePlayer = MediaControllerProvider(context)
 
 	@Provides
 	@ViewModelScoped
