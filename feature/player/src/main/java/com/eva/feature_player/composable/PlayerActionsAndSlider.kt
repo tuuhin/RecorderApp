@@ -26,6 +26,7 @@ internal fun PlayerActionsAndSlider(
 	onPlayerAction: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
 	isControllerSet: Boolean = true,
+	isPlayerPlaying: Boolean = true,
 	containerShape: Shape = MaterialTheme.shapes.large,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 	contentColor: Color = contentColorFor(backgroundColor = containerColor),
@@ -42,6 +43,7 @@ internal fun PlayerActionsAndSlider(
 		AudioPlayerActions(
 			playerMetaData = metaData,
 			isControllerReady = isControllerSet,
+			isPlayerPlaying = isPlayerPlaying,
 			onPlay = { onPlayerAction(PlayerEvents.OnStartPlayer) },
 			onPause = { onPlayerAction(PlayerEvents.OnPausePlayer) },
 			onMuteStream = { onPlayerAction(PlayerEvents.OnMutePlayer) },
@@ -61,8 +63,9 @@ internal fun PlayerActionsAndSlider(
 private fun PlayerActionsAndSliderPreview() = RecorderAppTheme {
 	Surface {
 		PlayerActionsAndSlider(
-			metaData = PlayerMetaData(isPlaying = true),
+			metaData = PlayerMetaData(),
 			trackData = { PlayerTrackData(total = 2.minutes) },
+			isPlayerPlaying = true,
 			onPlayerAction = {},
 			modifier = Modifier.padding(12.dp)
 		)

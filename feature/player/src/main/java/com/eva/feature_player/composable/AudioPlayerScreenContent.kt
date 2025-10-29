@@ -40,6 +40,7 @@ internal fun AudioPlayerScreenContent(
 	modifier: Modifier = Modifier,
 	onBookmarkEvent: (BookMarkEvents) -> Unit = {},
 	isControllerReady: Boolean = false,
+	isPlayerPlaying: Boolean = true,
 ) {
 	val bookMarkTimeStamps by remember(bookmarks) {
 		derivedStateOf {
@@ -82,6 +83,7 @@ internal fun AudioPlayerScreenContent(
 		PlayerActionsAndSlider(
 			metaData = playerMetaData,
 			trackData = trackData,
+			isPlayerPlaying = isPlayerPlaying,
 			isControllerSet = isControllerReady,
 			onPlayerAction = onPlayerEvents,
 			modifier = Modifier

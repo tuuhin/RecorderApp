@@ -14,6 +14,7 @@ kotlin {
 }
 
 dependencies {
+	implementation(libs.kotlinx.coroutines.core)
 	// kotlinx datetime
 	api(libs.kotlinx.datetime)
 	api(libs.kotlinx.collections.immutable)
