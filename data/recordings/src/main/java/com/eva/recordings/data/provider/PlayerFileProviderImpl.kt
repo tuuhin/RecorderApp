@@ -14,6 +14,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.os.bundleOf
+import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationAddressProvider
 import com.eva.location.domain.utils.parseLocationFromString
 import com.eva.recordings.data.utils.MediaMetaDataInfo
@@ -40,6 +41,7 @@ private const val TAG = "PLAYER_FILE_PROVIDER"
 
 internal class PlayerFileProviderImpl(
 	private val context: Context,
+	private val settings: RecorderAudioSettingsRepo,
 	private val addressProvider: LocationAddressProvider,
 ) : RecordingsContentResolverWrapper(context), PlayerFileProvider {
 
@@ -133,7 +135,7 @@ internal class PlayerFileProviderImpl(
 		val extractor = MediaExtractor()
 		val retriever = MediaMetadataRetriever()
 		try {
-			return withContext(Dispatchers.Default) {// set source
+			return withContext(Dispatchers.IO) {// set source
 				extractor.setDataSource(context, uri, null)
 				retriever.setDataSource(context, uri)
 				// its accountable that there is a single track
@@ -146,8 +148,10 @@ internal class PlayerFileProviderImpl(
 				} else mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 
 				val locationAsString = async {
+					val audioSettings = settings.audioSettings()
+					if (!audioSettings.addLocationInfoInRecording) return@async null
 					parseLocationFromString(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION))
-						?.let { addressProvider.invoke(it) } ?: ""
+						?.let { addressProvider.invoke(it).getOrNull() }
 				}
 
 				val bitRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)

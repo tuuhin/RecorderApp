@@ -1,7 +1,6 @@
 package com.eva.location.di
 
 import android.content.Context
-import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationAddressProvider
 import com.eva.location.domain.repository.LocationProvider
 import com.eva.location.provider.CoarseLocationProviderImpl
@@ -27,6 +26,5 @@ object LocationModule {
 	@Singleton
 	fun providesLocationAddressProvider(
 		@ApplicationContext context: Context,
-		settingsRepo: RecorderAudioSettingsRepo,
-	): LocationAddressProvider = LocationAddressProviderImpl(context, settingsRepo)
+	): LocationAddressProvider = LocationAddressProviderImpl(context)
 }

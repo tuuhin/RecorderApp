@@ -6,64 +6,45 @@ import android.location.Geocoder
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.BaseLocationModel
+import com.eva.location.domain.exceptions.GeoCoderMissingException
+import com.eva.location.domain.exceptions.InvalidLocationException
 import com.eva.location.domain.repository.LocationAddressProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.IOException
 import java.util.Locale
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 private const val TAG = "GEO_CODER"
 
-internal class LocationAddressProviderImpl(
-	private val context: Context,
-	private val settings: RecorderAudioSettingsRepo,
-) : LocationAddressProvider {
+internal class LocationAddressProviderImpl(private val context: Context) :
+	LocationAddressProvider {
 
 	private val geoCoder by lazy { Geocoder(context, Locale.getDefault()) }
 
 	private val hasGeoCoder: Boolean
 		get() = Geocoder.isPresent()
 
-	private fun buildAddressFromGeoCoderAddress(address: Address) = buildString {
-		val pattern = with(address) {
-			listOfNotNull(locality, adminArea, countryName, postalCode)
-		}
+	override suspend operator fun invoke(locationModel: BaseLocationModel): Result<String> {
+		if (!hasGeoCoder) return Result.failure(GeoCoderMissingException())
 
-		pattern.forEachIndexed { idx, block ->
-			append(block)
-			if (idx + 1 != pattern.size)
-				append(",")
-		}
-	}
-
-
-	override suspend operator fun invoke(locationModel: BaseLocationModel): String? {
-		if (!hasGeoCoder) {
-			Log.i(TAG, "GEO CODER API IS NOT FOUND")
-			return null
-		}
-		val audioSettings = settings.audioSettings()
-		if (!audioSettings.addLocationInfoInRecording) {
-			Log.d(TAG, "NO NEED TO SHOW LOCATION ")
-			return null
-		}
 		return withContext(Dispatchers.IO) {
 			try {
 				val addressPattern = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
 					evalAddressAPI33(locationModel)
 				else evalAddressNormal(locationModel)
 				Log.d(TAG, "ADDRESS DETERMINED FROM LOCATION :$addressPattern")
-				return@withContext addressPattern
-			} catch (e: IOException) {
+				Result.success(addressPattern ?: "")
+			} catch (e: IllegalArgumentException) {
 				Log.e(TAG, "LAT LONG IS INVALID", e)
-				null
+				Result.failure(InvalidLocationException())
 			} catch (e: Exception) {
+				if (e is CancellationException) throw e
 				e.printStackTrace()
-				null
+				Result.failure(e)
 			}
 		}
 	}
@@ -73,14 +54,13 @@ internal class LocationAddressProviderImpl(
 		// geocoder observer
 		val observer = object : Geocoder.GeocodeListener {
 			override fun onGeocode(addresses: MutableList<Address>) {
-				val result = addresses.firstOrNull()
-					?.let(::buildAddressFromGeoCoderAddress)
+				val result = addresses.firstOrNull()?.buildAddressString()
 				cont.resume(result)
 			}
 
 			override fun onError(errorMessage: String?) {
 				Log.e(TAG, "ERROR IN USING GEOCODER :$errorMessage")
-				cont.resume(null)
+				cont.resumeWithException(Exception(errorMessage))
 			}
 		}
 		// add the observer
@@ -92,5 +72,13 @@ internal class LocationAddressProviderImpl(
 		geoCoder.getFromLocation(location.latitude, location.longitude, 2)
 			?.filterNotNull()
 			?.firstOrNull()
-			?.let(::buildAddressFromGeoCoderAddress)
+			?.buildAddressString()
+
+	private fun Address.buildAddressString() = buildString {
+		val pattern = listOfNotNull(locality, adminArea, countryName, postalCode)
+		pattern.forEachIndexed { idx, block ->
+			append(block)
+			if (idx + 1 != pattern.size) append(", ")
+		}
+	}
 }

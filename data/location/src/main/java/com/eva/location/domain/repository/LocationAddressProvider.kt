@@ -4,5 +4,5 @@ import com.eva.location.domain.BaseLocationModel
 
 fun interface LocationAddressProvider {
 
-	suspend operator fun invoke(locationModel: BaseLocationModel): String?
+	suspend operator fun invoke(locationModel: BaseLocationModel): Result<String>
 }

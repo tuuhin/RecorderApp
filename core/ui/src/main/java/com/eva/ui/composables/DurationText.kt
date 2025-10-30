@@ -1,10 +1,12 @@
 package com.eva.ui.composables
 
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -19,7 +21,8 @@ import kotlin.time.toJavaDuration
 fun DurationText(
 	duration: Duration,
 	modifier: Modifier = Modifier,
-	style: TextStyle = MaterialTheme.typography.bodyMedium,
+	style: TextStyle = LocalTextStyle.current,
+	color: Color = LocalContentColor.current,
 	formatToLocale: Boolean = true,
 	fontFamily: FontFamily? = null,
 	fontWeight: FontWeight? = null,
@@ -38,6 +41,7 @@ fun DurationText(
 	Text(
 		text = formattedDuration,
 		modifier = modifier,
+		color = color,
 		style = style,
 		fontFamily = fontFamily,
 		fontWeight = fontWeight
