@@ -11,4 +11,9 @@ dependencies {
 	implementation(project(":core:utils"))
 	implementation(project(":data:bookmarks"))
 	implementation(project(":data:recordings"))
+
+	// testing
+	androidTestImplementation(libs.androidx.espresso.intents)
+	androidTestImplementation(project(":testing:runtime"))
+
 }

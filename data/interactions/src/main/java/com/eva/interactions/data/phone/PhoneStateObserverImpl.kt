@@ -28,6 +28,8 @@ internal class PhoneStateObserverImpl(private val context: Context) : PhoneState
 
 	override fun invoke(): Flow<PhoneState> {
 		return callbackFlow {
+			// initial send
+			trySend(PhoneState.IDLE)
 
 			if (!hasPhoneStatePermission) {
 				Log.i(TAG, "PERMISSION WAS NOT GRANTED")
@@ -36,6 +38,7 @@ internal class PhoneStateObserverImpl(private val context: Context) : PhoneState
 
 			val listener = object : PhoneStateListener() {
 
+				@Deprecated("Deprecated in Java")
 				override fun onCallStateChanged(state: Int, phoneNumber: String?) {
 					super.onCallStateChanged(state, phoneNumber)
 					val phoneState = when (state) {

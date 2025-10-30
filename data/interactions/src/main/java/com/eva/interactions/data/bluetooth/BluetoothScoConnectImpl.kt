@@ -9,8 +9,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import com.eva.interactions.domain.BluetoothScoConnect
 import com.eva.interactions.domain.enums.BtSCOChannelState
+import com.eva.interactions.domain.exception.BluetoothSCONotAvailableException
 import com.eva.interactions.domain.exception.BluetoothScoAlreadyConnected
-import com.eva.interactions.domain.exception.TelephonyFeatureNotException
 import com.eva.interactions.domain.models.AudioDevice
 import com.eva.utils.Resource
 import kotlinx.coroutines.channels.awaitClose
@@ -27,13 +27,12 @@ internal class BluetoothScoConnectImpl(private val context: Context) : Bluetooth
 	override val hasTelephonyFeature: Boolean
 		get() = context.packageManager.hasSystemFeature(PackageManager.FEATURE_TELEPHONY)
 
-
 	/**
 	 * In lower api we cannot observe the connection for [AudioDevice]
 	 * @see BluetoothScoConnectImplApi31
 	 */
 	override val observeConnection: Flow<AudioDevice>
-		get() = emptyFlow<AudioDevice>()
+		get() = emptyFlow()
 
 	override val observeScoState: Flow<BtSCOChannelState>
 		get() = callbackFlow {
@@ -64,7 +63,7 @@ internal class BluetoothScoConnectImpl(private val context: Context) : Bluetooth
 			Log.i(TAG, "STARTING CONNECTION...")
 			if (audioManager?.isBluetoothScoAvailableOffCall == false) {
 				Log.i(TAG, "SCO NOT AVAILABLE")
-				return Resource.Error(TelephonyFeatureNotException())
+				return Resource.Error(BluetoothSCONotAvailableException())
 			}
 			if (audioManager?.isBluetoothScoOn == true) {
 				Log.i(TAG, "BLUETOOTH SCO IS ALREADY ON")
