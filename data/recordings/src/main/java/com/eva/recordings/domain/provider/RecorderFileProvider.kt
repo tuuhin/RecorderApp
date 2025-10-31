@@ -16,9 +16,9 @@ interface RecorderFileProvider {
 	 * database if entry successfully entered
 	 * @param file The File whose data to be copied or metadata need to be evaluated
 	 * @param mimeType MimeType of the file to be submitted
-	 * @return The recordingId assigned for the current recording
+	 * @return The result with recording id if it's a success
 	 */
-	suspend fun transferFileDataToStorage(file: File, mimeType: String): Long?
+	suspend fun transferFileDataToStorage(file: File, mimeType: String): Result<Long>
 
 
 	/**

@@ -87,7 +87,7 @@ private fun RecorderContentPreview(
 		RecorderContent(
 			timer = LocalTime(0, 10, 56, 0),
 			recorderState = recorderState,
-			bookMarksDeferred = { listOf() },
+			bookMarksDeferred = { setOf() },
 			recordingPointsCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE },
 			onRecorderAction = {},
 			modifier = Modifier
