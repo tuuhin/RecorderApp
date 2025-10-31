@@ -14,4 +14,6 @@ dependencies {
 	implementation(libs.androidx.datastore.preferences)
 	//local
 	implementation(project(":core:utils"))
+
+	androidTestImplementation(project(":testing:runtime"))
 }
