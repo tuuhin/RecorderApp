@@ -18,14 +18,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -177,29 +178,33 @@ class AudioRecordAmplitudeReader(
 				return@flow
 			}
 
-			val invalids = arrayOf(AudioRecord.ERROR_INVALID_OPERATION, AudioRecord.ERROR_BAD_VALUE)
+			val invalids = arrayOf(
+				AudioRecord.ERROR_INVALID_OPERATION,
+				AudioRecord.ERROR_BAD_VALUE,
+				AudioRecord.ERROR
+			)
 			if (_recorder == null) return@flow
 
 			val pcmBuffer = ShortArray(_pcmBufferSize)
 			var shortsRead: Int
 
-			while (state == RecorderState.RECORDING) {
+			while (state == RecorderState.RECORDING && currentCoroutineContext().isActive) {
 				// ensure the current coroutine is active otherwise
-				currentCoroutineContext().ensureActive()
 				shortsRead = _recorder?.read(pcmBuffer, 0, pcmBuffer.size) ?: break
 				if (shortsRead in invalids) break
 				if (shortsRead == 0) break
 
-				// these are raw bytes
-				val rmsValue = pcmBuffer.rms(shortsRead)
-				emit(rmsValue)
-				// check if audio source set otherwise amp is zero
-				// read the values here
-				delay(delayRate)
+				if (currentCoroutineContext().isActive) {
+					// these are raw bytes
+					val rmsValue = pcmBuffer.rms(shortsRead)
+					emit(rmsValue)
+					// check if audio source set otherwise amp is zero
+					// read the values here
+					delay(delayRate)
+				}
 			}
-		} catch (err: IllegalStateException) {
-			Log.e(TAG, "ILLEGAL STATE", err)
 		} catch (e: Exception) {
+			if (e is CancellationException) Log.d(TAG, "NO MORE PROCESSING VALUES")
 			e.printStackTrace()
 		}
 	}.flowOn(Dispatchers.IO)
@@ -235,6 +240,7 @@ class AudioRecordAmplitudeReader(
 				val distinctBuffer = _buffer.distinctBy { it.timeInMillis }
 				emit(distinctBuffer)
 			} catch (e: Exception) {
+				if (e is CancellationException) Log.d(TAG, "UPDATE BUFFER CANCELLED")
 				e.printStackTrace()
 			}
 		}.flowOn(Dispatchers.Default)

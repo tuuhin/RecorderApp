@@ -43,7 +43,7 @@ fun NavGraphBuilder.recorderRoute(navController: NavHostController) =
 			VoiceRecorderScreen(
 				isRecorderReady = isRecorderReady,
 				recorderState = recorderState,
-				recorderTimer = recorderTimer,
+				recorderTimer = { recorderTimer },
 				bookMarksSetDeferred = { bookMarksSet },
 				deferredRecordingPoints = { recordingPoints },
 				onRecorderAction = viewModel::onAction,
