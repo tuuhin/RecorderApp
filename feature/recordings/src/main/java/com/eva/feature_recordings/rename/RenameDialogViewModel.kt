@@ -2,6 +2,7 @@ package com.eva.feature_recordings.rename
 
 import android.app.RecoverableSecurityException
 import android.os.Build
+import android.util.Log
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
@@ -21,10 +22,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
@@ -44,7 +47,12 @@ internal class RenameDialogViewModel @Inject constructor(
 		get() = route.recordingId
 
 	private val _state = MutableStateFlow(RenameRecordingState())
-	val renameState = _state.asStateFlow()
+	val renameState = _state.onStart { loadEntry() }
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.Lazily,
+			initialValue = RenameRecordingState()
+		)
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
@@ -66,10 +74,10 @@ internal class RenameDialogViewModel @Inject constructor(
 	}
 
 	init {
-		viewModelScope.launch { loadEntry() }
+		viewModelScope.launch { }
 	}
 
-	private suspend fun loadEntry() {
+	private fun loadEntry() = viewModelScope.launch {
 		when (val result = recordingsProvider.getVoiceRecordingAsResourceFromId(recordingId)) {
 			is Resource.Error -> {
 				val message = result.error.message ?: result.message ?: "Recording not found"
@@ -82,7 +90,7 @@ internal class RenameDialogViewModel @Inject constructor(
 			is Resource.Success -> _state.update { state ->
 				state.copy(
 					recording = result.data,
-					textFieldState = TextFieldValue(text = result.data.title),
+					textFieldState = TextFieldValue(text = result.data.displayName),
 					isRenameAllowed = true
 				)
 			}
@@ -104,6 +112,7 @@ internal class RenameDialogViewModel @Inject constructor(
 				when (result) {
 					Resource.Loading -> _state.update { it.copy(isRenameAllowed = true) }
 					is Resource.Error -> {
+						Log.d("SOME_TAG", "${result.error}")
 						val error = result.error
 						if (error is SecurityException) {
 							// show the toast
@@ -114,7 +123,7 @@ internal class RenameDialogViewModel @Inject constructor(
 							val recordingState = _state.updateAndGet { state ->
 								state.copy(isRenameAllowed = false)
 							}
-							handleSecurityException(error, recordingState.recording)
+							handleSecurityException(error, recordingState.recording, true)
 							return@onEach
 						}
 						val message = result.message ?: result.error.message ?: ""
@@ -139,13 +148,16 @@ internal class RenameDialogViewModel @Inject constructor(
 	private fun handleSecurityException(
 		error: SecurityException,
 		recording: RecordedVoiceModel? = null,
+		isEnabled: Boolean = false,
 	) {
-		if (recording == null) return
+
+		if (recording == null || !isEnabled) return
+		if (error !is RecoverableSecurityException) return
 
 		val request = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			// event with recording
 			RenamePermissionEvent.OnAskAccessRequest(recording)
-		} else if (true && error is RecoverableSecurityException) {
+		} else {
 			val pendingIntent = error.userAction.actionIntent
 			val request = IntentSenderRequest.Builder(pendingIntent).build()
 			// event with the intent sender
@@ -153,9 +165,7 @@ internal class RenameDialogViewModel @Inject constructor(
 				recordings = recording,
 				intentSenderRequest = request
 			)
-
-		} else null
-
-		request?.let { viewModelScope.launch { _permissionEvent.emit(it) } }
+		}
+		viewModelScope.launch { _permissionEvent.emit(request) }
 	}
 }

@@ -6,7 +6,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -26,6 +28,7 @@ internal fun TrashItemRequestHandler(
 
 	val context = LocalContext.current
 	val lifecycleOwner = LocalLifecycleOwner.current
+	val currentOnResults by rememberUpdatedState(onResult)
 
 	val trashRequestLauncher = rememberLauncherForActivityResult(
 		contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -36,7 +39,7 @@ internal fun TrashItemRequestHandler(
 			else context.getString(R.string.recording_delete_request_failed)
 
 			val event = RecordingScreenEvent.OnPostTrashRequest(message)
-			onResult(event)
+			currentOnResults(event)
 		}
 	)
 

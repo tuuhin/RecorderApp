@@ -6,6 +6,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -23,6 +25,7 @@ internal fun RenameItemRequestHandler(
 ) {
 	val lifeCycleOwner = LocalLifecycleOwner.current
 	val context = LocalContext.current
+	val currentOnWriteAccessChange by rememberUpdatedState(onWriteAccessChange)
 
 	val permissionLauncher = rememberLauncherForActivityResult(
 		contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -33,7 +36,7 @@ internal fun RenameItemRequestHandler(
 			else context.getString(R.string.write_request_rejected)
 
 			val event = RenameRecordingEvent.OnWriteAccessChanged(isAccepted, message)
-			onWriteAccessChange(event)
+			currentOnWriteAccessChange(event)
 		}
 	)
 

@@ -6,7 +6,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -25,6 +27,7 @@ fun DeleteItemRequestHandler(
 ) {
 	val context = LocalContext.current
 	val lifecycleOwner = LocalLifecycleOwner.current
+	val currentOnEvent by rememberUpdatedState(onResult)
 
 	val deleteRequestLauncher = rememberLauncherForActivityResult(
 		contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -35,7 +38,7 @@ fun DeleteItemRequestHandler(
 				else context.getString(R.string.recording_delete_request_failed)
 
 			val event = TrashRecordingScreenEvent.OnPostDeleteRequest(message)
-			onResult(event)
+			currentOnEvent(event)
 		},
 	)
 

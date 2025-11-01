@@ -57,8 +57,18 @@ interface TrashRecordingsProvider {
 	 * Permanently deletes recordings from the trash. This action is irreversible.
 	 *
 	 * @param trashRecordings A [Collection] of [TrashRecordingModel] objects to permanently delete.
-	 * @return A [Resource] indicating success (Unit) or failure (an [Exception]).
+	 * @return [Flow] of [ResourcedTrashRecordingModels] As there can be security exceptions for certain files it's a flow resources to indicate
+	 * few have succeeded and few caught exceptions
 	 */
-	suspend fun permanentlyDeleteRecordingsInTrash(trashRecordings: Collection<TrashRecordingModel>): Resource<Unit, Exception>
+	fun permanentlyDeleteRecordingsInTrash(trashRecordings: List<TrashRecordingModel>): Flow<Resource<List<TrashRecordingModel>, Exception>>
 
+	/**
+	 * Permanently deletes recordings from the trash. This action is irreversible.
+	 *
+	 * @param trashRecordings A [Collection] of [TrashRecordingModel] objects to permanently delete,
+	 * If the owner is now this app then the [trashRecordings] are ignored
+	 * @return [Resource] Indicating the recordings has been deleted
+	 *
+	 */
+	suspend fun permanentlyDeleteRecordings(trashRecordings: List<TrashRecordingModel>): Resource<Unit, Exception>
 }
