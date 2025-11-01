@@ -71,35 +71,29 @@ fun FloatArray.compressFloatArray(m: Int): FloatArray {
 }
 
 
- fun FloatArray.normalize(): FloatArray {
+fun FloatArray.normalize(): FloatArray {
 
-	if (isEmpty()) return FloatArray(0)
 	val maxValue = maxOrNull() ?: .0f
 	val minValue = minOrNull() ?: .0f
 
-	if (maxValue == minValue) return FloatArray(size)
+	if (maxValue == minValue || isEmpty()) return this
 
-	val finalArray = FloatArray(size)
-	val diff = (maxValue - minValue)
-	for (i in indices) {
-		finalArray[i] = (get(i) - minValue) / diff
+	val diff = (maxValue - minValue).let { value -> if (value == 0f) 1f else value }
+	val copy = copyOf()
+	for (i in 1..<lastIndex) {
+		copy[i] = (this[i] - minValue) / diff
 	}
-	return finalArray
+	return copy
 }
 
 
 fun FloatArray.smoothen(smoothness: Float = .7f): FloatArray {
-	if (this.isEmpty()) return FloatArray(0)
-
-	val smoothed = FloatArray(this.size)
-	if (smoothness == 0f) return this.copyOf()
-
-	smoothed[0] = this[0]
-	smoothed[this.lastIndex] = this[this.lastIndex]
-
-	for (i in 1 until this.lastIndex) {
-		smoothed[i] =
-			(this[i - 1] * smoothness * 0.5f) + (this[i] * (1 - smoothness)) + (this[i + 1] * smoothness * 0.5f)
+	if (isEmpty() || smoothness == 0f) return this
+	val original = copyOf()
+	for (i in 1..<lastIndex) {
+		this[i] = (original[i - 1] * smoothness * 0.5f) +
+				(original[i] * (1 - smoothness)) +
+				(original[i + 1] * smoothness * 0.5f)
 	}
-	return smoothed
+	return this
 }

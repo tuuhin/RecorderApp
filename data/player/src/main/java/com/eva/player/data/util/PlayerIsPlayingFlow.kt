@@ -8,6 +8,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 
 private const val TAG = "PLAYER_PLAYING_FLOW"
@@ -82,6 +83,7 @@ fun Player.computePlayerPlayState(): Flow<PlayerPlayState> = callbackFlow {
 	awaitClose { removeListener(listener) }
 }.distinctUntilChanged()
 
-fun Player.computeIsPlayerPlaying(): Flow<Boolean> =
-	computePlayerPlayState().map { it == PlayerPlayState.PLAYING || it == PlayerPlayState.BUFFERING }
-		.distinctUntilChanged()
+fun Player.computeIsPlayerPlaying(): Flow<Boolean> = computePlayerPlayState()
+	.filterNot { it == PlayerPlayState.BUFFERING }
+	.map { it == PlayerPlayState.PLAYING }
+	.distinctUntilChanged()

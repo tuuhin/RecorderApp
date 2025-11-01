@@ -10,12 +10,11 @@ import com.eva.player.domain.AudioVisualizer
 import com.eva.player.domain.exceptions.DecoderExistsException
 import com.eva.player.domain.exceptions.InvalidMimeTypeException
 import com.eva.recordings.domain.models.AudioFileModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -23,9 +22,7 @@ import kotlinx.coroutines.withContext
 
 private const val TAG = "PLAIN_VISUALIZER"
 
-class AudioVisualizerImpl(private val context: Context) : AudioVisualizer {
-
-	private val _scope = CoroutineScope(Dispatchers.Default)
+internal class AudioVisualizerImpl(private val context: Context) : AudioVisualizer {
 
 	private var _extractor: MediaExtractor? = null
 	private var _decoder: MediaCodecPCMDataDecoder? = null
@@ -37,6 +34,7 @@ class AudioVisualizerImpl(private val context: Context) : AudioVisualizer {
 	private val _visualization = MutableStateFlow(floatArrayOf())
 	override val normalizedVisualization: Flow<FloatArray>
 		get() = _visualization.map { array -> array.normalize().smoothen(.4f) }
+			.catch { err -> Log.d(TAG, "SOME ERROR", err) }
 			.flowOn(Dispatchers.Default)
 
 	override suspend fun prepareVisualization(model: AudioFileModel, timePerPointInMs: Int)
@@ -52,12 +50,13 @@ class AudioVisualizerImpl(private val context: Context) : AudioVisualizer {
 
 	override suspend fun prepareVisualization(fileUri: String, timePerPointInMs: Int)
 			: Result<Unit> {
-		return withContext(Dispatchers.IO) {
-			if (_decoder != null) {
-				Log.d(TAG, "CLEAN DECODER TO PREPARE IT AGAIN")
-				return@withContext Result.failure(DecoderExistsException())
-			}
 
+		if (_decoder != null) {
+			Log.d(TAG, "CLEAN DECODER TO PREPARE IT AGAIN")
+			return Result.failure(DecoderExistsException())
+		}
+
+		return withContext(Dispatchers.IO) {
 			try {
 				_extractor = MediaExtractor().apply {
 					setDataSource(context, fileUri.toUri(), null)
@@ -72,14 +71,14 @@ class AudioVisualizerImpl(private val context: Context) : AudioVisualizer {
 
 				_decoder = MediaCodecPCMDataDecoder(
 					extractor = _extractor,
-					scope = _scope,
 					totalTime = format.duration,
-					seekDuration = timePerPointInMs,
-					onBufferDecoded = { array ->
+					seekDurationMillis = timePerPointInMs,
+				).apply {
+					setOnBufferDecode { array ->
 						_isReady.update { true }
 						_visualization.update { it + array }
-					},
-				)
+					}
+				}
 				Log.d(TAG, "MEDIA CODEC SET FOR MIME TYPE:$mimetype")
 				_decoder?.initiateCodec(format, mimetype)
 				Result.success(Unit)
@@ -91,7 +90,6 @@ class AudioVisualizerImpl(private val context: Context) : AudioVisualizer {
 	}
 
 	override fun cleanUp() {
-		_scope.cancel()
 		_isReady.update { false }
 
 		Log.d(TAG, "MEDIA CODEC IS RELEASED")
