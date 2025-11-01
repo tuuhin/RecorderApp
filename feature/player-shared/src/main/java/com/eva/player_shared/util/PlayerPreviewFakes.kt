@@ -2,6 +2,7 @@ package com.eva.player_shared.util
 
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.recordings.domain.models.AudioFileModel
+import com.eva.recordings.domain.models.MediaMetaDataInfo
 import kotlinx.datetime.toKotlinLocalDateTime
 import java.time.LocalDateTime
 import kotlin.time.Duration
@@ -126,20 +127,23 @@ object PlayerPreviewFakes {
 		return data.toFloatArray()
 	}
 
+	val FAKE_MEDIA_INFO = MediaMetaDataInfo(
+		bitRate = 128_000,
+		sampleRate = 44_100,
+		channelCount = 1,
+		locationString = null
+	)
+
 	val FAKE_AUDIO_MODEL = AudioFileModel(
 		id = 0L,
 		title = "Voice_001",
 		displayName = "Voice_001.abc",
 		duration = 5.minutes,
 		fileUri = "",
-		bitRateInKbps = 0f,
 		lastModified = LocalDateTime.now().toKotlinLocalDateTime(),
-		samplingRateKHz = 0f,
-		path = "this_is_a_path/file",
-		channel = 1,
 		size = 100L,
 		mimeType = "This/that",
-		isFavourite = true
+		isFavourite = true, metaData = FAKE_MEDIA_INFO
 	)
 
 	val FAKE_TRACK_DATA = PlayerTrackData(current = 4.seconds, total = 10.seconds)

@@ -1,7 +1,6 @@
 package com.eva.feature_player.composable
 
 import android.text.format.Formatter
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,7 +26,6 @@ import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.LocalTimeFormats
 import kotlinx.datetime.format
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FileMetaDataSheetContent(
 	audio: AudioFileModel,
@@ -93,43 +91,56 @@ fun FileMetaDataSheetContent(
 				text = lastModified
 			)
 		}
-		item {
-			FileMetaData(
-				title = stringResource(id = R.string.audio_metadata_channel_title),
-				text = stringResource(
-					id = if (audio.channel == 1) R.string.audio_metadata_channel_mono
-					else R.string.audio_metadata_channel_stereo
-				)
-			)
-		}
-		item {
-			FileMetaData(
-				title = stringResource(id = R.string.audio_metadata_bitrate_title),
-				text = stringResource(id = R.string.audio_metadata_bitrate, audio.bitRateInKbps)
-			)
-		}
-		item {
-			FileMetaData(
-				title = stringResource(id = R.string.audio_metadata_sample_rate_title),
-				text = stringResource(
-					id = R.string.audio_metadata_sample_rate,
-					audio.samplingRateKHz
-				)
-			)
-		}
-		item {
-			FileMetaData(
-				title = stringResource(id = R.string.audio_metadata_path_title),
-				text = audio.path
-			)
-		}
-		if (audio.hasLocation) {
+		audio.metaData?.let { metaData ->
 			item {
 				FileMetaData(
-					title = stringResource(R.string.audio_metadata_file_location),
-					text = audio.metaDataLocation
+					title = stringResource(id = R.string.audio_metadata_channel_title),
+					text = stringResource(
+						id = if (metaData.channelCount == 1) R.string.audio_metadata_channel_mono
+						else R.string.audio_metadata_channel_stereo
+					),
+					modifier = Modifier.animateItem(),
 				)
 			}
+			item {
+				FileMetaData(
+					title = stringResource(id = R.string.audio_metadata_bitrate_title),
+					text = stringResource(
+						id = R.string.audio_metadata_bitrate,
+						metaData.bitRateInKbps
+					),
+					modifier = Modifier.animateItem(),
+				)
+			}
+			item {
+				FileMetaData(
+					title = stringResource(id = R.string.audio_metadata_sample_rate_title),
+					text = stringResource(
+						id = R.string.audio_metadata_sample_rate,
+						metaData.sampleRateInKHz
+					),
+					modifier = Modifier.animateItem(),
+				)
+			}
+			metaData.locationString?.let { location ->
+				item {
+					FileMetaData(
+						title = stringResource(R.string.audio_metadata_file_location),
+						text = location,
+						modifier = Modifier.animateItem()
+					)
+				}
+			}
+		}
+		audio.path?.let { path ->
+			item {
+				FileMetaData(
+					title = stringResource(id = R.string.audio_metadata_path_title),
+					text = path,
+					modifier = Modifier.animateItem(),
+				)
+			}
+
 		}
 	}
 }

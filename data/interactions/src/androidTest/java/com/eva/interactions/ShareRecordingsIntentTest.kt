@@ -75,10 +75,8 @@ class ShareRecordingsIntentTest {
 			size = 1024 * 20,
 			lastModified = LocalDateTime.now().toKotlinLocalDateTime(),
 			fileUri = contentURI.toString(),
-			mimeType = "audio/mp3", path = "",
-			channel = 1,
-			bitRateInKbps = 0f,
-			samplingRateKHz = 0f
+			mimeType = "audio/mp3",
+			path = "",
 		)
 
 		try {

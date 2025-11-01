@@ -10,7 +10,6 @@ import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
-import com.eva.utils.Resource
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +24,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.updateAndGet
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel(assistedFactory = PlayerViewmodelFactory::class)
@@ -115,11 +114,10 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 
 	private fun setAudioModel() = viewModelScope.launch {
 		val result = fileProvider.getAudioFileFromId(audioId)
-		when (result) {
-			is Resource.Success -> _currentFile.updateAndGet { result.data }
-			is Resource.Error -> _uiEvents.emit(UIEvents.ShowSnackBar(result.message ?: ""))
-			else -> {}
-		}
+		result.fold(
+			onSuccess = { data -> _currentFile.update { data } },
+			onFailure = { error -> _uiEvents.emit(UIEvents.ShowSnackBar(error.message ?: "")) },
+		)
 	}
 
 	override fun onCleared() {

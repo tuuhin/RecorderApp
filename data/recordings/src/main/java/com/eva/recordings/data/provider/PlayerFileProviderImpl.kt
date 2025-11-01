@@ -5,7 +5,6 @@ import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
 import android.database.Cursor
-import android.database.SQLException
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
@@ -13,21 +12,21 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationAddressProvider
 import com.eva.location.domain.utils.parseLocationFromString
-import com.eva.recordings.data.utils.MediaMetaDataInfo
 import com.eva.recordings.data.wrapper.RecordingsConstants
 import com.eva.recordings.data.wrapper.RecordingsContentResolverWrapper
 import com.eva.recordings.domain.exceptions.InvalidRecordingIdException
 import com.eva.recordings.domain.models.AudioFileModel
+import com.eva.recordings.domain.models.MediaMetaDataInfo
 import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.recordings.domain.provider.ResourcedDetailedRecordingModel
 import com.eva.utils.Resource
 import com.eva.utils.toLocalDateTime
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -61,28 +60,36 @@ internal class PlayerFileProviderImpl(
 		return ContentUris.withAppendedId(RecordingsConstants.AUDIO_VOLUME_URI, audioId).toString()
 	}
 
-	override fun getAudioFileFromIdFlow(id: Long): Flow<ResourcedDetailedRecordingModel> {
+	override fun getAudioFileFromIdFlow(
+		id: Long,
+		readMetaData: Boolean
+	): Flow<ResourcedDetailedRecordingModel> {
 		return callbackFlow {
-
-			var updateJob: Job? = null
 			// send loading
 			trySend(Resource.Loading)
 
 			// send the data
 			launch(Dispatchers.IO) {
 				// evaluate it and send
-				val first = getAudioFileFromId(id)
-				send(first)
+				val first = getAudioFileFromId(id, readMetaData)
+				first.fold(
+					onSuccess = { send(Resource.Success(it)) },
+					onFailure = {
+						send(Resource.Error(Exception(it)))
+					},
+				)
 			}
 
 			val contentObserver = object : ContentObserver(null) {
 				override fun onChange(selfChange: Boolean) {
-					// observer has found some changes
-					// cancel the previous job and run new one
-					updateJob?.cancel()
-					updateJob = launch(Dispatchers.IO) {
-						val update = getAudioFileFromId(id)
-						send(update)
+					launch(Dispatchers.IO) {
+						val updated = getAudioFileFromId(id, readMetaData)
+						updated.fold(
+							onSuccess = { send(Resource.Success(it)) },
+							onFailure = {
+								send(Resource.Error(Exception(it)))
+							},
+						)
 					}
 				}
 			}
@@ -99,7 +106,10 @@ internal class PlayerFileProviderImpl(
 		}
 	}
 
-	override suspend fun getAudioFileFromId(id: Long): ResourcedDetailedRecordingModel {
+	override suspend fun getAudioFileFromId(
+		id: Long,
+		readMetaData: Boolean
+	): Result<AudioFileModel> {
 		val selection = "${MediaStore.Audio.AudioColumns._ID} = ?"
 		val selectionArgs = arrayOf("$id")
 
@@ -108,24 +118,21 @@ internal class PlayerFileProviderImpl(
 			ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs
 		)
 		return withContext(Dispatchers.IO) {
-			try {
+			runCatching {
 				contentResolver.query(
 					RecordingsConstants.AUDIO_VOLUME_URI,
 					_projection,
 					bundle,
 					null
-				)
-					?.use { cur -> evaluateValuesFromCursor(cur) }
-					?.let { Resource.Success(it) }
-					?: Resource.Error(InvalidRecordingIdException())
-			} catch (e: SecurityException) {
-				Resource.Error(e, "CANNOT ACCESS FILE PERMISSION WAS NOT GRANTED")
-			} catch (e: SQLException) {
-				e.printStackTrace()
-				Resource.Error(e, "SQL EXCEPTION")
-			} catch (e: Exception) {
-				e.printStackTrace()
-				Resource.Error(e)
+				)?.use { cur ->
+					val result = evaluateValuesFromCursor(cur)
+						?: return@withContext Result.failure(InvalidRecordingIdException())
+					val metadata = if (readMetaData) {
+						Log.d(TAG, "READING METADATA")
+						extractMediaInfo(result.fileUri.toUri())
+					} else null
+					result.copy(metaData = metadata)
+				} ?: return@withContext Result.failure(InvalidRecordingIdException())
 			}
 		}
 	}
@@ -150,7 +157,9 @@ internal class PlayerFileProviderImpl(
 				val locationAsString = async {
 					val audioSettings = settings.audioSettings()
 					if (!audioSettings.addLocationInfoInRecording) return@async null
-					parseLocationFromString(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION))
+					val locationString =
+						retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION)
+					parseLocationFromString(locationString)
 						?.let { addressProvider.invoke(it).getOrNull() }
 				}
 
@@ -160,7 +169,7 @@ internal class PlayerFileProviderImpl(
 				MediaMetaDataInfo(
 					channelCount = channelCount,
 					sampleRate = sampleRate,
-					bitRate = bitRate / 1_000f,
+					bitRate = bitRate,
 					locationString = locationAsString.await()
 				)
 			}
@@ -200,8 +209,6 @@ internal class PlayerFileProviderImpl(
 			val mimeType = cursor.getString(mimeTypeColumn)
 			val contentUri = ContentUris.withAppendedId(RecordingsConstants.AUDIO_VOLUME_URI, id)
 
-			val extractor = extractMediaInfo(contentUri)
-
 			AudioFileModel(
 				id = id,
 				title = title,
@@ -209,13 +216,9 @@ internal class PlayerFileProviderImpl(
 				duration = duration.milliseconds,
 				size = size,
 				fileUri = contentUri.toString(),
-				bitRateInKbps = extractor?.bitRate ?: 0f,
 				lastModified = lastModified.seconds.toLocalDateTime(),
-				channel = extractor?.channelCount ?: 0,
 				path = relPath,
 				mimeType = mimeType,
-				samplingRateKHz = (extractor?.sampleRate ?: 0) / 1000f,
-				metaDataLocation = extractor?.locationString ?: ""
 			)
 		}
 	}
