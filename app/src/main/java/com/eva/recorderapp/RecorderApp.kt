@@ -3,6 +3,8 @@ package com.eva.recorderapp
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import androidx.compose.runtime.Composer
+import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.hilt.work.HiltWorkerFactory
@@ -14,7 +16,7 @@ import com.eva.worker.UpdateRecordingPathWorker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
-
+@OptIn(ExperimentalComposeRuntimeApi::class)
 @HiltAndroidApp
 class RecorderApp : Application(), Configuration.Provider {
 
@@ -35,6 +37,22 @@ class RecorderApp : Application(), Configuration.Provider {
 	override fun onCreate() {
 		super.onCreate()
 
+		// enabled compose stack-trace
+		Composer.setDiagnosticStackTraceEnabled(enabled = BuildConfig.DEBUG)
+
+		createNotificationChannels()
+
+		//shortcuts
+		shortcutFacade.createRecordingsShortCut()
+
+		//start workers
+		RemoveTrashRecordingWorker.startRepeatWorker(applicationContext)
+		// update path worker
+		UpdateRecordingPathWorker.startWorker(applicationContext)
+	}
+
+
+	private fun createNotificationChannels() {
 		val channel1 = NotificationChannel(
 			NotificationConstants.RECORDER_CHANNEL_ID,
 			NotificationConstants.RECORDER_CHANNEL_NAME,
@@ -67,13 +85,5 @@ class RecorderApp : Application(), Configuration.Provider {
 		val channels = listOf(channel1, channel2, channel3)
 
 		notificationManager?.createNotificationChannels(channels)
-
-		//shortcuts
-		shortcutFacade.createRecordingsShortCut()
-
-		//start workers
-		RemoveTrashRecordingWorker.startRepeatWorker(applicationContext)
-		// update path worker
-		UpdateRecordingPathWorker.startWorker(applicationContext)
 	}
 }
