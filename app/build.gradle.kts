@@ -4,6 +4,7 @@ import java.util.Properties
 plugins {
 	alias(libs.plugins.android.application)
 	alias(libs.plugins.jetbrains.kotlin.android)
+	// custom plugins
 	alias(libs.plugins.recorderapp.hilt)
 	alias(libs.plugins.recorderapp.compose.compiler)
 }
@@ -16,8 +17,8 @@ android {
 		applicationId = "com.eva.recorderapp"
 		minSdk = libs.versions.minSdk.get().toInt()
 		targetSdk = libs.versions.compileSdk.get().toInt()
-		versionCode = 10
-		versionName = "1.4.0"
+		versionCode = 11
+		versionName = "1.4.1"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -68,6 +69,10 @@ android {
 				"proguard-rules.pro"
 			)
 		}
+		debug {
+			applicationIdSuffix = ".debug"
+			resValue("string", "app_name", "RecorderApp (DEBUG)")
+		}
 	}
 	compileOptions {
 		sourceCompatibility = JavaVersion.VERSION_17
@@ -111,4 +116,6 @@ dependencies {
 	implementation(project(":feature:widget"))
 	implementation(project(":feature:onboarding"))
 
+	// android testing
+	androidTestImplementation(libs.androidx.runner)
 }
