@@ -15,16 +15,18 @@ import androidx.compose.ui.unit.dp
 import com.eva.feature_player.state.PlayerEvents
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerTrackData
-import com.eva.player_shared.composables.PlayerSlider
+import com.eva.player_shared.composables.PlayerTrackSlider2
 import com.eva.ui.theme.RecorderAppTheme
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 internal fun PlayerActionsAndSlider(
 	metaData: PlayerMetaData,
-	trackData: PlayerTrackData,
+	trackData: () -> PlayerTrackData,
 	onPlayerAction: (PlayerEvents) -> Unit,
 	modifier: Modifier = Modifier,
 	isControllerSet: Boolean = true,
+	isPlayerPlaying: Boolean = true,
 	containerShape: Shape = MaterialTheme.shapes.large,
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 	contentColor: Color = contentColorFor(backgroundColor = containerColor),
@@ -33,7 +35,7 @@ internal fun PlayerActionsAndSlider(
 		modifier = modifier,
 		verticalArrangement = Arrangement.spacedBy(8.dp)
 	) {
-		PlayerSlider(
+		PlayerTrackSlider2(
 			trackData = trackData,
 			onSeekComplete = { amount -> onPlayerAction(PlayerEvents.OnSeekPlayer(amount)) },
 			enabled = isControllerSet
@@ -41,6 +43,7 @@ internal fun PlayerActionsAndSlider(
 		AudioPlayerActions(
 			playerMetaData = metaData,
 			isControllerReady = isControllerSet,
+			isPlayerPlaying = isPlayerPlaying,
 			onPlay = { onPlayerAction(PlayerEvents.OnStartPlayer) },
 			onPause = { onPlayerAction(PlayerEvents.OnPausePlayer) },
 			onMuteStream = { onPlayerAction(PlayerEvents.OnMutePlayer) },
@@ -60,8 +63,9 @@ internal fun PlayerActionsAndSlider(
 private fun PlayerActionsAndSliderPreview() = RecorderAppTheme {
 	Surface {
 		PlayerActionsAndSlider(
-			metaData = PlayerMetaData(isPlaying = true),
-			trackData = PlayerTrackData(),
+			metaData = PlayerMetaData(),
+			trackData = { PlayerTrackData(total = 2.minutes) },
+			isPlayerPlaying = true,
 			onPlayerAction = {},
 			modifier = Modifier.padding(12.dp)
 		)

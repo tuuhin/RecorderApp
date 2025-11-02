@@ -55,6 +55,14 @@ object LocalTimeFormats {
 		second()
 	}
 
+	val LOCALTIME_FORMAT_HH_MM_SS = LocalTime.Format {
+		hour()
+		char(':')
+		minute()
+		char(':')
+		second()
+	}
+
 	val RECORDING_RECORD_TIME_FORMAT = LocalDateTime.Format {
 		day(padding = Padding.ZERO)
 		char(' ')

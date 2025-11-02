@@ -1,7 +1,5 @@
 package com.eva.feature_editor
 
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -39,11 +37,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.merge
 
 fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
-	animatedComposable<PlayerSubGraph.AudioEditorRoute>(
-		sizeTransform = {
-			SizeTransform(clip = false) { _, _ -> tween(durationMillis = 300) }
-		},
-	) { backstackEntry ->
+	animatedComposable<PlayerSubGraph.AudioEditorRoute> { backstackEntry ->
 
 		val sharedViewmodel = backstackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
 		val visualsViewmodel = backstackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
@@ -74,10 +68,8 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 							}
 						},
 						navigation = {
-							if (controller.previousBackStackEntry?.destination?.route != null) {
-								IconButton(
-									onClick = dropUnlessResumed(block = controller::popBackStack),
-								) {
+							if (controller.previousBackStackEntry != null) {
+								IconButton(onClick = dropUnlessResumed(block = controller::popBackStack)) {
 									Icon(
 										imageVector = Icons.AutoMirrored.Default.ArrowBack,
 										contentDescription = stringResource(R.string.back_arrow)
@@ -92,7 +84,7 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 	}
 
 @Composable
-fun AudioEditorScreenStateful(
+private fun AudioEditorScreenStateful(
 	fileModel: AudioFileModel,
 	visualization: PlayerGraphData,
 	onClipDataUpdate: (AudioConfigToActionList) -> Unit,
@@ -135,12 +127,12 @@ fun AudioEditorScreenStateful(
 		derivedStateOf { totalConfigs.count() >= 1 }
 	}
 
-	AudioEditorScreenContent(
+	AudioEditorScreen(
 		graphData = visualization,
 		isVisualsReady = isVisualsReady,
 		isPlaying = isPlaying,
 		clipConfig = clipConfig,
-		trackData = trackData,
+		trackData = { trackData },
 		isMediaEdited = isMediaEdited,
 		undoRedoState = undoRedoState,
 		transformationState = transformationState,

@@ -135,7 +135,7 @@ internal fun RecorderAmplitudeGraph(
 private fun RecorderAmplitudeGraphPreview() = RecorderAppTheme {
 	RecorderAmplitudeGraph(
 		recoderPointsCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE },
-		bookMarksDeferred = { listOf(2.seconds, 5.seconds) },
+		bookMarksDeferred = { setOf(2.seconds, 5.seconds) },
 		modifier = Modifier.fillMaxWidth(),
 	)
 }

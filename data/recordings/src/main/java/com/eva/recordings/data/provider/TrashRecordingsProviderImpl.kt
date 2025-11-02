@@ -15,17 +15,13 @@ import com.eva.database.entity.RecordingsMetaDataEntity
 import com.eva.recordings.R
 import com.eva.recordings.data.wrapper.RecordingsConstants
 import com.eva.recordings.data.wrapper.RecordingsContentResolverWrapper
-import com.eva.recordings.domain.exceptions.CannotTrashFileDifferentOwnerException
 import com.eva.recordings.domain.models.RecordedVoiceModel
 import com.eva.recordings.domain.models.TrashRecordingModel
 import com.eva.recordings.domain.provider.ResourcedTrashRecordingModels
 import com.eva.recordings.domain.provider.TrashRecordingsProvider
 import com.eva.utils.Resource
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
@@ -62,7 +58,11 @@ internal class TrashRecordingsProviderImpl(
 			}
 
 			Log.d(LOGGER_TAG, "ADDED OBSERVER FOR TRASHED ITEMS")
-			contentResolver.registerContentObserver(RecordingsConstants.AUDIO_VOLUME_URI, true, observer)
+			contentResolver.registerContentObserver(
+				RecordingsConstants.AUDIO_VOLUME_URI,
+				true,
+				observer
+			)
 
 			awaitClose {
 				Log.d(LOGGER_TAG, "CANCELED OBSERVER FOR TRASH ITEMS")
@@ -86,8 +86,12 @@ internal class TrashRecordingsProviderImpl(
 
 		return withContext(Dispatchers.IO) {
 			try {
-				val models = contentResolver
-					.query(RecordingsConstants.AUDIO_VOLUME_URI, trashRecordingsProjection, queryArgs, null)
+				val models = contentResolver.query(
+					RecordingsConstants.AUDIO_VOLUME_URI,
+					trashRecordingsProjection,
+					queryArgs,
+					null
+				)
 					?.use(::readTrashedRecordingsFromCursor)
 					?: emptyList()
 
@@ -97,6 +101,7 @@ internal class TrashRecordingsProviderImpl(
 			} catch (e: SecurityException) {
 				Resource.Error(e, e.localizedMessage ?: "SECURITY EXCEPTION")
 			} catch (e: Exception) {
+				if (e is CancellationException) throw e
 				e.printStackTrace()
 				Resource.Error(e, e.message)
 			}
@@ -105,98 +110,136 @@ internal class TrashRecordingsProviderImpl(
 
 	override suspend fun restoreRecordingsFromTrash(recordings: Collection<TrashRecordingModel>)
 			: Resource<Unit, Exception> {
-		return coroutineScope {
-			// ensure that only this app files are restore.
-			val recordingsWithOwnerShip = recordings.filter { it.owner == context.packageName }
+		// ensure that only this app files are restore.
+		val recordingsWithOwnerShip = recordings.filter { it.owner == context.packageName }
 
-			try {
-				val restoreUris = async(Dispatchers.IO) {
-					// restore uris from trash
-					val uriToRestore = recordingsWithOwnerShip
-						.map { model -> model.fileUri.toUri() }
+		return try {
+			// restore uris from trash
+			val uriToRestore = recordingsWithOwnerShip
+				.map { model -> model.fileUri.toUri() }
+				.toSet()
 
-					moveUrisToOrFromTrash(uriToRestore, fromTrash = true)
-				}
-				val createMetadata = async(Dispatchers.IO) {
-					// create secondary metadata
-					val entities = recordingsWithOwnerShip.map { RecordingsMetaDataEntity(it.id) }
-					recordingsDao.addRecordingMetaDataBulk(entities)
-				}
-				awaitAll(restoreUris, createMetadata)
+			moveToTrashOrRestoreFromTrash(uriToRestore, fromTrash = true)
+			// then create secondary metadata : kept it synchronous as after delete only this should be performed
+			val entities = recordingsWithOwnerShip.map { RecordingsMetaDataEntity(it.id) }
+			recordingsDao.addRecordingMetaDataBulk(entities)
 
-				val message = context.getString(R.string.restore_recordings_success)
-				Resource.Success(Unit, message)
-			} catch (e: CancellationException) {
-				throw e
-			} catch (e: Exception) {
-				// on other exceptions
-				e.printStackTrace()
-				val errorMessage = context.getString(R.string.recording_restore_request_failed)
-				Resource.Error(e, message = errorMessage)
-			}
+			val message = context.getString(R.string.restore_recordings_success)
+			Resource.Success(Unit, message)
+		} catch (e: CancellationException) {
+			throw e
+		} catch (e: Exception) {
+			// on other exceptions
+			e.printStackTrace()
+			val errorMessage = context.getString(R.string.recording_restore_request_failed)
+			Resource.Error(e, message = errorMessage)
 		}
 	}
 
 	override fun createTrashRecordings(recordings: Collection<RecordedVoiceModel>)
 			: Flow<Resource<Collection<RecordedVoiceModel>, Exception>> {
 
-		val recordingsWithOwnerShip = recordings.filter { it.owner == context.packageName }
-		val recordingsWithoutOwnerShip = recordings.filterNot { it.owner == context.packageName }
+		val ownedRecordings = recordings.filter { it.owner == context.packageName }.toSet()
+		val notOwnedRecordings = recordings.filter { it.owner != context.packageName }.toSet()
 
-		return flow<Resource<Collection<RecordedVoiceModel>, Exception>> {
-			if (recordingsWithOwnerShip.isNotEmpty()) {
+		return flow {
+			// handle the ownership recordings
+			if (ownedRecordings.isNotEmpty()) {
 				try {
-					// try to delete recordings with ownership
-					val urisToDelete = recordingsWithOwnerShip.map { it.fileUri.toUri() }
-					// perform action in dispatches IO
-					coroutineScope {
-						val moveTrashDeferred = async(Dispatchers.IO) {
-							moveUrisToOrFromTrash(urisToDelete, fromTrash = false)
-						}
-						// clear metadata of all the selected ones
-						val clearMetaDataDeferred = async(Dispatchers.IO) {
-							val ids = recordings.map { it.id }
-							// now remove secondary data from the table
-							recordingsDao.deleteRecordingMetaDataFromIds(ids)
-						}
-						awaitAll(moveTrashDeferred, clearMetaDataDeferred)
-					}
-					val successMessage = context.getString(R.string.recording_trash_request_success)
-					emit(Resource.Success(emptyList(), successMessage))
-				} catch (e: SecurityException) {
-					emit(Resource.Error(e, "Security Issues"))
+					val urisToDelete = ownedRecordings.map { it.fileUri.toUri() }.toSet()
+					// move items to trash
+					moveToTrashOrRestoreFromTrash(urisToDelete, fromTrash = false)
+					// emit a success with empty list
+					val result: Resource.Success<List<RecordedVoiceModel>, Exception> =
+						Resource.Success(
+							emptyList(),
+							context.getString(R.string.recording_trash_request_success)
+						)
+					emit(result)
+
+					// now delete the associated entries
+					val ids = recordings.map { it.id }
+					// now remove secondary data from the table
+					recordingsDao.deleteRecordingMetaDataFromIds(ids)
 				} catch (e: Exception) {
 					e.printStackTrace()
 					val message = context.getString(R.string.recording_trash_request_failed)
 					emit(Resource.Error(e, message))
 				}
 			}
-			// try to delete without ownership
-			if (recordingsWithoutOwnerShip.isNotEmpty()) {
-				emit(Resource.Error(error = CannotTrashFileDifferentOwnerException()))
+			if (notOwnedRecordings.isNotEmpty()) {
+				try {
+					// this is sure to throw a security exception
+					val recordingsURIs = notOwnedRecordings.map { it.fileUri.toUri() }.toSet()
+					moveToTrashOrRestoreFromTrash(recordingsURIs, fromTrash = false)
+				} catch (e: SecurityException) {
+					Log.e(LOGGER_TAG, "Trying to trash non owner recordings", e)
+					// now in send the exception that it has failed to remove
+					// this need to be handled via recoverable security exception
+					emit(Resource.Error(e, data = notOwnedRecordings))
+				}
+			}
+		}
+	}
+
+
+	override fun permanentlyDeleteRecordingsInTrash(trashRecordings: List<TrashRecordingModel>)
+			: Flow<Resource<List<TrashRecordingModel>, Exception>> {
+
+		val ownedRecordings = trashRecordings.filter { it.owner == context.packageName }.toSet()
+		val notOwnedRecordings = trashRecordings.filter { it.owner != context.packageName }.toSet()
+
+		return flow {
+			if (ownedRecordings.isNotEmpty()) {
+				try {
+					val urisToDelete = ownedRecordings.map { it.fileUri.toUri() }.toSet()
+					// move items to trash
+					permanentlyDeleteURIFromScopedStorage(urisToDelete)
+					// then clear the associated
+					val result: Resource.Success<List<TrashRecordingModel>, Exception> =
+						Resource.Success(
+							emptyList(),
+							context.getString(R.string.recording_trash_request_success)
+						)
+					emit(result)
+				} catch (e: Exception) {
+					e.printStackTrace()
+					val message = context.getString(R.string.recording_trash_request_failed)
+					emit(Resource.Error(e, message))
+				}
+			}
+			if (notOwnedRecordings.isNotEmpty()) {
+				try {
+					val urisToDelete = notOwnedRecordings.map { it.fileUri.toUri() }
+						.toSet()
+					// this is sure to expose it throw a security exception
+					permanentlyDeleteURIFromScopedStorage(urisToDelete)
+				} catch (e: SecurityException) {
+					Log.e(LOGGER_TAG, "Trying permanently delete non owner uris", e)
+					// now in send the exception that it has failed to remove
+					// this need to be handled via recoverable security exception
+					emit(Resource.Error(e, data = notOwnedRecordings.toList()))
+				}
 			}
 		}.flowOn(Dispatchers.IO)
 	}
 
-
-	override suspend fun permanentlyDeleteRecordingsInTrash(trashRecordings: Collection<TrashRecordingModel>): Resource<Unit, Exception> {
-
-		val currentAppRecordings = trashRecordings.filter { it.owner == context.packageName }
-
+	override suspend fun permanentlyDeleteRecordings(trashRecordings: List<TrashRecordingModel>): Resource<Unit, Exception> {
+		val ownedRecordings = trashRecordings.filter { it.owner == context.packageName }
 		return withContext(Dispatchers.IO) {
 			try {
-				val uriToDeletePermanent =
-					currentAppRecordings.map { model -> model.fileUri.toUri() }
-				permanentDeleteUrisFromAudioMediaVolume(uriToDeletePermanent)
-
-				val message = context.getString(R.string.recording_delete_request_success)
-				Resource.Success(Unit, message)
-			} catch (e: CancellationException) {
-				throw e
+				val urisToDelete = ownedRecordings.map { it.fileUri.toUri() }.toSet()
+				// move items to trash
+				permanentlyDeleteURIFromScopedStorage(urisToDelete)
+				// then clear the associated
+				Resource.Success(
+					Unit,
+					context.getString(R.string.recording_trash_request_success)
+				)
 			} catch (e: Exception) {
 				e.printStackTrace()
-				val errorMessage = context.getString(R.string.recording_delete_request_failed)
-				Resource.Error(e, errorMessage)
+				val message = context.getString(R.string.recording_trash_request_failed)
+				Resource.Error(e, message)
 			}
 		}
 	}

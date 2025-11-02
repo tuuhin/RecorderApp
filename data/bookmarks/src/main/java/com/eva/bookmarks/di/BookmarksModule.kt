@@ -1,9 +1,11 @@
 package com.eva.bookmarks.di
 
 import android.content.Context
+import com.eva.bookmarks.data.AndroidExportURIProvider
 import com.eva.bookmarks.data.BookMarksToCsvFileConvertor
 import com.eva.bookmarks.data.RecordingBookMarkProviderImpl
-import com.eva.bookmarks.domain.provider.ExportBookMarkUriProvider
+import com.eva.bookmarks.domain.provider.BookMarksExportRepository
+import com.eva.bookmarks.domain.provider.ExportURIProvider
 import com.eva.bookmarks.domain.provider.RecordingBookmarksProvider
 import com.eva.database.dao.RecordingsBookmarkDao
 import com.eva.recordings.domain.provider.RecordingsSecondaryDataProvider
@@ -20,8 +22,14 @@ object BookmarksModule {
 
 	@Provides
 	@Singleton
-	fun providesBookmarksToCsvConvertor(@ApplicationContext context: Context)
-			: ExportBookMarkUriProvider = BookMarksToCsvFileConvertor(context)
+	fun providesBookURIProvider(@ApplicationContext context: Context): ExportURIProvider =
+		AndroidExportURIProvider(context)
+
+	@Provides
+	@Singleton
+	fun providesBookmarksToCsvConvertor(
+		provider: ExportURIProvider
+	): BookMarksExportRepository = BookMarksToCsvFileConvertor(provider)
 
 	@Provides
 	@Singleton
@@ -29,4 +37,5 @@ object BookmarksModule {
 		dao: RecordingsBookmarkDao,
 		provider: RecordingsSecondaryDataProvider,
 	): RecordingBookmarksProvider = RecordingBookMarkProviderImpl(dao, provider)
+
 }

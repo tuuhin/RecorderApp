@@ -33,6 +33,20 @@ class ConfigureHiltPlugin : Plugin<Project> {
 				add("ksp", dependency)
 			}
 		}
+		val androidTest = listOf("hilt.test")
+		androidTest.forEach {
+			catalog.findLibrary(it).ifPresent { androidTestDependency ->
+				val dependency = androidTestDependency.get()
+				add("androidTestImplementation", dependency)
+			}
+		}
+		val kspAndroidText = listOf("hilt.android.compiler")
+		kspAndroidText.forEach {
+			catalog.findLibrary(it).ifPresent { testDependency ->
+				val dependency = testDependency.get()
+				add("kspAndroidTest", dependency)
+			}
+		}
 	}
 
 }

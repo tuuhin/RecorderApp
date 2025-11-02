@@ -5,7 +5,6 @@
   <string name="recorder_action_stop">बंद करें</string>
   <string name="recorder_action_cancel">रद्द करें</string>
   <string name="action_paused">रोकें</string>
-  <string name="action_stop">बंद करें</string>
   <string name="allow_permissions">अनुमति</string>
   <string name="recorder_permission_not_found">रिकॉर्डिंग की अनुमति नहीं है</string>
   <string name="recorder_permission_not_found_desc">रिकॉर्डिंग की अनुमति आवश्यक है यह महत्वपूर्ण और आवश्यक है</string>
@@ -75,7 +74,6 @@
   <string name="audio_metadata_file_size_title">आकार</string>
   <string name="audio_metadata_name_title">नाम</string>
   <string name="audio_metadata_bitrate_title">बिटरेट</string>
-  <string name="player_channel_resource_id">प्लेयर_चैनल</string>
   <string name="show_recordings_list">सूची</string>
   <string name="player_action_speed">गति</string>
   <string name="player_action_repeat">दोहराएँ</string>

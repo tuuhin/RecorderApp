@@ -5,6 +5,10 @@ plugins {
 
 android {
 	namespace = "com.eva.editor"
+
+	buildFeatures {
+		buildConfig = true
+	}
 }
 
 dependencies {
@@ -15,13 +19,11 @@ dependencies {
 	implementation(libs.androidx.media3.transformer)
 	implementation(libs.androidx.media3.effects)
 
-	//local
 	implementation(project(":core:utils"))
 	implementation(project(":data:player"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:worker"))
 	implementation(project(":data:datastore"))
 
-	//test
-	testImplementation(kotlin("test"))
+	androidTestImplementation(libs.androidx.media3.test.utils)
 }

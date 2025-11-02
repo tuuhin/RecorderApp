@@ -49,6 +49,7 @@ internal fun AudioPlayerActions(
 	onForward: () -> Unit = {},
 	onRewind: () -> Unit = {},
 	isControllerReady: Boolean = true,
+	isPlayerPlaying: Boolean = true,
 	onSpeedSelected: (PlayerPlayBackSpeed) -> Unit = {},
 	shape: Shape = MaterialTheme.shapes.large,
 	color: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -148,7 +149,7 @@ internal fun AudioPlayerActions(
 					enabled = isControllerReady
 				)
 				AnimatedPlayPauseButton(
-					isPlaying = playerMetaData.isPlaying,
+					isPlaying = isPlayerPlaying,
 					enabled = isControllerReady,
 					onPause = onPause,
 					onPlay = onPlay,

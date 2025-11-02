@@ -177,8 +177,9 @@ internal class RecordingsViewmodel @Inject constructor(
 					is Resource.Error -> {
 						val error = result.error
 						if (error is SecurityException) {
+							val trashList = result.data ?: emptyList()
 							// on security exception handle the case
-							handleSecurityExceptionToTrash(error, result.data)
+							handleSecurityExceptionToTrash(error, trashList)
 							return@onEach
 						}
 						val message = result.error.message ?: result.message
@@ -236,15 +237,16 @@ internal class RecordingsViewmodel @Inject constructor(
 
 	private fun handleSecurityExceptionToTrash(
 		error: SecurityException,
-		recordingsToTrash: Collection<RecordedVoiceModel>? = null,
+		recordingsToTrash: Collection<RecordedVoiceModel>,
+		isEnabled: Boolean = false,
 	) {
-		if (recordingsToTrash == null) return
+		if (recordingsToTrash.isEmpty() || !isEnabled) return
+		if (error !is RecoverableSecurityException) return
 
 		viewModelScope.launch {
 			val request = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 				DeleteOrTrashRequestEvent.OnTrashRequest(recordingsToTrash)
 			} else {
-				if (error !is RecoverableSecurityException) return@launch
 				val pendingIntent = error.userAction.actionIntent
 				val senderRequest = IntentSenderRequest.Builder(pendingIntent).build()
 

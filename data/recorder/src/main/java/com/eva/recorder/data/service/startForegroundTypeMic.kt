@@ -11,31 +11,16 @@ import android.util.Log
 private const val LOGGER_TAG = "MIC_FOREGROUND_SERVICE"
 
 internal fun Service.startVoiceRecorderService(id: Int, notification: Notification) {
-	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-		try {
+	try {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
 			startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
-		} catch (e: ForegroundServiceTypeException) {
-			Log.e(LOGGER_TAG, "WRONG FG-SERVICE TYPE", e)
-		} catch (e: ForegroundServiceStartNotAllowedException) {
+		else startForeground(id, notification)
+	} catch (e: Exception) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && e is ForegroundServiceTypeException)
+			Log.e(LOGGER_TAG, "WRONG FG TYPE", e)
+		else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && e is ForegroundServiceStartNotAllowedException)
 			Log.e(LOGGER_TAG, "FG-SERVICE NOT ALLOWED TO START", e)
-		}
-	} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-		try {
-			startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
-		} catch (e: ForegroundServiceStartNotAllowedException) {
-			Log.e(LOGGER_TAG, "FG-SERVICE NOT ALLOWED TO START", e)
-		}
-	} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-		try {
-			startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
-		} catch (e: Exception) {
+		else
 			Log.e(LOGGER_TAG, "SOME EXCEPTION OCCURRED", e)
-		}
-	} else {
-		try {
-			startForeground(id, notification)
-		} catch (e: Exception) {
-			Log.e(LOGGER_TAG, "SOME EXCEPTION OCCURRED", e)
-		}
 	}
 }

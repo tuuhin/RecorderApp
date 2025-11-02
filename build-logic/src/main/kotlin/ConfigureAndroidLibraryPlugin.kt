@@ -29,37 +29,57 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
 	private fun Project.addDependencies() = dependencies.apply {
 
-		val dependenciesMap = mapOf(
-			"implementation" to listOf(
-				"androidx.core.ktx",
-				"androidx.lifecycle.runtime.ktx",
-				"androidx.activity.compose"
-			),
-			"testImplementation" to listOf("junit"),
-			"androidTestImplementation" to listOf("androidx.junit", "androidx.espresso.core")
+		val implementations = listOf(
+			"androidx.core.ktx",
+			"androidx.lifecycle.runtime.ktx",
+			"androidx.activity.compose"
+		)
+		implementations.forEach {
+			catalog.findLibrary(it).ifPresent { dependency ->
+				add("implementation", dependency.get())
+			}
+		}
+
+		val testImplementations = listOf(
+			"junit",
+			"kotlin.test",
+			"kotlinx.coroutines.test",
+			"turbine"
 		)
 
-		dependenciesMap.forEach { (key, dependencies) ->
-			dependencies.forEach {
-				catalog.findLibrary(it).ifPresent { dependency ->
-					add(key, dependency.get())
-				}
+		testImplementations.forEach {
+			catalog.findLibrary(it).ifPresent { dependency ->
+				add("testImplementation", dependency.get())
 			}
+		}
+
+		val androidTestImplementations = listOf(
+			"androidx.junit",
+			"androidx.espresso.core",
+			"kotlin.test",
+			"kotlinx.coroutines.test",
+			"turbine"
+		)
+
+		androidTestImplementations.forEach {
+			catalog.findLibrary(it).ifPresent { dependency ->
+				add("androidTestImplementation", dependency.get())
+			}
+		}
+		// include the testing runtime module
+		if (findProject(":testing:runtime") != null) {
+			add("androidTestImplementation", project(":testing:runtime"))
 		}
 	}
 
 	private fun Project.configureLibrary() = extensions.configure<LibraryExtension> {
 
-		val compilerSdkVersion = catalog.findVersion("compileSdk")
-			.getOrNull()?.toString()?.toInt() ?: 36
-		val minSdkVersion = catalog.findVersion("minSdk")
-			.getOrNull()?.toString()?.toInt() ?: 29
+		compileSdk = catalog.findVersion("compileSdk").getOrNull()?.toString()?.toInt() ?: 36
 
-		compileSdk = compilerSdkVersion
 		defaultConfig {
-			minSdk = minSdkVersion
+			minSdk = catalog.findVersion("minSdk").getOrNull()?.toString()?.toInt() ?: 29
 
-			testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+			testInstrumentationRunner = Constants.TEST_RUNNER_CLASS_NAME
 			consumerProguardFiles("consumer-rules.pro")
 		}
 

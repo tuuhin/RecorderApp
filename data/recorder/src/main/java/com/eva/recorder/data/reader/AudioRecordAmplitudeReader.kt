@@ -9,22 +9,15 @@ import android.media.MediaRecorder
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
-import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
-import com.eva.recorder.data.ext.normalize
-import com.eva.recorder.data.ext.padListWithExtra
-import com.eva.recorder.data.ext.rms
-import com.eva.recorder.data.ext.smoothen
-import com.eva.recorder.data.ext.toProperSequence
 import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.domain.stopwatch.RecorderStopWatch
 import com.eva.utils.RecorderConstants
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -32,9 +25,12 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.math.sqrt
 import kotlin.time.Duration
 
 private const val TAG = "AmplitudeVisualizer"
@@ -47,7 +43,6 @@ private const val TAG = "AmplitudeVisualizer"
 class AudioRecordAmplitudeReader(
 	private val context: Context,
 	private val stopWatch: RecorderStopWatch,
-	private val settings: RecorderAudioSettingsRepo,
 	private val delayRate: Duration = RecorderConstants.AMPS_READ_DELAY_RATE,
 	private val bufferSize: Int = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE,
 ) {
@@ -57,16 +52,19 @@ class AudioRecordAmplitudeReader(
 				PermissionChecker.PERMISSION_GRANTED
 
 	private val _buffer = ConcurrentLinkedQueue<RecordedPoint>()
-	private val _lock = Mutex()
+
+	private val _lock = Any()
+	private val _mutex = Mutex()
 
 	private val _rangeMin = AtomicInt(0)
 	private val _rangeMax = AtomicInt(100)
 
 	private var _recorder: AudioRecord? = null
-	private var _minBufferSize: Int = 0
 
-	suspend fun initiateRecorder() {
+	@Volatile
+	private var _pcmBufferSize: Int = 0
 
+	fun initiateRecorder(sampleRate: Int, isStereo: Boolean) {
 		if (!_hasRecordPermission) {
 			Log.d(TAG, "MISSING PERMISSION")
 			return
@@ -76,25 +74,31 @@ class AudioRecordAmplitudeReader(
 			Log.d(TAG, "RECORDER ALREADY INITIATED")
 			return
 		}
-
-		val audioSettings = settings.audioSettings()
-		val sampleRate = audioSettings.quality.sampleRate
+		// encoding is based to 16 bits
 		val audioFormat = AudioFormat.ENCODING_PCM_16BIT
-		val channelConfig = if (audioSettings.enableStereo) AudioFormat.CHANNEL_IN_STEREO
+		val channelConfig = if (isStereo) AudioFormat.CHANNEL_IN_STEREO
 		else AudioFormat.CHANNEL_IN_MONO
 
+		val channelCount = if (isStereo) 2 else 1
+		val bytesPerSample = 2
+
 		try {
-			_minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
-			if (_minBufferSize == AudioRecord.ERROR || _minBufferSize == AudioRecord.ERROR_BAD_VALUE) {
-				Log.e(TAG, "AudioRecord.getMinBufferSize error: $_minBufferSize")
+			val bufferSize = AudioRecord
+				.getMinBufferSize(sampleRate, channelConfig, audioFormat)
+			if (bufferSize == AudioRecord.ERROR || bufferSize == AudioRecord.ERROR_BAD_VALUE) {
+				Log.e(TAG, "AudioRecord.getMinBufferSize error: $_pcmBufferSize")
 				return
 			}
+
+			_pcmBufferSize = bufferSize / (bytesPerSample * channelCount)
+			Log.d(TAG, "PCM BUFFER SIZE :$_pcmBufferSize")
+
 			_recorder = AudioRecord(
 				MediaRecorder.AudioSource.MIC,
 				sampleRate,
 				channelConfig,
 				audioFormat,
-				_minBufferSize * 2
+				bufferSize * 2
 			)
 
 			if (_recorder?.state != AudioRecord.STATE_INITIALIZED) {
@@ -107,14 +111,14 @@ class AudioRecordAmplitudeReader(
 		}
 	}
 
-	suspend fun startRecorder() {
+	fun startRecorder() {
 		if (_recorder?.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
 			Log.d(TAG, "RECORDER STATE RECORDING CANNOT START AGAIN")
 			return
 		}
 		if (_recorder == null) {
 			Log.d(TAG, "RECORDER WAS NOT INITIATED ")
-			initiateRecorder()
+			throw Exception("Audio Record instance not initiated")
 		}
 		try {
 			_recorder?.startRecording()
@@ -143,7 +147,7 @@ class AudioRecordAmplitudeReader(
 			}
 			_recorder?.release()
 			_recorder = null
-			_minBufferSize = 0
+			_pcmBufferSize = 0
 		} catch (e: Exception) {
 			Log.d(TAG, "FAILED TO RELEASE RECORDER", e)
 		} finally {
@@ -155,11 +159,13 @@ class AudioRecordAmplitudeReader(
 		return readRecorderRawBytes(recorderState)
 			.flatMapLatest(::toFixedSizeCollection)
 			.mapLatest { points ->
-				points.smoothen(factor = .25f)
+				points.asSequence()
+					.smoothen(factor = .3f)
 					.normalize(max = _rangeMax.load(), min = _rangeMin.load())
 					.padListWithExtra(bufferSize * 2)
 					.toProperSequence(bufferSize)
 					.distinctBy { it.timeInMillis }
+					.toList()
 			}.flowOn(Dispatchers.Default)
 	}
 
@@ -172,34 +178,33 @@ class AudioRecordAmplitudeReader(
 				return@flow
 			}
 
-			val invalids = arrayOf(AudioRecord.ERROR_INVALID_OPERATION, AudioRecord.ERROR_BAD_VALUE)
+			val invalids = arrayOf(
+				AudioRecord.ERROR_INVALID_OPERATION,
+				AudioRecord.ERROR_BAD_VALUE,
+				AudioRecord.ERROR
+			)
 			if (_recorder == null) return@flow
 
-			val pcmBuffer = ShortArray(_minBufferSize / 2)
+			val pcmBuffer = ShortArray(_pcmBufferSize)
 			var shortsRead: Int
 
 			while (state == RecorderState.RECORDING && currentCoroutineContext().isActive) {
 				// ensure the current coroutine is active otherwise
-				currentCoroutineContext().ensureActive()
-
 				shortsRead = _recorder?.read(pcmBuffer, 0, pcmBuffer.size) ?: break
-				if (shortsRead in invalids) {
-					Log.e(TAG, "RECORDER CANNOT READ BYTES!")
-					break // Exit loop on critical error
-				}
+				if (shortsRead in invalids) break
+				if (shortsRead == 0) break
 
-				// these are raw bytes
-				val rmsValue = rms(pcmBuffer)
-				emit(maxOf(rmsValue, .0f))
-				// check if audio source set otherwise amp is zero
-				// read the values here
-				delay(delayRate)
+				if (currentCoroutineContext().isActive) {
+					// these are raw bytes
+					val rmsValue = pcmBuffer.rms(shortsRead)
+					emit(rmsValue)
+					// check if audio source set otherwise amp is zero
+					// read the values here
+					delay(delayRate)
+				}
 			}
-		} catch (e: CancellationException) {
-			throw e
-		} catch (err: IllegalStateException) {
-			Log.e(TAG, "ILLEGAL STATE", err)
 		} catch (e: Exception) {
+			if (e is CancellationException) Log.d(TAG, "NO MORE PROCESSING VALUES")
 			e.printStackTrace()
 		}
 	}.flowOn(Dispatchers.IO)
@@ -208,12 +213,11 @@ class AudioRecordAmplitudeReader(
 	 * Clears the buffer if it contains any value and emit an end zero
 	 */
 	private fun clearBuffer() {
-		if (_buffer.isNotEmpty()) {
-			Log.d(TAG, "CLEARING VALUES")
-			_buffer.clear()
-			_rangeMin.store(0)
-			_rangeMax.store(100)
-		}
+		if (_buffer.isEmpty()) return
+		Log.d(TAG, "CLEARING VALUES")
+		_buffer.clear()
+		_rangeMin.store(0)
+		_rangeMax.store(100)
 	}
 
 
@@ -233,41 +237,45 @@ class AudioRecordAmplitudeReader(
 					Log.d(TAG, "NEW MIN VALUE SET $newValue")
 					_rangeMin.store(newValue.toInt())
 				}
-				val distinctBuffer = _buffer.distinctBy { it.timeInMillis }.toList()
+				val distinctBuffer = _buffer.distinctBy { it.timeInMillis }
 				emit(distinctBuffer)
 			} catch (e: Exception) {
+				if (e is CancellationException) Log.d(TAG, "UPDATE BUFFER CANCELLED")
 				e.printStackTrace()
 			}
 		}.flowOn(Dispatchers.Default)
 	}
 
 	private suspend fun updateItemsInList(newValue: Float) {
-
-		if (_lock.holdsLock(this)) {
-			Log.d(TAG, "ITS LOCKED REMOVING ITEMS IS ALREADY PROCESSING")
-			return
-		}
-		_lock.lock(this)
-
-		try {
-			val stopWatchTime = stopWatch.elapsedTime.value.toMillisecondOfDay().toLong()
-			val entry = (stopWatchTime / bufferSize) * bufferSize
-			val point = RecordedPoint(entry, newValue)
-			// adds the element to the end of queue
-			_buffer.add(point)
-			if (_buffer.size >= bufferSize * 3) {
-				// remove the first pair
-				Log.d(TAG, "REMOVING SOME ITEMS FROM FRONT")
-				// removes the elements
-				val itemsToRemove = _buffer.take(bufferSize)
-				_buffer.removeAll(itemsToRemove)
-				// items removed
-				Log.d(TAG, "ITEMS REMOVED")
+		_mutex.withLock(_lock) {
+			try {
+				val stopWatchTime = stopWatch.elapsedTime.value.toMillisecondOfDay().toLong()
+				val entry = (stopWatchTime / bufferSize) * bufferSize
+				val point = RecordedPoint(entry, newValue)
+				// adds the element to the end of queue
+				_buffer.offer(point)
+				if (_buffer.size >= bufferSize * 3) {
+					// remove the first pair
+					Log.d(TAG, "REMOVING SOME ITEMS FROM FRONT")
+					// removes the elements via polling them out
+					repeat(bufferSize) {
+						// if polling failed return from the block
+						_buffer.poll() ?: return@repeat
+					}
+					// items removed
+					Log.d(TAG, "ITEMS REMOVED")
+				}
+			} catch (e: Exception) {
+				e.printStackTrace()
 			}
-		} catch (e: Exception) {
-			e.printStackTrace()
-		} finally {
-			_lock.unlock()
+		}
+	}
+
+	internal suspend fun ShortArray.rms(readSize: Int): Float {
+		// lets not context switch
+		return coroutineScope {
+			val squaredAvg = take(readSize).map { it * it }.average().toFloat()
+			sqrt(squaredAvg)
 		}
 	}
 }

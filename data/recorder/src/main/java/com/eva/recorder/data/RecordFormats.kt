@@ -4,50 +4,49 @@ import android.media.MediaRecorder
 import android.webkit.MimeTypeMap
 import androidx.media3.common.MimeTypes
 import com.eva.datastore.domain.enums.RecordingEncoders
-import com.eva.recorder.domain.models.RecordEncoderAndFormat
 
 private val mimeTypesMap = MimeTypeMap.getSingleton()
 
-internal object RecordFormats {
+enum class RecordFormats(val encoder: Int, val outputFormat: Int, val mimeType: String) {
 
-	val THREE_GPP = RecordEncoderAndFormat(
+	THREE_GPP(
 		encoder = MediaRecorder.AudioEncoder.AMR_NB,
 		outputFormat = MediaRecorder.OutputFormat.AMR_NB,
 		mimeType = MimeTypes.AUDIO_AMR,
-	)
+	),
 
-	val AMR_WB = RecordEncoderAndFormat(
+	AMR_WB(
 		encoder = MediaRecorder.AudioEncoder.AMR_WB,
 		outputFormat = MediaRecorder.OutputFormat.AMR_WB,
 		mimeType = MimeTypes.AUDIO_AMR_WB,
-	)
+	),
 
-
-	val M4A = RecordEncoderAndFormat(
+	M4A(
 		encoder = MediaRecorder.AudioEncoder.AAC,
 		outputFormat = MediaRecorder.OutputFormat.MPEG_4,
 		mimeType = MimeTypes.AUDIO_MP4,
-	)
+	),
 
-	val OGG = RecordEncoderAndFormat(
+	OGG(
 		encoder = MediaRecorder.AudioEncoder.OPUS,
 		outputFormat = MediaRecorder.OutputFormat.OGG,
 		mimeType = MimeTypes.AUDIO_OGG,
-	)
+	);
 
-}
+	internal val fileExtension: String?
+		get() = mimeTypesMap.getExtensionFromMimeType(mimeType)
+			?.let { ext -> ".$ext" }
 
-internal val RecordEncoderAndFormat.fileExtension: String?
-	get() = mimeTypesMap.getExtensionFromMimeType(mimeType)
-		?.let { ext -> ".$ext" }
-
-internal val RecordingEncoders.recordFormat: RecordEncoderAndFormat
-	get() = when (this) {
-		RecordingEncoders.AMR_NB -> RecordFormats.THREE_GPP
-		RecordingEncoders.AMR_WB -> RecordFormats.AMR_WB
-		RecordingEncoders.ACC -> RecordFormats.M4A
-		RecordingEncoders.OPTUS -> RecordFormats.OGG
+	companion object {
+		fun fromEncoder(encoder: RecordingEncoders): RecordFormats {
+			return when (encoder) {
+				RecordingEncoders.AMR_NB -> THREE_GPP
+				RecordingEncoders.AMR_WB -> AMR_WB
+				RecordingEncoders.ACC -> M4A
+				RecordingEncoders.OPTUS -> OGG
+			}
+		}
 	}
-
+}
 
 

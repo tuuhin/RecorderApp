@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
@@ -133,7 +136,7 @@ private fun PlayerAmplitudeGraph(
 
 @Composable
 internal fun PlayerAmplitudeGraph(
-	trackData: PlayerTrackData,
+	trackData: () -> PlayerTrackData,
 	graphData: PlayerGraphData,
 	modifier: Modifier = Modifier,
 	bookMarksTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
@@ -152,9 +155,11 @@ internal fun PlayerAmplitudeGraph(
 		vertical = dimensionResource(id = R.dimen.graph_card_padding_other)
 	),
 ) {
+	val totalDuration by remember { derivedStateOf { trackData().total } }
+
 	PlayerAmplitudeGraph(
-		trackPlayRatio = { trackData.playRatio },
-		totalTrackDuration = trackData.total,
+		trackPlayRatio = { trackData().playRatio },
+		totalTrackDuration = totalDuration,
 		graphData = graphData,
 		bookMarkTimeStamps = bookMarksTimeStamps,
 		modifier = modifier,
@@ -176,7 +181,7 @@ internal fun PlayerAmplitudeGraph(
 @Composable
 private fun PlayerAmplitudeGraphPreview() = RecorderAppTheme {
 	PlayerAmplitudeGraph(
-		trackData = PlayerPreviewFakes.FAKE_TRACK_DATA,
+		trackData = { PlayerPreviewFakes.FAKE_TRACK_DATA },
 		graphData = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
 		bookMarksTimeStamps = persistentListOf(
 			LocalTime.fromSecondOfDay(2),

@@ -5,6 +5,7 @@ import com.eva.editor.domain.model.AudioEditAction
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 
 typealias AudioConfigToAction = Pair<AudioClipConfig, AudioEditAction>
 typealias AudioConfigToActionList = List<AudioConfigToAction>
@@ -12,12 +13,12 @@ typealias AudioConfigsList = List<AudioClipConfig>
 
 interface AudioTransformer {
 
-	val progress: Flow<TransformationProgress>
+	val transformationProgress: Flow<TransformationProgress>
 
-	val isTransformerRunning: StateFlow<Boolean>
+	val isTransformationRunning: StateFlow<Boolean>
 
-	suspend fun transformAudio(model: AudioFileModel, actionsList: AudioConfigToActionList)
-			: Result<String>
+	suspend fun transformAudio(model: AudioFileModel, actions: AudioConfigToActionList)
+			: Result<File>
 
 	suspend fun removeTransformsFile(uri: String): Result<Boolean>
 

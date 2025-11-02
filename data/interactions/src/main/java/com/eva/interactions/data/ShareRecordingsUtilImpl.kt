@@ -7,7 +7,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.eva.bookmarks.domain.AudioBookmarkModel
 import com.eva.bookmarks.domain.exceptions.ExportBookMarksFailedException
-import com.eva.bookmarks.domain.provider.ExportBookMarkUriProvider
+import com.eva.bookmarks.domain.provider.BookMarksExportRepository
 import com.eva.interactions.R
 import com.eva.interactions.domain.ShareRecordingsUtil
 import com.eva.recordings.domain.models.AudioFileModel
@@ -16,7 +16,7 @@ import com.eva.utils.Resource
 
 internal class ShareRecordingsUtilImpl(
 	private val context: Context,
-	private val exportBookMarkUriProvider: ExportBookMarkUriProvider,
+	private val bookMarksExportRepository: BookMarksExportRepository,
 ) : ShareRecordingsUtil {
 
 	override fun shareAudioFiles(collection: List<RecordedVoiceModel>): Resource<Unit, Exception> {
@@ -74,7 +74,7 @@ internal class ShareRecordingsUtilImpl(
 
 	override suspend fun shareBookmarksCsv(bookmarks: Collection<AudioBookmarkModel>): Resource<Unit, Exception> {
 
-		val uri = exportBookMarkUriProvider.invoke(bookmarks.toSet())?.toUri()
+		val uri = bookMarksExportRepository.invoke(bookmarks.toList())?.toUri()
 			?: return Resource.Error(ExportBookMarksFailedException())
 
 		val intent = Intent(Intent.ACTION_SEND).apply {

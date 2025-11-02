@@ -21,18 +21,17 @@ fun FileMetadataDetailsSheet(
 	modifier: Modifier = Modifier,
 	sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
 ) {
-	if (!showBottomSheet) return
+	if (!showBottomSheet || contentLoadState !is ContentLoadState.Content) return
+	val fileModel = contentLoadState.data
 
-	contentLoadState.OnContent { fileModel ->
-		ModalBottomSheet(
-			sheetState = sheetState,
-			onDismissRequest = onSheetDismiss,
-			modifier = modifier,
-		) {
-			FileMetaDataSheetContent(
-				audio = fileModel,
-				contentPadding = PaddingValues(horizontal = dimensionResource(R.dimen.bottom_sheet_padding_lg))
-			)
-		}
+	ModalBottomSheet(
+		sheetState = sheetState,
+		onDismissRequest = onSheetDismiss,
+		modifier = modifier,
+	) {
+		FileMetaDataSheetContent(
+			audio = fileModel,
+			contentPadding = PaddingValues(horizontal = dimensionResource(R.dimen.bottom_sheet_padding_lg))
+		)
 	}
 }

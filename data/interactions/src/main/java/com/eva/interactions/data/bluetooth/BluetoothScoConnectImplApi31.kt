@@ -12,9 +12,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import com.eva.interactions.domain.BluetoothScoConnect
 import com.eva.interactions.domain.enums.BtSCOChannelState
+import com.eva.interactions.domain.exception.BluetoothSCONotAvailableException
 import com.eva.interactions.domain.exception.BluetoothScoAlreadyConnected
 import com.eva.interactions.domain.exception.BluetoothScoDeviceNotFound
-import com.eva.interactions.domain.exception.TelephonyFeatureNotException
 import com.eva.interactions.domain.models.AudioDevice
 import com.eva.utils.Resource
 import kotlinx.coroutines.channels.awaitClose
@@ -81,11 +81,11 @@ internal class BluetoothScoConnectImplApi31(private val context: Context) : Blue
 			Log.i(TAG, "STARTING CONNECTION...")
 			if (audioManager?.isBluetoothScoAvailableOffCall == false) {
 				Log.i(TAG, "SCO NOT AVAILABLE")
-				return Resource.Error(TelephonyFeatureNotException())
+				return Resource.Error(BluetoothSCONotAvailableException())
 			}
 
 			val connected = audioManager?.communicationDevice
-				?: return Resource.Error(TelephonyFeatureNotException())
+				?: return Resource.Error(BluetoothScoDeviceNotFound())
 
 			Log.i(TAG, "DEVICE FOUND OF TYPE :${connected.type}")
 

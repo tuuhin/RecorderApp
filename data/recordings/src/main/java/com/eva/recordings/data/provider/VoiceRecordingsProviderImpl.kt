@@ -65,7 +65,11 @@ internal class VoiceRecordingsProviderImpl(
 			}
 
 			Log.d(LOGGER_TAG, "ADDED OBSERVER FOR VOICE RECORDINGS")
-			contentResolver.registerContentObserver(RecordingsConstants.AUDIO_VOLUME_URI, true, observer)
+			contentResolver.registerContentObserver(
+				RecordingsConstants.AUDIO_VOLUME_URI,
+				true,
+				observer
+			)
 
 			awaitClose {
 				// the launch will get automatically cancelled when closed
@@ -149,7 +153,8 @@ internal class VoiceRecordingsProviderImpl(
 
 
 	override suspend fun getVoiceRecordingAsResourceFromId(recordingId: Long): Resource<RecordedVoiceModel, Exception> {
-		val recordingUri = ContentUris.withAppendedId(RecordingsConstants.AUDIO_VOLUME_URI, recordingId)
+		val recordingUri =
+			ContentUris.withAppendedId(RecordingsConstants.AUDIO_VOLUME_URI, recordingId)
 		return try {
 			val models = withContext(Dispatchers.IO) {
 				contentResolver.query(recordingUri, recordingsProjection, null, null)
@@ -198,17 +203,21 @@ internal class VoiceRecordingsProviderImpl(
 			try {
 				val deleteRow = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
 					contentResolver.delete(RecordingsConstants.AUDIO_VOLUME_URI, bundle)
-				else contentResolver.delete(RecordingsConstants.AUDIO_VOLUME_URI, selection, selectionArgs)
+				else contentResolver.delete(
+					RecordingsConstants.AUDIO_VOLUME_URI,
+					selection,
+					selectionArgs
+				)
 
 				return@withContext if (deleteRow == 1)
-					Resource.Success<Unit, Exception>(
+					Resource.Success(
 						data = Unit,
 						message = context.getString(R.string.rename_recording_success)
 					)
 				else Resource.Error(NoRecordingsModifiedOrDeletedException())
 
 			} catch (e: SecurityException) {
-				Resource.Error(e, "SECURITY EXCEPTION")
+				Resource.Error(e, "Cannot delete file don't have access")
 			} catch (e: CancellationException) {
 				throw e
 			} catch (e: Exception) {
@@ -225,8 +234,8 @@ internal class VoiceRecordingsProviderImpl(
 
 		return withContext(Dispatchers.IO) {
 			try {
-				val urisToDelete = filesFromThisApp.map { model -> model.fileUri.toUri() }
-				permanentDeleteUrisFromAudioMediaVolume(urisToDelete)
+				val urisToDelete = filesFromThisApp.map { model -> model.fileUri.toUri() }.toSet()
+				permanentlyDeleteURIFromScopedStorage(urisToDelete)
 				Resource.Success(
 					data = Unit,
 					message = context.getString(R.string.recording_delete_request_success)
@@ -241,31 +250,33 @@ internal class VoiceRecordingsProviderImpl(
 		}
 	}
 
-	override fun renameRecording(recording: RecordedVoiceModel, newName: String)
-			: Flow<Resource<Unit, Exception>> {
+	override fun renameRecording(
+		recording: RecordedVoiceModel,
+		newName: String
+	): Flow<Resource<Unit, Exception>> {
 		return flow {
 			try {
+				emit(Resource.Loading)
 				val uri = recording.fileUri.toUri()
-
 				val contentValues = ContentValues().apply {
 					put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, newName)
 				}
-				emit(Resource.Loading)
-
-				val transaction = withContext(Dispatchers.IO) {
+				val isSuccess = withContext(Dispatchers.IO) {
 					contentResolver.update(uri, contentValues, null, null)
-				}
-				val result = if (transaction == 1)
-					Resource.Success<Unit, Exception>(
+				} == 1
+
+				val res: Resource<Unit, Exception> = if (isSuccess)
+					Resource.Success(
 						data = Unit,
 						message = context.getString(R.string.rename_recording_success)
 					)
 				else Resource.Error(NoRecordingsModifiedOrDeletedException())
 
-				emit(result)
+				emit(res)
 
 			} catch (e: SecurityException) {
-				emit(Resource.Error(e, message = "Access not found"))
+				Log.e(LOGGER_TAG, "DON'T HAVE OWNER ACCESS", e)
+				emit(Resource.Error(e, message = "Don't have access to modify the file metadata"))
 			} catch (e: SQLException) {
 				emit(Resource.Error(e, "SQL EXCEPTION"))
 			} catch (e: Exception) {

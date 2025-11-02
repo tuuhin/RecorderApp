@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -53,7 +55,7 @@ internal class TrashRecordingsProviderApi29Impl(
 
 	private val folderName = "trash_recordings"
 
-	private val filesDir: File
+	private val trashFilesDirectory: File
 		get() = File(context.filesDir, folderName).apply(File::mkdirs)
 
 	@OptIn(ExperimentalTime::class)
@@ -84,111 +86,126 @@ internal class TrashRecordingsProviderApi29Impl(
 	}
 
 	override suspend fun restoreRecordingsFromTrash(recordings: Collection<TrashRecordingModel>): Resource<Unit, Exception> {
-		// ensure that only this app files are restore.
-		return coroutineScope {
-			try {
-				// recordings are from here only so no need to check for owner
+		return try {
+			// recordings are from here only so no need to check for owner
+			supervisorScope {
 				val operations = recordings.map { model ->
 					val entity = model.toEntity()
-					Log.d(TAG, "WORKING FOR $entity")
 					// async
 					async(Dispatchers.IO) {
 						// restore from internal storage
 						restoreRecordingsDataFromTableAndFile(entity)
 						// delete from internal storage
-						deleteRecordingInfoFromFileAndTable(entity)
-						Unit
+						removeBackupFileAndMetadata(entity)
 					}
 				}
 				// run all the operations together
 				operations.awaitAll()
-
-				val createSecondaryMetadata = recordings.map { model ->
-					RecordingsMetaDataEntity(model.id)
-				}
-				withContext(Dispatchers.IO) {
-					recordingsDao.updateOrInsertRecordingMetadataBulk(createSecondaryMetadata)
-				}
-
-				Log.d(TAG, "TRASHED ITEMS RECOVERED")
-
-				val message = context.getString(R.string.restore_recordings_success)
-				Resource.Success(Unit, message)
-			} catch (e: Exception) {
-				Resource.Error(e)
 			}
+
+			val createSecondaryMetadata = recordings.map { model ->
+				RecordingsMetaDataEntity(model.id)
+			}
+			recordingsDao.updateOrInsertRecordingMetadataBulk(createSecondaryMetadata)
+			Log.d(TAG, "TRASHED ITEMS RECOVERED")
+
+			val message = context.getString(R.string.restore_recordings_success)
+			Resource.Success(Unit, message)
+		} catch (e: Exception) {
+			Resource.Error(e)
 		}
 	}
-
 
 	override fun createTrashRecordings(recordings: Collection<RecordedVoiceModel>)
 			: Flow<Resource<Collection<RecordedVoiceModel>, Exception>> {
 
-		val recordingsWithOwnerShip = recordings.filter { it.owner == context.packageName }
-		val recordingsWithoutOwnerShip = recordings.filterNot { it.owner == context.packageName }
+		val ownerRecordings = recordings.filter { it.owner == context.packageName }
+		val notOwnerRecordings = recordings.filterNot { it.owner == context.packageName }
 
-		return flow<Resource<Collection<RecordedVoiceModel>, Exception>> {
+		return flow {
+			try {
+				supervisorScope {
+					// perform operations with creating a backup file
+					val operations = ownerRecordings.map { recording ->
+						async(Dispatchers.IO) { createBackUpEntry(recording) }
+					}
+					// run all the operations together
+					operations.awaitAll()
+				}
+				// now remove secondary data
+				val ids = recordings.map { it.id }
+				recordingsDao.deleteRecordingMetaDataFromIds(ids)
+				val successMessage = context.getString(R.string.recording_trash_request_success)
+				emit(Resource.Success(emptyList(), message = successMessage))
+			} catch (e: Exception) {
+				Log.d(TAG, "SOME ERROR IN TRASHING FILES", e)
+				emit(Resource.Error(e))
+			}
+			if (notOwnerRecordings.isNotEmpty()) {
+				emit(Resource.Error(CannotTrashFileDifferentOwnerException()))
+			}
+		}
+	}
 
-			if (recordingsWithOwnerShip.isNotEmpty()) {
-				try {
-					coroutineScope {
-						// perform operations with creating a backup file
-						val operations = recordingsWithOwnerShip.map { recording ->
-							async(Dispatchers.IO) {
-								createBackUpEntry(recording)
-							}
-						}
-						// run all the operations together
-						operations.awaitAll()
-						// now remove secondary data
-						val ids = recordings.map { it.id }
-						withContext(Dispatchers.IO) {
-							recordingsDao.deleteRecordingMetaDataFromIds(ids)
+	override fun permanentlyDeleteRecordingsInTrash(trashRecordings: List<TrashRecordingModel>)
+			: Flow<Resource<List<TrashRecordingModel>, Exception>> {
+		return flow<Resource<List<TrashRecordingModel>, Exception>> {
+			try {
+				// delete from internal storage
+				supervisorScope {
+					val operations = trashRecordings.map { model ->
+						async(Dispatchers.IO) {
+							// delete the file and the table
+							removeBackupFileAndMetadata(model.toEntity())
 						}
 					}
-					val successMessage = context.getString(R.string.recording_trash_request_success)
-					emit(Resource.Success(emptyList(), message = successMessage))
-				} catch (e: Exception) {
-					emit(Resource.Error(e))
+					// run all the operations together
+					operations.awaitAll()
 				}
-			}
-			if (recordingsWithoutOwnerShip.isNotEmpty()) {
-				emit(Resource.Error(CannotTrashFileDifferentOwnerException()))
+				Log.d(TAG, "PERMANENT REMOVED FILES FROM TRASH:")
+				emit(
+					Resource.Success(
+						data = emptyList<TrashRecordingModel>(),
+						message = context.getString(R.string.recording_delete_request_success)
+					)
+				)
+			} catch (e: Exception) {
+				e.printStackTrace()
+				val errorMessage = context.getString(R.string.recording_delete_request_failed)
+				emit(Resource.Error(e, errorMessage))
 			}
 		}.flowOn(Dispatchers.IO)
 	}
 
-	override suspend fun permanentlyDeleteRecordingsInTrash(trashRecordings: Collection<TrashRecordingModel>)
-			: Resource<Unit, Exception> {
-		return coroutineScope {
+	override suspend fun permanentlyDeleteRecordings(trashRecordings: List<TrashRecordingModel>): Resource<Unit, Exception> {
+		return withContext(Dispatchers.IO) {
 			try {
-				// delete from internal storage
-				val operations = trashRecordings.map { model ->
-					async(Dispatchers.IO) {
-						// delete the file and the table
-						deleteRecordingInfoFromFileAndTable(model.toEntity())
+				// move items to trash
+				supervisorScope {
+					val operations = trashRecordings.map { model ->
+						async(Dispatchers.IO) {
+							// delete the file and the table
+							removeBackupFileAndMetadata(model.toEntity())
+						}
 					}
+					// run all the operations together
+					operations.awaitAll()
 				}
-				// run all the operations together
-				operations.awaitAll()
-				Log.d(TAG, "PERMANENT REMOVED FILES FROM TRASH:")
+				// then clear the associated
 				Resource.Success(
-					data = Unit,
-					message = context.getString(R.string.recording_delete_request_success)
+					Unit,
+					context.getString(R.string.recording_trash_request_success)
 				)
-			} catch (e: CancellationException) {
-				throw e
 			} catch (e: Exception) {
 				e.printStackTrace()
-				val errorMessage = context.getString(R.string.recording_delete_request_failed)
-				Resource.Error(e, errorMessage)
+				val message = context.getString(R.string.recording_trash_request_failed)
+				Resource.Error(e, message)
 			}
-
 		}
 	}
 
 	private suspend fun createBackUpEntry(recording: RecordedVoiceModel) {
-		val entry = createBackupFileForRecording(recording, thirtyDaysLater)
+		val entry = createBackupFileForRecording(recording, thirtyDaysLater) ?: return
 		// add metadata to table
 		trashMediaDao.addNewTrashFile(entry)
 		val isDeleteSuccess = try {
@@ -198,73 +215,86 @@ internal class TrashRecordingsProviderApi29Impl(
 			// if delete was cancelled then delete the file and the table entry
 			withContext(NonCancellable) {
 				Log.d(TAG, "FAILED TO DELETE FILE FROM THE STORAGE")
-				deleteRecordingInfoFromFileAndTable(entry)
+				removeBackupFileAndMetadata(entry)
 			}
 			throw e
 		}
 
-		if (!isDeleteSuccess) {
-			// if delete is unsuccessful so delete the file and the entry
-			deleteRecordingInfoFromFileAndTable(entry)
-		}
+		if (isDeleteSuccess) return
+		// if delete is unsuccessful so delete the file and the entry
+		removeBackupFileAndMetadata(entry)
 	}
 
 
 	private suspend fun restoreRecordingsDataFromTableAndFile(entity: TrashFileEntity) {
-		return coroutineScope {
-			val file = entity.file.toUri().toFile()
 
-			if (!file.exists()) {
-				Log.d(TAG, "FILE DO-NOT EXISTS")
-				return@coroutineScope
-			}
+		val file = entity.file.toUri().toFile()
 
-			val metaData = ContentValues().apply {
-				put(MediaStore.Audio.AudioColumns.RELATIVE_PATH,
-					RecordingsConstants.RECORDINGS_MUSIC_PATH
-				)
-				put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, entity.displayName)
-				put(MediaStore.Audio.AudioColumns.MIME_TYPE, entity.mimeType)
-				put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
-				put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
-			}
+		if (!file.exists()) return
 
+		val metaData = ContentValues().apply {
+			put(
+				MediaStore.Audio.AudioColumns.RELATIVE_PATH,
+				RecordingsConstants.RECORDINGS_MUSIC_PATH
+			)
+			put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, entity.displayName)
+			put(MediaStore.Audio.AudioColumns.MIME_TYPE, entity.mimeType)
+			put(MediaStore.Audio.AudioColumns.DATE_ADDED, epochSeconds)
+			put(MediaStore.Audio.AudioColumns.IS_PENDING, 1)
+		}
+
+		val updateMetaData = ContentValues().apply {
+			put(MediaStore.Audio.AudioColumns.IS_PENDING, 0)
+			put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, System.currentTimeMillis())
+		}
+
+		try {
 			val newUri = withContext(Dispatchers.IO) {
 				contentResolver.insert(RecordingsConstants.AUDIO_VOLUME_URI, metaData)
-			} ?: return@coroutineScope
+			} ?: return
 
-			withContext(Dispatchers.IO) {
-				contentResolver.openOutputStream(newUri, "w")?.use { stream ->
-					// read the bytes and submit to the new uri
-					val data = file.readBytes()
-					stream.write(data)
-					Log.d(TAG, "WRITTEN DATA FOR DATA : ${entity.id}")
+			try {
+				withContext(Dispatchers.IO) {
+					contentResolver.openOutputStream(newUri, "w")?.use { stream ->
+						// read the bytes and submit to the new uri
+						file.inputStream().use { inStream -> inStream.copyTo(stream) }
+						Log.d(TAG, "WRITTEN DATA FOR DATA : ${entity.id}")
+					}
+					contentResolver.update(newUri, updateMetaData, null, null)
 				}
+			} catch (e: CancellationException) {
+				withContext(NonCancellable) {
+					contentResolver.delete(newUri, null, null)
+					Log.d(TAG, "DELETING NEW URI")
+				}
+				throw e
 			}
-
-			val updateMetaData = ContentValues().apply {
-				put(MediaStore.Audio.AudioColumns.IS_PENDING, 0)
-				put(MediaStore.Audio.AudioColumns.DATE_MODIFIED, System.currentTimeMillis())
-			}
-
-			withContext(Dispatchers.IO) {
-				contentResolver.update(newUri, updateMetaData, null, null)
-			}
-
+		} catch (e: Exception) {
+			Log.e(TAG, "ISSUE IN CREATING NEW URI", e)
 		}
+
 	}
 
-	private suspend fun deleteRecordingInfoFromFileAndTable(entity: TrashFileEntity): Boolean {
-		return withContext(Dispatchers.IO) {
+	private suspend fun removeBackupFileAndMetadata(entity: TrashFileEntity): Boolean {
+		return coroutineScope {
 			try {
-				val file = entity.file.toUri().toFile()
-				if (file.exists()) {
-					val result = file.delete()
-					Log.d(TAG, "FILE REMOVE RESULT $result")
+				val fileDeleteJob = async(Dispatchers.IO) {
+					try {
+						val file = entity.file.toUri().toFile()
+						if (!file.exists()) return@async
+						val result = file.delete()
+						Log.d(TAG, "FILE REMOVE RESULT $result")
+						result
+					} catch (e: IOException) {
+						Log.d(TAG, "TRASH FILE FAILED TO CREATE", e)
+					}
 				}
-				//delete the entry
-				trashMediaDao.deleteTrashEntity(entity)
-				Log.d(TAG, "REMOVED ENTRY ")
+				val deleteEntity = async {
+					//delete the entry
+					trashMediaDao.deleteTrashEntity(entity)
+					Log.d(TAG, "REMOVED ENTRY ")
+				}
+				awaitAll(fileDeleteJob, deleteEntity)
 				true
 			} catch (e: CancellationException) {
 				throw e
@@ -279,39 +309,38 @@ internal class TrashRecordingsProviderApi29Impl(
 	private suspend fun createBackupFileForRecording(
 		recording: RecordedVoiceModel,
 		expiry: LocalDateTime,
-	): TrashFileEntity {
-		return coroutineScope {
-
-			val recordingUri = recording.fileUri.toUri()
-			val trashFile = File(filesDir, "file_${recording.id}")
-
+	): TrashFileEntity? = coroutineScope {
+		val recordingUri = recording.fileUri.toUri()
+		try {
+			val trashFile = withContext(Dispatchers.IO) {
+				File(trashFilesDirectory, "file_${recording.id}")
+					.apply(File::createNewFile)
+			}
 			try {
-				val operation = async(Dispatchers.IO) {
-					// adding the bytes info to a separate file
-					context.contentResolver.openInputStream(recordingUri)?.use { stream ->
-						val bytes = stream.readBytes()
+				val copyJob = launch(Dispatchers.IO) {
+					context.contentResolver.openInputStream(recordingUri)?.use { inStream ->
 						// upload the contents to a new file
-						trashFile.writeBytes(bytes)
+						trashFile.outputStream().use { outStream -> inStream.copyTo(outStream) }
 					}
-					trashFile
 				}
-
-				return@coroutineScope recording.toEntity(
+				copyJob.join()
+				recording.toEntity(
 					expires = expiry,
-					fileUri = operation.await().toUri().toString()
+					fileUri = trashFile.toUri().toString()
 				)
 			} catch (e: CancellationException) {
-				// if cancel delete the file then throw the cancellation exception
 				withContext(NonCancellable) {
 					try {
-						if (trashFile.exists()) trashFile.delete()
-						else Unit
+						trashFile.delete()
 					} catch (e: IOException) {
 						Log.e(TAG, "FAILED TO REMOVE THE FILE", e)
 					}
 				}
 				throw e
 			}
+		} catch (e: IOException) {
+			Log.e(TAG, "CANNOT CREATE BACKUP FILE", e)
+			null
 		}
 	}
 }

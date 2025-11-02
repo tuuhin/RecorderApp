@@ -28,7 +28,7 @@ import kotlinx.datetime.LocalTime
 
 @Composable
 internal fun RecorderContent(
-	timer: LocalTime,
+	timer: () -> LocalTime,
 	recordingPointsCallback: DeferredRecordedPointList,
 	bookMarksDeferred: DeferredDurationList,
 	recorderState: RecorderState,
@@ -85,9 +85,9 @@ private fun RecorderContentPreview(
 ) = RecorderAppTheme {
 	Surface {
 		RecorderContent(
-			timer = LocalTime(0, 10, 56, 0),
+			timer = { LocalTime(0, 10, 56, 0) },
 			recorderState = recorderState,
-			bookMarksDeferred = { listOf() },
+			bookMarksDeferred = { setOf() },
 			recordingPointsCallback = { RecorderPreviewFakes.PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE },
 			onRecorderAction = {},
 			modifier = Modifier

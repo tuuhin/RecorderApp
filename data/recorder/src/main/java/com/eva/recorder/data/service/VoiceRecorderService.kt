@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
@@ -79,7 +80,8 @@ internal class VoiceRecorderService : LifecycleService() {
 
 	@OptIn(FlowPreview::class)
 	private val notificationTimer: Flow<LocalTime>
-		get() = voiceRecorder.recorderTimer.sample(1.seconds)
+		get() = voiceRecorder.recorderTimer
+			.distinctUntilChanged { old, new -> old.second == new.second }
 
 	@OptIn(FlowPreview::class)
 	val recorderTime: Flow<LocalTime>
@@ -227,22 +229,17 @@ internal class VoiceRecorderService : LifecycleService() {
 		// stop the recording
 		lifecycleScope.launch {
 			val timeBeforeSave = voiceRecorder.recorderTimer.value
-			when (val result = voiceRecorder.stopRecording()) {
-				// show an error toast
-				is Resource.Error -> {
-					val message = result.message ?: result.error.message ?: ""
-					showSaveRecordingErrorMessage(message)
-				}
-				// save it to bookmarks
-				is Resource.Success -> {
-					val recordingId = result.data ?: return@launch
+			voiceRecorder.stopRecording().fold(
+				onSuccess = { recordingId ->
 					clearAndSaveBookMarks(recordingId, timeBeforeSave)
 					// again show the notification
 					notificationHelper.showCompletedNotificationWithIntent(recordingId)
-				}
-
-				else -> {}
-			}
+				},
+				onFailure = { error ->
+					val message = error.message ?: ""
+					showSaveRecordingErrorMessage(message)
+				},
+			)
 			//update widget
 			widgetFacade.resetWidget()
 		}.invokeOnCompletion {

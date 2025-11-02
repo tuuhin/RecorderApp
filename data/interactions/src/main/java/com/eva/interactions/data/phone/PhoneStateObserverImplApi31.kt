@@ -29,6 +29,8 @@ internal class PhoneStateObserverImplApi31(private val context: Context) : Phone
 
 	override fun invoke(): Flow<PhoneState> {
 		return callbackFlow {
+			// initial send
+			trySend(PhoneState.IDLE)
 
 			if (!hasPhoneStatePermission) {
 				Log.i(TAG, "PERMISSION WAS NOT GRANTED")

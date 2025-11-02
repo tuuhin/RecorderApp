@@ -11,8 +11,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
@@ -24,20 +24,21 @@ private const val TAG = "RECORDER_SERVICE_BINDER"
 internal class RecorderServiceBinderImpl(private val context: Context) : RecorderServiceBinder {
 
 	private val _isBounded = MutableStateFlow(false)
-	private var _service: VoiceRecorderService? = null
+	private var _service = MutableStateFlow<VoiceRecorderService?>(null)
 
-	override val recorderTimer = _isBounded.filter { it }
-		.flatMapLatest { _service?.recorderTime ?: emptyFlow() }
+	private val _serviceInstanceFlow = combine(_isBounded, _service) { bounded, service ->
+		if (bounded && service != null) service
+		else null
+	}.filterNotNull()
 
-	override val recorderState = _isBounded.filter { it }
-		.flatMapLatest { _service?.recorderState ?: emptyFlow() }
+	override val recorderTimer = _serviceInstanceFlow.flatMapLatest { it.recorderTime }
+
+	override val recorderState = _serviceInstanceFlow.flatMapLatest { it.recorderState }
 
 	override val bookMarkTimes: Flow<Set<Duration>>
-		get() = _isBounded.filter { it }
-			.flatMapLatest { _service?.bookMarks ?: emptyFlow() }
+		get() = _serviceInstanceFlow.flatMapLatest { it.bookMarks }
 
-	override val amplitudes = _isBounded.filter { it }
-		.flatMapLatest { _service?.amplitudes ?: emptyFlow() }
+	override val amplitudes = _serviceInstanceFlow.flatMapLatest { it.amplitudes }
 
 	override val isConnectionReady: StateFlow<Boolean>
 		get() = _isBounded
@@ -45,14 +46,14 @@ internal class RecorderServiceBinderImpl(private val context: Context) : Recorde
 	private val serviceConnection = object : ServiceConnection {
 		override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
 			val binder = (service as? VoiceRecorderService.LocalBinder)
-			_service = binder?.getService()
+			_service.value = binder?.getService()
 			val isBounded = _isBounded.updateAndGet { true }
 			Log.d(TAG, "SERVICE CONNECTED :BOUNDED :$isBounded")
 		}
 
 		override fun onServiceDisconnected(name: ComponentName?) {
 			val bounded = _isBounded.updateAndGet { false }
-			_service = null
+			_service.value = null
 			Log.d(TAG, "SERVICE DISCONNECTED :BOUNDED:$bounded")
 		}
 	}
@@ -80,7 +81,7 @@ internal class RecorderServiceBinderImpl(private val context: Context) : Recorde
 
 	override fun cleanUp() {
 		Log.d(TAG, "SERVICE BINDER CLEANUP")
-		_service = null
+		_service.value = null
 		_isBounded.update { false }
 	}
 }

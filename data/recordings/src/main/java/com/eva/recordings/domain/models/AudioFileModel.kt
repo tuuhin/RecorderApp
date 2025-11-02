@@ -7,24 +7,18 @@ import kotlin.time.DurationUnit
 
 data class AudioFileModel(
 	val id: Long,
-	val title: String,
 	val displayName: String,
 	val size: Long,
 	val duration: Duration,
 	val lastModified: LocalDateTime,
-	val channel: Int,
-	val bitRateInKbps: Float,
-	val samplingRateKHz: Float,
-	val path: String,
 	val fileUri: String,
 	val mimeType: String,
+	val title: String = displayName,
+	val path: String? = null,
 	val isFavourite: Boolean = false,
-	val metaDataLocation: String = "",
+	val metaData: MediaMetaDataInfo? = null,
 ) {
 	val durationAsLocaltime: LocalTime
-		get() = LocalTime.Companion.fromSecondOfDay(duration.toInt(DurationUnit.SECONDS))
-
-	val hasLocation: Boolean
-		get() = metaDataLocation.isNotBlank()
+		get() = LocalTime.fromSecondOfDay(duration.toInt(DurationUnit.SECONDS))
 
 }

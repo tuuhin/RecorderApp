@@ -22,6 +22,7 @@ import com.eva.ui.activity.animateOnExit
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.IntentConstants
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -32,19 +33,25 @@ class OnBoardingActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 
 		val splash = installSplashScreen()
-		splash.setKeepOnScreenCondition { viewmodel.boardingState.value == OnBoardingState.UNKNOWN }
-
 		super.onCreate(savedInstanceState)
 
 		// set enable edge to edge normally
 		enableEdgeToEdge()
+		// set activity transitions
+		setTransitions()
+
+		splash.setKeepOnScreenCondition {
+			val boardingState = viewmodel.boardingState.value
+			boardingState == OnBoardingState.UNKNOWN ||
+					boardingState == OnBoardingState.SHOW_CONTENT
+		}
 
 		// on splash complete again enable edge to edge
 		splash.animateOnExit(onAnimationEnd = { enableEdgeToEdge() })
 
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
-				viewmodel.boardingState.collect { state ->
+				viewmodel.boardingState.collectLatest { state ->
 					if (state == OnBoardingState.SHOW_CONTENT)
 						startMainActivityAndFinishCurrent()
 				}
@@ -67,8 +74,6 @@ class OnBoardingActivity : ComponentActivity() {
 				flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
 			}
 			startActivity(intent)
-			// set activity transitions
-			setTransitions()
 			// finish onboarding activity
 			finish()
 		} catch (e: Exception) {

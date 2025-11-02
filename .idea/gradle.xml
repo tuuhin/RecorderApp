@@ -49,6 +49,8 @@
             <option value="$PROJECT_DIR$/feature/recordings" />
             <option value="$PROJECT_DIR$/feature/settings" />
             <option value="$PROJECT_DIR$/feature/widget" />
+            <option value="$PROJECT_DIR$/testing" />
+            <option value="$PROJECT_DIR$/testing/runtime" />
           </set>
         </option>
       </GradleProjectSettings>

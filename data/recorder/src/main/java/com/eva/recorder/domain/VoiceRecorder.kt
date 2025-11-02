@@ -2,7 +2,6 @@ package com.eva.recorder.domain
 
 import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
-import com.eva.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalTime
@@ -36,7 +35,7 @@ interface VoiceRecorder {
 	/**
 	 * Stop the running recording
 	 */
-	suspend fun stopRecording(): Resource<Long?, Exception>
+	suspend fun stopRecording(): Result<Long>
 
 	/**
 	 * Pause the ongoing recording

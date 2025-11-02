@@ -1,5 +1,6 @@
 package com.eva.feature_editor.composables
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseInOut
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,7 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -47,13 +50,13 @@ import com.eva.feature_editor.event.TransformationState
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 
-
 @Composable
 internal fun TransformsSheetContent(
 	state: TransformationState,
 	onExport: () -> Unit,
 	onTransform: () -> Unit,
 	modifier: Modifier = Modifier,
+	onCancelTransform: () -> Unit = {},
 	contentPadding: PaddingValues = PaddingValues(10.dp)
 ) {
 
@@ -98,7 +101,7 @@ internal fun TransformsSheetContent(
 				TransformType.TRANSFORMING -> TransformationProgressIndicator(progress = state.progress)
 			}
 		}
-		Spacer(modifier = Modifier.height(4.dp))
+		Spacer(modifier = Modifier.height(12.dp))
 		Crossfade(
 			targetState = transformType,
 			animationSpec = tween(durationMillis = 200, easing = EaseInOut)
@@ -111,20 +114,14 @@ internal fun TransformsSheetContent(
 			Text(
 				text = message,
 				color = MaterialTheme.colorScheme.onSurfaceVariant,
-				style = MaterialTheme.typography.labelMedium,
+				style = MaterialTheme.typography.bodySmall,
 				textAlign = TextAlign.Center,
 			)
 		}
 		HorizontalDivider(
-			modifier = Modifier.padding(vertical = 4.dp),
+			modifier = Modifier.padding(vertical = 8.dp),
 			color = MaterialTheme.colorScheme.outline
 		)
-
-		val message = when (transformType) {
-			TransformType.IDLE -> stringResource(R.string.action_transform)
-			TransformType.TRANSFORMING -> stringResource(R.string.action_transforming)
-			TransformType.READY_FOR_EXPORT -> stringResource(R.string.action_export)
-		}
 
 		Button(
 			onClick = if (state.isExportFileReady) onExport else onTransform,
@@ -134,16 +131,33 @@ internal fun TransformsSheetContent(
 			contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
 		) {
 			Text(
-				text = message,
+				text = when (transformType) {
+					TransformType.IDLE -> stringResource(R.string.action_transform)
+					TransformType.TRANSFORMING -> stringResource(R.string.action_transforming)
+					TransformType.READY_FOR_EXPORT -> stringResource(R.string.action_export)
+				},
 				style = MaterialTheme.typography.titleMedium
 			)
+		}
+		Spacer(modifier = Modifier.height(4.dp))
+		AnimatedVisibility(state.isTransforming) {
+			FilledTonalButton(
+				onClick = onCancelTransform,
+				shape = MaterialTheme.shapes.extraLarge,
+				colors = ButtonDefaults.filledTonalButtonColors(
+					containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+					contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+				)
+			) {
+				Text(text = stringResource(R.string.action_cancel))
+			}
 		}
 	}
 }
 
 @Composable
 private fun TransformationProgressIndicator(
-	progress: TransformationProgress,
+	progress: () -> TransformationProgress,
 	modifier: Modifier = Modifier,
 	arcColor: Color = MaterialTheme.colorScheme.secondary,
 	textStyle: TextStyle = MaterialTheme.typography.titleMedium,
@@ -154,33 +168,30 @@ private fun TransformationProgressIndicator(
 	Spacer(
 		modifier = modifier
 			.size(120.dp)
-			.drawWithCache {
+			.drawBehind {
 
-				val progressAmount = (progress as? TransformationProgress.Progress)?.amount ?: 0
+				val progressAmount = (progress() as? TransformationProgress.Progress)?.amount ?: 0
 				val rotateAmount = (progressAmount * 360f / 100).coerceIn(0f, 360f)
 
-				onDrawBehind {
-					drawArc(
-						color = arcColor,
-						startAngle = 90f,
-						size = Size(width = size.width * .9f, height = size.height * .9f),
-						sweepAngle = rotateAmount,
-						useCenter = false,
-						style = Stroke(cap = StrokeCap.Round, width = 10.dp.toPx())
-					)
+				drawArc(
+					color = arcColor,
+					startAngle = 90f,
+					size = Size(width = size.width * .9f, height = size.height * .9f),
+					sweepAngle = rotateAmount,
+					useCenter = false,
+					style = Stroke(cap = StrokeCap.Round, width = 10.dp.toPx())
+				)
 
-					val textResults = textMeasurer.measure("$progressAmount %", style = textStyle)
+				val textResults = textMeasurer.measure("$progressAmount %", style = textStyle)
 
-					val centerPos =
-						center - with(textResults.size) { Offset(width / 2f, height / 2f) }
+				val centerPos =
+					center - with(textResults.size) { Offset(width / 2f, height / 2f) }
 
-					drawText(
-						textLayoutResult = textResults,
-						topLeft = centerPos,
-						color = textColor
-					)
-				}
-
+				drawText(
+					textLayoutResult = textResults,
+					topLeft = centerPos,
+					color = textColor
+				)
 			},
 	)
 }
@@ -199,7 +210,7 @@ private class TransformsSheetContentPreviewParams :
 			TransformationState(exportFileUri = ""),
 			TransformationState(
 				isTransforming = true,
-				progress = TransformationProgress.Progress(10)
+				progress = { TransformationProgress.Progress(10) }
 			)
 		)
 	)

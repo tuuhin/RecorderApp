@@ -17,10 +17,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -52,15 +51,11 @@ fun AnimatedPlayPauseButton(
 	enabled: Boolean = true,
 	tonalElevation: Dp = 0.dp,
 	shadowElevation: Dp = 0.dp,
-	colors: ButtonColors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.primary,
-		contentColor = MaterialTheme.colorScheme.onPrimary,
-	),
+	containerColor: Color = MaterialTheme.colorScheme.primary,
+	disabledColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = .1f)
 ) {
 
-	val buttonContainerColor = if (enabled) colors.containerColor
-	else colors.disabledContainerColor
-
+	val buttonContainerColor = if (enabled) containerColor else disabledColor
 
 	val infiniteTransition = rememberInfiniteTransition(
 		label = "Infinite transition for rotating shape"
@@ -68,9 +63,9 @@ fun AnimatedPlayPauseButton(
 
 	val rotation by infiniteTransition.animateFloat(
 		initialValue = 0f,
-		targetValue = 360f,
+		targetValue = if (isPlaying) 360f else 0f,
 		animationSpec = infiniteRepeatable(
-			animation = tween(10_000, easing = LinearEasing),
+			animation = tween(8_000, easing = LinearEasing),
 			repeatMode = RepeatMode.Restart
 		),
 		label = "Amount of rotation for the play button",
@@ -85,7 +80,7 @@ fun AnimatedPlayPauseButton(
 			clip = true
 			shape = RoundedPolygonShape(
 				polygon = CustomShapes.ROUNDED_STAR_8_CORNERS,
-				rotation = if (isPlaying) rotation else 0f
+				rotation = rotation
 			)
 		},
 		tonalElevation = tonalElevation,
@@ -103,16 +98,17 @@ fun AnimatedPlayPauseButton(
 				transitionSpec = { isPlayingAnimation() },
 				label = "Transform between playing states",
 				contentAlignment = Alignment.Center,
-				modifier = Modifier.padding(8.dp)
 			) { playing ->
 				if (playing)
 					Icon(
 						painter = painterResource(id = R.drawable.ic_pause),
 						contentDescription = stringResource(R.string.recorder_action_pause),
+						modifier = Modifier.size(32.dp),
 					)
 				else Icon(
 					painter = painterResource(id = R.drawable.ic_play),
 					contentDescription = stringResource(R.string.recorder_action_resume),
+					modifier = Modifier.size(32.dp),
 				)
 			}
 		}
@@ -121,14 +117,12 @@ fun AnimatedPlayPauseButton(
 
 private fun isPlayingAnimation(): ContentTransform {
 
-	val fadeSpec = tween<Float>(durationMillis = 200, easing = EaseInBounce)
+	val fadeSpec = tween<Float>(durationMillis = 200, delayMillis = 100, easing = EaseInBounce)
+	val scaleSpec = spring<Float>(dampingRatio = Spring.DampingRatioLowBouncy)
 
-	val scaleSpec = spring<Float>(
-		dampingRatio = Spring.DampingRatioMediumBouncy,
-		stiffness = Spring.StiffnessMedium,
-	)
-
-	val enter = fadeIn(animationSpec = fadeSpec) + scaleIn(animationSpec = scaleSpec)
+	val enter =
+		fadeIn(animationSpec = fadeSpec, initialAlpha = .2f) +
+				scaleIn(animationSpec = scaleSpec, initialScale = .4f)
 	val exit = fadeOut(animationSpec = fadeSpec) + scaleOut(animationSpec = scaleSpec)
 
 	return enter togetherWith exit

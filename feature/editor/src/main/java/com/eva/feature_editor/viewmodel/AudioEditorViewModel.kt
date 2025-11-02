@@ -1,5 +1,6 @@
 package com.eva.feature_editor.viewmodel
 
+import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import com.eva.editor.domain.AudioConfigToAction
 import com.eva.editor.domain.AudioTransformer
@@ -18,6 +19,7 @@ import com.eva.ui.viewmodel.UIEvents
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,14 +65,16 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 	private val _exportBegin = Channel<Boolean>()
 	val exportBegun = _exportBegin.consumeAsFlow()
 
+	private var _exportJob: Job? = null
+
 	val transformationState = combine(
-		transformer.isTransformerRunning,
-		transformer.progress,
+		transformer.isTransformationRunning,
+		transformer.transformationProgress,
 		_exportFileUri
 	) { isRunning, progress, exportUri ->
 		TransformationState(
 			isTransforming = isRunning,
-			progress = progress,
+			progress = { progress },
 			exportFileUri = exportUri
 		)
 	}.stateIn(
@@ -113,6 +117,7 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 		EditorScreenEvent.OnSaveExportFile -> onSaveExportFile()
 		EditorScreenEvent.OnRedoEdit -> onUndoOrRedoConfigs(false)
 		EditorScreenEvent.OnUndoEdit -> onUndoOrRedoConfigs(true)
+		EditorScreenEvent.OnCancelTransformation -> cancelFinalExport()
 	}
 
 	suspend fun setPlayerItem() = player.prepareAudioFile(fileModel)
@@ -218,19 +223,28 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 		transformer.removeTransformsFile(fileUri)
 	}
 
-	private fun finalExport() = viewModelScope.launch {
+	private fun cancelFinalExport() {
+		_exportJob?.cancel()
+		_exportJob = null
+		viewModelScope.launch { _uiEvents.emit(UIEvents.ShowToast("Cancelled")) }
+	}
 
-		val filterValidConfigs = _undoRedoManager.allActions.value
-			.filter { (config, _) -> config.hasMinimumDuration }
+	private fun finalExport() {
+		_exportJob?.cancel()
+		_exportJob = viewModelScope.launch {
 
-		val result = transformer.transformAudio(fileModel, filterValidConfigs)
-		result.fold(
-			onSuccess = { data -> _exportFileUri.update { data } },
-			onFailure = { exp ->
-				val message = exp.message ?: "Some transformation error"
-				_uiEvents.emit(UIEvents.ShowToast(message))
-			},
-		)
+			val filterValidConfigs = _undoRedoManager.allActions.value
+				.filter { (config, _) -> config.hasMinimumDuration }
+
+			val result = transformer.transformAudio(fileModel, filterValidConfigs)
+			result.fold(
+				onSuccess = { data -> _exportFileUri.update { data.toUri().toString() } },
+				onFailure = { exp ->
+					val message = exp.message ?: "Some transformation error"
+					_uiEvents.emit(UIEvents.ShowToast(message))
+				},
+			)
+		}
 	}
 
 

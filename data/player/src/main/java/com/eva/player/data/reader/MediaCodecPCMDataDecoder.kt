@@ -3,44 +3,62 @@ package com.eva.player.data.reader
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.Log
-import androidx.collection.mutableScatterSetOf
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.nio.ByteOrder
-import kotlin.math.pow
+import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.plusAssign
 import kotlin.math.sqrt
 import kotlin.time.Duration
 
 private const val TAG = "CODEC_CALLBACK"
 
-class MediaCodecPCMDataDecoder(
-	private val seekDuration: Int,
+@OptIn(ExperimentalAtomicApi::class)
+internal class MediaCodecPCMDataDecoder(
+	private val seekDurationMillis: Int,
 	private val totalTime: Duration,
-	private val scope: CoroutineScope,
 	private val extractor: MediaExtractor? = null,
-	private val onBufferDecoded: (FloatArray) -> Unit
 ) : MediaCodec.Callback() {
 
-	private val _operations = mutableScatterSetOf<Deferred<Float>>()
-	private var _codecState = MediaCodecState.EXEC
-
+	private val threadName = "MediaCodecComputeThread"
+	private var _handlerThread: HandlerThread? = null
+	private var _handler: Handler? = null
 	private var _mediaCodec: MediaCodec? = null
 
-	private val lock = Any()
+	private val _scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+	private val _operations = ConcurrentLinkedQueue<Deferred<Float>>()
+
+	@Volatile
+	private var _codecState = MediaCodecState.EXEC
+
 	private val _mutex = Mutex()
+
+	// callbacks
+	private var _onBufferDecoded: ((FloatArray) -> Unit)? = null
+	private var _onDecodeComplete: (() -> Unit)? = null
 
 	// need to play with the size to get the optimal results
 	private val batchSize = 50
 
-	private var currentTimeInMs = 0L
+	private val currentTimeInMs = AtomicLong(0L)
+	private val _isBatchProcessing = AtomicBoolean(false)
 
 	override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
 
@@ -50,9 +68,9 @@ class MediaCodecPCMDataDecoder(
 			codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
 			return
 		}
-
+		val currentTime = currentTimeInMs.load()
 		// if timeInMs is greater than totalTime+extra return END_OF_STREAM
-		if (currentTimeInMs >= totalTime.inWholeMilliseconds + seekDuration) {
+		if (currentTime >= totalTime.inWholeMilliseconds + seekDurationMillis) {
 			Log.d(TAG, "TOTAL TIME IS ALREADY REACHED")
 			codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
 			return
@@ -66,7 +84,7 @@ class MediaCodecPCMDataDecoder(
 
 			val extractor = extractor ?: return
 			// seek the extractor as we don't need extra data
-			extractor.seekTo(currentTimeInMs * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+			extractor.seekTo(currentTimeInMs.load() * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
 			val sampleSize = extractor.readSampleData(inputBuffer, 0)
 
 			// sample size is zero thus processing done END_OF_STREAM
@@ -84,7 +102,7 @@ class MediaCodecPCMDataDecoder(
 				codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
 			} else {
 				// update the current time
-				currentTimeInMs += seekDuration
+				currentTimeInMs.plusAssign(seekDurationMillis.toLong())
 				codec.queueInputBuffer(index, 0, sampleSize, extractor.sampleTime, 0)
 			}
 
@@ -97,80 +115,97 @@ class MediaCodecPCMDataDecoder(
 
 
 	override fun onOutputBufferAvailable(
-		codec: MediaCodec, index: Int,
+		codec: MediaCodec,
+		index: Int,
 		info: MediaCodec.BufferInfo
 	) {
-		try {
-			// there is some data
-			if (info.size > 0) {
-				val outputBuffer = codec.getOutputBuffer(index)
-				outputBuffer?.position(info.offset)
-				outputBuffer?.rewind()
-				outputBuffer?.order(ByteOrder.LITTLE_ENDIAN)
+		if (info.isEndOfStream) {
+			Log.i(TAG, "EVERYTHING RAN ON ${Thread.currentThread().name}")
+			codec.stop()
+			_codecState = MediaCodecState.STOP
+			handleEndOfStream()
+			return
+		}
+		if (info.size > 0) {
+			try {
+				val outputBuffer = codec.getOutputBuffer(index) ?: return
+				outputBuffer.position(info.offset)
+				outputBuffer.rewind()
+				outputBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
 				val format = codec.outputFormat
 				val pcmEncoding = format.pcmEncoding
 				val channelCount = format.channels
-
-				val pcm = outputBuffer?.asFloatArray(info.size, pcmEncoding, channelCount)
-					?: floatArrayOf()
-
-				if (!scope.isActive) {
-					Log.i(TAG, "SCOPE IS NOT ACTIVE ANY MORE STOPING CODEC")
-					_codecState = MediaCodecState.STOP
-					// release the buffer
-					codec.releaseOutputBuffer(index, false)
-					return
-				}
-				// if there is some pcm data available
-				if (pcm.isNotEmpty()) {
-					val action = scope.async(Dispatchers.Default) {
-						performOperation(pcm)
-					}
-					_operations.plusAssign(action)
-				}
-				// batched operation
-				if (_operations.size >= batchSize && scope.isActive) {
-					scope.launch(Dispatchers.Default) {
-						if (_mutex.holdsLock(lock)) {
-							Log.d(TAG, "A BATCH BEING SEND CANNOT SEND IN THIS BATCH")
-							return@launch
-						}
-						_mutex.lock(lock)
-						try {
-							Log.i(TAG, "EVALUATING INFORMATION")
-							val results = _operations.asSet().awaitAll()
-							val resultAsFloatArray = results.toFloatArray()
-							onBufferDecoded(resultAsFloatArray)
-							_operations.clear()
-						} finally {
-							_mutex.unlock()
-						}
-					}
-				}
-				// release the buffer
+				val floatArray = outputBuffer.asFloatArray(info.size, pcmEncoding, channelCount)
+				handleFloatArray(floatArray)
+			} catch (e: Exception) {
+				e.printStackTrace()
+			} finally {
 				codec.releaseOutputBuffer(index, false)
-				return
 			}
+		}
 
-			if (info.isEndOfStream) {
-				Log.d(TAG, "END OF BUFFER REACHED, AWAITING OPERATIONS")
-				codec.stop()
-				_codecState = MediaCodecState.STOP
+	}
 
-				scope.launch(Dispatchers.Default) {
-					if (!isActive) return@launch
-					Log.i(TAG, "EVALUATING INFORMATION END")
+	private fun handleFloatArray(pcm: FloatArray) {
+		// if there is some pcm data available
+		if (pcm.isNotEmpty()) {
+			val action = _scope.async { pcm.performRMS() }
+			_operations.offer(action)
+		}
 
+		// Try to acquire the lock atomically BEFORE launching
+		if (!_isBatchProcessing.compareAndSet(expectedValue = false, newValue = true)) return
 
-					val results = _operations.asSet().awaitAll()
-					val resultAsFloatArray = results.toFloatArray()
-					onBufferDecoded(resultAsFloatArray)
-
+		_scope.launch {
+			try {
+				if (_operations.size >= batchSize && isActive) {
+					// batched operation
+					_isBatchProcessing.compareAndSet(expectedValue = false, newValue = true)
+					val operations = buildSet {
+						repeat(batchSize) {
+							val item = _operations.poll() ?: return@repeat
+							add(item)
+						}
+					}
+					Log.i(TAG, "EVALUATING INFORMATION BATCH :${operations.size}")
+					val resultAsFloatArray = operations.awaitAll().toFloatArray()
+					_onBufferDecoded?.invoke(resultAsFloatArray)
 				}
+			} catch (_: CancellationException) {
+				Log.d(TAG, "CANCELLATION IN BATCH PROCESSING")
+			} catch (e: Exception) {
+				Log.d(TAG, "Exception at the end of stream", e)
+			} finally {
+				_isBatchProcessing.store(false)
 			}
-		} catch (e: IllegalStateException) {
-			Log.e(TAG, "MEDIA CODEC IS NOT IN EXECUTION STATE", e)
+		}
+	}
+
+	private fun handleEndOfStream() {
+		_scope.launch {
+			try {
+				Log.d(TAG, "END OF BUFFER REACHED, AWAITING OPERATIONS")
+
+				val leftItems = buildSet {
+					while (isActive) {
+						val item = _operations.poll() ?: break
+						add(item)
+					}
+				}
+				Log.i(TAG, "EVALUATING INFORMATION END :${leftItems.size}")
+				_mutex.withLock {
+					if (leftItems.isEmpty()) return@withLock
+					val results = leftItems.awaitAll()
+					val resultAsFloatArray = results.toFloatArray()
+					_onBufferDecoded?.invoke(resultAsFloatArray)
+					_onDecodeComplete?.invoke()
+				}
+			} catch (_: CancellationException) {
+				Log.d(TAG, "CANCELLATION IN HANDLING END OF STREAM")
+			} catch (e: Exception) {
+				Log.d(TAG, "Exception at the end of stream", e)
+			}
 		}
 	}
 
@@ -178,36 +213,56 @@ class MediaCodecPCMDataDecoder(
 		Log.e(TAG, "ERROR HAPPENED", e)
 	}
 
-
 	override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
 		Log.d(TAG, "MEDIA FORMAT CHANGED: $format")
 	}
 
+	fun setOnBufferDecode(listener: (FloatArray) -> Unit) {
+		_onBufferDecoded = listener
+	}
+
+	fun setOnComplete(listener: () -> Unit) {
+		_onDecodeComplete = listener
+	}
+
 	fun initiateCodec(format: MediaFormat, mimeType: String) {
+		if (_handlerThread == null || _handlerThread?.isAlive == false) {
+			_handlerThread = HandlerThread(threadName).apply { start() }
+			_handler = Handler(_handlerThread!!.looper)
+		}
 		_mediaCodec?.reset()
 		_mediaCodec = MediaCodec.createDecoderByType(mimeType).apply {
 			configure(format, null, null, 0)
-			setCallback(this@MediaCodecPCMDataDecoder)
+			setCallback(this@MediaCodecPCMDataDecoder, _handler!!)
 		}
 		_mediaCodec?.start()
 		Log.d(TAG, "MEDIA CODEC STARTED")
 	}
 
 	fun cleanUp() {
-		Log.d(TAG, "CLEANING UP OPERATIONS")
-		_operations.forEach { it.cancel() }
-		_operations.clear()
-
 		Log.d(TAG, "MEDIA CODEC RELEASING")
 		_mediaCodec?.stop()
 		_mediaCodec?.release()
 		_mediaCodec = null
+
+		// shut down the thread
+		val quit = _handlerThread?.quitSafely() ?: false
+		_handlerThread = null
+		_handler = null
+		Log.d(TAG, "HANDLER THREAD STOPPED:$quit")
+
+		Log.d(TAG, "CLEANING UP OPERATIONS")
+		_operations.forEach { it.cancel() }
+		_operations.clear()
+
+		Log.d(TAG, "CLEARING UP SCOPE")
+		_scope.cancel()
 	}
 
-	private suspend fun performOperation(samples: FloatArray): Float {
+	private suspend fun FloatArray.performRMS(): Float {
 		return withContext(Dispatchers.Default) {
-			val squaredSum = samples.sumOf { it.toDouble().pow(2) }
-			sqrt(squaredSum / samples.size).toFloat()
+			val squaredAvg = map { it * it }.average().toFloat()
+			sqrt(squaredAvg)
 		}
 	}
 }

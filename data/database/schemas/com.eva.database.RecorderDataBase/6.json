@@ -1,0 +1,228 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "edcf0a79617bde92c1854605c306993a",
+    "entities": [
+      {
+        "tableName": "trash_files_data_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ID` INTEGER NOT NULL, `TITLE` TEXT NOT NULL, `DISPLAY_NAME` TEXT NOT NULL, `MIME_TYPE` TEXT NOT NULL, `DATE_ADDED` INTEGER NOT NULL, `DATE_EXPIRES` INTEGER, `FILE` TEXT NOT NULL, PRIMARY KEY(`ID`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "ID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "TITLE",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "DISPLAY_NAME",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mimeType",
+            "columnName": "MIME_TYPE",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateAdded",
+            "columnName": "DATE_ADDED",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiresAt",
+            "columnName": "DATE_EXPIRES",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "file",
+            "columnName": "FILE",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ID"
+          ]
+        }
+      },
+      {
+        "tableName": "recording_meta_data",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`RECORDING_ID` INTEGER NOT NULL, `IS_FAVOURITE` INTEGER NOT NULL, `CATEGORY_ID` INTEGER, PRIMARY KEY(`RECORDING_ID`), FOREIGN KEY(`CATEGORY_ID`) REFERENCES `recordings_category`(`CATEGORY_ID`) ON UPDATE CASCADE ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "recordingId",
+            "columnName": "RECORDING_ID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isFavourite",
+            "columnName": "IS_FAVOURITE",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "CATEGORY_ID",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "RECORDING_ID"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_recording_meta_data_CATEGORY_ID",
+            "unique": false,
+            "columnNames": [
+              "CATEGORY_ID"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recording_meta_data_CATEGORY_ID` ON `${TABLE_NAME}` (`CATEGORY_ID`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "recordings_category",
+            "onDelete": "SET NULL",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "CATEGORY_ID"
+            ],
+            "referencedColumns": [
+              "CATEGORY_ID"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "recordings_category",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`CATEGORY_ID` INTEGER PRIMARY KEY AUTOINCREMENT, `CATEGORY_NAME` TEXT NOT NULL, `CREATED_AT` INTEGER NOT NULL, `COLOR` TEXT, `type` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "categoryId",
+            "columnName": "CATEGORY_ID",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "categoryName",
+            "columnName": "CATEGORY_NAME",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "CREATED_AT",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "COLOR",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "CATEGORY_ID"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_recordings_category_CATEGORY_NAME",
+            "unique": true,
+            "columnNames": [
+              "CATEGORY_NAME"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_recordings_category_CATEGORY_NAME` ON `${TABLE_NAME}` (`CATEGORY_NAME`)"
+          }
+        ]
+      },
+      {
+        "tableName": "recording_bookmark_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`BOOKMARK_ID` INTEGER PRIMARY KEY AUTOINCREMENT, `BOOKMARK_TEXT` TEXT NOT NULL, `RECORDING_ID` INTEGER NOT NULL, `BOOKMARK_TIMESTAMP` INTEGER NOT NULL, FOREIGN KEY(`RECORDING_ID`) REFERENCES `recording_meta_data`(`RECORDING_ID`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "bookMarkId",
+            "columnName": "BOOKMARK_ID",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "BOOKMARK_TEXT",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordingId",
+            "columnName": "RECORDING_ID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeStamp",
+            "columnName": "BOOKMARK_TIMESTAMP",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "BOOKMARK_ID"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_recording_bookmark_table_RECORDING_ID",
+            "unique": false,
+            "columnNames": [
+              "RECORDING_ID"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recording_bookmark_table_RECORDING_ID` ON `${TABLE_NAME}` (`RECORDING_ID`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "recording_meta_data",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "RECORDING_ID"
+            ],
+            "referencedColumns": [
+              "RECORDING_ID"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'edcf0a79617bde92c1854605c306993a')"
+    ]
+  }
+}

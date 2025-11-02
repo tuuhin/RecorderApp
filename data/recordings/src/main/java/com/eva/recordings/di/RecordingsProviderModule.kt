@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import com.eva.database.dao.RecordingsMetadataDao
 import com.eva.database.dao.TrashFileDao
+import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
 import com.eva.location.domain.repository.LocationAddressProvider
 import com.eva.recordings.data.RecordingWidgetInteractorImpl
@@ -66,7 +67,8 @@ object RecordingsProviderModule {
 	fun providesPlayerFileProvider(
 		@ApplicationContext context: Context,
 		locationProvider: LocationAddressProvider,
-	): PlayerFileProvider = PlayerFileProviderImpl(context, locationProvider)
+		settings: RecorderAudioSettingsRepo,
+	): PlayerFileProvider = PlayerFileProviderImpl(context, settings, locationProvider)
 
 
 	@Provides

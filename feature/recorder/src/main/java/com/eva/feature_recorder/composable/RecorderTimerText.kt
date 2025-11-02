@@ -20,16 +20,18 @@ import kotlinx.datetime.format
 
 @Composable
 internal fun RecorderTimerText(
-	time: LocalTime,
+	time: () -> LocalTime,
 	modifier: Modifier = Modifier,
 	style: TextStyle = MaterialTheme.typography.displayMedium,
 	color: Color = MaterialTheme.colorScheme.primary,
 	fontFamily: FontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 ) {
-	val timeText by remember(time) {
+	val timeText by remember {
 		derivedStateOf {
-			if (time.hour > 0) time.format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
-			else time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+			val readTime = time()
+
+			if (readTime.hour > 0) readTime.format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
+			else readTime.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
 		}
 	}
 

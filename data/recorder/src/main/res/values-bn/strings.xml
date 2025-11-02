@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="recorder_action_pause">বিরতি</string>
-  <string name="recorder_action_resume">পুনরায় শুরু করুন</string>
-  <string name="recorder_action_stop">থামুন</string>
-  <string name="recorder_action_cancel">বাতিল করুন</string>
   <string name="recorder_notification_text_running">রেকর্ডার চলছে</string>
   <string name="recorder_notification_text_paused">রেকর্ডার পজ করা হয়েছে</string>
   <string name="recorder_recording_completed">রেকর্ডিং সম্পন্ন হয়েছে</string>
   <string name="recorder_recording_completed_text">বাহ্যিক সঞ্চয়স্থানে সংরক্ষণ করা হয়েছে৷</string>
   <string name="recorder_recording_completed_text_2">রেকর্ডিং প্লে করতে ক্লিক করুন</string>
-  <string name="recorder_recording_notification_title_canceled">রেকর্ডিং বাতিল</string>
-  <string name="recorder_recording_notification_canceled_text">ব্যবহারকারী দ্বারা রেকর্ডিং বাতিল করা হয়েছে</string>
   <string name="toast_recording_bluetooth">ব্লুটুথ মাইক ব্যবহার করা</string>
   <string name="toast_incoming_call">ইনকামিং কল</string>
   <string name="bookmarks_saved">বুকমার্ক যোগ করা হয়েছে</string>
