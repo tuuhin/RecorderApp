@@ -6,9 +6,7 @@ import com.eva.bookmarks.domain.provider.BookMarksExportRepository
 import com.eva.bookmarks.domain.provider.ExportURIProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalTime
 import org.junit.Rule
@@ -17,11 +15,11 @@ import javax.inject.Inject
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
-@OptIn(ExperimentalCoroutinesApi::class)
 class BookMarksToCsvConvertorTest {
 
 	@get:Rule
@@ -39,6 +37,7 @@ class BookMarksToCsvConvertorTest {
 	@AfterTest
 	fun tearDown() = runBlocking {
 		uriProvider.clearAll()
+		Unit
 	}
 
 	@Test
@@ -54,7 +53,6 @@ class BookMarksToCsvConvertorTest {
 		}
 
 		val uriString = exporter.invoke(entries)
-		advanceUntilIdle()
 
 		assertTrue(uriString != null, "A CSV File created")
 	}
@@ -64,9 +62,8 @@ class BookMarksToCsvConvertorTest {
 
 		val entries = emptyList<AudioBookmarkModel>()
 		val uriString = exporter.invoke(entries)
-		advanceUntilIdle()
 
-		assertTrue(uriString == null, "Doesn't create a file as there is no entries")
+		assertEquals(null, uriString, "Doesn't create a file as there is no entries")
 	}
 
 }

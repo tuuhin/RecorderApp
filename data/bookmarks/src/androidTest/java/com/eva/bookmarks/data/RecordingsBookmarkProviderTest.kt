@@ -9,7 +9,6 @@ import com.eva.recordings.domain.exceptions.InvalidRecordingIdException
 import com.eva.utils.Resource
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalTime
@@ -25,7 +24,6 @@ import kotlin.test.assertTrue
 
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
-@OptIn(ExperimentalCoroutinesApi::class)
 class RecordingsBookmarkProviderTest {
 
 	@get:Rule
