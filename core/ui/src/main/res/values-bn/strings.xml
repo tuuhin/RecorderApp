@@ -5,7 +5,6 @@
   <string name="recorder_action_stop">বন্ধ করুন</string>
   <string name="recorder_action_cancel">বাতিল করুন</string>
   <string name="action_paused">বিরতি</string>
-  <string name="action_stop">বন্ধ করা</string>
   <string name="allow_permissions">অনুমতি দিন</string>
   <string name="recorder_permission_not_found">রেকর্ডার অনুমতি পাওয়া যায়নি</string>
   <string name="recorder_permission_not_found_desc">এটি একটি রেকর্ডার অ্যাপ্লিকেশন যা আপনাকে কাজ করার জন্য অডিও রেকর্ডিংয়ের অনুমতি দিতে হবে</string>
@@ -75,7 +74,6 @@
   <string name="audio_metadata_duration_title">মেয়াদ</string>
   <string name="audio_metadata_file_size_title">সাইজ</string>
   <string name="audio_metadata_name_title">নাম</string>
-  <string name="player_channel_resource_id">প্লেয়ার চ্যানেল</string>
   <string name="show_recordings_list">লিস্ট</string>
   <string name="player_action_speed">স্পীড</string>
   <string name="player_action_repeat">পুনরাবৃত্তি করুন</string>

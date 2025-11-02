@@ -26,5 +26,4 @@ dependencies {
 	implementation(project(":data:datastore"))
 
 	androidTestImplementation(libs.androidx.media3.test.utils)
-	androidTestImplementation(project(":testing:runtime"))
 }

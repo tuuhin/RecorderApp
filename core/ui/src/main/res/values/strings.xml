@@ -6,7 +6,6 @@
   <string name="recorder_action_cancel">Cancel</string>
   <string name="back_arrow" translatable="false">Back Arrow</string>
   <string name="action_paused">Pause</string>
-  <string name="action_stop">Stop</string>
   <string name="allow_permissions">Allow permission</string>
   <string name="recorder_permission_not_found">Recorder Permission not found</string>
   <string name="recorder_permission_not_found_desc">Its a recorder app you need to allow audio recording in order to work</string>

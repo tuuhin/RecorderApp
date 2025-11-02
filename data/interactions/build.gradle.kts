@@ -14,6 +14,5 @@ dependencies {
 
 	// testing
 	androidTestImplementation(libs.androidx.espresso.intents)
-	androidTestImplementation(project(":testing:runtime"))
 
 }

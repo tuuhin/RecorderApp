@@ -14,7 +14,6 @@
 
   <color name="notification_button_color">#000000</color>
   <color name="ic_launcher_background">#FFF1FFE8</color>
-  <color name="ic_shortcut_background">#E0EBD0</color>
 
   <color name="tailwind_color_red">#F87171</color>
   <color name="tailwind_color_orange">#FB923C</color>

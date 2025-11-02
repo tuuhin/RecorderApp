@@ -66,6 +66,10 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 				add("androidTestImplementation", dependency.get())
 			}
 		}
+		// include the testing runtime module
+		if (findProject(":testing:runtime") != null) {
+			add("androidTestImplementation", project(":testing:runtime"))
+		}
 	}
 
 	private fun Project.configureLibrary() = extensions.configure<LibraryExtension> {
