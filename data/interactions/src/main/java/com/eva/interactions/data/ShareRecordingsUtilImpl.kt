@@ -52,6 +52,7 @@ internal class ShareRecordingsUtilImpl(
 
 		val intent = Intent(Intent.ACTION_SEND).apply {
 			setDataAndType(uri, "audio/*")
+			putExtra(Intent.EXTRA_STREAM, uri)
 			putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_audio_extra_subject))
 		}
 
