@@ -7,7 +7,9 @@ import com.eva.editor.domain.AudioConfigToActionList
 import com.eva.player.data.reader.compressFloatArray
 import com.eva.player.domain.AudioVisualizer
 import com.eva.player.domain.exceptions.DecoderExistsException
+import com.eva.player_shared.util.CoroutineLifecycleOwner
 import com.eva.player_shared.util.updateArrayViaConfigs
+import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.ui.navigation.PlayerSubGraph
 import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
@@ -31,23 +33,21 @@ import javax.inject.Inject
 @HiltViewModel
 class PlayerVisualizerViewmodel @Inject constructor(
 	private val visualizer: AudioVisualizer,
+	private val playerFileProvider: PlayerFileProvider,
 	private val savedStateHandle: SavedStateHandle,
 ) : AppViewModel() {
+
+	private val _lifecycleOwner by lazy { CoroutineLifecycleOwner(viewModelScope.coroutineContext) }
 
 	private val route: PlayerSubGraph.NavGraph
 		get() = savedStateHandle.toRoute()
 
-	val audioId: Long
-		get() = route.audioId
-
 	private val _compressedVisualization = MutableStateFlow(floatArrayOf())
+	private val _clipConfigs = MutableStateFlow<AudioConfigToActionList>(emptyList())
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
 		get() = _uiEvents
-
-
-	private val _clipConfigs = MutableStateFlow<AudioConfigToActionList>(emptyList())
 
 	val isVisualsReady = visualizer.isVisualReady.stateIn(
 		scope = viewModelScope,
@@ -79,7 +79,8 @@ class PlayerVisualizerViewmodel @Inject constructor(
 
 	private fun prepareVisuals() = viewModelScope.launch {
 		val result = visualizer.prepareVisualization(
-			fileId = audioId,
+			lifecycleOwner = _lifecycleOwner,
+			fileUri = playerFileProvider.providesAudioFileUri(route.audioId),
 			timePerPointInMs = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE
 		)
 		result.onFailure { err ->
