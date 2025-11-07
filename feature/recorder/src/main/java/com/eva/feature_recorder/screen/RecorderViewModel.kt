@@ -79,9 +79,8 @@ internal class RecorderViewModel @Inject constructor(
 		}
 	}
 
-
 	override fun onCleared() {
+		recorderService.unBindService()
 		recorderService.cleanUp()
-		super.onCleared()
 	}
 }
