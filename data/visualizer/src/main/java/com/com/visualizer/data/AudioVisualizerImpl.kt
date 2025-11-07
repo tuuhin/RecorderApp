@@ -1,15 +1,12 @@
 package com.com.visualizer.data
 
 import android.content.Context
-import android.media.MediaExtractor
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import com.com.visualizer.domain.AudioVisualizer
 import com.com.visualizer.domain.ThreadController
 import com.com.visualizer.domain.exception.DecoderExistsException
-import com.com.visualizer.domain.exception.ExtractorNoTrackFoundException
-import com.com.visualizer.domain.exception.InvalidMimeTypeException
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -30,21 +27,20 @@ internal class AudioVisualizerImpl(
 	private val threadHandler: ThreadController
 ) : AudioVisualizer {
 
-	@Volatile
-	private var _extractor: MediaExtractor? = null
+	private var _decoder: MediaCodecPCMDataDecoder? = null
+	private val _lock = Mutex()
 
 	private val _isReady = MutableStateFlow(false)
+	private val _visualization = MutableStateFlow(floatArrayOf())
+
 	override val isVisualReady: StateFlow<Boolean>
 		get() = _isReady
 
-	private val _visualization = MutableStateFlow(floatArrayOf())
 	override val normalizedVisualization: Flow<FloatArray>
 		get() = _visualization.map { array -> array.normalize().smoothen(.4f) }
 			.flowOn(Dispatchers.Default)
 			.catch { err -> Log.d(TAG, "SOME ERROR", err) }
 
-	private var _decoder: MediaCodecPCMDataDecoder? = null
-	private val _lock = Mutex()
 
 	override suspend fun prepareVisualization(
 		model: AudioFileModel,
@@ -71,33 +67,15 @@ internal class AudioVisualizerImpl(
 
 		return withContext(Dispatchers.IO) {
 			try {
-				// clear an extractor if present
-				_extractor?.release()
-				_extractor = MediaExtractor().apply {
-					setDataSource(context, fileUri.toUri(), null)
-				}
-				val format = _extractor?.getTrackFormat(0)
-				val mimeType = format?.mimeType
-
-				if (mimeType == null || !mimeType.startsWith("audio"))
-					return@withContext Result.failure(InvalidMimeTypeException())
-
-				if (_extractor?.trackCount == 0)
-					return@withContext Result.failure(ExtractorNoTrackFoundException())
-
-				_extractor?.selectTrack(0)
-
 				_lock.withLock {
 					_decoder = MediaCodecPCMDataDecoder(
 						handler = handler,
-						extractor = _extractor!!,
-						totalTime = format.duration,
 						seekDurationMillis = timePerPointInMs,
 					)
 				}
 				_decoder?.setOnBufferDecode(::updateVisuals)
 				_decoder?.setOnComplete(::releaseObjects)
-				_decoder?.initiateCodec(format, mimeType)
+				_decoder?.initiateExtraction(context, fileUri.toUri())
 
 				Result.success(Unit)
 			} catch (e: Exception) {
@@ -117,9 +95,7 @@ internal class AudioVisualizerImpl(
 			try {
 				Log.d(TAG, "CLEARING UP OBJECTS")
 				_decoder?.cleanUp()
-				_extractor?.release()
 			} finally {
-				_extractor = null
 				_decoder = null
 				_lock.unlock()
 			}

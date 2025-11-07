@@ -80,7 +80,7 @@ internal class ThreadLifecycleControllerImpl(private val threadName: String) :
 	 * @param maxWaitTime Time in millis the thread should wait for thread to die
 	 */
 	@Synchronized
-	private fun stopThread(maxWaitTime: Long = 2_000L) {
+	private fun stopThread(maxWaitTime: Long = 600L) {
 		require(maxWaitTime > 0) { "Wait time need to be greater than 0" }
 
 		val handlerThread = _handlerThread ?: run {
