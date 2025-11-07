@@ -35,8 +35,10 @@ graph TB
     :data:player["player"]
     :data:bookmarks["bookmarks"]
     :data:editor["editor"]
+    :data:visualizer["visualizer"]
     :data:recorder["recorder"]
     :data:location["location"]
+    :data:visualizer["visualizer"]
     :data:use_case["use_case"]
     :data:categories["categories"]
     :data:database["database"]
@@ -122,6 +124,7 @@ graph TB
   :feature:player-shared --> :core:utils
   :feature:player-shared --> :data:player
   :feature:player-shared --> :data:editor
+  :feature:player-shared --> :data:visualizer
   :feature:player-shared --> :data:recordings
   :feature:player-shared --> :data:interactions
   :feature:player-shared --> :data:use_case
@@ -132,6 +135,8 @@ graph TB
   :data:recorder --> :data:datastore
   :data:recorder --> :data:recordings
   :data:recorder --> :data:bookmarks
+  :data:visualizer --> :testing:runtime
+  :data:visualizer --> :data:recordings
   :data:use_case --> :testing:runtime
   :data:use_case --> :core:utils
   :data:use_case --> :data:interactions
@@ -208,6 +213,7 @@ class :feature:player android-library
 class :data:bookmarks android-library
 class :data:interactions android-library
 class :feature:player-shared android-library
+class :data:visualizer android-library
 class :feature:onboarding android-library
 class :feature:categories android-library
 class :feature:editor android-library

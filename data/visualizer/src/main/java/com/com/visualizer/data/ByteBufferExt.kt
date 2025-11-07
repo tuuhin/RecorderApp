@@ -1,4 +1,4 @@
-package com.eva.player.data.reader
+package com.com.visualizer.data
 
 import java.nio.ByteBuffer
 

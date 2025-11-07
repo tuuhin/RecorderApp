@@ -1,11 +1,11 @@
-package com.eva.player.data.reader
+package com.com.visualizer.data
 
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-fun FloatArray.lowPassFilter(sampleRate: Int, cutoffFrequency: Float): FloatArray {
+internal fun FloatArray.lowPassFilter(sampleRate: Int, cutoffFrequency: Float): FloatArray {
 	val cutOff = cutoffFrequency / (sampleRate / 2f)
 	val filterLength = 101
 	val impulseResponse = FloatArray(filterLength)
@@ -71,7 +71,7 @@ fun FloatArray.compressFloatArray(m: Int): FloatArray {
 }
 
 
-fun FloatArray.normalize(): FloatArray {
+internal fun FloatArray.normalize(): FloatArray {
 
 	val maxValue = maxOrNull() ?: .0f
 	val minValue = minOrNull() ?: .0f
@@ -87,7 +87,7 @@ fun FloatArray.normalize(): FloatArray {
 }
 
 
-fun FloatArray.smoothen(smoothness: Float = .7f): FloatArray {
+internal fun FloatArray.smoothen(smoothness: Float = .7f): FloatArray {
 	if (isEmpty() || smoothness == 0f) return this
 	val original = copyOf()
 	for (i in 1..<lastIndex) {

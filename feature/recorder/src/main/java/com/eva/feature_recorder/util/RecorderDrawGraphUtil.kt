@@ -64,22 +64,7 @@ internal fun DrawScope.drawRecorderTimeline(
 	timelineInMillis.forEachIndexed { idx, millis ->
 		val xAxis = spikesWidth * idx.toFloat()
 		if (millis % 2_000 == 0L || idx == 0) {
-			val readableTime = buildString {
-				val seconds = (millis / 1_000) % 1_000
-				val minutes = (seconds / 60) % 60
-				val hours = (minutes % 60) % 60
-				if (hours > 0) {
-					append("$hours".padStart(2, '0'))
-					append(":")
-				}
-				if (minutes >= 0) {
-					append("$minutes".padStart(2, '0'))
-					append(":")
-				}
-				if (seconds >= 0) {
-					append("$seconds".padStart(2, '0'))
-				}
-			}
+			val readableTime = toReadableDuration(millis)
 
 			if (readableTime.isNotBlank()) {
 				val layoutResult = textMeasurer.measure(readableTime, style = textStyle)
@@ -150,5 +135,24 @@ internal fun DrawScope.drawRecorderTimeline(
 				}
 			}
 		}
+	}
+}
+
+
+private fun toReadableDuration(timeInMillis: Long) = buildString {
+	val totalSeconds = timeInMillis / 1_000
+	val hours = totalSeconds / 3_600
+	val minutes = (totalSeconds % 3_600) / 60
+	val remainingSeconds = totalSeconds % 60
+	if (hours > 0) {
+		append("$hours".padStart(2, '0'))
+		append(":")
+	}
+	if (minutes >= 0) {
+		append("$minutes".padStart(2, '0'))
+		append(":")
+	}
+	if (remainingSeconds >= 0) {
+		append("$remainingSeconds".padStart(2, '0'))
 	}
 }
