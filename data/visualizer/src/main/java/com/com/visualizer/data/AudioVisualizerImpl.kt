@@ -6,6 +6,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import com.com.visualizer.domain.AudioVisualizer
 import com.com.visualizer.domain.ThreadController
+import com.com.visualizer.domain.VisualizerState
 import com.com.visualizer.domain.exception.DecoderExistsException
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.Dispatchers
@@ -30,10 +31,10 @@ internal class AudioVisualizerImpl(
 	private var _decoder: MediaCodecPCMDataDecoder? = null
 	private val _lock = Mutex()
 
-	private val _isReady = MutableStateFlow(false)
+	private val _isReady = MutableStateFlow(VisualizerState.NOT_STARTED)
 	private val _visualization = MutableStateFlow(floatArrayOf())
 
-	override val isVisualReady: StateFlow<Boolean>
+	override val visualizerState: StateFlow<VisualizerState>
 		get() = _isReady
 
 	override val normalizedVisualization: Flow<FloatArray>
@@ -86,7 +87,7 @@ internal class AudioVisualizerImpl(
 	}
 
 	private fun updateVisuals(array: FloatArray) {
-		_isReady.update { true }
+		_isReady.update { VisualizerState.RUNNING }
 		_visualization.update { it + array }
 	}
 
@@ -99,18 +100,14 @@ internal class AudioVisualizerImpl(
 				_decoder = null
 				_lock.unlock()
 			}
-		} else {
-			Log.d(TAG, "CANNOT ACQUIRE LOCK")
 		}
+		_isReady.update { VisualizerState.FINISHED }
 	}
 
 	override fun cleanUp() {
-
 		// reset values
-		_isReady.update { false }
 		_visualization.update { floatArrayOf() }
-
-		// cleanup
+		// release the objects
 		releaseObjects()
 	}
 

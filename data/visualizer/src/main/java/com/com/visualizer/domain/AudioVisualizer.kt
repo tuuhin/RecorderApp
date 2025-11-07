@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface AudioVisualizer {
 
-	val isVisualReady: StateFlow<Boolean>
+	val visualizerState: StateFlow<VisualizerState>
 
 	val normalizedVisualization: Flow<FloatArray>
 
