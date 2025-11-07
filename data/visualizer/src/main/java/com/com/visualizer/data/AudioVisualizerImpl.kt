@@ -1,14 +1,15 @@
-package com.eva.player.data.reader
+package com.com.visualizer.data
 
 import android.content.Context
 import android.media.MediaExtractor
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
-import com.eva.player.domain.AudioVisualizer
-import com.eva.player.domain.exceptions.DecoderExistsException
-import com.eva.player.domain.exceptions.ExtractorNoTrackFoundException
-import com.eva.player.domain.exceptions.InvalidMimeTypeException
+import com.com.visualizer.domain.AudioVisualizer
+import com.com.visualizer.domain.ThreadController
+import com.com.visualizer.domain.exception.DecoderExistsException
+import com.com.visualizer.domain.exception.ExtractorNoTrackFoundException
+import com.com.visualizer.domain.exception.InvalidMimeTypeException
 import com.eva.recordings.domain.models.AudioFileModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -24,12 +25,13 @@ import kotlinx.coroutines.withContext
 
 private const val TAG = "PLAIN_VISUALIZER"
 
-internal class AudioVisualizerImpl(private val context: Context) : AudioVisualizer {
+internal class AudioVisualizerImpl(
+	private val context: Context,
+	private val threadHandler: ThreadController
+) : AudioVisualizer {
 
 	@Volatile
 	private var _extractor: MediaExtractor? = null
-
-	private val _threadHandler by lazy { ThreadLifecycleHandler("ComputeThread") }
 
 	private val _isReady = MutableStateFlow(false)
 	override val isVisualReady: StateFlow<Boolean>
@@ -58,15 +60,19 @@ internal class AudioVisualizerImpl(private val context: Context) : AudioVisualiz
 		fileUri: String,
 		lifecycleOwner: LifecycleOwner,
 		timePerPointInMs: Int
-	): Result<Unit> = _lock.withLock {
+	): Result<Unit> {
 
 		if (_decoder != null) {
 			Log.d(TAG, "CLEAN DECODER TO PREPARE IT AGAIN")
 			return Result.failure(DecoderExistsException())
 		}
 
-		withContext(Dispatchers.IO) {
+		val handler = threadHandler.bindToLifecycle(lifecycleOwner)
+
+		return withContext(Dispatchers.IO) {
 			try {
+				// clear an extractor if present
+				_extractor?.release()
 				_extractor = MediaExtractor().apply {
 					setDataSource(context, fileUri.toUri(), null)
 				}
@@ -81,20 +87,17 @@ internal class AudioVisualizerImpl(private val context: Context) : AudioVisualiz
 
 				_extractor?.selectTrack(0)
 
-				_decoder = MediaCodecPCMDataDecoder(
-					extractor = _extractor!!,
-					totalTime = format.duration,
-					seekDurationMillis = timePerPointInMs,
-				).apply {
-					setOnBufferDecode { array ->
-						_isReady.update { true }
-						_visualization.update { it + array }
-					}
+				_lock.withLock {
+					_decoder = MediaCodecPCMDataDecoder(
+						handler = handler,
+						extractor = _extractor!!,
+						totalTime = format.duration,
+						seekDurationMillis = timePerPointInMs,
+					)
 				}
-
-				val handler = _threadHandler.bindToLifecycle(lifecycleOwner)
+				_decoder?.setOnBufferDecode(::updateVisuals)
 				_decoder?.setOnComplete(::releaseObjects)
-				_decoder?.initiateCodec(format, mimeType, handler)
+				_decoder?.initiateCodec(format, mimeType)
 
 				Result.success(Unit)
 			} catch (e: Exception) {
@@ -104,16 +107,29 @@ internal class AudioVisualizerImpl(private val context: Context) : AudioVisualiz
 		}
 	}
 
-	private fun releaseObjects() {
-		Log.d(TAG, "CLEARING UP OBJECTS")
-		_decoder?.cleanUp()
-		_decoder = null
+	private fun updateVisuals(array: FloatArray) {
+		_isReady.update { true }
+		_visualization.update { it + array }
+	}
 
-		_extractor?.release()
-		_extractor = null
+	private fun releaseObjects() {
+		if (_lock.tryLock()) {
+			try {
+				Log.d(TAG, "CLEARING UP OBJECTS")
+				_decoder?.cleanUp()
+				_extractor?.release()
+			} finally {
+				_extractor = null
+				_decoder = null
+				_lock.unlock()
+			}
+		} else {
+			Log.d(TAG, "CANNOT ACQUIRE LOCK")
+		}
 	}
 
 	override fun cleanUp() {
+
 		// reset values
 		_isReady.update { false }
 		_visualization.update { floatArrayOf() }

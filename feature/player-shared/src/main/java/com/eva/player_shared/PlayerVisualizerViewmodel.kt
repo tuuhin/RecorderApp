@@ -3,10 +3,10 @@ package com.eva.player_shared
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.com.visualizer.data.compressFloatArray
+import com.com.visualizer.domain.AudioVisualizer
+import com.com.visualizer.domain.exception.DecoderExistsException
 import com.eva.editor.domain.AudioConfigToActionList
-import com.eva.player.data.reader.compressFloatArray
-import com.eva.player.domain.AudioVisualizer
-import com.eva.player.domain.exceptions.DecoderExistsException
 import com.eva.player_shared.util.CoroutineLifecycleOwner
 import com.eva.player_shared.util.updateArrayViaConfigs
 import com.eva.recordings.domain.provider.PlayerFileProvider
@@ -102,7 +102,6 @@ class PlayerVisualizerViewmodel @Inject constructor(
 
 	override fun onCleared() {
 		visualizer.cleanUp()
-		super.onCleared()
 	}
 }
 

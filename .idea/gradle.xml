@@ -38,6 +38,7 @@
             <option value="$PROJECT_DIR$/data/recorder" />
             <option value="$PROJECT_DIR$/data/recordings" />
             <option value="$PROJECT_DIR$/data/use_case" />
+            <option value="$PROJECT_DIR$/data/visualizer" />
             <option value="$PROJECT_DIR$/data/worker" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/categories" />

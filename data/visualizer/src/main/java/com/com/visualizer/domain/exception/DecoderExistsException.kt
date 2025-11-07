@@ -1,3 +1,3 @@
-package com.eva.player.domain.exceptions
+package com.com.visualizer.domain.exception
 
 class DecoderExistsException : Exception("Decoder is holding resources, clean it to run again")

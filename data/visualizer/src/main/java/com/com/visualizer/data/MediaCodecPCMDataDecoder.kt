@@ -1,9 +1,10 @@
-package com.eva.player.data.reader
+package com.com.visualizer.data
 
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.plusAssign
 import kotlin.math.sqrt
 import kotlin.time.Duration
+import kotlin.time.measureTime
 
 private const val CODEC_TAG = "CODEC_CALLBACK"
 private const val PROCESSING_TAG = "CODEC_PROCESSING"
@@ -35,6 +37,7 @@ internal class MediaCodecPCMDataDecoder(
 	private val seekDurationMillis: Int,
 	private val totalTime: Duration,
 	private val extractor: MediaExtractor,
+	private val handler: Handler? = null,
 ) : MediaCodec.Callback() {
 
 	@Volatile
@@ -61,7 +64,7 @@ internal class MediaCodecPCMDataDecoder(
 	override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
 		// clean up is called thus no more processing
 		if (_isCleaningUp.load()) {
-			Log.i(CODEC_TAG, "IGNORING READING INPUT CALLBACK")
+			Log.i(CODEC_TAG, "IGNORING READING INPUT CALLBACK ")
 			return
 		}
 		try {
@@ -246,7 +249,7 @@ internal class MediaCodecPCMDataDecoder(
 	}
 
 	@Synchronized
-	fun initiateCodec(format: MediaFormat, mimeType: String, handler: Handler) {
+	fun initiateCodec(format: MediaFormat, mimeType: String) {
 		_isCleaningUp.store(false)
 		_isBatchProcessing.store(false)
 		_currentTimeInMs.store(0)
@@ -256,7 +259,8 @@ internal class MediaCodecPCMDataDecoder(
 			setCallback(this@MediaCodecPCMDataDecoder, handler)
 			configure(format, null, null, 0)
 		}
-		Log.i(CODEC_TAG, "MEDIA CODEC CREATED IN THREAD:${handler.looper.thread.name}")
+		Log.i(CODEC_TAG, "MEDIA CODEC WILL RUN IN THREAD:${handler?.looper?.thread}")
+		Log.d(CODEC_TAG, "MEDIA CODEC READY :${_mediaCodec?.name}")
 		_mediaCodec?.start()
 		_codecState = MediaCodecState.EXEC
 		Log.i(CODEC_TAG, "MEDIA CODEC STARTED")
@@ -272,17 +276,24 @@ internal class MediaCodecPCMDataDecoder(
 		Log.d(PROCESSING_TAG, "CANCELLING OPERATIONS SCOPE")
 		_scope.cancel()
 
-		val mediaCodec = _mediaCodec ?: return
+		if (handler == null || handler.looper == Looper.getMainLooper()) {
+			codecClean()
+		} else {
+			val isPosted = handler.post { codecClean() }
+			Log.d(CODEC_TAG, "CLEAN UP POSTED! :$isPosted")
+		}
 
+	}
+
+	private fun codecClean() {
 		try {
+			Log.i(CODEC_TAG, "CLEANING UP IN :${Thread.currentThread()}")
 			_isCleaningUp.compareAndSet(expectedValue = false, newValue = true)
 			if (_codecState == MediaCodecState.EXEC) {
 				// flush all the buffers
-				mediaCodec.flush()
+				_mediaCodec?.flush()
 				// codec is stopped then switched to stopped state
-				mediaCodec.stop()
-				Thread.sleep(10)
-				Log.i(CODEC_TAG, "CODEC STOPPED")
+				_mediaCodec?.stop()
 				_codecState = MediaCodecState.STOPPED
 			}
 		} catch (e: Exception) {
@@ -291,16 +302,21 @@ internal class MediaCodecPCMDataDecoder(
 			_isCleaningUp.compareAndSet(expectedValue = true, newValue = false)
 		}
 
-		// release the codec
 		try {
 			if (_codecState == MediaCodecState.STOPPED) {
-				Log.i(CODEC_TAG, "CODEC CALLBACK CLEANED")
-				mediaCodec.setCallback(null)
+				// clear the codec
+				val clearDuration = measureTime { _mediaCodec?.setCallback(null) }
+				// Give it time to process
+				Log.i(CODEC_TAG, "CALLBACK CLEAR POSTED TO HANDLER $clearDuration")
 			}
-			mediaCodec.release()
-			Log.i(CODEC_TAG, "MEDIA CODEC RELEASED")
 		} catch (e: Exception) {
-			Log.e(CODEC_TAG, "UNABLE TO RELEASE MEDIA CODEC", e)
+			Log.e(CODEC_TAG, "FAILED TO CLEAR CALLBACK", e)
+		}
+
+		try {
+			// release the codec
+			_mediaCodec?.release()
+			Log.i(CODEC_TAG, "MEDIA CODEC RELEASED")
 		} finally {
 			_codecState = MediaCodecState.RELEASED
 			_mediaCodec = null

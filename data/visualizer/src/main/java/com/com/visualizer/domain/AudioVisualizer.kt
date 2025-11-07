@@ -1,4 +1,4 @@
-package com.eva.player.domain
+package com.com.visualizer.domain
 
 import androidx.lifecycle.LifecycleOwner
 import com.eva.recordings.domain.models.AudioFileModel
