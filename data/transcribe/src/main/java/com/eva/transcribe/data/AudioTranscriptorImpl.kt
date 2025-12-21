@@ -1,0 +1,100 @@
+package com.eva.transcribe.data
+
+import android.util.Log
+import com.eva.transcribe.domain.AudioTranscriptor
+import com.eva.transcribe.domain.LanguageModel
+import com.eva.transcribe.domain.ModelFileProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import org.vosk.LibVosk
+import org.vosk.LogLevel
+import org.vosk.Model
+import org.vosk.Recognizer
+import java.io.IOException
+import kotlin.coroutines.cancellation.CancellationException
+
+private const val TAG = "AUDIO_TRANSCRIPTOR"
+private typealias JsonString = String
+
+internal class AudioTranscriptorImpl(
+	private val pathProvider: ModelFileProvider
+) : AudioTranscriptor {
+
+	private var _model: Model? = null
+	private var _recognizer: Recognizer? = null
+
+	private val _recognisedText = Channel<JsonString>(10, BufferOverflow.DROP_OLDEST)
+
+	override val recognizedText: Flow<String>
+		get() = _recognisedText.receiveAsFlow().mapNotNull { json ->
+			val result = parseResult(json) ?: return@mapNotNull null
+			when {
+				result.isBlank() -> null
+				!result.contains(".") -> result
+				else -> result.split(".").lastOrNull()
+			}
+		}
+
+	init {
+		LibVosk.setLogLevel(LogLevel.INFO)
+	}
+
+	override suspend fun setUp(language: LanguageModel) {
+		try {
+			if (_model != null && _recognizer != null) {
+				// if this is already present only reset the recognizer
+				_recognizer?.reset()
+				Log.i(TAG, "RECOGNIZER ALREADY PRESENT RESTING")
+				return
+			}
+			val file = pathProvider.provideModelFile(language) ?: return
+			_model = Model(file.absolutePath)
+			_recognizer = Recognizer(_model!!, 16_000f)
+			Log.i(TAG, "RECOGNIZER LOADED AND READY TO ROCK!")
+		} catch (e: IOException) {
+			e.printStackTrace()
+		}
+	}
+
+	override suspend fun recognizeAudio(buffer: ShortArray, length: Int) {
+		val recognizer = _recognizer ?: run {
+			Log.d(TAG, "UNABLE TO SET UP RECOGNIZED")
+			return
+		}
+		withContext(Dispatchers.Default) {
+			try {
+				val success = recognizer.acceptWaveForm(buffer, length)
+				val json = if (success) recognizer.result else recognizer.partialResult
+				_recognisedText.trySend(json)
+			} catch (_: CancellationException) {
+				Log.d(TAG, "COROUTINE IS CANCELLED")
+			}
+		}
+	}
+
+	fun parseResult(json: String): String? {
+		return try {
+			val jsonObj = JSONObject(json)
+			if (jsonObj.has("text")) jsonObj.getString("text")
+			else if (jsonObj.has("partial")) jsonObj.getString("partial")
+			else null
+		} catch (e: Exception) {
+			e.printStackTrace()
+			null
+		}
+	}
+
+	override fun cleanUp() {
+		_recognizer?.close()
+		_model?.close()
+		_recognizer = null
+		_model = null
+		Log.i(TAG, "CLOSING THE RECOGNIZER")
+	}
+}
