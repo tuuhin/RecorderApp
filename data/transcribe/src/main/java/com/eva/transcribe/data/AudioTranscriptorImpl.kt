@@ -1,6 +1,7 @@
 package com.eva.transcribe.data
 
 import android.util.Log
+import com.eva.transcribe.BuildConfig
 import com.eva.transcribe.domain.AudioTranscriptor
 import com.eva.transcribe.domain.LanguageModel
 import com.eva.transcribe.domain.ModelFileProvider
@@ -8,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
@@ -32,20 +34,16 @@ internal class AudioTranscriptorImpl(
 	private val _recognisedText = Channel<JsonString>(10, BufferOverflow.DROP_OLDEST)
 
 	override val recognizedText: Flow<String>
-		get() = _recognisedText.receiveAsFlow().mapNotNull { json ->
-			val result = parseResult(json) ?: return@mapNotNull null
-			when {
-				result.isBlank() -> null
-				!result.contains(".") -> result
-				else -> result.split(".").lastOrNull()
-			}
-		}
+		get() = _recognisedText.receiveAsFlow()
+			.mapNotNull { json -> parseResult(json) ?: return@mapNotNull null }
+			.distinctUntilChanged()
 
 	init {
-		LibVosk.setLogLevel(LogLevel.INFO)
+		val level = if (BuildConfig.DEBUG) LogLevel.DEBUG else LogLevel.INFO
+		LibVosk.setLogLevel(level)
 	}
 
-	override suspend fun setUp(language: LanguageModel) {
+	override suspend fun setUp(language: LanguageModel, sampleRate: Float) {
 		try {
 			if (_model != null && _recognizer != null) {
 				// if this is already present only reset the recognizer
@@ -55,7 +53,7 @@ internal class AudioTranscriptorImpl(
 			}
 			val file = pathProvider.provideModelFile(language) ?: return
 			_model = Model(file.absolutePath)
-			_recognizer = Recognizer(_model!!, 16_000f)
+			_recognizer = Recognizer(_model!!, sampleRate)
 			Log.i(TAG, "RECOGNIZER LOADED AND READY TO ROCK!")
 		} catch (e: IOException) {
 			e.printStackTrace()
@@ -91,9 +89,11 @@ internal class AudioTranscriptorImpl(
 	}
 
 	override fun cleanUp() {
+		// close the recognizer
 		_recognizer?.close()
-		_model?.close()
 		_recognizer = null
+		// close the model
+		_model?.close()
 		_model = null
 		Log.i(TAG, "CLOSING THE RECOGNIZER")
 	}

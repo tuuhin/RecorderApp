@@ -20,4 +20,5 @@ dependencies {
 	implementation(project(":data:datastore"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:bookmarks"))
+	implementation(project(":data:transcribe"))
 }

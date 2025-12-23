@@ -11,6 +11,10 @@ android {
 			abiFilters.addAll(setOf("armeabi-v7a", "arm64-v8a"))
 		}
 	}
+
+	buildFeatures {
+		buildConfig = true
+	}
 }
 
 dependencies {

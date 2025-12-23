@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalTime
 
-typealias MicrophoneDataPoint = Pair<Long, Float>
-
 interface VoiceRecorder {
 
 	/**
@@ -21,6 +19,11 @@ interface VoiceRecorder {
 	 * A series of data-points for the current recording.
 	 */
 	val dataPoints: Flow<List<RecordedPoint>>
+
+	/**
+	 * Transcription on what is being recorded may not be available in certain cases
+	 */
+	val transcription: Flow<String>
 
 	/**
 	 * A flow determining how long the recording has been started

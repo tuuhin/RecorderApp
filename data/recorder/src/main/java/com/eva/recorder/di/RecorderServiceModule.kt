@@ -7,6 +7,7 @@ import com.eva.recorder.data.VoiceRecorderImpl
 import com.eva.recorder.data.service.NotificationHelper
 import com.eva.recorder.domain.VoiceRecorder
 import com.eva.recordings.domain.provider.RecorderFileProvider
+import com.eva.transcribe.domain.AudioTranscriptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,10 +26,12 @@ internal object RecorderServiceModule {
 		fileProvider: RecorderFileProvider,
 		settings: RecorderAudioSettingsRepo,
 		locationProvider: LocationProvider,
+		transcriptor: AudioTranscriptor,
 	): VoiceRecorder = VoiceRecorderImpl(
 		context = context,
 		fileProvider = fileProvider,
 		settings = settings,
+		transcriptor = transcriptor,
 		locationProvider = locationProvider
 	)
 

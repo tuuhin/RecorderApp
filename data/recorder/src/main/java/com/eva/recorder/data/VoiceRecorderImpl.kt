@@ -1,12 +1,9 @@
 package com.eva.recorder.data
 
-import android.Manifest
 import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
-import androidx.core.content.ContextCompat
-import androidx.core.content.PermissionChecker
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationProvider
 import com.eva.recorder.data.reader.AudioRecordAmplitudeReader
@@ -16,6 +13,7 @@ import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.domain.stopwatch.RecorderStopWatch
 import com.eva.recordings.domain.provider.RecorderFileProvider
+import com.eva.transcribe.domain.AudioTranscriptor
 import com.eva.utils.RecorderConstants
 import com.eva.utils.tryWithLock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,6 +23,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -42,6 +41,7 @@ internal class VoiceRecorderImpl(
 	private val fileProvider: RecorderFileProvider,
 	private val settings: RecorderAudioSettingsRepo,
 	private val locationProvider: LocationProvider,
+	private val transcriptor: AudioTranscriptor,
 ) : VoiceRecorder {
 
 	private val sampleTime = RecorderConstants.AMPS_READ_DELAY_RATE
@@ -51,8 +51,8 @@ internal class VoiceRecorderImpl(
 	private val _pcmReader by lazy {
 		AudioRecordAmplitudeReader(
 			context = context,
-			stopWatch = _stopWatch,
-			delayRate = sampleTime
+			transcriptor = transcriptor,
+			delayRate = sampleTime,
 		)
 	}
 
@@ -64,10 +64,6 @@ internal class VoiceRecorderImpl(
 	// locks ensures an operation complete before another operation can start
 	private val _lock = Mutex(false)
 
-	private val _hasRecordPermission: Boolean
-		get() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
-				PermissionChecker.PERMISSION_GRANTED
-
 	override val recorderState: StateFlow<RecorderState>
 		get() = _stopWatch.recorderState
 
@@ -75,8 +71,17 @@ internal class VoiceRecorderImpl(
 		get() = _stopWatch.elapsedTime
 
 	override val dataPoints: Flow<List<RecordedPoint>>
-		get() = _stopWatch.recorderState
-			.flatMapLatest(_pcmReader::readAmplitudeBuffered)
+		get() = combine(
+			_stopWatch.recorderState,
+			_stopWatch.elapsedTime
+		) { state, time -> state to time.toMillisecondOfDay() }
+			.flatMapLatest { (state, time) ->
+				_pcmReader.readAmplitudeBuffered(state, time.toLong())
+			}
+
+
+	override val transcription: Flow<String>
+		get() = _pcmReader.transcriptionResult
 
 	private val errorListener = MediaRecorder.OnErrorListener { _, what, extra ->
 		if (what == MediaRecorder.MEDIA_ERROR_SERVER_DIED) releaseResources()
@@ -86,7 +91,7 @@ internal class VoiceRecorderImpl(
 	@Suppress("DEPRECATION")
 	private fun createRecorder(): Boolean {
 		// no perms granted
-		if (!_hasRecordPermission) {
+		if (!context.hasAudioRecordPermission) {
 			Log.i(TAG, "NO RECORD PERMISSION FOUND")
 			return false
 		}
@@ -124,10 +129,7 @@ internal class VoiceRecorderImpl(
 		// recorder should be ready by now
 		val recorder = _recorder ?: return@coroutineScope
 		// initiate the amplitude reader
-		_pcmReader.initiateRecorder(
-			sampleRate = quality.sampleRate,
-			isStereo = audioSettings.enableStereo
-		)
+		_pcmReader.initiateRecorder()
 
 		// ensures the file is being created in a different coroutine
 		val fileDeferred = async {
@@ -229,9 +231,10 @@ internal class VoiceRecorderImpl(
 				Log.d(TAG, "CURRENT URI IS ALREADY SET")
 				return@tryWithLock
 			}
-			_stopWatch.prepare()
 			Log.i(TAG, "PREPARING FILE FOR RECORDING")
 			initiateRecorderParams()
+			// now start the stopwatch
+			_stopWatch.prepare()
 			// prepare the recorder
 			_recorder?.prepare()
 			Log.d(TAG, "RECORDER PREPARED")
