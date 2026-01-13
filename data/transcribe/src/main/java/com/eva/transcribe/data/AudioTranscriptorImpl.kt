@@ -5,15 +5,18 @@ import com.eva.transcribe.BuildConfig
 import com.eva.transcribe.domain.AudioTranscriptor
 import com.eva.transcribe.domain.LanguageModel
 import com.eva.transcribe.domain.ModelFileProvider
+import com.eva.transcribe.domain.TranscriptionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 import org.vosk.LibVosk
 import org.vosk.LogLevel
 import org.vosk.Model
@@ -31,11 +34,19 @@ internal class AudioTranscriptorImpl(
 	private var _model: Model? = null
 	private var _recognizer: Recognizer? = null
 
+	private val _json by lazy {
+		Json {
+			serializersModule = SerializersModule {
+				serializer<TranscriptionResult>()
+			}
+		}
+	}
+
 	private val _recognisedText = Channel<JsonString>(10, BufferOverflow.DROP_OLDEST)
 
-	override val recognizedText: Flow<String>
+	override val recognizedText: Flow<TranscriptionResult>
 		get() = _recognisedText.receiveAsFlow()
-			.mapNotNull { json -> parseResult(json) ?: return@mapNotNull null }
+			.map { jsonString -> _json.decodeFromString<TranscriptionResult>(jsonString) }
 			.distinctUntilChanged()
 
 	init {
@@ -52,11 +63,11 @@ internal class AudioTranscriptorImpl(
 				return
 			}
 			val file = pathProvider.provideModelFile(language) ?: return
-			_model = Model(file.absolutePath)
-			_recognizer = Recognizer(_model!!, sampleRate)
+			val model = Model(file.absolutePath).also { _model = it }
+			_recognizer = Recognizer(model, sampleRate)
 			Log.i(TAG, "RECOGNIZER LOADED AND READY TO ROCK!")
 		} catch (e: IOException) {
-			e.printStackTrace()
+			Log.d(TAG, "SOME ERROR", e)
 		}
 	}
 
@@ -76,25 +87,14 @@ internal class AudioTranscriptorImpl(
 		}
 	}
 
-	fun parseResult(json: String): String? {
-		return try {
-			val jsonObj = JSONObject(json)
-			if (jsonObj.has("text")) jsonObj.getString("text")
-			else if (jsonObj.has("partial")) jsonObj.getString("partial")
-			else null
-		} catch (e: Exception) {
-			e.printStackTrace()
-			null
-		}
-	}
-
 	override fun cleanUp() {
 		// close the recognizer
 		_recognizer?.close()
 		_recognizer = null
+		Log.i(TAG, "CLOSING THE RECOGNIZER")
 		// close the model
 		_model?.close()
 		_model = null
-		Log.i(TAG, "CLOSING THE RECOGNIZER")
+		Log.i(TAG, "CLOSING THE MODEL")
 	}
 }

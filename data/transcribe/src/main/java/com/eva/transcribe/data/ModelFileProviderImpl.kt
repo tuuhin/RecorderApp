@@ -19,14 +19,12 @@ internal class ModelFileProviderImpl(
 	private val context: Context
 ) : ModelFileProvider {
 
-	private val languageToFileMap = mapOf(LanguageModel.EN_US to "vosk-model-small-en-us-0.15")
+	private val modelFolder: File
+		get() = File(context.filesDir, "ml-models").apply { mkdirs() }
 
-	private val modelFolder by lazy {
-		File(context.filesDir, "ml-models").apply { mkdirs() }
-	}
+	override suspend fun provideModelFile(language: LanguageModel): File {
 
-	override suspend fun provideModelFile(language: LanguageModel): File? {
-		val fileName = languageToFileMap[language] ?: return null
+		val fileName = language.modelAssets
 		val probableFile = File(modelFolder, fileName)
 		// if file exists and content is not null
 		if (probableFile.exists() && probableFile.listFiles()?.isNotEmpty() == true) {
@@ -40,6 +38,20 @@ internal class ModelFileProviderImpl(
 		}
 		Log.d(TAG, "DONE COPYING THE CONTENT")
 		return probableFile
+	}
+
+	override suspend fun deleteModelInfo(languageModel: LanguageModel) {
+		withContext(Dispatchers.IO) {
+			val fileName = languageModel.modelAssets
+			val probableFile = File(modelFolder, fileName)
+			if (probableFile.exists() && probableFile.listFiles()?.isNotEmpty() == true) {
+				Log.i(TAG, "FILE ALREADY PRESENT")
+				return@withContext
+			}
+			// delete the file else
+			probableFile.deleteRecursively()
+			Log.i(TAG, "MODEL FILE ALREADY PRESENT")
+		}
 	}
 
 	private fun collectAssetFiles(
@@ -96,4 +108,9 @@ internal class ModelFileProviderImpl(
 			}
 		}
 	}
+
+	private val LanguageModel.modelAssets: String
+		get() = when (this) {
+			LanguageModel.EN_US -> "vosk-model-small-en-us-0.15"
+		}
 }

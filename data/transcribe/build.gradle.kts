@@ -1,6 +1,7 @@
 plugins {
 	alias(libs.plugins.recorderapp.android.library)
 	alias(libs.plugins.recorderapp.hilt)
+	alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -18,6 +19,10 @@ android {
 }
 
 dependencies {
+	// vosk-model
 	implementation(libs.vosk.model.en)
 	implementation(libs.vosk.android)
+
+	// serialization
+	implementation(libs.kotlinx.serialization.json)
 }

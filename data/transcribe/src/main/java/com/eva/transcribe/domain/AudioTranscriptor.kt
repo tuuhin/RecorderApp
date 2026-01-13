@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface AudioTranscriptor {
 
-	val recognizedText: Flow<String>
+	val recognizedText: Flow<TranscriptionResult>
 
 	suspend fun setUp(language: LanguageModel = LanguageModel.EN_US, sampleRate: Float = 16_000f)
 
