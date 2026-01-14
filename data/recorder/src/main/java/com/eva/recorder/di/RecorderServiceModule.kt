@@ -1,13 +1,11 @@
 package com.eva.recorder.di
 
 import android.content.Context
-import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
-import com.eva.location.domain.repository.LocationProvider
-import com.eva.recorder.data.VoiceRecorderImpl
+import com.eva.recorder.data.VoiceRecorderManager
 import com.eva.recorder.data.service.NotificationHelper
-import com.eva.recorder.domain.VoiceRecorder
-import com.eva.recordings.domain.provider.RecorderFileProvider
-import com.eva.transcribe.domain.AudioTranscriptor
+import com.eva.recorder.domain.recorder.AudioVisualDataProvider
+import com.eva.recorder.domain.recorder.TranscriptionProvider
+import com.eva.recorder.domain.recorder.VoiceRecorder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,19 +19,11 @@ internal object RecorderServiceModule {
 
 	@Provides
 	@ServiceScoped
-	fun providesVoiceRecorder(
-		@ApplicationContext context: Context,
-		fileProvider: RecorderFileProvider,
-		settings: RecorderAudioSettingsRepo,
-		locationProvider: LocationProvider,
-		transcriptor: AudioTranscriptor,
-	): VoiceRecorder = VoiceRecorderImpl(
-		context = context,
-		fileProvider = fileProvider,
-		settings = settings,
-		transcriptor = transcriptor,
-		locationProvider = locationProvider
-	)
+	fun providesVoiceRecorderManager(
+		recorder: VoiceRecorder,
+		visualizer: AudioVisualDataProvider,
+		transcriber: TranscriptionProvider
+	): VoiceRecorderManager = VoiceRecorderManager(recorder, visualizer, transcriber)
 
 	@Provides
 	@ServiceScoped

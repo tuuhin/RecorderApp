@@ -7,8 +7,8 @@ import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.eva.bookmarks.domain.provider.RecordingBookmarksProvider
+import com.eva.recorder.data.VoiceRecorderManager
 import com.eva.recorder.domain.RecorderWidgetInteractor
-import com.eva.recorder.domain.VoiceRecorder
 import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderAction
 import com.eva.recorder.domain.models.RecorderState
@@ -43,7 +43,7 @@ private const val LOGGER_TAG = "VOICE_RECORDER_SERVICE"
 internal class VoiceRecorderService : LifecycleService() {
 
 	@Inject
-	lateinit var voiceRecorder: VoiceRecorder
+	lateinit var voiceRecorder: VoiceRecorderManager
 
 	@Inject
 	lateinit var bluetoothScoUseCase: BluetoothScoUseCase
@@ -77,6 +77,9 @@ internal class VoiceRecorderService : LifecycleService() {
 
 	val recorderState: StateFlow<RecorderState>
 		get() = voiceRecorder.recorderState
+
+	val transcript: Flow<String>
+		get() = voiceRecorder.transcription
 
 	@OptIn(FlowPreview::class)
 	private val notificationTimer: Flow<LocalTime>
@@ -120,6 +123,10 @@ internal class VoiceRecorderService : LifecycleService() {
 			readTimerAndUpdateNotification()
 			// update widget state
 			updateRecorderWidgetState()
+			// initiate transcript
+			lifecycleScope.launch {
+				voiceRecorder.initTranscriptions()
+			}
 			Log.i(LOGGER_TAG, "SERVICE CREATED WITH OBSERVERS")
 		} catch (e: Exception) {
 			e.printStackTrace()
@@ -310,6 +317,8 @@ internal class VoiceRecorderService : LifecycleService() {
 		bluetoothScoUseCase.closeConnectionIfPresent()
 		// resources are cleared
 		voiceRecorder.releaseResources()
+		// release transcript
+		voiceRecorder.transcriptCleanUp()
 		Log.i(LOGGER_TAG, "RECORDER SERVICE DESTROYED")
 		super.onDestroy()
 	}

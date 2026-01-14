@@ -1,7 +1,8 @@
-package com.eva.recorder.data.reader
+package com.eva.recorder.data.recorder
 
 import com.eva.recorder.domain.models.RecordedPoint
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 internal fun Sequence<RecordedPoint>.normalize(max: Int, min: Int): Sequence<RecordedPoint> {
 	val range = (max - min).let { diff -> if (diff <= 0) 1 else diff }
@@ -71,6 +72,11 @@ internal fun Sequence<RecordedPoint>.toProperSequence(eachBlockSize: Int): Seque
 			start += eachBlockSize
 		}
 	}
+}
+
+fun ShortArray.rms(readSize: Int): Float {
+	val squaredAvg = take(readSize).map { it * it }.average().toFloat()
+	return sqrt(squaredAvg)
 }
 
 private fun lerp(v0: Float, v1: Float, t: Float): Float {

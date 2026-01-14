@@ -1,14 +1,10 @@
 package com.eva.transcribe.domain
 
-import kotlinx.coroutines.flow.Flow
-
 interface AudioTranscriptor {
-
-	val recognizedText: Flow<TranscriptionResult>
 
 	suspend fun setUp(language: LanguageModel = LanguageModel.EN_US, sampleRate: Float = 16_000f)
 
-	suspend fun recognizeAudio(buffer: ShortArray, length: Int)
+	suspend fun recognizeAudio(buffer: ShortArray, length: Int): TranscriptionResult?
 
 	fun cleanUp()
 

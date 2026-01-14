@@ -1,8 +1,6 @@
-package com.eva.recorder.domain
+package com.eva.recorder.domain.recorder
 
-import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalTime
 
@@ -15,15 +13,6 @@ interface VoiceRecorder {
 	 */
 	val recorderState: StateFlow<RecorderState>
 
-	/**
-	 * A series of data-points for the current recording.
-	 */
-	val dataPoints: Flow<List<RecordedPoint>>
-
-	/**
-	 * Transcription on what is being recorded may not be available in certain cases
-	 */
-	val transcription: Flow<String>
 
 	/**
 	 * A flow determining how long the recording has been started

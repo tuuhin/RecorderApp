@@ -1,4 +1,4 @@
-package com.eva.recorder.data
+package com.eva.recorder.data.recorder
 
 import android.content.Context
 import android.media.MediaRecorder
@@ -6,25 +6,30 @@ import android.os.Build
 import android.util.Log
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationProvider
-import com.eva.recorder.data.reader.AudioRecordAmplitudeReader
-import com.eva.recorder.domain.VoiceRecorder
+import com.eva.recorder.data.RecordFormats
+import com.eva.recorder.data.hasAudioRecordPermission
 import com.eva.recorder.domain.exceptions.RecorderNotConfiguredException
-import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
+import com.eva.recorder.domain.recorder.AudioByteDataProvider
+import com.eva.recorder.domain.recorder.AudioDataReader
+import com.eva.recorder.domain.recorder.VoiceRecorder
 import com.eva.recorder.domain.stopwatch.RecorderStopWatch
 import com.eva.recordings.domain.provider.RecorderFileProvider
-import com.eva.transcribe.domain.AudioTranscriptor
-import com.eva.utils.RecorderConstants
 import com.eva.utils.tryWithLock
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -38,24 +43,16 @@ private const val TAG = "VOICE_RECORDER"
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VoiceRecorderImpl(
 	private val context: Context,
+	private val stopWatch: RecorderStopWatch,
 	private val fileProvider: RecorderFileProvider,
 	private val settings: RecorderAudioSettingsRepo,
 	private val locationProvider: LocationProvider,
-	private val transcriptor: AudioTranscriptor,
-) : VoiceRecorder {
+	private val pcmReader: AudioDataReader,
+) : VoiceRecorder, AudioByteDataProvider {
 
-	private val sampleTime = RecorderConstants.AMPS_READ_DELAY_RATE
+	private val _scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-	private val _stopWatch = RecorderStopWatch(delayTime = sampleTime)
-
-	private val _pcmReader by lazy {
-		AudioRecordAmplitudeReader(
-			context = context,
-			transcriptor = transcriptor,
-			delayRate = sampleTime,
-		)
-	}
-
+	@Volatile
 	private var _recorder: MediaRecorder? = null
 
 	@Volatile
@@ -65,23 +62,14 @@ internal class VoiceRecorderImpl(
 	private val _lock = Mutex(false)
 
 	override val recorderState: StateFlow<RecorderState>
-		get() = _stopWatch.recorderState
+		get() = stopWatch.recorderState
 
 	override val recorderTimer: StateFlow<LocalTime>
-		get() = _stopWatch.elapsedTime
+		get() = stopWatch.elapsedTime
 
-	override val dataPoints: Flow<List<RecordedPoint>>
-		get() = combine(
-			_stopWatch.recorderState,
-			_stopWatch.elapsedTime
-		) { state, time -> state to time.toMillisecondOfDay() }
-			.flatMapLatest { (state, time) ->
-				_pcmReader.readAmplitudeBuffered(state, time.toLong())
-			}
-
-
-	override val transcription: Flow<String>
-		get() = _pcmReader.transcriptionResult
+	override val stream: Flow<Pair<ShortArray, Int>> = stopWatch.recorderState
+		.flatMapLatest { pcmReader.readRecorderRawBytes(it) }
+		.shareIn(_scope, SharingStarted.Lazily, replay = 0)
 
 	private val errorListener = MediaRecorder.OnErrorListener { _, what, extra ->
 		if (what == MediaRecorder.MEDIA_ERROR_SERVER_DIED) releaseResources()
@@ -122,14 +110,14 @@ internal class VoiceRecorderImpl(
 		}
 
 		val audioSettings = settings.audioSettings()
-		val format = RecordFormats.fromEncoder(audioSettings.encoders)
+		val format = RecordFormats.Companion.fromEncoder(audioSettings.encoders)
 		val quality = audioSettings.quality
 		val channelCount = if (audioSettings.enableStereo) 2 else 1
 
 		// recorder should be ready by now
 		val recorder = _recorder ?: return@coroutineScope
 		// initiate the amplitude reader
-		_pcmReader.initiateRecorder()
+		pcmReader.initiateRecorder()
 
 		// ensures the file is being created in a different coroutine
 		val fileDeferred = async {
@@ -188,7 +176,7 @@ internal class VoiceRecorderImpl(
 		// update the file
 		try {
 			val audioSettings = settings.audioSettings()
-			val format = RecordFormats.fromEncoder(audioSettings.encoders)
+			val format = RecordFormats.Companion.fromEncoder(audioSettings.encoders)
 
 			Log.d(TAG, "RECORDER FILE UPDATED")
 			return fileProvider.transferFileDataToStorage(
@@ -201,7 +189,7 @@ internal class VoiceRecorderImpl(
 			// resets the recorder for  next recording
 			Log.d(TAG, "RESTING THE RECORDER")
 			_recorder?.reset()
-			_pcmReader.releaseRecorder()
+			pcmReader.releaseRecorder()
 		}
 	}
 
@@ -220,7 +208,7 @@ internal class VoiceRecorderImpl(
 			// resets the recorder for  next recording
 			Log.d(TAG, "RESTING THE RECORDER")
 			_recorder?.reset()
-			_pcmReader.releaseRecorder()
+			pcmReader.releaseRecorder()
 		}
 	}
 
@@ -234,13 +222,13 @@ internal class VoiceRecorderImpl(
 			Log.i(TAG, "PREPARING FILE FOR RECORDING")
 			initiateRecorderParams()
 			// now start the stopwatch
-			_stopWatch.prepare()
+			stopWatch.prepare()
 			// prepare the recorder
 			_recorder?.prepare()
 			Log.d(TAG, "RECORDER PREPARED")
 			//start the recorder
-			_stopWatch.startOrResume()
-			_pcmReader.startRecorder()
+			stopWatch.startOrResume()
+			pcmReader.startRecorder()
 			_recorder?.start()
 			Log.d(TAG, "RECORDER STARTED")
 		}
@@ -252,7 +240,7 @@ internal class VoiceRecorderImpl(
 			val file = _recordingFile ?: return Result.failure(RecorderNotConfiguredException())
 			// reset the timer
 			Log.d(TAG, "STOPWATCH STOPPED")
-			_stopWatch.stop()
+			stopWatch.stop()
 			//stop the ongoing recording
 			_recorder?.stop()
 			Log.d(TAG, "RECORDER STOPPED")
@@ -267,7 +255,7 @@ internal class VoiceRecorderImpl(
 			try {
 				//pause recorder
 				Log.d(TAG, "STOPWATCH PAUSED")
-				_stopWatch.pause()
+				stopWatch.pause()
 				//pause recorder
 				_recorder?.pause()
 				Log.d(TAG, "RECORDER PAUSED")
@@ -282,7 +270,7 @@ internal class VoiceRecorderImpl(
 			try {
 				//resume stopwatch
 				Log.d(TAG, "STOPWATCH RESUMED")
-				_stopWatch.startOrResume()
+				stopWatch.startOrResume()
 				//resume recorder
 				_recorder?.resume()
 				Log.d(TAG, "RECORDER RESUMED")
@@ -298,7 +286,7 @@ internal class VoiceRecorderImpl(
 			try {
 				// cancel the timer watch
 				Log.d(TAG, "STOPWATCH STOPPED")
-				_stopWatch.cancel()
+				stopWatch.cancel()
 				//stop the ongoing recording
 				Log.d(TAG, "RECORDER STOPPED")
 				_recorder?.stop()
@@ -323,17 +311,19 @@ internal class VoiceRecorderImpl(
 				}
 			}
 		} finally {
+			// clear the scope
+			_scope.cancel()
 			//set recording file to null
 			_recordingFile = null
 			//set buffer reader to null
-			_pcmReader.releaseRecorder()
+			pcmReader.releaseRecorder()
 			// clear the recorder resources
 			Log.d(TAG, "RELEASE RECORDER")
 			_recorder?.release()
 			_recorder = null
 			// resetting the stopwatch
 			Log.d(TAG, "RESETTING STOPWATCH")
-			_stopWatch.reset()
+			stopWatch.reset()
 		}
 	}
 }

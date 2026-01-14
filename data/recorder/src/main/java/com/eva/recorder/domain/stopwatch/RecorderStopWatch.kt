@@ -26,7 +26,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 
-class RecorderStopWatch(
+internal class RecorderStopWatch(
 	private val delayTime: Duration = 80.milliseconds,
 ) {
 

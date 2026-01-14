@@ -7,12 +7,6 @@ import com.eva.transcribe.domain.LanguageModel
 import com.eva.transcribe.domain.ModelFileProvider
 import com.eva.transcribe.domain.TranscriptionResult
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -25,7 +19,6 @@ import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 
 private const val TAG = "AUDIO_TRANSCRIPTOR"
-private typealias JsonString = String
 
 internal class AudioTranscriptorImpl(
 	private val pathProvider: ModelFileProvider
@@ -41,13 +34,6 @@ internal class AudioTranscriptorImpl(
 			}
 		}
 	}
-
-	private val _recognisedText = Channel<JsonString>(10, BufferOverflow.DROP_OLDEST)
-
-	override val recognizedText: Flow<TranscriptionResult>
-		get() = _recognisedText.receiveAsFlow()
-			.map { jsonString -> _json.decodeFromString<TranscriptionResult>(jsonString) }
-			.distinctUntilChanged()
 
 	init {
 		val level = if (BuildConfig.DEBUG) LogLevel.DEBUG else LogLevel.INFO
@@ -71,18 +57,19 @@ internal class AudioTranscriptorImpl(
 		}
 	}
 
-	override suspend fun recognizeAudio(buffer: ShortArray, length: Int) {
+	override suspend fun recognizeAudio(buffer: ShortArray, length: Int): TranscriptionResult? {
 		val recognizer = _recognizer ?: run {
 			Log.d(TAG, "UNABLE TO SET UP RECOGNIZED")
-			return
+			return null
 		}
-		withContext(Dispatchers.Default) {
+		return withContext(Dispatchers.Default) {
 			try {
 				val success = recognizer.acceptWaveForm(buffer, length)
-				val json = if (success) recognizer.result else recognizer.partialResult
-				_recognisedText.trySend(json)
+				val jsonString = if (success) recognizer.result else recognizer.partialResult
+				_json.decodeFromString<TranscriptionResult>(jsonString)
 			} catch (_: CancellationException) {
 				Log.d(TAG, "COROUTINE IS CANCELLED")
+				return@withContext null
 			}
 		}
 	}
