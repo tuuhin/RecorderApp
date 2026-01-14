@@ -112,5 +112,6 @@ internal class ModelFileProviderImpl(
 	private val LanguageModel.modelAssets: String
 		get() = when (this) {
 			LanguageModel.EN_US -> "vosk-model-small-en-us-0.15"
+			LanguageModel.EN_IN -> "vosk-model-small-en-in-0.4"
 		}
 }
