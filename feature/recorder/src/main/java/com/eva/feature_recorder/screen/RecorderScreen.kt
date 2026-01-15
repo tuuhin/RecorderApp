@@ -29,7 +29,7 @@ import kotlinx.datetime.LocalTime
 internal fun VoiceRecorderScreen(
 	isRecorderReady: Boolean,
 	recorderState: RecorderState,
-	recorderTimer:()-> LocalTime,
+	recorderTimer: () -> LocalTime,
 	deferredRecordingPoints: DeferredRecordedPointList,
 	bookMarksSetDeferred: DeferredDurationList,
 	onRecorderAction: (RecorderAction) -> Unit,
@@ -38,6 +38,7 @@ internal fun VoiceRecorderScreen(
 	onNavigateToSettings: () -> Unit,
 	onNavigateToBin: () -> Unit,
 	modifier: Modifier = Modifier,
+	transcriptions: String? = null,
 	navigation: @Composable () -> Unit = {},
 ) {
 
@@ -84,6 +85,7 @@ internal fun VoiceRecorderScreen(
 				bookMarksDeferred = bookMarksSetDeferred,
 				onRecorderAction = onRecorderAction,
 				isStartRecordingEnabled = isRecorderReady,
+				transcriptions = transcriptions,
 				modifier = Modifier.fillMaxSize()
 			)
 		}

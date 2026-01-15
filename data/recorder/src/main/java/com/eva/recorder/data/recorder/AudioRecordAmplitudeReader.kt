@@ -132,10 +132,14 @@ internal class AudioRecordAmplitudeReader(
 
 			// reset the state based on the state
 			if (!state.canReadAmplitudes) {
+				Log.d(TAG, "INVALID RECORDER STATE :$state")
 				send(shortArrayOf() to -1)
 				return@channelFlow
 			}
-			if (_recorder == null) return@channelFlow
+			if (_recorder == null) {
+				Log.w(TAG, "RECORDER IS NOT READY")
+				return@channelFlow
+			}
 			try {
 				val pcmBuffer = ShortArray(_pcmBufferSize)
 				var shortsRead: Int

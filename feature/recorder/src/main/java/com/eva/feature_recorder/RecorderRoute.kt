@@ -34,6 +34,7 @@ fun NavGraphBuilder.recorderRoute(navController: NavHostController) =
 		val recorderTimer by viewModel.recorderTime.collectAsStateWithLifecycle()
 		val bookMarksSet by viewModel.bookMarksSet.collectAsStateWithLifecycle()
 		val recordingPoints by viewModel.recordingPoints.collectAsStateWithLifecycle()
+		val transcriptions by viewModel.transcriptions.collectAsStateWithLifecycle()
 
 		UiEventsHandler(eventsFlow = viewModel::uiEvent)
 
@@ -43,6 +44,7 @@ fun NavGraphBuilder.recorderRoute(navController: NavHostController) =
 			VoiceRecorderScreen(
 				isRecorderReady = isRecorderReady,
 				recorderState = recorderState,
+				transcriptions = transcriptions,
 				recorderTimer = { recorderTimer },
 				bookMarksSetDeferred = { bookMarksSet },
 				deferredRecordingPoints = { recordingPoints },

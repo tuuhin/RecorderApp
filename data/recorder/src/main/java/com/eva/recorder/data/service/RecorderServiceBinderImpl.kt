@@ -47,6 +47,9 @@ internal class RecorderServiceBinderImpl(private val context: Context) : Recorde
 	override val amplitudes: Flow<List<RecordedPoint>>
 		get() = _serviceInstanceFlow.flatMapLatest { it.amplitudes }
 
+	override val transcriptions: Flow<String>
+		get() = _serviceInstanceFlow.flatMapLatest { it.transcript }
+
 	override val isConnectionReady: StateFlow<Boolean>
 		get() = _isBounded
 

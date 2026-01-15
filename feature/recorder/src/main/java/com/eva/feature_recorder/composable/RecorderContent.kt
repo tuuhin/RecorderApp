@@ -34,12 +34,20 @@ internal fun RecorderContent(
 	recorderState: RecorderState,
 	onRecorderAction: (RecorderAction) -> Unit,
 	modifier: Modifier = Modifier,
+	transcriptions: String? = null,
 	isStartRecordingEnabled: Boolean = true,
 ) {
 	Box(
 		modifier = modifier,
 		contentAlignment = Alignment.Center
 	) {
+		RecorderTranscriptionsChip(
+			transcriptions = transcriptions,
+			fontFamily = DownloadableFonts.SOURCE_CODE_PRO_FONT_FAMILY,
+			modifier = Modifier
+				.offset(y = dimensionResource(id = R.dimen.recordings_action_offset) * -1)
+				.align(Alignment.TopCenter)
+		)
 		Column(
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.spacedBy(40.dp),

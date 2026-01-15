@@ -19,6 +19,8 @@ interface RecorderServiceBinder {
 
 	val amplitudes: Flow<List<RecordedPoint>>
 
+	val transcriptions: Flow<String>
+
 	fun bindToService()
 
 	fun unBindService()

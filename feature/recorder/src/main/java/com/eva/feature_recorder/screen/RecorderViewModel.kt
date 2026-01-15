@@ -9,15 +9,21 @@ import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 internal class RecorderViewModel @Inject constructor(
@@ -59,6 +65,16 @@ internal class RecorderViewModel @Inject constructor(
 			initialValue = emptyList()
 		)
 
+	val transcriptions = combine(
+		recorderService.recorderState,
+		controlledTranscriptions(),
+	) { state, trans -> if (state.canReadAmplitudes) trans else null }
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.Eagerly,
+			null,
+		)
+
 	fun onAction(action: RecorderAction) {
 
 		when (val resource = handler.onRecorderAction(action)) {
@@ -78,6 +94,19 @@ internal class RecorderViewModel @Inject constructor(
 			RecorderScreenEvent.UnBindRecorderService -> recorderService.unBindService()
 		}
 	}
+
+	@OptIn(ExperimentalCoroutinesApi::class)
+	private fun controlledTranscriptions(slowDownDelay: Duration = 1.seconds) =
+		recorderService.transcriptions.transformLatest { wordsStream ->
+			val result = wordsStream.split(" ")
+				.let { words -> if (words.size > 10) words.takeLast(10) else words }
+				.joinToString(" ")
+
+			emit(result)
+			delay(slowDownDelay)
+			emit(null)
+		}
+
 
 	override fun onCleared() {
 		recorderService.unBindService()

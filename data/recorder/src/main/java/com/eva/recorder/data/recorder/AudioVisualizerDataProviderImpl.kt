@@ -12,6 +12,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -21,7 +22,6 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.transform
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.CancellationException
@@ -52,21 +52,26 @@ internal class AudioVisualizerDataProviderImpl(
 	private val _rangeMin = AtomicInt(0)
 	private val _rangeMax = AtomicInt(100)
 
-	private val slowedRmsPoints = source.stream
+	private val slowedRmsPoints: Flow<Float> = source.stream
 		.buffer(Channel.CONFLATED)
-		.onStart { clearBuffer() }
+		.onStart {
+			clearBuffer()
+			// initial emission required to start the flow
+			// otherwise combine will not work
+			emit(shortArrayOf() to -1)
+		}
 		.transform { (shortArray, size) ->
 			if (shortArray.isEmpty() || size < 0) clearBuffer()
 			// emit is required to be sent which will clear the thing
 			emit(shortArray to size)
 		}
-		.map { (shorts, size) -> if (size > 0) shorts.rms(size) else .0f }
+		.map { (shorts, size) -> if (size >= 0) shorts.rms(size) else .0f }
 		.flowOn(Dispatchers.Default)
 		.sample(delayRate)
 		.onCompletion { clearBuffer() }
 
 	override val dataPoints: Flow<List<RecordedPoint>>
-		get() = slowedRmsPoints.zip(stopWatch.elapsedTime) { rms, t -> rms to t.toMillisecondOfDay() }
+		get() = combine(slowedRmsPoints, stopWatch.elapsedTime) { rms, t -> rms to t.toMillisecondOfDay() }
 			.flatMapLatest { (rms, time) -> toFixedSizeCollection(rms, time) }
 			.mapLatest { points -> points.normalizedAndPadded() }
 			.flowOn(Dispatchers.Default)
