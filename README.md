@@ -95,11 +95,20 @@ Here are the steps to get started with this app:
    ```bash
    git clone https://github.com/tuuhin/RecorderApp.git
    ```
+2. **Download transcription models**
+   In order to let the transcription work you need to download `vosk` models
+    ```bash
+    mkdir -p data/transcribe/src/main/assets/models
+    curl -L https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip -o model.zip
+    unzip model.zip -d data/transcribe/src/main/assets/models
+    mv data/transcribe/src/main/assets/models/model data/transcribe/src/main/assets/models/vosk-model-small-en-us-0.15
+    rm model.zip
+   ```    
 
-2. **Open Project**
+3. **Open Project**
    Open the project in android studio
 
-3. **Build and Run**
+4. **Build and Run**
    Build and run on android device with api 29 and above
 
 You have your app running this is just simple as that.
