@@ -70,13 +70,14 @@ There are some optional permissions, but they aren't necessary to the core audio
 playing stuff.
 
 - :telephone_receiver: **Phone State** : To handle incomming calls during a recording.
-- :world_map: **Location** : Some mediacodec like `acc` and `three_gpp` can add a additional
+- :world_map: **Location** : Some mediacodec like `acc` and `three_gpp` can add a
   location data with the recording.You can view this location data on other devices which can read
   metadata.
 
 ## :new: What's new
 
-The latest update to the **RecorderApp** contains some improvements with the media player
+The latest update to the **RecorderApp** makes the Player audio graph smoother alongside scrollable
+to seek player position
 
 ## :next_track_button: What's next
 
@@ -125,7 +126,7 @@ Contributions are always welcomed from the community
 
 ### :curly_loop: Feedback and Support
 
-A app is never perfect there may issue here and there which are not caught.If you encounter any
+AN app is never perfect there may issue here and there which are not caught.If you encounter any
 issues, have suggestions for new features, or just want to share your thoughts, please don't
 hesitate to reach out by creating a new [Issue](https://github.com/tuuhin/RecorderApp/issues) on
 GitHub. Your feedback is invaluable!

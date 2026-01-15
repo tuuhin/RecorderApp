@@ -44,6 +44,7 @@ private fun EditorActionsAndControls(
 	onCutMedia: () -> Unit,
 	onPlay: () -> Unit,
 	onPause: () -> Unit,
+	onSeekEnd: () -> Unit = {},
 	playButtonColor: Color = MaterialTheme.colorScheme.primary,
 	actionButtonColor: Color = MaterialTheme.colorScheme.secondary,
 ) {
@@ -54,7 +55,8 @@ private fun EditorActionsAndControls(
 	) {
 		PlayerTrackSlider2(
 			trackData = trackData,
-			onSeekComplete = onSeek
+			onSeek = onSeek,
+			onSeekEnd = onSeekEnd
 		)
 		//actions
 		Row(
@@ -158,6 +160,8 @@ internal fun EditorActionsAndControls(
 		onSeek = { onEvent(EditorScreenEvent.OnSeekTrack(it)) },
 		onPlay = { onEvent(EditorScreenEvent.PlayAudio) },
 		onPause = { onEvent(EditorScreenEvent.PauseAudio) },
+		onSeekEnd = { onEvent(EditorScreenEvent.OnSeekTrackEnd) },
 		onCropMedia = { onEvent(EditorScreenEvent.OnEditAction(AudioEditAction.CROP)) },
-		onCutMedia = { onEvent(EditorScreenEvent.OnEditAction(AudioEditAction.CUT)) })
+		onCutMedia = { onEvent(EditorScreenEvent.OnEditAction(AudioEditAction.CUT)) },
+	)
 }

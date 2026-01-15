@@ -6,6 +6,7 @@ import com.eva.feature_player.state.PlayerEvents
 import com.eva.player.domain.AudioFilePlayer
 import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerTrackData
+import com.eva.player_shared.state.PlayerTrackUIState
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.ui.viewmodel.AppViewModel
@@ -35,28 +36,33 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 	private val player: AudioFilePlayer,
 ) : AppViewModel() {
 
+	private val _trackController = PlayerTrackUIState()
+
 	private val _currentFile = MutableStateFlow<AudioFileModel?>(null)
 	private val _currentFileDistinctById = _currentFile
 		.filterNotNull()
 		.distinctUntilChangedBy { it.id }
 
-	val playerMetaData = player.playerMetaDataFlow.stateIn(
-		scope = viewModelScope,
-		started = SharingStarted.Lazily,
-		initialValue = PlayerMetaData()
-	)
+	val playerMetaData = player.playerMetaDataFlow
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.Lazily,
+			initialValue = PlayerMetaData()
+		)
 
-	val isPlayerPlaying = player.isPlaying.stateIn(
-		scope = viewModelScope,
-		started = SharingStarted.Eagerly,
-		initialValue = false
-	)
+	val isPlayerPlaying = player.isPlaying
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.Eagerly,
+			initialValue = false
+		)
 
-	val trackData = player.trackInfoAsFlow.stateIn(
-		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(5_000),
-		initialValue = PlayerTrackData()
-	)
+	val trackData = _trackController.controllablePlayerTrackData(player.trackInfoAsFlow)
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(5_000),
+			initialValue = PlayerTrackData()
+		)
 
 	val isControllerReady = player.isControllerReady
 		.onStart {
@@ -100,7 +106,17 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 			is PlayerEvents.OnPlayerSpeedChange -> player.setPlayBackSpeed(event.speed)
 			is PlayerEvents.OnRepeatModeChange -> player.setPlayLooping(event.canRepeat)
 			PlayerEvents.OnMutePlayer -> player.onMuteDevice()
-			is PlayerEvents.OnSeekPlayer -> player.onSeekDuration(event.amount)
+
+			//seeking the player
+			is PlayerEvents.OnSeekingPlayer -> viewModelScope.launch {
+				_trackController.onSliderValueChange(event.amount)
+			}
+
+			PlayerEvents.OnSeekEndPlayer -> viewModelScope.launch {
+				_trackController.onInteractionFinished(
+					onSeekComplete = { player.onSeekDuration(it) },
+				)
+			}
 		}
 	}
 

@@ -65,10 +65,13 @@ internal fun AudioPlayerScreenContent(
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.spacedBy(4.dp),
 		) {
-			PlayerAmplitudeGraph(
+			PlayerAmplitudeGraph2(
 				trackData = trackData,
 				bookMarksTimeStamps = bookMarkTimeStamps,
 				graphData = waveforms,
+				isSwipeToScrollEnabled = true,
+				onSeek = { amount -> onPlayerEvents(PlayerEvents.OnSeekingPlayer(amount)) },
+				onSeekEnd = { onPlayerEvents(PlayerEvents.OnSeekEndPlayer) },
 				timelineFontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 				modifier = Modifier.fillMaxWidth()
 			)

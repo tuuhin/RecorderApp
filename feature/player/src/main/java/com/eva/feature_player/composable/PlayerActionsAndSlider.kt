@@ -37,7 +37,8 @@ internal fun PlayerActionsAndSlider(
 	) {
 		PlayerTrackSlider2(
 			trackData = trackData,
-			onSeekComplete = { amount -> onPlayerAction(PlayerEvents.OnSeekPlayer(amount)) },
+			onSeek = { amount -> onPlayerAction(PlayerEvents.OnSeekingPlayer(amount)) },
+			onSeekEnd = { onPlayerAction(PlayerEvents.OnSeekEndPlayer) },
 			enabled = isControllerSet
 		)
 		AudioPlayerActions(

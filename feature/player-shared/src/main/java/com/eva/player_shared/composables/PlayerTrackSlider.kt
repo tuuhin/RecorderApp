@@ -18,10 +18,18 @@ import kotlinx.coroutines.launch
 import kotlin.math.round
 import kotlin.time.Duration
 
+@Deprecated(
+	message = "This version of the player track slider is im compatible with track data info,the player state is being hoisted outside the composable scope use PlayerTrackSlider2",
+	replaceWith = ReplaceWith(
+		"PlayerTrackSlider2",
+		"com.eva.player_shared.composables.PlayerTrackSlider2"
+	),
+	level = DeprecationLevel.ERROR,
+)
 @Composable
 fun PlayerTrackSlider(
 	trackData: PlayerTrackData,
-	onSeekComplete: (Duration) -> Unit,
+	onSeek: (Duration) -> Unit,
 	modifier: Modifier = Modifier,
 	enabled: Boolean = true
 ) {
@@ -53,7 +61,7 @@ fun PlayerTrackSlider(
 		onValueChangeFinished = {
 			scope.launch {
 				controller.sliderCleanUp {
-					onSeekComplete(seekAmountByUser)
+					onSeek(seekAmountByUser)
 				}
 			}
 		},

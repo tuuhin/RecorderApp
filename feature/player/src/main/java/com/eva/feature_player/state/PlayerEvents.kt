@@ -16,5 +16,7 @@ internal sealed interface PlayerEvents {
 	data class OnPlayerSpeedChange(val speed: PlayerPlayBackSpeed) : PlayerEvents
 
 	data class OnRepeatModeChange(val canRepeat: Boolean) : PlayerEvents
-	data class OnSeekPlayer(val amount: Duration) : PlayerEvents
+
+	data class OnSeekingPlayer(val amount: Duration) : PlayerEvents
+	object OnSeekEndPlayer : PlayerEvents
 }

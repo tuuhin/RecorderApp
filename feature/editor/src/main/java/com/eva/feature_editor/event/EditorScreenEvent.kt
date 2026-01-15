@@ -10,7 +10,6 @@ sealed interface EditorScreenEvent {
 	data object PauseAudio : EditorScreenEvent
 
 	data class OnClipConfigChange(val config: AudioClipConfig) : EditorScreenEvent
-	data class OnSeekTrack(val duration: Duration) : EditorScreenEvent
 
 	data class OnEditAction(val action: AudioEditAction) : EditorScreenEvent
 
@@ -21,4 +20,7 @@ sealed interface EditorScreenEvent {
 	data object OnCancelTransformation : EditorScreenEvent
 	data object OnDismissExportSheet : EditorScreenEvent
 	data object OnSaveExportFile : EditorScreenEvent
+
+	data class OnSeekTrack(val duration: Duration) : EditorScreenEvent
+	data object OnSeekTrackEnd : EditorScreenEvent
 }

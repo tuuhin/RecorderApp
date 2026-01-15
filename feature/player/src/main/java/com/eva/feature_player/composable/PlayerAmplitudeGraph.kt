@@ -134,6 +134,13 @@ private fun PlayerAmplitudeGraph(
 	}
 }
 
+@Deprecated(
+	message = "This version of the amplitude graph is deprecated",
+	replaceWith = ReplaceWith(
+		"PlayerAmplitudeGraph2",
+		"com.eva.feature_player.composable.PlayerAmplitudeGraph2"
+	)
+)
 @Composable
 internal fun PlayerAmplitudeGraph(
 	trackData: () -> PlayerTrackData,
@@ -179,6 +186,7 @@ internal fun PlayerAmplitudeGraph(
 
 @Preview
 @Composable
+@Suppress("DEPRECATION")
 private fun PlayerAmplitudeGraphPreview() = RecorderAppTheme {
 	PlayerAmplitudeGraph(
 		trackData = { PlayerPreviewFakes.FAKE_TRACK_DATA },

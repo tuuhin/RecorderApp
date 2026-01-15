@@ -69,7 +69,7 @@ internal fun RecordingWidgetCard(
 		Spacer(modifier = GlanceModifier.width(8.dp))
 		Column(modifier = GlanceModifier.defaultWeight()) {
 			Text(
-				text = model.title,
+				text = model.displayName,
 				style = TextStyle(
 					color = GlanceTheme.colors.onPrimaryContainer,
 					fontWeight = FontWeight.Medium,

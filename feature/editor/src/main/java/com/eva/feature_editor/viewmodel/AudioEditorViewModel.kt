@@ -13,6 +13,7 @@ import com.eva.feature_editor.event.TransformationState
 import com.eva.feature_editor.undoredo.UndoRedoManager
 import com.eva.feature_editor.undoredo.UndoRedoState
 import com.eva.player.domain.model.PlayerTrackData
+import com.eva.player_shared.state.PlayerTrackUIState
 import com.eva.recordings.domain.models.AudioFileModel
 import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.ui.viewmodel.AppViewModel
@@ -48,6 +49,8 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 	private val saver: EditedItemSaver,
 	private val player: SimpleAudioPlayer,
 ) : AppViewModel() {
+
+	private val _trackUIState = PlayerTrackUIState()
 
 	private val _currentFile = MutableStateFlow<AudioFileModel?>(null)
 	private val _lastEditAction = MutableStateFlow(AudioEditAction.CROP)
@@ -98,11 +101,12 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 			initialValue = false
 		)
 
-	val trackData = player.trackInfoAsFlow.stateIn(
-		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(1_000L),
-		initialValue = PlayerTrackData()
-	)
+	val trackData = _trackUIState.controllablePlayerTrackData(player.trackInfoAsFlow)
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(1_000L),
+			initialValue = PlayerTrackData()
+		)
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
 	override val uiEvent: SharedFlow<UIEvents>
@@ -113,7 +117,6 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 		EditorScreenEvent.PauseAudio -> viewModelScope.launch { player.pausePlayer() }
 		EditorScreenEvent.PlayAudio -> viewModelScope.launch { player.startOrResumePlayer() }
 		is EditorScreenEvent.OnClipConfigChange -> updateClipConfig(event.config)
-		is EditorScreenEvent.OnSeekTrack -> player.onSeekDuration(event.duration)
 		is EditorScreenEvent.OnEditAction -> validateAndApplyEditViaAction(event.action)
 		EditorScreenEvent.BeginTransformation -> finalExport()
 		EditorScreenEvent.OnDismissExportSheet -> onCancelExport()
@@ -121,6 +124,13 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 		EditorScreenEvent.OnRedoEdit -> onUndoOrRedoConfigs(false)
 		EditorScreenEvent.OnUndoEdit -> onUndoOrRedoConfigs(true)
 		EditorScreenEvent.OnCancelTransformation -> cancelFinalExport()
+		is EditorScreenEvent.OnSeekTrack -> viewModelScope.launch {
+			_trackUIState.onSliderValueChange(event.duration)
+		}
+
+		EditorScreenEvent.OnSeekTrackEnd -> viewModelScope.launch {
+			_trackUIState.onInteractionFinished { duration -> player.onSeekDuration(duration) }
+		}
 	}
 
 	fun setPlayerItem() = viewModelScope.launch {
@@ -211,8 +221,9 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 		val fileModel = _currentFile.value ?: return
 		val clipData = _clipData.updateAndGet { clipConfig } ?: return
 		// again if track data is not
-		val trackData = this@AudioEditorViewModel.trackData.value.let { if (it.allPositiveAndFinite) it else null }
-			?: PlayerTrackData(Duration.ZERO, fileModel.duration)
+		val trackData =
+			this@AudioEditorViewModel.trackData.value.let { if (it.allPositiveAndFinite) it else null }
+				?: PlayerTrackData(Duration.ZERO, fileModel.duration)
 		if (trackData.current in clipData.start..clipData.end) return
 
 		if (!clipData.hasMinimumDuration) {

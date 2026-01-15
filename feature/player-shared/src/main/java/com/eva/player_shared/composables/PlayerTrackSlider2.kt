@@ -1,5 +1,6 @@
 package com.eva.player_shared.composables
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -10,16 +11,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.eva.player.domain.model.PlayerTrackData
-import com.eva.player_shared.state.PlayerSliderController
 import com.eva.ui.theme.RecorderAppTheme
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlin.time.Duration
@@ -29,42 +26,31 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun PlayerTrackSlider2(
 	trackData: () -> PlayerTrackData,
-	onSeekComplete: (Duration) -> Unit,
+	onSeek: (Duration) -> Unit,
 	modifier: Modifier = Modifier,
-	enabled: Boolean = true
+	onSeekEnd: () -> Unit = {},
+	enabled: Boolean = true,
+	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
-	// slider controller
-	val controller = remember { PlayerSliderController() }
-	val isUserControlled by controller.isSeekByUser.collectAsStateWithLifecycle(false)
-	val seekAmountByUser by controller.seekAmountByUser.collectAsStateWithLifecycle()
-
-	val currentOnSeekComplete by rememberUpdatedState(onSeekComplete)
-
-	val state = remember { SliderState(value = trackData().playRatio) }
-
-	LaunchedEffect(state) {
-
-		// Basic state update updated by the player
-		snapshotFlow { trackData().playRatio }
-			.filter { !state.isDragging }
-			.onEach { state.value = it }
-			.launchIn(this)
-
-		// If the slider is being drag , updated by the user
-		snapshotFlow { state.value }
-			.filter { state.isDragging }
-			.onEach { seek ->
-				val playerSeekAmount = trackData().calculateSeekAmount(seek)
-				controller.onSliderSlide(playerSeekAmount)
-			}.launchIn(this)
-
-		// now if it's not being dragged  but user controlled then send seek completed
-		snapshotFlow { !state.isDragging && isUserControlled }
-			.filter { it }
-			.onEach {
-				controller.sliderCleanUp()
-				currentOnSeekComplete(seekAmountByUser)
+	val state = remember {
+		SliderState(
+			value = trackData().playRatio,
+			valueRange = 0f..1f,
+			onValueChangeFinished = onSeekEnd,
+		).also { state ->
+			// on value change will be called only when the value changed completed
+			// via interactions not update
+			state.onValueChange = { value ->
+				val seekAmount = trackData().calculateSeekAmount(value)
+				onSeek(seekAmount)
 			}
+		}
+	}
+
+	// update the track ratio when changed
+	LaunchedEffect(state) {
+		snapshotFlow { trackData().playRatio }
+			.onEach { value -> state.value = value }
 			.launchIn(this)
 	}
 
@@ -76,7 +62,8 @@ fun PlayerTrackSlider2(
 			thumbColor = MaterialTheme.colorScheme.primary,
 			inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant
 		),
-		modifier = modifier
+		modifier = modifier,
+		interactionSource = interactionSource,
 	)
 }
 
@@ -87,6 +74,6 @@ private fun PlayerTrackSlider2Preview() = RecorderAppTheme {
 
 	PlayerTrackSlider2(
 		trackData = { trackState },
-		onSeekComplete = { trackState = trackState.copy(current = it) },
+		onSeek = { trackState = trackState.copy(current = it) },
 	)
 }
