@@ -1,5 +1,5 @@
 import androidx.room.gradle.RoomExtension
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.getByType
@@ -56,7 +56,7 @@ class ConfigureRoomPlugin : Plugin<Project> {
 		.apply {
 			sourceSets {
 				val androidTestSourceSet = getByName("androidTest")
-				androidTestSourceSet.assets.srcDir("$projectDir/schemas")
+				androidTestSourceSet.assets.directories += "$projectDir/schemas"
 			}
 		}
 

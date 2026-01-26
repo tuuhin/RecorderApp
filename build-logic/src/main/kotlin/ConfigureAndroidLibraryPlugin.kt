@@ -1,4 +1,4 @@
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -18,7 +18,7 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 	}
 
 	private fun Project.addPlugins() = plugins.apply {
-		val aliases = listOf("android.library", "jetbrains.kotlin.android")
+		val aliases = listOf("android.library")
 		aliases.forEach {
 			catalog.findPlugin(it).ifPresent { libraryProvider ->
 				val plugin = libraryProvider.get()
