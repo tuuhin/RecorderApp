@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
 	alias(libs.plugins.android.application)
-	alias(libs.plugins.jetbrains.kotlin.android)
 	// custom plugins
 	alias(libs.plugins.recorderapp.hilt)
 	alias(libs.plugins.recorderapp.compose.compiler)
@@ -81,6 +80,7 @@ android {
 	buildFeatures {
 		compose = true
 		buildConfig = true
+		resValues = true
 	}
 	packaging {
 		resources {
