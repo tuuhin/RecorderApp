@@ -1,4 +1,4 @@
-package com.eva.transcribe.domain
+package com.eva.transcribe.domain.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

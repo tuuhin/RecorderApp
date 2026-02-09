@@ -4,7 +4,7 @@ import android.util.Log
 import com.eva.recorder.domain.recorder.AudioByteDataProvider
 import com.eva.recorder.domain.recorder.TranscriptionProvider
 import com.eva.transcribe.domain.AudioTranscriptor
-import com.eva.transcribe.domain.LanguageModel
+import com.eva.transcribe.domain.models.LanguageModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.currentCoroutineContext

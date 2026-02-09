@@ -36,6 +36,8 @@ moduleGrapher = "0.13.0"
 mockk = "1.14.7"
 coroutines = "1.10.2"
 turbine_version = "1.2.1"
+vosk = "0.3.75"
+okio = "3.16.4"
 compileSdk = "36"
 minSdk = "29"
 
@@ -123,6 +125,11 @@ protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.
 protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufJavalite" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobufJavalite" }
 protobuf-gen-javalite = { module = "com.google.protobuf:protoc-gen-javalite", version.ref = "protobuf_gen_java_lite" }
+#fs
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+#vosk
+vosk-model-en = { module = "com.alphacephei:vosk-model-en", version.ref = "vosk" }
+vosk-android = { module = "com.alphacephei:vosk-android", version.ref = "vosk" }
 #gradle plugins
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }

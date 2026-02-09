@@ -1,4 +1,4 @@
-package com.eva.transcribe.domain
+package com.eva.transcribe.domain.models
 
 enum class LanguageModel {
 	EN_US,

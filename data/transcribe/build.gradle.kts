@@ -19,10 +19,15 @@ android {
 }
 
 dependencies {
+	implementation(project(":core:utils"))
 	// vosk-model
-	implementation(libs.vosk.model.en)
 	implementation(libs.vosk.android)
-
+	// ktor
+	implementation(ktorLibs.client.core)
+	implementation(ktorLibs.client.android)
+	implementation(ktorLibs.client.logging)
+	// okio
+	implementation(libs.okio)
 	// serialization
 	implementation(libs.kotlinx.serialization.json)
 }

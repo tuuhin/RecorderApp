@@ -3,14 +3,12 @@ package com.eva.transcribe.data
 import android.util.Log
 import com.eva.transcribe.BuildConfig
 import com.eva.transcribe.domain.AudioTranscriptor
-import com.eva.transcribe.domain.LanguageModel
 import com.eva.transcribe.domain.ModelFileProvider
-import com.eva.transcribe.domain.TranscriptionResult
+import com.eva.transcribe.domain.models.LanguageModel
+import com.eva.transcribe.domain.models.TranscriptionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.serializer
 import org.vosk.LibVosk
 import org.vosk.LogLevel
 import org.vosk.Model
@@ -21,19 +19,12 @@ import kotlin.coroutines.cancellation.CancellationException
 private const val TAG = "AUDIO_TRANSCRIPTOR"
 
 internal class AudioTranscriptorImpl(
-	private val pathProvider: ModelFileProvider
+	private val pathProvider: ModelFileProvider,
+	private val json: Json,
 ) : AudioTranscriptor {
 
 	private var _model: Model? = null
 	private var _recognizer: Recognizer? = null
-
-	private val _json by lazy {
-		Json {
-			serializersModule = SerializersModule {
-				serializer<TranscriptionResult>()
-			}
-		}
-	}
 
 	init {
 		val level = if (BuildConfig.DEBUG) LogLevel.DEBUG else LogLevel.INFO
@@ -66,7 +57,7 @@ internal class AudioTranscriptorImpl(
 			try {
 				val success = recognizer.acceptWaveForm(buffer, length)
 				val jsonString = if (success) recognizer.result else recognizer.partialResult
-				_json.decodeFromString<TranscriptionResult>(jsonString)
+				json.decodeFromString<TranscriptionResult>(jsonString)
 			} catch (_: CancellationException) {
 				Log.d(TAG, "COROUTINE IS CANCELLED")
 				return@withContext null
