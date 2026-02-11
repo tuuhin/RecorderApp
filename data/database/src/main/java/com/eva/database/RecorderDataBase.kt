@@ -8,13 +8,16 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.eva.database.convertors.LocalDateTimeConvertors
 import com.eva.database.convertors.LocalTimeConvertors
+import com.eva.database.convertors.STTModelConvertors
 import com.eva.database.dao.RecordingCategoryDao
 import com.eva.database.dao.RecordingsBookmarkDao
 import com.eva.database.dao.RecordingsMetadataDao
+import com.eva.database.dao.STTModelsDao
 import com.eva.database.dao.TrashFileDao
 import com.eva.database.entity.RecordingBookMarkEntity
 import com.eva.database.entity.RecordingCategoryEntity
 import com.eva.database.entity.RecordingsMetaDataEntity
+import com.eva.database.entity.STTModelEntity
 import com.eva.database.entity.TrashFileEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
@@ -25,20 +28,23 @@ import kotlinx.coroutines.asExecutor
 		RecordingsMetaDataEntity::class,
 		RecordingCategoryEntity::class,
 		RecordingBookMarkEntity::class,
+		STTModelEntity::class,
 	],
-	version = 6,
+	version = 7,
 	exportSchema = true,
 	autoMigrations = [
 		AutoMigration(from = 1, to = 2),
 		AutoMigration(from = 2, to = 3),
 		AutoMigration(from = 3, to = 4),
 		AutoMigration(from = 4, to = 5),
+		AutoMigration(from = 6, to = 7)
 	]
 )
 @TypeConverters(
 	value = [
 		LocalDateTimeConvertors::class,
 		LocalTimeConvertors::class,
+		STTModelConvertors::class
 	],
 )
 abstract class RecorderDataBase : RoomDatabase() {
@@ -51,6 +57,8 @@ abstract class RecorderDataBase : RoomDatabase() {
 
 	abstract fun recordingBookMarkDao(): RecordingsBookmarkDao
 
+	abstract fun sTTModelDao(): STTModelsDao
+
 	companion object {
 
 		@Volatile
@@ -58,16 +66,18 @@ abstract class RecorderDataBase : RoomDatabase() {
 
 		private val localDateTimeConvertor = LocalDateTimeConvertors()
 		private val localtimeConvertor = LocalTimeConvertors()
+		private val sttStausConvertors = STTModelConvertors()
 
 		fun createDataBase(context: Context): RecorderDataBase {
-			return instance ?: synchronized(this) {
-				Room.databaseBuilder(
+			return synchronized(this) {
+				instance ?: Room.databaseBuilder(
 					context,
 					RecorderDataBase::class.java,
 					DataBaseConstants.DATABASE_NAME
 				)
 					.addTypeConverter(localtimeConvertor)
 					.addTypeConverter(localDateTimeConvertor)
+					.addTypeConverter(sttStausConvertors)
 					.addMigrations(DBMigrations.MIGRATE_5_6)
 					.setQueryExecutor(Dispatchers.IO.asExecutor())
 					.build()
@@ -79,6 +89,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 			return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
 				.addTypeConverter(localtimeConvertor)
 				.addTypeConverter(localDateTimeConvertor)
+				.addTypeConverter(sttStausConvertors)
 				.addMigrations(DBMigrations.MIGRATE_5_6)
 				.setQueryExecutor(Dispatchers.IO.asExecutor())
 				.build()

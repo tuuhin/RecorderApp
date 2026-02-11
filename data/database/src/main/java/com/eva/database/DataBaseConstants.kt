@@ -9,4 +9,5 @@ object DataBaseConstants {
 	const val RECORDING_METADATA_TABLE = "recording_meta_data"
 	const val RECORDING_CATEGORY_TABLE = "recordings_category"
 	const val RECORDING_BOOKMARK_TABLE = "recording_bookmark_table"
+	const val STT_MODELS_TABLE = "stt_models_table"
 }

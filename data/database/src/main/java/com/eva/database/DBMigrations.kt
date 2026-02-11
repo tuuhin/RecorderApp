@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package com.eva.database
 
 import androidx.room.migration.Migration
@@ -7,7 +5,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.offsetAt
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 object DBMigrations {
 

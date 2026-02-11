@@ -20,6 +20,7 @@ android {
 
 dependencies {
 	implementation(project(":core:utils"))
+	implementation(project(":data:database"))
 	// vosk-model
 	implementation(libs.vosk.android)
 	// ktor

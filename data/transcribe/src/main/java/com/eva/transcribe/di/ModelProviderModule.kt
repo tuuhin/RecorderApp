@@ -1,11 +1,13 @@
 package com.eva.transcribe.di
 
 import android.content.Context
+import com.eva.database.dao.STTModelsDao
 import com.eva.transcribe.data.ModelDownloadMangerImpl
-import com.eva.transcribe.data.ModelFileProviderImpl
+import com.eva.transcribe.data.repository.STTModelMetadataReader
+import com.eva.transcribe.data.repository.STTModelsRepositoryImpl
 import com.eva.transcribe.domain.ModelDownloadManager
-import com.eva.transcribe.domain.ModelFileProvider
 import com.eva.transcribe.domain.models.TranscriptionResult
+import com.eva.transcribe.domain.repository.STTModelsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +24,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ModelProviderModule {
+internal object ModelProviderModule {
 
 	@Provides
 	@Singleton
@@ -44,12 +46,22 @@ object ModelProviderModule {
 	@Singleton
 	fun providesModelDownloader(
 		@ApplicationContext context: Context,
-		client: HttpClient
-	): ModelDownloadManager = ModelDownloadMangerImpl(context, client)
+		client: HttpClient,
+		repo: STTModelsRepository,
+	): ModelDownloadManager = ModelDownloadMangerImpl(context, client, repo)
 
 
 	@Provides
 	@Singleton
-	fun providesModelFileProvider(@ApplicationContext context: Context): ModelFileProvider =
-		ModelFileProviderImpl(context)
+	fun providesAssetsReader(
+		@ApplicationContext context: Context,
+		json: Json
+	): STTModelMetadataReader = STTModelMetadataReader(json, context)
+
+	@Provides
+	@Singleton
+	fun providesSTTModelsRepo(
+		dao: STTModelsDao,
+		reader: STTModelMetadataReader
+	): STTModelsRepository = STTModelsRepositoryImpl(dao = dao, metaData = reader)
 }
