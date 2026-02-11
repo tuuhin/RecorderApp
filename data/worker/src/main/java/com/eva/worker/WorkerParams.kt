@@ -1,6 +1,6 @@
 package com.eva.worker
 
-object WorkerParams {
+internal object WorkerParams {
 
 	// remove trash recording worker params
 	const val REMOVE_TRASH_RECORDING_SUCCESS_KEY = "remove_trash_recording_api_29_success"
@@ -29,4 +29,8 @@ object WorkerParams {
 		"FILE URI IS REQUIRED TO COPY THE CONTENTS OF THE FILE"
 	const val WORK_DATA_SAVE_EDITED_ITEM_FILE_INVALID = "WRONG URI PROVIDED SHOULD BE A FILE"
 
+	// stt model download
+	const val WORK_DATA_STT_MODEL_ID = "WORK_DATA_STT_MODEL_ID"
+	const val WORK_DATA_SST_MODEL_WORK_SUCCESS = "WORKER_DATA_STT_MODEL_WORK_SUCCESS"
+	const val WORK_DATA_SST_MODEL_WORK_FAILED = "WORKED_DATA_STT_MODEL_WORK_FAILED"
 }

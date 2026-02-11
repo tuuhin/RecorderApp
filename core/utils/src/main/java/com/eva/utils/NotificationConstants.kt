@@ -4,12 +4,10 @@ object NotificationConstants {
 
 	const val RECORDER_NOTIFICATION_ID = 1
 	const val RECORDER_NOTIFICATION_SECONDARY_ID = 2
-
 	const val DELETE_WORKER_NOTIFICATION_ID = 3
-
 	const val PLAYER_NOTIFICATION_ID = 4
-
 	const val SAVE_EDITED_MEDIA_FOREGROUND_ID = 5
+	const val DOWNLOAD_STT_MODEL_WORKER_NOTIFICATION_ID = 6
 
 	// Recorder channel
 	const val RECORDER_CHANNEL_ID = "recorder_channel"
@@ -27,4 +25,9 @@ object NotificationConstants {
 	const val RECORDING_CHANNEL_NAME = "Recordings"
 	const val RECORDING_CHANNEL_DESC =
 		"Notifications related to completion and cancellation of recordings"
+
+	// worker channel
+	const val WORKER_CHANNEL_ID = "worker_channel"
+	const val WORKER_CHANNEL_NAME = "Background task channel"
+	const val WORKER_CHANNEL_DESC = "Channel to show notification with background work"
 }

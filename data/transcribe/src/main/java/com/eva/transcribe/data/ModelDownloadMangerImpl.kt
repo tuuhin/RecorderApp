@@ -2,11 +2,12 @@ package com.eva.transcribe.data
 
 import android.content.Context
 import android.util.Log
+import androidx.core.net.toUri
 import com.eva.transcribe.domain.ModelDownloadManager
 import com.eva.transcribe.domain.exceptions.ModelDownloadFailedException
-import com.eva.transcribe.domain.models.LanguageModel
 import com.eva.transcribe.domain.models.ModelDownloadState
-import com.eva.utils.Resource
+import com.eva.transcribe.domain.models.STTModelState
+import com.eva.transcribe.domain.repository.STTModelsRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onDownload
 import io.ktor.client.request.prepareGet
@@ -16,8 +17,6 @@ import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.withContext
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
@@ -31,7 +30,8 @@ private const val TAG = "MODEL_DOWNLOAD_MANAGER"
 
 internal class ModelDownloadMangerImpl(
 	private val context: Context,
-	private val httpClient: HttpClient
+	private val httpClient: HttpClient,
+	private val repository: STTModelsRepository,
 ) : ModelDownloadManager {
 
 	private val modelFolder by lazy {
@@ -39,49 +39,73 @@ internal class ModelDownloadMangerImpl(
 			.apply { mkdirs() }
 	}
 
-	override suspend fun downloadAndSaveModel(language: LanguageModel): Flow<Resource<ModelDownloadState, Exception>> {
-		return channelFlow {
-			val prefix = "models_dn_${language.name}"
+	override suspend fun downloadAndSaveModel(
+		modelId: String,
+		onDownloadState: suspend (ModelDownloadState) -> Unit,
+	): Result<Boolean> {
 
-			val file = File.createTempFile(prefix, ".zip", context.cacheDir)
-			val targetFile = File(modelFolder, language.savedModelPath)
+		val modelResult = repository.readModelByLanguage(modelId)
+		if (modelResult.isFailure) {
+			val ex = modelResult.exceptionOrNull() ?: Exception("Invalid result")
+			return Result.failure(ex)
+		}
 
-			// delete the file if its already present
-			if (targetFile.exists()) {
-				Log.d(TAG, "DELETING CONTENT FROM THE PREVIOUS FILE")
-				val result = deleteDownloadedFile(targetFile)
+		val readModel = modelResult.getOrThrow()
+		val language = readModel.locale
+		val downloadURI = readModel.downloadURI
+		val folder = "${readModel.modelId}-${readModel.downloadedVersion}"
 
-				if (result.isFailure) {
-					val exception = result.exceptionOrNull() as? Exception ?: Exception("Failed")
-					trySend(Resource.Error(exception))
-					return@channelFlow
-				}
-			}
+		val prefix = "models_dn_${language}"
 
-			trySend(Resource.Success(ModelDownloadState.DownloadRequested))
+		// this doesn't create the file so no need io context wrapper
+		val zipFile = File.createTempFile(prefix, ".zip", context.cacheDir)
+		val targetFile = File(modelFolder, folder)
 
-			// download the file
-			val result = downloadModelZipFile(language.downloadURI, file) { progress ->
-				trySend(Resource.Success(ModelDownloadState.DownloadProgress(progress)))
-			}
-			// failed to download the file or failed to save the file
+		// delete the file if its already present
+		if (targetFile.exists()) {
+			Log.d(TAG, "DELETING CONTENT FROM THE PREVIOUS FILE")
+			val result = deleteDownloadedFile(targetFile)
+
 			if (result.isFailure) {
-				val exc = result.exceptionOrNull() as? Exception ?: Exception("Some exception")
-				trySend(Resource.Error(exc, "Failed to download the file"))
-				return@channelFlow
-			}
-
-			try {
-				// un zip the file content
-				trySend(Resource.Success(ModelDownloadState.ModelUnzipping))
-				unZipFileContent(file, targetFile)
-				trySend(Resource.Success(ModelDownloadState.ModelSaved))
-			} finally {
-				withContext(NonCancellable) {
-					deleteDownloadedFile(file)
-				}
+				val exception = result.exceptionOrNull() as? Exception ?: Exception("Failed")
+				return Result.failure(exception)
 			}
 		}
+
+		onDownloadState(ModelDownloadState.DownloadRequested)
+
+		// download the file
+		val result = downloadModelZipFile(downloadURI, zipFile) { progress ->
+			onDownloadState(ModelDownloadState.DownloadProgress(progress))
+		}
+		// failed to download the file or failed to save the file
+		if (result.isFailure) {
+			val exc = result.exceptionOrNull() as? Exception ?: Exception("Some exception")
+			return Result.failure(exc)
+		}
+
+		try {
+			// un zip the file content
+			onDownloadState(ModelDownloadState.ModelUnzipping)
+			unZipFileContent(zipFile, targetFile)
+		} finally {
+			withContext(NonCancellable) {
+				deleteDownloadedFile(zipFile)
+			}
+		}
+		onDownloadState(ModelDownloadState.ModelSaved)
+
+		try {
+			val updatedMOdel = readModel.copy(
+				state = STTModelState.DOWNLOADED,
+				size = targetFile.totalSpace,
+				localModelURI = targetFile.toUri().toString()
+			).copy()
+			repository.updateSTTModel(updatedMOdel)
+		} catch (e: Exception) {
+			if (e is CancellationException) throw e
+		}
+		return Result.success(true)
 	}
 
 
@@ -111,6 +135,7 @@ internal class ModelDownloadMangerImpl(
 		}
 	}
 
+
 	private suspend fun ByteReadChannel.saveToFS(file: File, bufferSize: Int = 10 * 1024): Boolean {
 		val filePath = file.toOkioPath()
 		val fs = FileSystem.SYSTEM
@@ -133,6 +158,7 @@ internal class ModelDownloadMangerImpl(
 			}
 		}
 	}
+
 
 	suspend fun unZipFileContent(zipFile: File, targetFile: File) {
 
@@ -169,7 +195,8 @@ internal class ModelDownloadMangerImpl(
 		}
 	}
 
-	suspend fun deleteDownloadedFile(file: File): Result<Unit> {
+
+	private suspend fun deleteDownloadedFile(file: File): Result<Unit> {
 		return withContext(Dispatchers.IO) {
 			try {
 				val isDeleted = file.deleteRecursively()

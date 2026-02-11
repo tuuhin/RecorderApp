@@ -84,7 +84,16 @@ class RecorderApp : Application(), Configuration.Provider {
 			lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
 		}
 
-		val channels = listOf(channel1, channel2, channel3)
+		val channel4 = NotificationChannel(
+			NotificationConstants.WORKER_CHANNEL_ID,
+			NotificationConstants.WORKER_CHANNEL_NAME,
+			NotificationManager.IMPORTANCE_HIGH
+		).apply {
+			description = NotificationConstants.WORKER_CHANNEL_DESC
+			lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
+		}
+
+		val channels = listOf(channel1, channel2, channel3, channel4)
 
 		notificationManager?.createNotificationChannels(channels)
 	}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="stt_model_download_notification_text" translatable="false">Preparing offline voice features</string>
+  <string name="stt_model_download_requested_text" translatable="false">Download requested</string>
+  <string name="stt_model_downloading_text" translatable="false">Downloading</string>
+  <string name="stt_model_unzip_text" translatable="false">Unzipping</string>
+  <string name="stt_model_ready_text" translatable="false">Ready</string>
+</resources>

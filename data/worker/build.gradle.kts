@@ -15,5 +15,5 @@ dependencies {
 	implementation(project(":core:utils"))
 	implementation(project(":core:ui"))
 	implementation(project(":data:recordings"))
-
+	implementation(project(":data:transcribe"))
 }
