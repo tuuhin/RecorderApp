@@ -17,6 +17,7 @@ internal fun STTModel.toEntity(
 	externalModelURI = downloadURI,
 	updatedAt = Clock.System.now().toLocalDateTime(timeZone),
 	externalModelVersion = downloadedVersion,
+	modelSize = size ?: 0,
 	status = when (state) {
 		STTModelState.UN_AVAILABLE -> STTModelEntity.ModelStatus.NOT_READY
 		STTModelState.DOWNLOADING -> STTModelEntity.ModelStatus.DOWNLOADING

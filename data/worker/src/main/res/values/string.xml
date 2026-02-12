@@ -4,5 +4,7 @@
   <string name="stt_model_download_requested_text" translatable="false">Download requested</string>
   <string name="stt_model_downloading_text" translatable="false">Downloading</string>
   <string name="stt_model_unzip_text" translatable="false">Unzipping</string>
-  <string name="stt_model_ready_text" translatable="false">Ready</string>
+  <string name="stt_model_ready_text" translatable="false">Ready to Save</string>
+  <string name="stt_model_saved_text" translatable="false">Saved</string>
+  <string name="stt_model_cleanup_text" translatable="false">Cleaning up</string>
 </resources>

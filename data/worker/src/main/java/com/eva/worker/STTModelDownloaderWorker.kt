@@ -25,58 +25,67 @@ internal class STTModelDownloaderWorker @AssistedInject constructor(
 
 	override suspend fun doWork(): Result {
 		val modelId = params.inputData.getString(WorkerParams.WORK_DATA_STT_MODEL_ID)
-			?: return Result.failure(workDataOf(WorkerParams.WORK_DATA_SST_MODEL_WORK_FAILED to "Required model id is not passed"))
+			?: return Result.failure(
+				workDataOf(
+					WorkerParams.WORK_DATA_SST_MODEL_WORK_FAILED to
+							WorkerParams.WORK_DATA_SST_MODEL_ID_MISSING
+				)
+			)
 
-		val re = task.downloadAndSaveModel(
+		val taskResult = task.downloadAndSaveModel(
 			modelId = modelId,
 			onDownloadState = { state -> setForegroundAsync(createNotification(state)) },
 		)
-		return if (re.isSuccess) {
-			val isSuccess = re.getOrNull() ?: false
-			Result.success(workDataOf(WorkerParams.WORK_DATA_SST_MODEL_WORK_SUCCESS to isSuccess))
-		} else {
-			val reason = re.exceptionOrNull()?.message ?: "Some unwanted issue happened"
-			Result.failure(workDataOf(WorkerParams.WORK_DATA_SST_MODEL_WORK_FAILED to reason))
+		if (taskResult.isFailure) {
+			val reason = taskResult.exceptionOrNull()?.message ?: "Some unwanted issue happened"
+			return Result.failure(workDataOf(WorkerParams.WORK_DATA_SST_MODEL_WORK_FAILED to reason))
 		}
+
+		val isSuccess = taskResult.getOrNull() ?: false
+		return Result.success(workDataOf(WorkerParams.WORK_DATA_SST_MODEL_WORK_SUCCESS to isSuccess))
 	}
 
 
 	private fun createNotification(state: ModelDownloadState): ForegroundInfo {
 		val title = applicationContext.getString(R.string.stt_model_download_notification_text)
+
+		// TODO: Check cancellation
 		// This PendingIntent can be used to cancel the worker
 		val intent = WorkManager.getInstance(applicationContext).createCancelPendingIntent(id)
 
-		val notificationText = when (state) {
+		val text = when (state) {
 			is ModelDownloadState.DownloadProgress -> applicationContext.getString(R.string.stt_model_downloading_text)
-			ModelDownloadState.DownloadRequested -> applicationContext.getString(R.string.stt_model_download_requested_text)
+			ModelDownloadState.DownloadInitiated -> applicationContext.getString(R.string.stt_model_download_requested_text)
 			ModelDownloadState.ModelUnzipping -> applicationContext.getString(R.string.stt_model_unzip_text)
-			ModelDownloadState.ModelSaved -> applicationContext.getString(R.string.stt_model_ready_text)
+			ModelDownloadState.ModelReadyToSave -> applicationContext.getString(R.string.stt_model_ready_text)
+			ModelDownloadState.ModelSaved -> applicationContext.getString(R.string.stt_model_saved_text)
+			ModelDownloadState.DownloadCleanUpDone -> applicationContext.getString(R.string.stt_model_cleanup_text)
+		}
+
+		// set the progress message
+		setProgressAsync(workDataOf(WorkerParams.WORK_DATA_WORK_PROGRESS_MESSAGE to text))
+		if (state is ModelDownloadState.DownloadProgress) {
+			setProgressAsync(workDataOf(WorkerParams.WORK_DATA_WORK_PROGRESS_PERCENTAGE to state.progress))
 		}
 
 		val notificationAction = NotificationCompat.Action.Builder(
 			IconCompat.createWithResource(applicationContext, R.drawable.ic_cancel),
 			"Cancel",
 			intent
-		).setShowsUserInterface(false)
-			.build()
+		).build()
 
-		val notification = NotificationCompat.Builder(
-			applicationContext,
-			NotificationConstants.WORKER_CHANNEL_ID
-		)
+		val notification = NotificationCompat
+			.Builder(applicationContext, NotificationConstants.WORKER_CHANNEL_ID)
 			.setContentTitle(title)
-			.setContentText(notificationText)
+			.setContentText(text)
 			.setSmallIcon(R.drawable.ic_model_download)
 			.setOngoing(true)
 			.addAction(notificationAction).apply {
 				when (state) {
-					is ModelDownloadState.DownloadProgress -> setProgress(
-						100,
-						state.progress.toInt(),
-						false
-					)
+					is ModelDownloadState.DownloadProgress ->
+						setProgress(100, state.progress, false)
 
-					ModelDownloadState.ModelUnzipping -> setProgress(0, 0, true)
+					ModelDownloadState.ModelUnzipping -> setProgress(100, 0, true)
 					else -> setProgress(0, 0, false)
 				}
 			}

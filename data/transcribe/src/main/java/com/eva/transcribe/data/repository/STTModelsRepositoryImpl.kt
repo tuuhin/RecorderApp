@@ -106,7 +106,7 @@ internal class STTModelsRepositoryImpl(
 		}
 	}
 
-	suspend fun syncAssetsToManifest(timeZone: TimeZone = TimeZone.currentSystemDefault()): Result<Unit> {
+	suspend fun syncAssetsToManifest(timeZone: TimeZone = TimeZone.currentSystemDefault()): Result<Boolean> {
 		val readFiles = metaData.readMetaData()
 		if (readFiles.isFailure) {
 			val err = readFiles.exceptionOrNull() ?: Exception("Unknown exception")
@@ -121,6 +121,7 @@ internal class STTModelsRepositoryImpl(
 				val dbEntity = dbModels.find { it.modelId == model.modelId }
 				// we have an entry but it's a new version
 				if (dbEntity != null && dbEntity.externalModelVersion != model.version) {
+					Log.i(TAG,"${dbEntity.modelId} UPDATED NEW METADATA :$model")
 					dbEntity.copy(
 						status = STTModelEntity.ModelStatus.UPDATE_AVAILABLE,
 						externalModelURI = model.modelUri,
@@ -136,10 +137,14 @@ internal class STTModelsRepositoryImpl(
 			}
 
 			// update or insert entities
-			if (actions.isNotEmpty())
+			if (actions.isNotEmpty()) {
+				Log.d(TAG, "ITEMS BEING ADDED :${actions.size}")
 				dao.updateOrInsertModelEntities(actions)
-
-			Result.success(Unit)
+				Result.success(true)
+			} else {
+				Log.d(TAG, "NO OF ITEMS BEING ADDED")
+				Result.success(false)
+			}
 		} catch (e: Exception) {
 			if (e is CancellationException) throw e
 			Result.failure(e)

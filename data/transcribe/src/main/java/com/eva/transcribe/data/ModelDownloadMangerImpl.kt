@@ -1,6 +1,7 @@
 package com.eva.transcribe.data
 
 import android.content.Context
+import android.text.format.Formatter
 import android.util.Log
 import androidx.core.net.toUri
 import com.eva.transcribe.domain.ModelDownloadManager
@@ -58,7 +59,9 @@ internal class ModelDownloadMangerImpl(
 		val prefix = "models_dn_${language}"
 
 		// this doesn't create the file so no need io context wrapper
-		val zipFile = File.createTempFile(prefix, ".zip", context.cacheDir)
+		val zipFile = withContext(Dispatchers.IO) {
+			File.createTempFile(prefix, ".zip", context.cacheDir)
+		}
 		val targetFile = File(modelFolder, folder)
 
 		// delete the file if its already present
@@ -72,11 +75,18 @@ internal class ModelDownloadMangerImpl(
 			}
 		}
 
-		onDownloadState(ModelDownloadState.DownloadRequested)
+		Log.d(TAG, "READY TO DOWNLOAD THE FILE")
+		onDownloadState(ModelDownloadState.DownloadInitiated)
 
 		// download the file
+		var prevProgress = -1
 		val result = downloadModelZipFile(downloadURI, zipFile) { progress ->
-			onDownloadState(ModelDownloadState.DownloadProgress(progress))
+			val progressPercentage = (progress * 100).toInt()
+			if (progressPercentage > prevProgress) {
+				prevProgress = progressPercentage
+				Log.d(TAG, "DOWNLOAD PROGRESS:$progressPercentage")
+				onDownloadState(ModelDownloadState.DownloadProgress(progressPercentage))
+			}
 		}
 		// failed to download the file or failed to save the file
 		if (result.isFailure) {
@@ -86,24 +96,31 @@ internal class ModelDownloadMangerImpl(
 
 		try {
 			// un zip the file content
+			Log.d(TAG, "READY TO UNZIP THE FILE")
 			onDownloadState(ModelDownloadState.ModelUnzipping)
-			unZipFileContent(zipFile, targetFile)
+			val zipResult = unZipFileContent(zipFile, targetFile)
+			if (zipResult.isFailure) {
+				val exc = result.exceptionOrNull() as? Exception ?: Exception("Some exception")
+				return Result.failure(exc)
+			}
+			val modelSize = zipResult.getOrThrow()
+
+			onDownloadState(ModelDownloadState.ModelReadyToSave)
+
+			// TODO: ensures the repository is updated always
+			val updatedModel = readModel.copy(
+				state = STTModelState.DOWNLOADED,
+				size = modelSize,
+				localModelURI = targetFile.toUri().toString()
+			)
+			repository.updateSTTModel(updatedModel)
+			onDownloadState(ModelDownloadState.ModelSaved)
+
 		} finally {
 			withContext(NonCancellable) {
 				deleteDownloadedFile(zipFile)
+				onDownloadState(ModelDownloadState.DownloadCleanUpDone)
 			}
-		}
-		onDownloadState(ModelDownloadState.ModelSaved)
-
-		try {
-			val updatedMOdel = readModel.copy(
-				state = STTModelState.DOWNLOADED,
-				size = targetFile.totalSpace,
-				localModelURI = targetFile.toUri().toString()
-			).copy()
-			repository.updateSTTModel(updatedMOdel)
-		} catch (e: Exception) {
-			if (e is CancellationException) throw e
 		}
 		return Result.success(true)
 	}
@@ -160,16 +177,17 @@ internal class ModelDownloadMangerImpl(
 	}
 
 
-	suspend fun unZipFileContent(zipFile: File, targetFile: File) {
+	suspend fun unZipFileContent(zipFile: File, targetFile: File): Result<Long> {
 
 		val fileSystem = FileSystem.SYSTEM
 		val zipPath = zipFile.toOkioPath()
 		val targetPath = targetFile.toOkioPath()
+		var totalSize = 0L
 
-		withContext(Dispatchers.IO) {
+		return withContext(Dispatchers.IO) {
 			try {
 				fileSystem.openZip(zipPath).use { fs ->
-					val fsEntries = fs.listRecursively(" / ".toPath())
+					val fsEntries = fs.listRecursively("/".toPath())
 
 					for (entry in fsEntries) {
 						val metadata = fs.metadata(entry)
@@ -186,11 +204,24 @@ internal class ModelDownloadMangerImpl(
 							}
 						}
 					}
-					Log.d(TAG, "UNZIPPED INPUT FILE:$zipFile TARGET FILE:$targetFile SUCCESS")
 				}
+				Log.d(TAG, "UNZIPPED INPUT FILE:$zipFile TARGET FILE:$targetFile SUCCESS")
+
+				val sequence = fileSystem.listRecursively(targetPath)
+
+				for (path in sequence) {
+					val metadata = fileSystem.metadata(path)
+					if (metadata.isRegularFile) {
+						totalSize += metadata.size ?: 0L
+					}
+				}
+				val formattedSize = Formatter.formatFileSize(context, totalSize)
+				Log.d(TAG, "UNZIPPED FILE:$targetFile SIZE: $formattedSize")
+				Result.success(totalSize)
 			} catch (e: Exception) {
 				if (e is CancellationException) throw e
 				Log.e(TAG, "SOME EXCEPTION OCCURRED WHILE UNZIPPING", e)
+				Result.failure(e)
 			}
 		}
 	}
