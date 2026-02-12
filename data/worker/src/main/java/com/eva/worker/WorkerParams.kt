@@ -29,12 +29,18 @@ internal object WorkerParams {
 		"FILE URI IS REQUIRED TO COPY THE CONTENTS OF THE FILE"
 	const val WORK_DATA_SAVE_EDITED_ITEM_FILE_INVALID = "WRONG URI PROVIDED SHOULD BE A FILE"
 
-	// stt model download
+	// stt model download& delete
+	const val WORKER_TAG_STT_MODEL = "STT_MODEL"
 	const val WORK_DATA_STT_MODEL_ID = "WORK_DATA_STT_MODEL_ID"
+	const val WORK_DATA_STT_MODEL_LIST_ID = "WORK_DATA_STT_MODELS_ID"
+
 	const val WORK_DATA_SST_MODEL_WORK_SUCCESS = "WORKER_DATA_STT_MODEL_WORK_SUCCESS"
 	const val WORK_DATA_SST_MODEL_WORK_FAILED = "WORKED_DATA_STT_MODEL_WORK_FAILED"
-	const val WORK_DATA_SST_MODEL_ID_MISSING = "Required sst model id missing cannot download"
-
 	const val WORK_DATA_WORK_PROGRESS_PERCENTAGE = "WORK_DATA_WORK_PROGRESS_PERCENTAGE"
 	const val WORK_DATA_WORK_PROGRESS_MESSAGE = "WORK_DATA_WORK_PROGRESS_MESSAGE"
+
+	// messages
+	const val WORK_DATA_SST_MODEL_ID_MISSING = "Required sst model id missing cannot download"
+	const val WORK_DATA_FAILED_DELETE_MODEL = "Cannot delete the model please try again later"
+	const val WORK_DATA_SUCCESS_DELETE_MODEL = "Successfully deleted the model"
 }

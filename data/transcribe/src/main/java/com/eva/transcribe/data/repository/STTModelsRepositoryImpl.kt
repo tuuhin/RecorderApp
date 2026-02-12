@@ -24,8 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import okio.FileSystem
-import okio.Path.Companion.toOkioPath
+import okio.IOException
 import kotlin.time.Clock
 
 private const val TAG = "STT_MODELS_REPOSITORY"
@@ -74,8 +73,10 @@ internal class STTModelsRepositoryImpl(
 				?: return Result.failure(Exception("Model is not downloaded"))
 
 			withContext(Dispatchers.IO) {
-				val toFilePath = path.toUri().toFile().toOkioPath()
-				FileSystem.SYSTEM.delete(toFilePath)
+				Log.d(TAG, "DELETING THE MODEL FOLDER :${model.modelId}")
+				val file = path.toUri().toFile()
+				val isDeleted = file.deleteRecursively()
+				if (!isDeleted) throw IOException("Failed to delete the file")
 			}
 
 			val updatedModel =
@@ -121,7 +122,7 @@ internal class STTModelsRepositoryImpl(
 				val dbEntity = dbModels.find { it.modelId == model.modelId }
 				// we have an entry but it's a new version
 				if (dbEntity != null && dbEntity.externalModelVersion != model.version) {
-					Log.i(TAG,"${dbEntity.modelId} UPDATED NEW METADATA :$model")
+					Log.i(TAG, "${dbEntity.modelId} UPDATED NEW METADATA :$model")
 					dbEntity.copy(
 						status = STTModelEntity.ModelStatus.UPDATE_AVAILABLE,
 						externalModelURI = model.modelUri,

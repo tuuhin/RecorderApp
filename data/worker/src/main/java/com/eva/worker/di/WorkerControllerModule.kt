@@ -1,6 +1,7 @@
 package com.eva.worker.di
 
 import android.content.Context
+import com.eva.worker.controller.STTModelDeleteController
 import com.eva.worker.controller.STTModelDownloadController
 import dagger.Module
 import dagger.Provides
@@ -17,5 +18,10 @@ object WorkerControllerModule {
 	@ViewModelScoped
 	fun providesSTTController(@ApplicationContext context: Context): STTModelDownloadController =
 		STTModelDownloadController(context)
+
+	@Provides
+	@ViewModelScoped
+	fun providesSTTDeleteController(@ApplicationContext context: Context): STTModelDeleteController =
+		STTModelDeleteController(context)
 
 }
