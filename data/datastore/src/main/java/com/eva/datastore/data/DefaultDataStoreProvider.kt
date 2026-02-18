@@ -7,9 +7,11 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.eva.datastore.data.serializers.FileSettingsSerializer
 import com.eva.datastore.data.serializers.RecorderSettingsSerializer
+import com.eva.datastore.data.serializers.TranscriptionSettingsSerializer
 import com.eva.datastore.domain.DataStoreProvider
 import com.eva.datastore.proto.FileSettingsProto
 import com.eva.datastore.proto.RecorderSettingsProto
+import com.eva.datastore.proto.TranscriptionSettingsProto
 
 private val Context.preferences by preferencesDataStore(
 	name = DataStoreConstants.PREFERENCES_DATASTORE_FILE
@@ -25,6 +27,11 @@ private val Context.recorderFileSettings: DataStore<FileSettingsProto> by dataSt
 	serializer = FileSettingsSerializer
 )
 
+private val Context.transcriptionSettings: DataStore<TranscriptionSettingsProto> by dataStore(
+	fileName = DataStoreConstants.TRANSCRIPTION_SETTINGS_FILE_NAME,
+	serializer = TranscriptionSettingsSerializer
+)
+
 internal class DefaultDataStoreProvider(private val context: Context) : DataStoreProvider {
 
 	override val preferencesDataStore: DataStore<Preferences>
@@ -35,6 +42,9 @@ internal class DefaultDataStoreProvider(private val context: Context) : DataStor
 
 	override val fileSettingsDataStore: DataStore<FileSettingsProto>
 		get() = context.recorderFileSettings
+
+	override val transcriptionsDataStore: DataStore<TranscriptionSettingsProto>
+		get() = context.transcriptionSettings
 
 	override suspend fun cleanUp() = Unit
 

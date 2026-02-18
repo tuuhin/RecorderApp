@@ -5,11 +5,13 @@ import com.eva.datastore.domain.enums.RecordQuality
 import com.eva.datastore.domain.enums.RecordingEncoders
 import com.eva.datastore.domain.models.RecorderAudioSettings
 import com.eva.datastore.domain.models.RecorderFileSettings
+import com.eva.datastore.domain.models.TranscriptionSettings
 import com.eva.datastore.proto.FileSettingsProto
 import com.eva.datastore.proto.NamingFormatProto
 import com.eva.datastore.proto.RecorderEncodingFormatsProto
 import com.eva.datastore.proto.RecorderQualityProto
 import com.eva.datastore.proto.RecorderSettingsProto
+import com.eva.datastore.proto.TranscriptionSettingsProto
 
 internal fun RecorderSettingsProto.toDomain(): RecorderAudioSettings = RecorderAudioSettings(
 	encoders = encoder.toDomain,
@@ -27,6 +29,13 @@ internal fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSe
 	allowExternalRead = allowExternalRead,
 	exportItemPrefix = exportedItemPrefix,
 )
+
+internal fun TranscriptionSettingsProto.toDomain(): TranscriptionSettings =
+	TranscriptionSettings(
+		isEnabled = isEnabled,
+		modelId = if (transcriptionModelId.value != null)
+			transcriptionModelId.value else null
+	)
 
 internal val RecorderQualityProto.toDomain: RecordQuality
 	get() = when (this) {

@@ -2,19 +2,19 @@
   "models": [
     {
       "model": "vosk-model-small-en-in",
-      "locale": "en-in",
+      "locale": "en-IN",
       "version": "0.4",
       "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-en-in-0.4.zip"
     },
     {
       "model": "vosk-model-small-en-us",
-      "locale": "en-us",
+      "locale": "en-US",
       "version": "0.15",
       "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
     },
     {
       "model": "vosk-model-small-hi",
-      "locale": "hi",
+      "locale": "hi-IN",
       "version": "0.22",
       "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-hi-0.22.zip"
     }

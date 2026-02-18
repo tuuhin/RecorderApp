@@ -98,7 +98,10 @@ internal class ModelDownloadMangerImpl(
 			// un zip the file content
 			Log.d(TAG, "READY TO UNZIP THE FILE")
 			onDownloadState(ModelDownloadState.ModelUnzipping)
-			val zipResult = unZipFileContent(zipFile, targetFile)
+
+			// unzipped file will give a folder with the content which can be directly saved
+			// to the model folder
+			val zipResult = unZipFileContent(zipFile, modelFolder)
 			if (zipResult.isFailure) {
 				val exc = result.exceptionOrNull() as? Exception ?: Exception("Some exception")
 				return Result.failure(exc)

@@ -2,7 +2,7 @@ package com.eva.transcribe.di
 
 import com.eva.transcribe.data.AudioTranscriptorImpl
 import com.eva.transcribe.domain.AudioTranscriptor
-import com.eva.transcribe.domain.ModelFileProvider
+import com.eva.transcribe.domain.repository.STTModelsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,6 +16,8 @@ object TranscriberModule {
 
 	@Provides
 	@Singleton
-	fun providersTranscriptor(provider: ModelFileProvider, json: Json): AudioTranscriptor =
-		AudioTranscriptorImpl(pathProvider = provider, json = json)
+	fun providersTranscriptor(
+		repository: STTModelsRepository,
+		json: Json
+	): AudioTranscriptor = AudioTranscriptorImpl(repository, json = json)
 }

@@ -1,11 +1,12 @@
 package com.eva.transcribe.data
 
 import android.util.Log
+import androidx.core.net.toFile
+import androidx.core.net.toUri
 import com.eva.transcribe.BuildConfig
 import com.eva.transcribe.domain.AudioTranscriptor
-import com.eva.transcribe.domain.ModelFileProvider
-import com.eva.transcribe.domain.models.LanguageModel
 import com.eva.transcribe.domain.models.TranscriptionResult
+import com.eva.transcribe.domain.repository.STTModelsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -19,7 +20,7 @@ import kotlin.coroutines.cancellation.CancellationException
 private const val TAG = "AUDIO_TRANSCRIPTOR"
 
 internal class AudioTranscriptorImpl(
-	private val pathProvider: ModelFileProvider,
+	private val repository: STTModelsRepository,
 	private val json: Json,
 ) : AudioTranscriptor {
 
@@ -31,20 +32,34 @@ internal class AudioTranscriptorImpl(
 		LibVosk.setLogLevel(level)
 	}
 
-	override suspend fun setUp(language: LanguageModel, sampleRate: Float) {
-		try {
+	override suspend fun setUp(modelId: String, sampleRate: Float): Result<Unit> {
+		return try {
 			if (_model != null && _recognizer != null) {
 				// if this is already present only reset the recognizer
 				_recognizer?.reset()
 				Log.i(TAG, "RECOGNIZER ALREADY PRESENT RESTING")
-				return
+				return Result.failure(Exception("Recognizer is already set"))
 			}
-			val file = pathProvider.provideModelFile(language) ?: return
-			val model = Model(file.absolutePath).also { _model = it }
+			val sttModelResult = repository.readModelByLanguage(modelId)
+			if (sttModelResult.isFailure) {
+				Log.d(TAG, "CANNOT READ THE GIVEN MODEL TYPE")
+				return Result.failure(
+					sttModelResult.exceptionOrNull() ?: Exception("Cannot find model")
+				)
+			}
+			val sttModel = sttModelResult.getOrThrow()
+			val modelFile = sttModel.localModelURI?.toUri()?.toFile() ?: run {
+				Log.d(TAG, "MODEL IS NOT DOWNLOADED")
+				return Result.failure(Exception("Model absent download it to use"))
+			}
+			Log.d(TAG, "PREPARING MODEL AND RECOGNIZER | PATH :${modelFile.absolutePath}")
+			val model = Model(modelFile.absolutePath).also { _model = it }
 			_recognizer = Recognizer(model, sampleRate)
 			Log.i(TAG, "RECOGNIZER LOADED AND READY TO ROCK!")
+			Result.success(Unit)
 		} catch (e: IOException) {
 			Log.d(TAG, "SOME ERROR", e)
+			Result.failure(e)
 		}
 	}
 

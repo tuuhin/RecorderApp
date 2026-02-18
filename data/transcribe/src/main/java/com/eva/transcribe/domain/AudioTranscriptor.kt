@@ -1,11 +1,10 @@
 package com.eva.transcribe.domain
 
-import com.eva.transcribe.domain.models.LanguageModel
 import com.eva.transcribe.domain.models.TranscriptionResult
 
 interface AudioTranscriptor {
 
-	suspend fun setUp(language: LanguageModel = LanguageModel.EN_US, sampleRate: Float = 16_000f)
+	suspend fun setUp(modelId: String, sampleRate: Float = 16_000f): Result<Unit>
 
 	suspend fun recognizeAudio(buffer: ShortArray, length: Int): TranscriptionResult?
 

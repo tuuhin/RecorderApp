@@ -2,6 +2,7 @@ package com.eva.recorder.di
 
 import android.content.Context
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
+import com.eva.datastore.domain.repository.TranscriptionSettingsRepo
 import com.eva.location.domain.repository.LocationProvider
 import com.eva.recorder.data.RecorderWidgetInteracterImpl
 import com.eva.recorder.data.recorder.AudioRecordAmplitudeReader
@@ -81,8 +82,13 @@ internal object RecorderSingletonModule {
 	@Singleton
 	fun transcriptorProvider(
 		source: AudioByteDataProvider,
-		transcriptor: AudioTranscriptor
-	): TranscriptionProvider = TranscriptionProviderImpl(source, transcriptor)
+		transcriptor: AudioTranscriptor,
+		settingsRepo: TranscriptionSettingsRepo
+	): TranscriptionProvider = TranscriptionProviderImpl(
+		source = source,
+		transcriptor = transcriptor,
+		settingsRepo = settingsRepo
+	)
 
 
 	@Provides

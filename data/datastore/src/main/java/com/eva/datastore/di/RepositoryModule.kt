@@ -3,10 +3,12 @@ package com.eva.datastore.di
 import com.eva.datastore.data.repository.PreferencesSettingsRepoImpl
 import com.eva.datastore.data.repository.RecorderAudioSettingsRepoImpl
 import com.eva.datastore.data.repository.RecorderFileSettingsRepoImpl
+import com.eva.datastore.data.repository.TranscriptionSettingsRepoImpl
 import com.eva.datastore.domain.DataStoreProvider
 import com.eva.datastore.domain.repository.PreferencesSettingsRepo
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
+import com.eva.datastore.domain.repository.TranscriptionSettingsRepo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,4 +34,8 @@ object RepositoryModule {
 	fun providesOnBoardingSettings(provider: DataStoreProvider): PreferencesSettingsRepo =
 		PreferencesSettingsRepoImpl(provider.preferencesDataStore)
 
+	@Provides
+	@Singleton
+	fun providesTranscriptionSettings(provider: DataStoreProvider): TranscriptionSettingsRepo =
+		TranscriptionSettingsRepoImpl(provider.transcriptionsDataStore)
 }

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option java_package = "com.eva.datastore.proto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+import "google/protobuf/wrappers.proto";
+
+message  TranscriptionSettingsProto{
+  bool is_enabled = 1;
+  google.protobuf.StringValue transcription_model_id = 2;
+}

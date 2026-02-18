@@ -1,10 +1,10 @@
 package com.eva.recorder.data.recorder
 
 import android.util.Log
+import com.eva.datastore.domain.repository.TranscriptionSettingsRepo
 import com.eva.recorder.domain.recorder.AudioByteDataProvider
 import com.eva.recorder.domain.recorder.TranscriptionProvider
 import com.eva.transcribe.domain.AudioTranscriptor
-import com.eva.transcribe.domain.models.LanguageModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.currentCoroutineContext
@@ -22,7 +22,7 @@ private const val TAG = "TRANSCRIPTION_PROVIDER"
 internal class TranscriptionProviderImpl(
 	private val source: AudioByteDataProvider,
 	private val transcriptor: AudioTranscriptor,
-	private val isEnabled: Boolean = true,
+	private val settingsRepo: TranscriptionSettingsRepo,
 ) : TranscriptionProvider {
 
 	override val transcription: Flow<String>
@@ -44,8 +44,13 @@ internal class TranscriptionProviderImpl(
 			}
 
 	override suspend fun initTranscriptions() {
-		if (!isEnabled) return
-		transcriptor.setUp(LanguageModel.EN_IN)
+		val settings = settingsRepo.setting()
+		val currentModel: String? = settings.modelId
+		if (!settings.isEnabled || currentModel == null) {
+			Log.d(TAG, "TRANSLATIONS NOT ENABLED OR NO MODEL IS SELECTED")
+			return
+		}
+		transcriptor.setUp(currentModel)
 	}
 
 	override fun transcriptCleanUp() = transcriptor.cleanUp()

@@ -7,9 +7,11 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.eva.datastore.data.serializers.FileSettingsSerializer
 import com.eva.datastore.data.serializers.RecorderSettingsSerializer
+import com.eva.datastore.data.serializers.TranscriptionSettingsSerializer
 import com.eva.datastore.domain.DataStoreProvider
 import com.eva.datastore.proto.FileSettingsProto
 import com.eva.datastore.proto.RecorderSettingsProto
+import com.eva.datastore.proto.TranscriptionSettingsProto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -33,7 +35,13 @@ class TestDatastoreProvider(private val context: Context) : DataStoreProvider {
 	override val fileSettingsDataStore: DataStore<FileSettingsProto>
 		get() = DataStoreFactory.create(
 			serializer = FileSettingsSerializer,
-			produceFile = { File(_tempDir, "file_test.pb") }
+			produceFile = { File(_tempDir, "file_test_2.pb") }
+		)
+
+	override val transcriptionsDataStore: DataStore<TranscriptionSettingsProto>
+		get() = DataStoreFactory.create(
+			serializer = TranscriptionSettingsSerializer,
+			produceFile = { File(_tempDir, "file_test_3.pb") }
 		)
 
 	override suspend fun cleanUp() {
