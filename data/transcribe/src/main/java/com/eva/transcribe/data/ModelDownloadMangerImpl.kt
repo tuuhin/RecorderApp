@@ -91,6 +91,7 @@ internal class ModelDownloadMangerImpl(
 		// failed to download the file or failed to save the file
 		if (result.isFailure) {
 			val exc = result.exceptionOrNull() as? Exception ?: Exception("Some exception")
+			Log.e(TAG, "FAILED TO DOWNLOAD THE ZIP FILE", exc)
 			return Result.failure(exc)
 		}
 
@@ -104,6 +105,7 @@ internal class ModelDownloadMangerImpl(
 			val zipResult = unZipFileContent(zipFile, modelFolder)
 			if (zipResult.isFailure) {
 				val exc = result.exceptionOrNull() as? Exception ?: Exception("Some exception")
+				Log.e(TAG, "FAILED TO UNZIP THE FILE", exc)
 				return Result.failure(exc)
 			}
 			val modelSize = zipResult.getOrThrow()
@@ -146,6 +148,7 @@ internal class ModelDownloadMangerImpl(
 			}
 			val response = statement.execute()
 			if (response.status.value != 200) return Result.failure(ModelDownloadFailedException())
+			Log.d(TAG, "FOUND SOME RESPONSE_CODE: ${response.status}")
 			val channel = response.bodyAsChannel()
 			val result = channel.saveToFS(outputFile)
 			Result.success(result)
@@ -156,7 +159,7 @@ internal class ModelDownloadMangerImpl(
 	}
 
 
-	private suspend fun ByteReadChannel.saveToFS(file: File, bufferSize: Int = 10 * 1024): Boolean {
+	private suspend fun ByteReadChannel.saveToFS(file: File, bufferSize: Int = 2 * 1024): Boolean {
 		val filePath = file.toOkioPath()
 		val fs = FileSystem.SYSTEM
 		return withContext(Dispatchers.IO) {
@@ -205,19 +208,12 @@ internal class ModelDownloadMangerImpl(
 									writeAll(this@read)
 								}
 							}
+							val fileMetadata = fileSystem.metadata(targetFilePath)
+							totalSize += fileMetadata.size ?: 0L
 						}
 					}
 				}
 				Log.d(TAG, "UNZIPPED INPUT FILE:$zipFile TARGET FILE:$targetFile SUCCESS")
-
-				val sequence = fileSystem.listRecursively(targetPath)
-
-				for (path in sequence) {
-					val metadata = fileSystem.metadata(path)
-					if (metadata.isRegularFile) {
-						totalSize += metadata.size ?: 0L
-					}
-				}
 				val formattedSize = Formatter.formatFileSize(context, totalSize)
 				Log.d(TAG, "UNZIPPED FILE:$targetFile SIZE: $formattedSize")
 				Result.success(totalSize)

@@ -2,6 +2,7 @@ package com.eva.transcribe.di
 
 import android.content.Context
 import com.eva.database.dao.STTModelsDao
+import com.eva.transcribe.BuildConfig
 import com.eva.transcribe.data.ModelDownloadMangerImpl
 import com.eva.transcribe.data.repository.STTModelMetadataReader
 import com.eva.transcribe.data.repository.STTModelsRepositoryImpl
@@ -38,7 +39,7 @@ internal object ModelProviderModule {
 	@Singleton
 	fun providesHTTPClient(): HttpClient = HttpClient(Android) {
 		install(Logging) {
-			level = LogLevel.INFO
+			level = if (BuildConfig.DEBUG) LogLevel.INFO else LogLevel.NONE
 		}
 	}
 
@@ -48,7 +49,11 @@ internal object ModelProviderModule {
 		@ApplicationContext context: Context,
 		client: HttpClient,
 		repo: STTModelsRepository,
-	): ModelDownloadManager = ModelDownloadMangerImpl(context, client, repo)
+	): ModelDownloadManager = ModelDownloadMangerImpl(
+		context = context,
+		httpClient = client,
+		repository = repo
+	)
 
 
 	@Provides

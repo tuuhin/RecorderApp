@@ -33,33 +33,35 @@ internal class AudioTranscriptorImpl(
 	}
 
 	override suspend fun setUp(modelId: String, sampleRate: Float): Result<Unit> {
-		return try {
-			if (_model != null && _recognizer != null) {
-				// if this is already present only reset the recognizer
-				_recognizer?.reset()
-				Log.i(TAG, "RECOGNIZER ALREADY PRESENT RESTING")
-				return Result.failure(Exception("Recognizer is already set"))
+		return withContext(Dispatchers.IO) {
+			try {
+				if (_model != null && _recognizer != null) {
+					// if this is already present only reset the recognizer
+					_recognizer?.reset()
+					Log.i(TAG, "RECOGNIZER ALREADY PRESENT RESTING")
+					return@withContext Result.failure(Exception("Recognizer is already set"))
+				}
+				val sttModelResult = repository.readModelByLanguage(modelId)
+				if (sttModelResult.isFailure) {
+					Log.d(TAG, "CANNOT READ THE GIVEN MODEL TYPE")
+					return@withContext Result.failure(
+						sttModelResult.exceptionOrNull() ?: Exception("Cannot find model")
+					)
+				}
+				val sttModel = sttModelResult.getOrThrow()
+				val modelFile = sttModel.localModelURI?.toUri()?.toFile() ?: run {
+					Log.d(TAG, "MODEL IS NOT DOWNLOADED")
+					return@withContext Result.failure(Exception("Model absent download it to use"))
+				}
+				Log.d(TAG, "PREPARING MODEL AND RECOGNIZER | PATH :${modelFile.absolutePath}")
+				val model = Model(modelFile.absolutePath).also { _model = it }
+				_recognizer = Recognizer(model, sampleRate)
+				Log.i(TAG, "RECOGNIZER LOADED AND READY TO ROCK!")
+				Result.success(Unit)
+			} catch (e: IOException) {
+				Log.d(TAG, "SOME ERROR", e)
+				Result.failure(e)
 			}
-			val sttModelResult = repository.readModelByLanguage(modelId)
-			if (sttModelResult.isFailure) {
-				Log.d(TAG, "CANNOT READ THE GIVEN MODEL TYPE")
-				return Result.failure(
-					sttModelResult.exceptionOrNull() ?: Exception("Cannot find model")
-				)
-			}
-			val sttModel = sttModelResult.getOrThrow()
-			val modelFile = sttModel.localModelURI?.toUri()?.toFile() ?: run {
-				Log.d(TAG, "MODEL IS NOT DOWNLOADED")
-				return Result.failure(Exception("Model absent download it to use"))
-			}
-			Log.d(TAG, "PREPARING MODEL AND RECOGNIZER | PATH :${modelFile.absolutePath}")
-			val model = Model(modelFile.absolutePath).also { _model = it }
-			_recognizer = Recognizer(model, sampleRate)
-			Log.i(TAG, "RECOGNIZER LOADED AND READY TO ROCK!")
-			Result.success(Unit)
-		} catch (e: IOException) {
-			Log.d(TAG, "SOME ERROR", e)
-			Result.failure(e)
 		}
 	}
 
