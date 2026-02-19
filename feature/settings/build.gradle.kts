@@ -16,12 +16,11 @@ dependencies {
 	//navigation
 	implementation(libs.androidx.navigation.compose)
 	implementation(libs.androidx.hilt.navigation.compose)
-	//icons
-	implementation(libs.androidx.icons.extended)
 
 	implementation(project(":core:ui"))
 	implementation(project(":core:utils"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:datastore"))
-
+	implementation(project(":data:transcribe"))
+	implementation(project(":data:worker"))
 }

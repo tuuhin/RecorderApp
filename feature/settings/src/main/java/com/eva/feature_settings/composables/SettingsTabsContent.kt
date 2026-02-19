@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.eva.feature_settings.utils.SettingsTabs
 import com.eva.ui.R
@@ -32,6 +33,7 @@ internal fun SettingsTabContent(
 	audioSettings: @Composable () -> Unit,
 	filesSettings: @Composable () -> Unit,
 	modifier: Modifier = Modifier,
+	transcriptionSettings: @Composable () -> Unit = {},
 	initialTab: SettingsTabs = SettingsTabs.AUDIO_SETTINGS,
 	contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -62,7 +64,13 @@ internal fun SettingsTabContent(
 							pagerState.animateScrollToPage(index)
 						}
 					},
-					text = { Text(text = tab.textRes) },
+					text = {
+						Text(
+							text = tab.textRes,
+							maxLines = 2,
+							overflow = TextOverflow.Ellipsis
+						)
+					},
 				)
 			}
 		}
@@ -83,6 +91,7 @@ internal fun SettingsTabContent(
 			when (idx) {
 				SettingsTabs.AUDIO_SETTINGS.tabIndex -> audioSettings()
 				SettingsTabs.FILES_SETTINGS.tabIndex -> filesSettings()
+				SettingsTabs.TRANSCRIPTIONS_SETTINGS.tabIndex -> transcriptionSettings()
 				else -> {}
 			}
 		}

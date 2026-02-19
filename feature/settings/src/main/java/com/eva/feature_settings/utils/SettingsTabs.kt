@@ -8,12 +8,14 @@ internal enum class SettingsTabs(
 	val tabIndex: Int,
 ) {
 	AUDIO_SETTINGS(0),
-	FILES_SETTINGS(1);
+	FILES_SETTINGS(1),
+	TRANSCRIPTIONS_SETTINGS(2);
 
 	val textRes: String
 		@Composable
 		get() = when (this) {
 			AUDIO_SETTINGS -> stringResource(R.string.app_settings_audio)
 			FILES_SETTINGS -> stringResource(R.string.app_settings_files)
+			else -> stringResource(R.string.app_settings_transcriptions)
 		}
 }
