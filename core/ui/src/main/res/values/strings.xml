@@ -77,7 +77,7 @@
   <string name="audio_metadata_duration_title">Duration</string>
   <string name="audio_metadata_file_size_title">Size</string>
   <string name="audio_metadata_name_title">Name</string>
-  <string name="player_channel_resource_id">player_channel</string>
+  <string name="player_channel_resource_id" translatable="false">player_channel</string>
   <string name="show_recordings_list">List</string>
   <string name="player_playback_speed" translatable="false">%.2f x</string>
   <string name="player_action_speed">Speed</string>
@@ -272,4 +272,13 @@
   <string name="action_exit">Exit</string>
   <string name="editor_screen_exiting_warning_dialog_title">Cancel Edit</string>
   <string name="editor_screen_exiting_warning_dialog_desc">Exiting the editor screen will cancel your ongoing editing</string>
+  <string name="recordings_settings_transcriptions_title">Live transcriptions</string>
+  <string name="recordings_settings_transcriptions_desc">Manage real time transcriptions</string>
+  <string name="option_enable">Enabled</string>
+  <string name="recordings_transcriptions_settings_title">Transcription Settings</string>
+  <string name="delete_stt_model_dialog_text">Are you sure you want to delete translation file. Deleting this you would prevent from real time transcriptions</string>
+  <string name="recording_settings_features_title">Features</string>
+  <string name="recording_settings_features_text">List of additional features for your recordings</string>
+  <string name="app_settings_transcriptions">Transcription</string>
+  <string name="app_settings_extra_option_about" translatable="false">About</string>
 </resources>

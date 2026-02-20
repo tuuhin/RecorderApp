@@ -40,10 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -151,12 +148,7 @@ internal fun STTModelOptionCard(
 					verticalArrangement = Arrangement.spacedBy(4.dp)
 				) {
 					Text(
-						text = buildAnnotatedString {
-							append("ID :")
-							withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
-								append(sttModel.modelId)
-							}
-						},
+						text = sttModel.modelId,
 						style = MaterialTheme.typography.titleMedium,
 						color = if (enabled) MaterialTheme.colorScheme.onBackground
 						else MaterialTheme.colorScheme.onSurfaceVariant

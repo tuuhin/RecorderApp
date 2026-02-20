@@ -54,7 +54,7 @@ internal fun DeleteSTTModelFilesDialog(
 		},
 		icon = { Icon(painter = painterResource(R.drawable.ic_delete), contentDescription = null) },
 		title = { Text(text = "Delete :${modelId} ($formattedSize)") },
-		text = { Text(text = stringResource(R.string.delete_sttmodel_dialog_text)) },
+		text = { Text(text = stringResource(R.string.delete_stt_model_dialog_text)) },
 		modifier = modifier,
 		shape = shape,
 		tonalElevation = tonalElevation,

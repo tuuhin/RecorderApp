@@ -239,4 +239,12 @@
   <string name="action_exit">বাতিল</string>
   <string name="editor_screen_exiting_warning_dialog_title">এডিট বাতিল করুন</string>
   <string name="editor_screen_exiting_warning_dialog_desc">এডিটর স্ক্রিন থেকে বেরিয়ে গেলে আপনার সম্পাদনা বাতিল হয়ে যাবে</string>
+  <string name="recordings_transcriptions_settings_title">ট্রান্সক্রিপশন সেটিংস</string>
+  <string name="delete_stt_model_dialog_text">আপনি কি নিশ্চিত যে আপনি অনুবাদ ফাইলটি মুছে ফেলতে চান? এটি মুছে ফেললে রিয়েল-টাইম ট্রান্সক্রিপশন বন্ধ হয়ে যাবে।</string>
+  <string name="recording_settings_features_title">অন্যান্য বৈশিষ্ট্য</string>
+  <string name="recording_settings_features_text">আপনার রেকর্ডিংয়ের জন্য অতিরিক্ত বৈশিষ্ট্য</string>
+  <string name="recordings_settings_transcriptions_title">লাইভ ট্রান্সক্রিপশন</string>
+  <string name="recordings_settings_transcriptions_desc">রেকর্ডিংয়ের জন্য লাইভ ট্রান্সক্রিপশন পরিচালনা করুন</string>
+  <string name="option_enable">সক্রিয়</string>
+  <string name="app_settings_transcriptions">ট্রান্সক্রিপশন</string>
 </resources>

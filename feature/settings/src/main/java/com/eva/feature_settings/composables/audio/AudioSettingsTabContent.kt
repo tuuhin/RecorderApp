@@ -4,6 +4,7 @@ import android.os.PowerManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import com.eva.datastore.domain.models.RecorderAudioSettings
+import com.eva.feature_settings.composables.SettingsItemTitle
 import com.eva.feature_settings.composables.SettingsItemWithSwitch
 import com.eva.feature_settings.utils.AudioSettingsEvent
 import com.eva.ui.R
@@ -52,7 +54,12 @@ internal fun AudioSettingsTabContent(
 				)
 			}
 		}
-
+		item {
+			SettingsItemTitle(
+				title = stringResource(id = R.string.recording_settings_encoder_title),
+				text = stringResource(id = R.string.recording_settings_encoder_text),
+			)
+		}
 		item {
 			AudioEncoderSelector(
 				encoder = settings.encoders,
@@ -60,9 +67,23 @@ internal fun AudioSettingsTabContent(
 			)
 		}
 		item {
+			SettingsItemTitle(
+				title = stringResource(id = R.string.recording_settings_quality_title),
+				text = stringResource(id = R.string.recording_settings_quality_text)
+			)
+		}
+		item {
 			AudioQualitySelector(
 				quality = settings.quality,
-				onQualityChanged = { onEvent(AudioSettingsEvent.OnQualityChange(it)) }
+				onQualityChanged = { onEvent(AudioSettingsEvent.OnQualityChange(it)) },
+				modifier = Modifier.fillMaxWidth(),
+				contentPadding = PaddingValues(horizontal = 12.dp),
+			)
+		}
+		item {
+			SettingsItemTitle(
+				title = stringResource(id = R.string.recording_settings_features_title),
+				text = stringResource(id = R.string.recording_settings_features_text)
 			)
 		}
 		item {

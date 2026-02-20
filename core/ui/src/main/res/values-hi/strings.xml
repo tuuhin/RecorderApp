@@ -239,4 +239,12 @@
   <string name="action_exit">बाहर निकलें</string>
   <string name="editor_screen_exiting_warning_dialog_title">एडिट रद्द करें</string>
   <string name="editor_screen_exiting_warning_dialog_desc">एडिटर स्क्रीन से बाहर निकलने पर आपकी चल रही एडिटिंग हट जाएगी</string>
+  <string name="recordings_transcriptions_settings_title">प्रतिलेखन सेटिंग्स</string>
+  <string name="delete_stt_model_dialog_text">क्या आप वाकई ट्रांसलेशन फ़ाइल डिलीट करना चाहते हैं? इसे डिलीट करने से आप रियल टाइम ट्रांसक्रिप्शन से बच जाएँगे।</string>
+  <string name="recording_settings_features_title">अन्य विशेषता</string>
+  <string name="recording_settings_features_text">आपकी रिकॉर्डिंग के लिए अतिरिक्त सुविधाएँ</string>
+  <string name="recordings_settings_transcriptions_title">लाइव ट्रांसक्रिप्शन</string>
+  <string name="recordings_settings_transcriptions_desc">रिकॉर्डिंग के लिए लाइव ट्रांसक्रिप्शन मैनेज करें</string>
+  <string name="option_enable">सक्रिय</string>
+  <string name="app_settings_transcriptions">प्रतिलेखन</string>
 </resources>
