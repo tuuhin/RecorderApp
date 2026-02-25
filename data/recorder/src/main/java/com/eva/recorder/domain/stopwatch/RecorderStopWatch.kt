@@ -4,7 +4,7 @@ import com.eva.recorder.domain.models.RecorderState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +30,7 @@ internal class RecorderStopWatch(
 	private val delayTime: Duration = 80.milliseconds,
 ) {
 
-	private val scope = CoroutineScope(Dispatchers.Default)
+	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
 	private val _state = MutableStateFlow(RecorderState.IDLE)
 	val recorderState = _state.asStateFlow()
@@ -43,7 +43,7 @@ internal class RecorderStopWatch(
 		.onStart { updateElapsedTime() }
 		.stateIn(
 			scope = scope,
-			started = SharingStarted.WhileSubscribed(5_000L),
+			started = SharingStarted.Eagerly,
 			initialValue = LocalTime(0, 0, 0)
 		)
 
@@ -89,9 +89,7 @@ internal class RecorderStopWatch(
 	}
 
 	fun reset() {
-		//cancels the scope
-		scope.cancel()
-		// update the state
+		// update the state no need to cancel the scope
 		_state.update { RecorderState.IDLE }
 	}
 

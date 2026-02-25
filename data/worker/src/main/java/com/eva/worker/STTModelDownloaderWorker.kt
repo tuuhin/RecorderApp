@@ -80,6 +80,9 @@ internal class STTModelDownloaderWorker @AssistedInject constructor(
 			.setContentText(text)
 			.setSmallIcon(R.drawable.ic_model_download)
 			.setOngoing(true)
+			.setSilent(true)
+			.setCategory(NotificationCompat.CATEGORY_PROGRESS)
+			.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
 			.addAction(notificationAction).apply {
 				when (state) {
 					is ModelDownloadState.DownloadProgress ->

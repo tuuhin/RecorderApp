@@ -110,7 +110,7 @@ internal class VoiceRecorderImpl(
 		}
 
 		val audioSettings = settings.audioSettings()
-		val format = RecordFormats.Companion.fromEncoder(audioSettings.encoders)
+		val format = RecordFormats.fromEncoder(audioSettings.encoders)
 		val quality = audioSettings.quality
 		val channelCount = if (audioSettings.enableStereo) 2 else 1
 
@@ -176,7 +176,7 @@ internal class VoiceRecorderImpl(
 		// update the file
 		try {
 			val audioSettings = settings.audioSettings()
-			val format = RecordFormats.Companion.fromEncoder(audioSettings.encoders)
+			val format = RecordFormats.fromEncoder(audioSettings.encoders)
 
 			Log.d(TAG, "RECORDER FILE UPDATED")
 			return fileProvider.transferFileDataToStorage(

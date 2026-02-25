@@ -5,13 +5,16 @@ import com.eva.datastore.domain.repository.TranscriptionSettingsRepo
 import com.eva.recorder.domain.recorder.AudioByteDataProvider
 import com.eva.recorder.domain.recorder.TranscriptionProvider
 import com.eva.transcribe.domain.AudioTranscriptor
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.isActive
@@ -25,27 +28,33 @@ internal class TranscriptionProviderImpl(
 	private val settingsRepo: TranscriptionSettingsRepo,
 ) : TranscriptionProvider {
 
+	@OptIn(ExperimentalCoroutinesApi::class)
 	override val transcription: Flow<String>
-		get() = source.stream
-			.buffer(capacity = 50, onBufferOverflow = BufferOverflow.SUSPEND)
-			.filter { (buffer, size) -> buffer.isNotEmpty() && size > 0 }
-			.mapNotNull { (pcmBuffer, readSize) ->
-				if (!currentCoroutineContext().isActive) return@mapNotNull null
-				val rmsValue = pcmBuffer.rms(readSize)
-				if (rmsValue <= AudioTranscriptor.MIN_RMS_TO_RECOGNIZE) return@mapNotNull null
-				val bufferCopy = pcmBuffer.copyOf(readSize)
-				// feed this to transcriber
-				transcriptor.recognizeAudio(bufferCopy, readSize)
-			}
-			.map { it.fullResult.ifBlank { it.partial } }
-			.catch { e ->
-				// Log your error here so the app doesn't die
-				Log.e(TAG, "SOME ERROR: ${e.message}")
-			}
+		get() = settingsRepo.settingsFlow.flatMapLatest { settings ->
+			if (settings.isEnabled && settings.modelId != null) readTranscriptionFlow()
+			else emptyFlow()
+		}
+
+	private fun readTranscriptionFlow() = source.stream
+		.buffer(capacity = 50, onBufferOverflow = BufferOverflow.SUSPEND)
+		.filter { (buffer, size) -> buffer.isNotEmpty() && size > 0 }
+		.mapNotNull { (pcmBuffer, readSize) ->
+			if (!currentCoroutineContext().isActive) return@mapNotNull null
+			val rmsValue = pcmBuffer.rms(readSize)
+			if (rmsValue <= AudioTranscriptor.MIN_RMS_TO_RECOGNIZE) return@mapNotNull null
+			val bufferCopy = pcmBuffer.copyOf(readSize)
+			// feed this to transcriber
+			transcriptor.recognizeAudio(bufferCopy, readSize)
+		}
+		.map { it.fullResult.ifBlank { it.partial } }
+		.catch { e ->
+			// Log your error here so the app doesn't die
+			Log.e(TAG, "SOME ERROR: ${e.message}")
+		}
 
 	override suspend fun initTranscriptions() {
 		val settings = settingsRepo.setting()
-		val currentModel: String? = settings.modelId
+		val currentModel = settings.modelId
 		if (!settings.isEnabled || currentModel == null) {
 			Log.d(TAG, "TRANSLATIONS NOT ENABLED OR NO MODEL IS SELECTED")
 			return
