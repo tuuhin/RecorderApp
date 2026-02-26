@@ -12,9 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.eva.datastore.domain.models.TranscriptionSettings
 import com.eva.feature_recorder.composable.MicPermissionWrapper
 import com.eva.feature_recorder.composable.RecorderContent
 import com.eva.feature_recorder.composable.RecorderTopBar
+import com.eva.feature_recorder.util.TranslationDataBlock
 import com.eva.feature_recorder.util.showTopBarActions
 import com.eva.recorder.domain.models.RecorderAction
 import com.eva.recorder.domain.models.RecorderState
@@ -38,7 +40,8 @@ internal fun VoiceRecorderScreen(
 	onNavigateToSettings: () -> Unit,
 	onNavigateToBin: () -> Unit,
 	modifier: Modifier = Modifier,
-	transcriptions: String? = null,
+	transcriptions: TranslationDataBlock = TranslationDataBlock(),
+	transcriptionSettings: TranscriptionSettings = TranscriptionSettings(),
 	navigation: @Composable () -> Unit = {},
 ) {
 
@@ -86,6 +89,7 @@ internal fun VoiceRecorderScreen(
 				onRecorderAction = onRecorderAction,
 				isStartRecordingEnabled = isRecorderReady,
 				transcriptions = transcriptions,
+				transcriptionSettings = transcriptionSettings,
 				modifier = Modifier.fillMaxSize()
 			)
 		}

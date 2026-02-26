@@ -5,8 +5,8 @@
   <dimen name="graph_card_padding">20dp</dimen>
   <dimen name="sc_padding_secondary">6dp</dimen>
   <dimen name="recorder_button_size">56dp</dimen>
-  <dimen name="recordings_action_offset">-36dp</dimen>
-  <dimen name="graph_offset">-80dp</dimen>
+  <dimen name="recordings_action_offset">-30dp</dimen>
+  <dimen name="graph_offset">-60dp</dimen>
   <dimen name="player_actions_padding">20dp</dimen>
   <dimen name="bottom_sheet_padding_lg">20dp</dimen>
   <dimen name="line_graph_min_height">150dp</dimen>

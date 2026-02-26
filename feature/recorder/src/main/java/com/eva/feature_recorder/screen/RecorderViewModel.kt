@@ -1,6 +1,9 @@
 package com.eva.feature_recorder.screen
 
 import androidx.lifecycle.viewModelScope
+import com.eva.datastore.domain.models.TranscriptionSettings
+import com.eva.datastore.domain.repository.TranscriptionSettingsRepo
+import com.eva.feature_recorder.util.TranslationDataBlock
 import com.eva.recorder.domain.RecorderActionHandler
 import com.eva.recorder.domain.RecorderServiceBinder
 import com.eva.recorder.domain.models.RecorderAction
@@ -9,14 +12,21 @@ import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
@@ -29,6 +39,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class RecorderViewModel @Inject constructor(
 	private val handler: RecorderActionHandler,
 	private val recorderService: RecorderServiceBinder,
+	transcriptionSettings: TranscriptionSettingsRepo,
 ) : AppViewModel() {
 
 	private val _uiEvents = MutableSharedFlow<UIEvents>()
@@ -65,14 +76,24 @@ internal class RecorderViewModel @Inject constructor(
 			initialValue = emptyList()
 		)
 
-	val transcriptions = combine(
-		recorderService.recorderState,
-		controlledTranscriptions(),
-	) { state, trans -> if (state.canReadAmplitudes) trans else null }
+	@OptIn(ExperimentalCoroutinesApi::class)
+	val transcriptionsResult = recorderService.recorderState
+		.flatMapLatest { state ->
+			if (!state.canReadAmplitudes) flowOf(TranslationDataBlock())
+			else controlledTranscriptions(silenceThreshold = 2.seconds)
+		}
+		.flowOn(Dispatchers.Default)
 		.stateIn(
 			scope = viewModelScope,
 			started = SharingStarted.Eagerly,
-			null,
+			initialValue = TranslationDataBlock(),
+		)
+
+	val transcribeSettings = transcriptionSettings.settingsFlow
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(5_000L),
+			initialValue = TranscriptionSettings()
 		)
 
 	fun onAction(action: RecorderAction) {
@@ -95,17 +116,41 @@ internal class RecorderViewModel @Inject constructor(
 		}
 	}
 
-	@OptIn(ExperimentalCoroutinesApi::class)
-	private fun controlledTranscriptions(slowDownDelay: Duration = 1.seconds) =
-		recorderService.transcriptions.transformLatest { wordsStream ->
-			val result = wordsStream.split(" ")
-				.let { words -> if (words.size > 10) words.takeLast(10) else words }
-				.joinToString(" ")
+	@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+	private fun controlledTranscriptions(
+		maxWords: Int = 6,
+		silenceThreshold: Duration = 1.seconds
+	): Flow<TranslationDataBlock> {
 
-			emit(result)
-			delay(slowDownDelay)
-			emit(null)
-		}
+		var blockCounter = 0
+		val space = "\\s+".toRegex()
+		val previousBlock = MutableStateFlow<List<String>>(emptyList())
+
+		return recorderService.transcriptions
+			.filter { it.isNotBlank() }
+			.transformLatest { newText ->
+				val words = newText.split(space)
+					.filter(String::isNotBlank)
+
+				// check if elements have any match
+				if (!previousBlock.value.any { it in words })
+					blockCounter++
+
+				val result = words.takeLast(maxWords).joinToString(" ")
+
+				if (result.isNotBlank()) {
+					val activeBlock = TranslationDataBlock(blockCounter, result)
+					emit(activeBlock)
+					// set the new block of words
+					previousBlock.value = words
+				}
+
+				// a delay to skip some
+				delay(silenceThreshold)
+				blockCounter++
+				emit(TranslationDataBlock(blockNumber = blockCounter))
+			}
+	}
 
 
 	override fun onCleared() {
