@@ -5,23 +5,21 @@ import com.eva.datastore.domain.repository.TranscriptionSettingsRepo
 import com.eva.recorder.domain.recorder.AudioByteDataProvider
 import com.eva.recorder.domain.recorder.TranscriptionProvider
 import com.eva.transcribe.domain.AudioTranscriptor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.isActive
 
 private const val TAG = "TRANSCRIPTION_PROVIDER"
 
-@OptIn(FlowPreview::class)
 internal class TranscriptionProviderImpl(
 	private val source: AudioByteDataProvider,
 	private val transcriptor: AudioTranscriptor,
@@ -36,17 +34,25 @@ internal class TranscriptionProviderImpl(
 		}
 
 	private fun readTranscriptionFlow() = source.stream
-		.buffer(capacity = 50, onBufferOverflow = BufferOverflow.SUSPEND)
-		.filter { (buffer, size) -> buffer.isNotEmpty() && size > 0 }
+		.buffer(capacity = 64, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+		.filter { (_, size) -> size > 0 }
 		.mapNotNull { (pcmBuffer, readSize) ->
-			if (!currentCoroutineContext().isActive) return@mapNotNull null
 			val rmsValue = pcmBuffer.rms(readSize)
 			if (rmsValue <= AudioTranscriptor.MIN_RMS_TO_RECOGNIZE) return@mapNotNull null
-			val bufferCopy = pcmBuffer.copyOf(readSize)
-			// feed this to transcriber
-			transcriptor.recognizeAudio(bufferCopy, readSize)
+			try {
+				// feed this to transcriber
+				transcriptor.recognizeAudio(pcmBuffer, readSize)
+			} catch (e: Exception) {
+				Log.e(TAG, "ERROR IN TRANSCRIPTION", e)
+				return@mapNotNull null
+			}
 		}
-		.map { it.fullResult.ifBlank { it.partial } }
+		.flowOn(Dispatchers.Default)
+		.map { result ->
+			// using partial results are good for live transcriptions
+			// a full result is mostly contamination of all the partial results
+			result.partial
+		}
 		.catch { e ->
 			// Log your error here so the app doesn't die
 			Log.e(TAG, "SOME ERROR: ${e.message}")

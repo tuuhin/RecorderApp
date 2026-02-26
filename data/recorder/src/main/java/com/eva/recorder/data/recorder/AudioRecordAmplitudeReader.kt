@@ -11,6 +11,7 @@ import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.domain.recorder.AudioDataReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
@@ -154,9 +155,13 @@ internal class AudioRecordAmplitudeReader(
 					// these are raw bytes
 					val bufferCopy = pcmBuffer.copyOf(shortsRead)
 					trySend(bufferCopy to shortsRead)
+
+					// ensure the coroutine is active
+					ensureActive()
 				}
 			} catch (e: Exception) {
-				if (e is CancellationException) Log.d(TAG, "NO MORE PROCESSING VALUES")
+				if (e is CancellationException)
+					Log.d(TAG, "NO MORE PROCESSING VALUES FLOW COLLECTION CANCELLED")
 				e.printStackTrace()
 			}
 		}.flowOn(Dispatchers.IO)

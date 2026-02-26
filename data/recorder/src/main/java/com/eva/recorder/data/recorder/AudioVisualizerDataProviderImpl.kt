@@ -68,16 +68,17 @@ internal class AudioVisualizerDataProviderImpl(
 		.map { (shorts, size) -> if (size >= 0) shorts.rms(size) else .0f }
 		.flowOn(Dispatchers.Default)
 		.sample(delayRate)
-		.onCompletion {
-			Log.d(TAG, "FLOW READ IS COMPLETED")
-			clearBuffer()
-		}
+
 
 	override val dataPoints: Flow<List<RecordedPoint>>
 		get() = combine(slowedRmsPoints, stopWatch.elapsedTime) { rms, t -> rms to t.toMillisecondOfDay() }
 			.flatMapLatest { (rms, time) -> toFixedSizeCollection(rms, time) }
 			.mapLatest { points -> points.normalizedAndPadded() }
 			.flowOn(Dispatchers.Default)
+			.onCompletion {
+				Log.d(TAG, "FLOW READ IS COMPLETED")
+				clearBuffer()
+			}
 
 
 	private fun toFixedSizeCollection(newValue: Float, stopWatchTime: Int) = flow {
