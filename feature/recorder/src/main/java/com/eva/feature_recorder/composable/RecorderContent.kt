@@ -41,7 +41,8 @@ internal fun RecorderContent(
 	modifier: Modifier = Modifier,
 	transcriptions: TranslationDataBlock = TranslationDataBlock(),
 	isStartRecordingEnabled: Boolean = true,
-	transcriptionSettings: TranscriptionSettings = TranscriptionSettings()
+	transcriptionSettings: TranscriptionSettings = TranscriptionSettings(),
+	onNavigateToSettings: () -> Unit = {},
 ) {
 	Box(
 		modifier = modifier,
@@ -61,6 +62,7 @@ internal fun RecorderContent(
 				onAddBookMark = { onRecorderAction(RecorderAction.AddBookMarkAction) },
 				recorderState = recorderState,
 				transcriptionSettings = transcriptionSettings,
+				onOpenSettings = onNavigateToSettings,
 				modifier = Modifier.align(Alignment.CenterHorizontally)
 			)
 			RecorderAmplitudeGraph(

@@ -284,4 +284,5 @@
   <string name="recorder_transcriptions_about_dialog_title">Live Transcriptions</string>
   <string name="recorder_transcriptions_about_dialog_text_not_enabled">Live Transcriptions are not enabled, Turn on from settings to receive live transcription while recording</string>
   <string name="recorder_transcriptions_about_dialog_text_enabled">Live Transcriptions are running with model </string>
+  <string name="stt_models_list_title">Transcription Models</string>
 </resources>

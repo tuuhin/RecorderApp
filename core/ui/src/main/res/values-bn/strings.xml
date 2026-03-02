@@ -247,4 +247,8 @@
   <string name="recordings_settings_transcriptions_desc">রেকর্ডিংয়ের জন্য লাইভ ট্রান্সক্রিপশন পরিচালনা করুন</string>
   <string name="option_enable">সক্রিয়</string>
   <string name="app_settings_transcriptions">ট্রান্সক্রিপশন</string>
+  <string name="recorder_transcriptions_about_dialog_title">" লাইভ ট্রান্সক্রিপশন"</string>
+  <string name="recorder_transcriptions_about_dialog_text_not_enabled">লাইভ ট্রান্সক্রিপশন চালু নেই, রেকর্ডিংয়ের সময় লাইভ ট্রান্সক্রিপশন পেতে সেটিংস থেকে চালু করুন</string>
+  <string name="recorder_transcriptions_about_dialog_text_enabled">মডেলের সাথে লাইভ ট্রান্সক্রিপশন চলছে</string>
+  <string name="stt_models_list_title">ট্রান্সক্রিপশন মডেল</string>
 </resources>

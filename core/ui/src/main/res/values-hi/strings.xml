@@ -247,4 +247,8 @@
   <string name="recordings_settings_transcriptions_desc">रिकॉर्डिंग के लिए लाइव ट्रांसक्रिप्शन मैनेज करें</string>
   <string name="option_enable">सक्रिय</string>
   <string name="app_settings_transcriptions">प्रतिलेखन</string>
+  <string name="recorder_transcriptions_about_dialog_title">लाइव ट्रांसक्रिप्शन</string>
+  <string name="recorder_transcriptions_about_dialog_text_not_enabled">लाइव ट्रांसक्रिप्शन चालू नहीं है, रिकॉर्डिंग के दौरान लाइव ट्रांसक्रिप्शन प्राप्त करने के लिए इसे सेटिंग्स से चालू करें।</string>
+  <string name="recorder_transcriptions_about_dialog_text_enabled">लाइव ट्रांसक्रिप्शन मॉडल के साथ चल रहे हैं</string>
+  <string name="stt_models_list_title">प्रतिलेखन मॉडल</string>
 </resources>

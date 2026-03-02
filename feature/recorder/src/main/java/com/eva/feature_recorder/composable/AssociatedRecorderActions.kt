@@ -1,10 +1,13 @@
 package com.eva.feature_recorder.composable
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
@@ -35,6 +38,7 @@ import com.eva.ui.R
 @Composable
 internal fun AssociatedRecorderActions(
 	onAddBookMark: () -> Unit,
+	onOpenSettings: () -> Unit,
 	modifier: Modifier = Modifier,
 	recorderState: RecorderState = RecorderState.RECORDING,
 	transcriptionSettings: TranscriptionSettings = TranscriptionSettings(),
@@ -44,6 +48,10 @@ internal fun AssociatedRecorderActions(
 
 	TranscriptionsDialog(
 		showDialog = showDialog,
+		onOpenSettings = {
+			onOpenSettings()
+			showDialog = false
+		},
 		transcriptionSettings = transcriptionSettings,
 		onDismiss = { showDialog = false },
 		iconContentColor = MaterialTheme.colorScheme.primary,
@@ -99,6 +107,7 @@ internal fun AssociatedRecorderActions(
 private fun TranscriptionsDialog(
 	showDialog: Boolean,
 	onDismiss: () -> Unit,
+	onOpenSettings: () -> Unit,
 	modifier: Modifier = Modifier,
 	transcriptionSettings: TranscriptionSettings = TranscriptionSettings(),
 	shape: Shape = AlertDialogDefaults.shape,
@@ -109,11 +118,24 @@ private fun TranscriptionsDialog(
 	iconContentColor: Color = AlertDialogDefaults.iconContentColor,
 	properties: DialogProperties = DialogProperties()
 ) {
+
 	if (!showDialog) return
 
 	AlertDialog(
 		onDismissRequest = onDismiss,
-		confirmButton = {},
+		confirmButton = {
+			AnimatedVisibility(visible = !transcriptionSettings.isEnabled || transcriptionSettings.modelId == null) {
+				Button(
+					onClick = onOpenSettings,
+					colors = ButtonDefaults.buttonColors(
+						containerColor = MaterialTheme.colorScheme.primaryContainer,
+						contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+					)
+				) {
+					Text("Open Settings")
+				}
+			}
+		},
 		title = { Text(text = stringResource(R.string.recorder_transcriptions_about_dialog_title)) },
 		text = {
 			if (transcriptionSettings.isEnabled && transcriptionSettings.modelId != null)

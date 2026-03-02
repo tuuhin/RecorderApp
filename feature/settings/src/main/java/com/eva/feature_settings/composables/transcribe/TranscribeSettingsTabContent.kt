@@ -84,7 +84,7 @@ internal fun TranscribeSettingsTabContent(
 		}
 		item {
 			SettingsItemTitle(
-				title = "Transcriptions Models",
+				title = stringResource(R.string.stt_models_list_title),
 				titleStyle = MaterialTheme.typography.titleMedium,
 				titleColor = MaterialTheme.colorScheme.onSurface,
 				modifier = Modifier.padding(vertical = 6.dp)
@@ -103,6 +103,7 @@ internal fun TranscribeSettingsTabContent(
 				onSelect = { onSelectSTTModel(model) },
 				onUnSelect = onUnSelectSTTModel,
 				onSelectInvalid = { onSelectInvalidModel(model) },
+				enabled = isTranscriptionActive,
 				modifier = Modifier
 					.fillMaxWidth()
 					.animateItem()

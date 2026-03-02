@@ -51,14 +51,17 @@ fun SettingsScreenTopAppbar(
 					containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
 				) {
 					DropdownMenuItem(
-						text = { Text("About") },
+						text = { Text(stringResource(R.string.app_settings_extra_option_about)) },
 						leadingIcon = {
 							Icon(
 								imageVector = Icons.Outlined.Info,
 								contentDescription = stringResource(R.string.extras_info)
 							)
 						},
-						onClick = onNavigateToInfo
+						onClick = {
+							showMenu = false
+							onNavigateToInfo()
+						}
 					)
 				}
 			}

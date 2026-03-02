@@ -35,7 +35,9 @@ fun NavGraphBuilder.settingsRoute(controller: NavController) = composable<NavRou
 	val sttModels by sttModelsViewmodel.modelsInfo.collectAsStateWithLifecycle()
 	val transcriptionSettings by sttModelsViewmodel.transcriptionSettings.collectAsStateWithLifecycle()
 
-	UiEventsHandler(eventsFlow = { merge(settingsViewModel.uiEvent, sttModelsViewmodel.uiEvent) })
+	UiEventsHandler(eventsFlow = {
+		merge(settingsViewModel.uiEvent, sttModelsViewmodel.uiEvent)
+	})
 
 	CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
 		AudioSettingsScreen(

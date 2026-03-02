@@ -1,5 +1,6 @@
 package com.eva.feature_settings.composables.transcribe
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.ButtonDefaults
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.eva.ui.R
 
 @Composable
@@ -52,9 +54,17 @@ internal fun DeleteSTTModelFilesDialog(
 				Text(text = stringResource(R.string.action_cancel))
 			}
 		},
-		icon = { Icon(painter = painterResource(R.drawable.ic_delete), contentDescription = null) },
-		title = { Text(text = "Delete :${modelId} ($formattedSize)") },
-		text = { Text(text = stringResource(R.string.delete_stt_model_dialog_text)) },
+		icon = {
+			Icon(
+				painter = painterResource(R.drawable.ic_delete),
+				contentDescription = null,
+				modifier = Modifier.size(32.dp)
+			)
+		},
+		title = { Text(text = stringResource(R.string.recording_action_delete)) },
+		text = {
+			Text(text = stringResource(R.string.delete_stt_model_dialog_text))
+		},
 		modifier = modifier,
 		shape = shape,
 		tonalElevation = tonalElevation,

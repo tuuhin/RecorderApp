@@ -29,6 +29,7 @@ import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -70,6 +72,9 @@ internal fun STTModelOptionCard(
 	isSelected: Boolean = false,
 	contentPadding: PaddingValues = PaddingValues(12.dp),
 	shape: Shape = MaterialTheme.shapes.large,
+	selectedContainerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+	containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+	disabledContainerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow
 ) {
 
 	val context = LocalContext.current
@@ -88,6 +93,10 @@ internal fun STTModelOptionCard(
 		)
 	}
 
+	val cardContainerColor = if (enabled && isSelected) selectedContainerColor
+	else if (enabled) containerColor
+	else disabledContainerColor
+
 	DeleteSTTModelFilesDialog(
 		showDialog = showDialog,
 		modelId = sttModel.modelId,
@@ -101,7 +110,7 @@ internal fun STTModelOptionCard(
 
 	Row(
 		modifier = modifier, verticalAlignment = Alignment.CenterVertically,
-		horizontalArrangement = Arrangement.spacedBy(12.dp)
+		horizontalArrangement = Arrangement.spacedBy(10.dp)
 	) {
 		AnimatedVisibility(
 			visible = isSelected,
@@ -112,7 +121,7 @@ internal fun STTModelOptionCard(
 				modifier = Modifier
 					.size(40.dp)
 					.background(
-						color = MaterialTheme.colorScheme.primaryContainer,
+						color = if (enabled) cardContainerColor else disabledContainerColor,
 						shape = RoundedPolygonShape(polygon = polygonShape)
 					),
 				contentAlignment = Alignment.Center,
@@ -120,7 +129,7 @@ internal fun STTModelOptionCard(
 				Icon(
 					painter = painterResource(R.drawable.ic_check_plain),
 					contentDescription = "Model selected",
-					tint = MaterialTheme.colorScheme.onPrimaryContainer
+					tint = contentColorFor(if (enabled) cardContainerColor else disabledContainerColor)
 				)
 			}
 		}
@@ -131,8 +140,9 @@ internal fun STTModelOptionCard(
 				if (sttModel.state != STTModelState.DOWNLOADED) onSelectInvalid()
 				if (isSelected) onUnSelect() else onSelect()
 			},
-			color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-			contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
+			enabled = enabled,
+			color = cardContainerColor,
+			contentColor = contentColorFor(cardContainerColor),
 			shape = shape
 		) {
 			Row(
@@ -153,33 +163,13 @@ internal fun STTModelOptionCard(
 						color = if (enabled) MaterialTheme.colorScheme.onBackground
 						else MaterialTheme.colorScheme.onSurfaceVariant
 					)
-					Row(
-						modifier = Modifier.height(IntrinsicSize.Min),
-						horizontalArrangement = Arrangement.spacedBy(4.dp)
-					) {
-						Text(
-							text = buildAnnotatedString {
-								append("Locale: ")
-								append(sttModel.locale)
-							},
-							style = MaterialTheme.typography.labelMedium,
-							color = if (enabled) MaterialTheme.colorScheme.onBackground
-							else MaterialTheme.colorScheme.onSurfaceVariant
-						)
-						VerticalDivider(
-							thickness = 2.dp,
-							modifier = Modifier.padding(horizontal = 2.dp)
-						)
-						Text(
-							text = buildAnnotatedString {
-								append("Size: ")
-								append(formattedSize)
-							},
-							style = MaterialTheme.typography.labelMedium,
-							color = if (enabled) MaterialTheme.colorScheme.onBackground
-							else MaterialTheme.colorScheme.onSurfaceVariant
-						)
-					}
+					STTModelCardDescription(
+						isDownloaded = sttModel.state == STTModelState.DOWNLOADED,
+						locale = sttModel.locale,
+						formattedSize = formattedSize,
+						enabled = enabled,
+						modifier = Modifier.height(IntrinsicSize.Min)
+					)
 				}
 				TooltipBox(
 					positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
@@ -187,7 +177,13 @@ internal fun STTModelOptionCard(
 					),
 					tooltip = {
 						PlainTooltip {
-							Text("Some state")
+							val modelText = when (sttModel.state) {
+								STTModelState.UN_AVAILABLE -> "Downloadable"
+								STTModelState.DOWNLOADING -> "Downloading"
+								STTModelState.DOWNLOADED -> "Ready"
+								STTModelState.UPDATE_AVAILABLE -> "Update Available"
+							}
+							Text(text = modelText)
 						}
 					},
 					state = rememberTooltipState()
@@ -213,6 +209,47 @@ internal fun STTModelOptionCard(
 						}
 					}
 				}
+			}
+		}
+	}
+}
+
+@Composable
+fun STTModelCardDescription(
+	isDownloaded: Boolean,
+	locale: String,
+	formattedSize: String,
+	modifier: Modifier = Modifier,
+	enabled: Boolean = true
+) {
+	Row(
+		modifier = modifier,
+		horizontalArrangement = Arrangement.spacedBy(4.dp)
+	) {
+		Text(
+			text = buildAnnotatedString {
+				append("Locale: ")
+				append(locale)
+			},
+			style = MaterialTheme.typography.labelMedium,
+			color = if (enabled) MaterialTheme.colorScheme.onBackground
+			else MaterialTheme.colorScheme.onSurfaceVariant
+		)
+		AnimatedVisibility(visible = isDownloaded) {
+			Row {
+				VerticalDivider(
+					thickness = 2.dp,
+					modifier = Modifier.padding(horizontal = 2.dp)
+				)
+				Text(
+					text = buildAnnotatedString {
+						append("Size: ")
+						append(formattedSize)
+					},
+					style = MaterialTheme.typography.labelMedium,
+					color = if (enabled) MaterialTheme.colorScheme.onBackground
+					else MaterialTheme.colorScheme.onSurfaceVariant
+				)
 			}
 		}
 	}

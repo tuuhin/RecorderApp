@@ -90,6 +90,7 @@ internal fun VoiceRecorderScreen(
 				isStartRecordingEnabled = isRecorderReady,
 				transcriptions = transcriptions,
 				transcriptionSettings = transcriptionSettings,
+				onNavigateToSettings = onNavigateToSettings,
 				modifier = Modifier.fillMaxSize()
 			)
 		}
