@@ -73,7 +73,7 @@ internal fun RecorderContent(
 			)
 			RecorderLiveTranscriptionText(
 				result = transcriptions,
-				fontFamily = DownloadableFonts.NOVA_MONO_FONT_FAMILY,
+				fontFamily = DownloadableFonts.SOURCE_SANS_3_FONT_FAMILY,
 				modifier = Modifier
 					.fillMaxWidth()
 					.heightIn(min = 64.dp)

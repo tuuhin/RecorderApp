@@ -22,13 +22,14 @@ graph TB
     :data:database["database"]
     :data:recordings["recordings"]
     :data:datastore["datastore"]
+    :data:transcribe["transcribe"]
+    :data:worker["worker"]
     :data:recorder["recorder"]
     :data:use_case["use_case"]
     :data:location["location"]
     :data:editor["editor"]
     :data:player["player"]
     :data:worker["worker"]
-    :data:worker["worker"]
     :data:bookmarks["bookmarks"]
     :data:interactions["interactions"]
     :data:interactions["interactions"]
@@ -39,6 +40,7 @@ graph TB
     :data:recorder["recorder"]
     :data:location["location"]
     :data:visualizer["visualizer"]
+    :data:transcribe["transcribe"]
     :data:use_case["use_case"]
     :data:categories["categories"]
     :data:database["database"]
@@ -76,6 +78,8 @@ graph TB
   :feature:settings --> :core:utils
   :feature:settings --> :data:recordings
   :feature:settings --> :data:datastore
+  :feature:settings --> :data:transcribe
+  :feature:settings --> :data:worker
   :feature:widget --> :testing:runtime
   :feature:widget --> :core:utils
   :feature:widget --> :core:ui
@@ -95,10 +99,12 @@ graph TB
   :feature:recorder --> :core:ui
   :feature:recorder --> :core:utils
   :feature:recorder --> :data:recorder
+  :feature:recorder --> :data:datastore
   :data:worker --> :testing:runtime
   :data:worker --> :core:utils
   :data:worker --> :core:ui
   :data:worker --> :data:recordings
+  :data:worker --> :data:transcribe
   :feature:player --> :testing:runtime
   :feature:player --> :core:ui
   :feature:player --> :core:utils
@@ -135,8 +141,12 @@ graph TB
   :data:recorder --> :data:datastore
   :data:recorder --> :data:recordings
   :data:recorder --> :data:bookmarks
+  :data:recorder --> :data:transcribe
   :data:visualizer --> :testing:runtime
   :data:visualizer --> :data:recordings
+  :data:transcribe --> :testing:runtime
+  :data:transcribe --> :core:utils
+  :data:transcribe --> :data:database
   :data:use_case --> :testing:runtime
   :data:use_case --> :core:utils
   :data:use_case --> :data:interactions
@@ -201,13 +211,14 @@ class :data:database android-library
 class :feature:settings android-library
 class :data:recordings android-library
 class :data:datastore android-library
+class :data:transcribe android-library
+class :data:worker android-library
 class :feature:widget android-library
 class :data:recorder android-library
 class :data:use_case android-library
 class :data:location android-library
 class :data:editor android-library
 class :data:player android-library
-class :data:worker android-library
 class :feature:recorder android-library
 class :feature:player android-library
 class :data:bookmarks android-library
