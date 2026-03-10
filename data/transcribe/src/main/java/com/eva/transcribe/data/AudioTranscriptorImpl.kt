@@ -38,17 +38,14 @@ internal class AudioTranscriptorImpl(
 				if (_model != null && _recognizer != null) {
 					// if this is already present only reset the recognizer
 					_recognizer?.reset()
-					Log.i(TAG, "RECOGNIZER ALREADY PRESENT RESTING")
+					Log.w(TAG, "RECOGNIZER ALREADY PRESENT RESTING")
 					return@withContext Result.failure(Exception("Recognizer is already set"))
 				}
 				val sttModelResult = repository.readModelByLanguage(modelId)
-				if (sttModelResult.isFailure) {
-					Log.d(TAG, "CANNOT READ THE GIVEN MODEL TYPE")
-					return@withContext Result.failure(
-						sttModelResult.exceptionOrNull() ?: Exception("Cannot find model")
-					)
+				val sttModel = sttModelResult.getOrElse { err ->
+					Log.w(TAG, "CANNOT READ THE GIVEN MODEL TYPE", err)
+					return@withContext Result.failure(err)
 				}
-				val sttModel = sttModelResult.getOrThrow()
 				val modelFile = sttModel.localModelURI?.toUri()?.toFile() ?: run {
 					Log.d(TAG, "MODEL IS NOT DOWNLOADED")
 					return@withContext Result.failure(Exception("Model absent download it to use"))
@@ -56,7 +53,7 @@ internal class AudioTranscriptorImpl(
 				Log.d(TAG, "PREPARING MODEL AND RECOGNIZER | PATH :${modelFile.absolutePath}")
 				val model = Model(modelFile.absolutePath).also { _model = it }
 				_recognizer = Recognizer(model, sampleRate)
-				Log.i(TAG, "RECOGNIZER LOADED AND READY TO ROCK!")
+				Log.d(TAG, "RECOGNIZER LOADED AND READY TO ROCK!")
 				Result.success(Unit)
 			} catch (e: IOException) {
 				Log.d(TAG, "SOME ERROR", e)
@@ -66,10 +63,8 @@ internal class AudioTranscriptorImpl(
 	}
 
 	override suspend fun recognizeAudio(buffer: ShortArray, length: Int): TranscriptionResult? {
-		val recognizer = _recognizer ?: run {
-			Log.d(TAG, "UNABLE TO SET UP RECOGNIZED")
-			return null
-		}
+		val recognizer = _recognizer ?: return null
+
 		return withContext(Dispatchers.Default) {
 			try {
 				val success = recognizer.acceptWaveForm(buffer, length)
@@ -77,6 +72,9 @@ internal class AudioTranscriptorImpl(
 				json.decodeFromString<TranscriptionResult>(jsonString)
 			} catch (_: CancellationException) {
 				Log.d(TAG, "COROUTINE IS CANCELLED")
+				return@withContext null
+			} catch (e: Exception) {
+				Log.e(TAG, "EXCEPTION WHILE DECODING", e)
 				return@withContext null
 			}
 		}
