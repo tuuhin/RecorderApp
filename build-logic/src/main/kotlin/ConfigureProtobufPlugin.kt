@@ -34,20 +34,14 @@ class ConfigureProtobufPlugin : Plugin<Project> {
 	private fun Project.configureProtobuf() = extensions.configure<ProtobufExtension> {
 
 		val protocArtifact = catalog.findLibrary("protobuf.protoc").get()
-		val protocJavaGen = catalog.findLibrary("protobuf.gen.javalite").get()
 
 		protoc {
 			artifact = protocArtifact.get().toString()
 		}
-		plugins {
-			create("java") {
-				artifact = protocJavaGen.get().toString()
-			}
-		}
 
 		generateProtoTasks {
 			all().forEach { task ->
-				task.plugins {
+				task.builtins {
 					create("java") {
 						option("lite")
 					}
