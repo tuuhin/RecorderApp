@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="select_category_screen">Kategori Seç</string>
+  <string name="categories_create_success">Kategori Başarıyla Oluşturuldu</string>
+  <string name="categories_deleted">Silinen Kategoriler</string>
+</resources>
