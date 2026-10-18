@@ -1,5 +1,6 @@
 package com.eva.database.dao
 
+import androidx.annotation.VisibleForTesting
 import androidx.room3.Dao
 import androidx.room3.Delete
 import androidx.room3.Insert
@@ -25,6 +26,10 @@ interface TrashFileDao {
 
 	@Query("DELETE FROM trash_files_data_table WHERE ID=:id")
 	suspend fun deleteTrashEntityFromId(id: Long)
+
+	@VisibleForTesting
+	@Query("DELETE FROM trash_files_data_table")
+	suspend fun deleteAllTrashEntries()
 
 	@Delete
 	suspend fun deleteTrashEntity(entity: TrashFileEntity)
