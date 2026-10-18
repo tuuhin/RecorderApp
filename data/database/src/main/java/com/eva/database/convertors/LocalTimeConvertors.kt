@@ -1,17 +1,16 @@
 package com.eva.database.convertors
 
-import androidx.room.ProvidedTypeConverter
-import androidx.room.TypeConverter
+import androidx.room3.ColumnTypeConverter
+import androidx.room3.ProvidedColumnTypeConverter
 import kotlinx.datetime.LocalTime
 
-@ProvidedTypeConverter
+@ProvidedColumnTypeConverter
 internal class LocalTimeConvertors {
 
-	@TypeConverter
+	@ColumnTypeConverter
 	fun fromLocalDateTime(dateTime: LocalTime) = dateTime.toMillisecondOfDay()
 
 
-	@TypeConverter
+	@ColumnTypeConverter
 	fun toLocalDateTime(seconds: Int) = LocalTime.fromMillisecondOfDay(seconds)
-
 }

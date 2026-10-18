@@ -1,4 +1,4 @@
-import androidx.room.gradle.RoomExtension
+import androidx.room3.gradle.RoomExtension
 import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project

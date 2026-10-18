@@ -1,27 +1,26 @@
 package com.eva.database.convertors
 
-import androidx.room.ProvidedTypeConverter
-import androidx.room.TypeConverter
+import androidx.room3.ColumnTypeConverter
+import androidx.room3.ColumnTypeConverters
+import androidx.room3.ProvidedColumnTypeConverter
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-@OptIn(ExperimentalTime::class)
-@ProvidedTypeConverter
+@ProvidedColumnTypeConverter
 internal class LocalDateTimeConvertors {
 
 	private val timeZone: TimeZone
 		get() = TimeZone.UTC
 
-	@TypeConverter
+	@ColumnTypeConverter
 	fun fromLocalDateTime(dateTime: LocalDateTime): Long = dateTime.toInstant(timeZone)
 		.toEpochMilliseconds()
 
 
-	@TypeConverter
+	@ColumnTypeConverter
 	fun toLocalDateTime(milliSeconds: Long) =
 		Instant.fromEpochMilliseconds(milliSeconds).toLocalDateTime(timeZone)
 

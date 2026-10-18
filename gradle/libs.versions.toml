@@ -26,7 +26,7 @@ hilt = "2.60.1"
 media3Common = "1.11.1"
 navigationCompose = "2.10.2"
 playServicesLocationVersion = "21.4.0"
-roomCompiler = "2.8.5"
+room3 = "3.0.3"
 uiTextGoogleFonts = "1.12.1"
 workRuntimeKtxVersion = "2.12.0"
 hiltWork = "1.4.0"
@@ -72,10 +72,9 @@ androidx-media3-decoder = { module = "androidx.media3:media3-decoder", version.r
 androidx-media3-ui = { module = "androidx.media3:media3-ui-compose-material3", version.ref = "media3Common" }
 androidx-media3-test-utils = { module = "androidx.media3:media3-test-utils", version.ref = "media3Common" }
 #room
-androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
-androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomCompiler" }
-androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomCompiler" }
-androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomCompiler" }
+androidx-room-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room3" }
+androidx-room-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room3" }
+androidx-room-testing = { module = "androidx.room3:room3-testing", version.ref = "room3" }
 #play services
 gms-play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocationVersion" }
 #testing and android testing
@@ -133,7 +132,7 @@ android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", ver
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 compose-compiler-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
 ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
-room-gradlePlugin = { group = "androidx.room", name = "room-gradle-plugin", version.ref = "roomCompiler" }
+room-gradlePlugin = { group = "androidx.room3", name = "room3-gradle-plugin", version.ref = "room3" }
 protobuf-gradlePlugin = { group = "com.google.protobuf", name = "protobuf-gradle-plugin", version.ref = "protobuf_version" }
 
 [plugins]
@@ -142,7 +141,7 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlinx_serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-androidx_room = { id = "androidx.room", version.ref = "roomCompiler" }
+androidx_room = { id = "androidx.room3", version.ref = "room3" }
 google_protobuf = { id = "com.google.protobuf", version.ref = "protobuf_version" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }

@@ -1,13 +1,13 @@
 package com.eva.database.dao
 
 import androidx.annotation.VisibleForTesting
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.MapColumn
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Upsert
+import androidx.room3.Dao
+import androidx.room3.Delete
+import androidx.room3.Insert
+import androidx.room3.MapColumn
+import androidx.room3.OnConflictStrategy
+import androidx.room3.Query
+import androidx.room3.Upsert
 import com.eva.database.entity.RecordingCategoryEntity
 import kotlinx.coroutines.flow.Flow
 

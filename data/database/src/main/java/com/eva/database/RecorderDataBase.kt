@@ -1,11 +1,11 @@
 package com.eva.database
 
 import android.content.Context
-import androidx.room.AutoMigration
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
+import androidx.room3.AutoMigration
+import androidx.room3.ColumnTypeConverters
+import androidx.room3.Database
+import androidx.room3.Room
+import androidx.room3.RoomDatabase
 import com.eva.database.convertors.LocalDateTimeConvertors
 import com.eva.database.convertors.LocalTimeConvertors
 import com.eva.database.convertors.STTModelConvertors
@@ -20,7 +20,6 @@ import com.eva.database.entity.RecordingsMetaDataEntity
 import com.eva.database.entity.STTModelEntity
 import com.eva.database.entity.TrashFileEntity
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asExecutor
 
 @Database(
 	entities = [
@@ -40,7 +39,7 @@ import kotlinx.coroutines.asExecutor
 		AutoMigration(from = 6, to = 7)
 	]
 )
-@TypeConverters(
+@ColumnTypeConverters(
 	value = [
 		LocalDateTimeConvertors::class,
 		LocalTimeConvertors::class,
@@ -75,11 +74,11 @@ abstract class RecorderDataBase : RoomDatabase() {
 					RecorderDataBase::class.java,
 					DataBaseConstants.DATABASE_NAME
 				)
-					.addTypeConverter(localtimeConvertor)
-					.addTypeConverter(localDateTimeConvertor)
-					.addTypeConverter(sttStausConvertors)
+					.addColumnTypeConverter(localtimeConvertor)
+					.addColumnTypeConverter(localDateTimeConvertor)
+					.addColumnTypeConverter(sttStausConvertors)
 					.addMigrations(DBMigrations.MIGRATE_5_6)
-					.setQueryExecutor(Dispatchers.IO.asExecutor())
+					.setQueryCoroutineContext(Dispatchers.IO)
 					.build()
 					.also { db -> instance = db }
 			}
@@ -87,11 +86,11 @@ abstract class RecorderDataBase : RoomDatabase() {
 
 		fun createInMemoryDatabase(context: Context): RecorderDataBase {
 			return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
-				.addTypeConverter(localtimeConvertor)
-				.addTypeConverter(localDateTimeConvertor)
-				.addTypeConverter(sttStausConvertors)
+				.addColumnTypeConverter(localtimeConvertor)
+				.addColumnTypeConverter(localDateTimeConvertor)
+				.addColumnTypeConverter(sttStausConvertors)
 				.addMigrations(DBMigrations.MIGRATE_5_6)
-				.setQueryExecutor(Dispatchers.IO.asExecutor())
+				.setQueryCoroutineContext(Dispatchers.IO)
 				.build()
 		}
 	}
