@@ -13,6 +13,8 @@ plugins {
 	alias(libs.plugins.google.protobuf) apply false
 	alias(libs.plugins.android.library) apply false
 	alias(libs.plugins.module.grapher)
+	alias(libs.plugins.android.test) apply false
+	alias(libs.plugins.androidx.baselineprofile) apply false
 }
 
 moduleGraphConfig {

@@ -41,6 +41,10 @@ coroutines = "1.11.0"
 turbine_version = "1.2.1"
 vosk = "0.3.75"
 okio = "3.18.2"
+uiautomator = "2.4.0"
+benchmarkJunit4 = "1.5.0"
+baselineprofile = "1.5.0"
+profileinstaller = "1.4.1"
 
 [libraries]
 #core
@@ -129,6 +133,12 @@ protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protoc
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 #vosk
 vosk-android = { module = "com.alphacephei:vosk-android", version.ref = "vosk" }
+# benchmarking
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmarkJunit4" }
+androidx-benchmark-junit4 = { module = "androidx.benchmark:benchmark-junit4", version.ref = "benchmarkJunit4" }
+androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
+
 #gradle plugins
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -155,3 +165,5 @@ recorderapp-hilt = { id = "recorderapp.hilt.plugin", version = "unspecified" }
 recorderapp-android-library = { id = "recorderapp.android.library.plugin", version = "unspecified" }
 recorderapp-protobuf = { id = "recorderapp.protobuf.plugin", version = "unspecified" }
 recorderapp-compose-compiler = { id = "recorderapp.compose.compiler.plugin", version = "unspecified" }
+android-test = { id = "com.android.test", version.ref = "agp" }
+androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "baselineprofile" }
