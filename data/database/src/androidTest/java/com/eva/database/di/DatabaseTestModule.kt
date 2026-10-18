@@ -5,6 +5,7 @@ import com.eva.database.RecorderDataBase
 import com.eva.database.dao.RecordingCategoryDao
 import com.eva.database.dao.RecordingsBookmarkDao
 import com.eva.database.dao.RecordingsMetadataDao
+import com.eva.database.dao.STTModelsDao
 import com.eva.database.dao.TrashFileDao
 import dagger.Module
 import dagger.Provides
@@ -45,4 +46,9 @@ object DatabaseTestModule {
 	@Singleton
 	fun providesBookMarkDao(dataBase: RecorderDataBase)
 			: RecordingsBookmarkDao = dataBase.recordingBookMarkDao()
+
+	@Provides
+	@Singleton
+	fun providesSTTModelsDao(dataBase: RecorderDataBase)
+			: STTModelsDao = dataBase.sTTModelDao()
 }

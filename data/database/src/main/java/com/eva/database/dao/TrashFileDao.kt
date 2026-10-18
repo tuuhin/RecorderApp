@@ -1,10 +1,11 @@
 package com.eva.database.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.annotation.VisibleForTesting
+import androidx.room3.Dao
+import androidx.room3.Delete
+import androidx.room3.Insert
+import androidx.room3.OnConflictStrategy
+import androidx.room3.Query
 import com.eva.database.entity.TrashFileEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -25,6 +26,10 @@ interface TrashFileDao {
 
 	@Query("DELETE FROM trash_files_data_table WHERE ID=:id")
 	suspend fun deleteTrashEntityFromId(id: Long)
+
+	@VisibleForTesting
+	@Query("DELETE FROM trash_files_data_table")
+	suspend fun deleteAllTrashEntries()
 
 	@Delete
 	suspend fun deleteTrashEntity(entity: TrashFileEntity)
