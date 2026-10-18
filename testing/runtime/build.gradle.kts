@@ -9,10 +9,9 @@ plugins {
 android {
 	namespace = "com.eva.testing.runtime"
 
-	compileSdk = libs.versions.compileSdk.getOrNull()?.toInt() ?: 36
+	compileSdk = libs.versions.android.compileSdk.get().toInt()
 	defaultConfig {
-		minSdk = libs.versions.minSdk.getOrNull()?.toInt() ?: 29
-
+		minSdk = libs.versions.android.minSdk.get().toInt()
 		testInstrumentationRunner = "com.eva.testing.runtime.HiltTestRunner"
 		consumerProguardFiles("consumer-rules.pro")
 	}

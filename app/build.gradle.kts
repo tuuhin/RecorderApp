@@ -10,12 +10,12 @@ plugins {
 
 android {
 	namespace = "com.eva.recorderapp"
-	compileSdk = libs.versions.compileSdk.get().toInt()
+	compileSdk = libs.versions.android.compileSdk.get().toInt()
 
 	defaultConfig {
 		applicationId = "com.eva.recorderapp"
-		minSdk = libs.versions.minSdk.get().toInt()
-		targetSdk = libs.versions.compileSdk.get().toInt()
+		minSdk = libs.versions.android.minSdk.get().toInt()
+		targetSdk = libs.versions.android.compileSdk.get().toInt()
 		versionCode = 15
 		versionName = "1.5.0-beta1"
 

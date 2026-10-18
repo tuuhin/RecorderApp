@@ -6,7 +6,6 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import kotlin.jvm.optionals.getOrNull
 
 class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
@@ -74,10 +73,10 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
 	private fun Project.configureLibrary() = extensions.configure<LibraryExtension> {
 
-		compileSdk = catalog.findVersion("compileSdk").getOrNull()?.toString()?.toInt() ?: 36
+		compileSdk = catalog.findVersion("android.compileSdk").get().toString().toInt()
 
 		defaultConfig {
-			minSdk = catalog.findVersion("minSdk").getOrNull()?.toString()?.toInt() ?: 29
+			minSdk = catalog.findVersion("android.minSdk").get().toString().toInt()
 
 			testInstrumentationRunner = Constants.TEST_RUNNER_CLASS_NAME
 			consumerProguardFiles("consumer-rules.pro")
