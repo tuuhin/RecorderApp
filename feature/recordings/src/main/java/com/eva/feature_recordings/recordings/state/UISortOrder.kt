@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.eva.ui.R
 
-internal enum class SortOrder {
+internal enum class UISortOrder {
 	ASC,
 	DESC;
 
@@ -14,4 +14,7 @@ internal enum class SortOrder {
 			ASC -> stringResource(R.string.sort_order_asc)
 			DESC -> stringResource(R.string.sort_order_desc)
 		}
+
+	val isAsc: Boolean
+		get() = this == ASC
 }

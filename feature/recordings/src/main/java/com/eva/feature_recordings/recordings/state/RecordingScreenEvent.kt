@@ -17,9 +17,9 @@ internal sealed interface RecordingScreenEvent {
 
 	data object OnToggleFavourites : RecordingScreenEvent
 
-	data class OnSortOptionChange(val sort: SortOptions) : RecordingScreenEvent
+	data class OnSortOptionChange(val sort: UISortIdentifier) : RecordingScreenEvent
 
-	data class OnSortOrderChange(val order: SortOrder) : RecordingScreenEvent
+	data class OnSortOrderChange(val order: UISortOrder) : RecordingScreenEvent
 
 	data object ShareSelectedRecordings : RecordingScreenEvent
 

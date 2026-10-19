@@ -7,6 +7,7 @@ internal object DataStoreConstants {
 	const val RECORDER_SETTINGS_FILE_NAME = "recorder_settings.pb"
 	const val RECORDER_FILE_SETTINGS_FILE_NAME = "recorder_files_settings.pb"
 	const val TRANSCRIPTION_SETTINGS_FILE_NAME = "transcriptions_settings.pb"
+	const val RECORDINGS_LIST_SETTINGS_FILE_NAME = "recordings_list_settings.pb"
 
 	// preferences
 	const val SHOW_ON_BOARDING_SCREEN = "show_on_boarding_screen"
