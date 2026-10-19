@@ -41,6 +41,7 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
 		val testImplementations = listOf(
 			"junit",
+			"kotin.test.junit",
 			"kotlin.test",
 			"kotlinx.coroutines.test",
 			"turbine"
@@ -55,6 +56,7 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 		val androidTestImplementations = listOf(
 			"androidx.junit",
 			"androidx.espresso.core",
+			"kotin.test.junit",
 			"kotlin.test",
 			"kotlinx.coroutines.test",
 			"turbine"

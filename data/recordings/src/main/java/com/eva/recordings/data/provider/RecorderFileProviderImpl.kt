@@ -6,9 +6,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import androidx.core.os.bundleOf
 import com.eva.database.dao.RecordingsMetadataDao
 import com.eva.database.entity.RecordingsMetaDataEntity
 import com.eva.datastore.domain.enums.AudioFileNamingFormat
@@ -177,10 +177,10 @@ internal class RecorderFileProviderImpl(
 		val selection = "${MediaStore.Audio.AudioColumns.OWNER_PACKAGE_NAME} = ?"
 		val selectionArgs = arrayOf(context.packageName)
 
-		val bundle = bundleOf(
-			ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
-			ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs
-		)
+		val bundle = Bundle().apply {
+			putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+			putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+		}
 
 		return withContext(Dispatchers.IO) {
 			context.contentResolver.query(
