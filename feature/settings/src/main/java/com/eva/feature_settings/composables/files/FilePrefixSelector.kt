@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -23,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +35,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -50,21 +48,14 @@ internal fun FilePrefixSelector(
 	modifier: Modifier = Modifier,
 ) {
 
-	var showDialog by remember {
-		mutableStateOf(false)
-	}
-
-	var textValue by remember {
-		mutableStateOf(TextFieldValue())
-	}
+	var showDialog by remember { mutableStateOf(false) }
 
 	RenamePrefixDialog(
 		showDialog = showDialog,
-		textFieldValue = textValue,
-		onTextFieldValueChange = { textValue = it },
+		initialName = prefix,
 		onDismiss = { showDialog = false },
 		onRename = {
-			onPrefixChange(it.text)
+			onPrefixChange(it)
 			showDialog = false
 		}
 	)
@@ -97,19 +88,15 @@ internal fun FilePrefixSelector(
 @Composable
 private fun RenamePrefixDialog(
 	showDialog: Boolean,
-	textFieldValue: TextFieldValue,
-	onTextFieldValueChange: (TextFieldValue) -> Unit,
 	onDismiss: () -> Unit,
-	onRename: (TextFieldValue) -> Unit,
-	modifier: Modifier = Modifier, properties: DialogProperties = DialogProperties(),
+	onRename: (String) -> Unit,
+	modifier: Modifier = Modifier,
+	initialName: String = "",
+	properties: DialogProperties = DialogProperties(),
 ) {
 	if (!showDialog) return
 
-	val isRenameEnabled by remember(textFieldValue) {
-		derivedStateOf {
-			textFieldValue.text.isBlank()
-		}
-	}
+	val state = rememberTextFieldState(initialName)
 
 	BasicAlertDialog(
 		onDismissRequest = onDismiss,
@@ -136,11 +123,13 @@ private fun RenamePrefixDialog(
 					modifier = Modifier.padding(vertical = 6.dp),
 				)
 				OutlinedTextField(
-					value = textFieldValue,
-					onValueChange = onTextFieldValueChange,
+					state = state,
 					label = { Text(text = stringResource(id = R.string.rename_label_text)) },
 					shape = MaterialTheme.shapes.large,
-					keyboardActions = KeyboardActions(onDone = { onRename(textFieldValue) }),
+					onKeyboardAction = {
+						onRename(state.text.toString())
+						it()
+					},
 					keyboardOptions = KeyboardOptions(
 						keyboardType = KeyboardType.Text, imeAction = ImeAction.Done
 					)
@@ -154,8 +143,7 @@ private fun RenamePrefixDialog(
 						Text(text = stringResource(id = R.string.action_cancel))
 					}
 					Button(
-						onClick = { onRename(textFieldValue) },
-						enabled = !isRenameEnabled
+						onClick = { onRename(state.text.toString()) },
 					) {
 						Text(text = stringResource(id = R.string.rename_recording_action))
 					}
@@ -171,8 +159,6 @@ private fun RenamePrefixDialog(
 private fun RenamePrefixDialogPreview() = RecorderAppTheme {
 	RenamePrefixDialog(
 		showDialog = true,
-		textFieldValue = TextFieldValue(),
-		onTextFieldValueChange = {},
 		onDismiss = { },
 		onRename = {}
 	)

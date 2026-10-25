@@ -7,6 +7,7 @@ data class RecorderFileSettings(
 	val exportItemPrefix: String = EXPORT_FILE_PREFIX,
 	val format: AudioFileNamingFormat = AudioFileNamingFormat.DATE_TIME,
 	val allowExternalRead: Boolean = false,
+	val artistName: String? = null,
 ) {
 	companion object {
 		const val NORMAL_FILE_PREFIX = "Voice"

@@ -14,35 +14,35 @@ import com.eva.datastore.domain.repository.TranscriptionSettingsRepo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object RepositoryModule {
 
 	@Provides
-	@ViewModelScoped
+	@Singleton
 	fun providesRecorderSettings(provider: DataStoreProvider): RecorderAudioSettingsRepo =
 		RecorderAudioSettingsRepoImpl(provider.audioSettingsDataStore)
 
 	@Provides
-	@ViewModelScoped
+	@Singleton
 	fun providesFileSettings(provider: DataStoreProvider): RecorderFileSettingsRepo =
 		RecorderFileSettingsRepoImpl(provider.fileSettingsDataStore)
 
 	@Provides
-	@ViewModelScoped
+	@Singleton
 	fun providesOnBoardingSettings(provider: DataStoreProvider): PreferencesSettingsRepo =
 		PreferencesSettingsRepoImpl(provider.preferencesDataStore)
 
 	@Provides
-	@ViewModelScoped
+	@Singleton
 	fun providesTranscriptionSettings(provider: DataStoreProvider): TranscriptionSettingsRepo =
 		TranscriptionSettingsRepoImpl(provider.transcriptionsDataStore)
 
 	@Provides
-	@ViewModelScoped
+	@Singleton
 	fun providesRecordingListSettings(provider: DataStoreProvider): RecordingListPreferencesRepo =
 		RecordingsListPreferencesRepoImpl(provider.recordingsListSettingsDataStore)
 }

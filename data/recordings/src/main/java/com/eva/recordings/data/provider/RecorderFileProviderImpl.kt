@@ -12,9 +12,11 @@ import android.util.Log
 import com.eva.database.dao.RecordingsMetadataDao
 import com.eva.database.entity.RecordingsMetaDataEntity
 import com.eva.datastore.domain.enums.AudioFileNamingFormat
+import com.eva.datastore.domain.models.RecorderFileSettings
 import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
 import com.eva.recordings.data.wrapper.RecordingsConstants
 import com.eva.recordings.domain.exceptions.MediastoreOperationException
+import com.eva.recordings.domain.provider.AudioTagWriter
 import com.eva.recordings.domain.provider.RecorderFileProvider
 import com.eva.utils.LocalTimeFormats
 import kotlinx.coroutines.CancellationException
@@ -36,6 +38,7 @@ internal class RecorderFileProviderImpl(
 	private val context: Context,
 	private val recordingDao: RecordingsMetadataDao,
 	private val settings: RecorderFileSettingsRepo,
+	private val tagWriter: AudioTagWriter,
 ) : RecorderFileProvider {
 
 	private val _tempRecordingDir by lazy {
@@ -101,13 +104,22 @@ internal class RecorderFileProviderImpl(
 	}
 
 	private suspend fun createContentUriAndCopy(file: File, mimeType: String): Uri? {
+		// read in the settings
+		val fileSettings = settings.fileSettings()
+		val contentUri = createUriForRecording(fileSettings, mimeType) ?: return null
+
+		// if we have an author name set
+		fileSettings.artistName?.let { authorName ->
+			if (authorName.isBlank()) return@let
+			tagWriter.writeAuthorTag(file, authorName)
+		}
+
 		return withContext(Dispatchers.IO) {
-			val contentUri = createUriForRecording(mimeType) ?: return@withContext null
-			Log.d(LOGGER_TAG, "CONTENT URI CREATED")
 			try {
 				context.contentResolver.openOutputStream(contentUri, "w")?.use { outStream ->
 					file.inputStream().use { inStream -> inStream.copyTo(outStream) }
 				}
+
 				Log.d(LOGGER_TAG, "CONTENT COPIED")
 				val newMetaData = ContentValues().apply {
 					put(MediaStore.Audio.AudioColumns.IS_PENDING, 0)
@@ -127,10 +139,11 @@ internal class RecorderFileProviderImpl(
 		}
 	}
 
-	private suspend fun createUriForRecording(mimeType: String): Uri? {
-		val fileSettings = settings.fileSettings()
-
-		val namingStrategy = when (fileSettings.format) {
+	private suspend fun createUriForRecording(
+		settings: RecorderFileSettings,
+		mimeType: String
+	): Uri? {
+		val namingStrategy = when (settings.format) {
 			AudioFileNamingFormat.DATE_TIME -> {
 				LocalDateTime.now().toKotlinLocalDateTime()
 					.format(LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT)
@@ -145,7 +158,7 @@ internal class RecorderFileProviderImpl(
 
 		// file name
 		val fileName = buildString {
-			append(fileSettings.name)
+			append(settings.name)
 			append("-")
 			append(namingStrategy)
 		}

@@ -92,6 +92,8 @@ internal class AudioSettingsViewModel @Inject constructor(
 			is FileSettingsChangeEvent.OnExportItemPrefixChange -> {
 				fileRepo.onExportItemPrefixChange(event.prefix)
 			}
+
+			is FileSettingsChangeEvent.OnSetArtistName -> fileRepo.onAddArtistName(event.name)
 		}
 	}
 }

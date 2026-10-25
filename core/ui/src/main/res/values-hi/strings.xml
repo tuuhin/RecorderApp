@@ -70,6 +70,8 @@
   <string name="audio_metadata_channel_title">चैनल</string>
   <string name="audio_metadata_last_edit_title">अंतिम संशोधन</string>
   <string name="audio_metadata_mime_type_title">Mime प्रकार</string>
+  <string name="audio_metadata_file_artist_name">कलाकार</string>
+  <string name="audio_metadata_file_author_name">लेखक</string>
   <string name="audio_metadata_duration_title">अवधि</string>
   <string name="audio_metadata_file_size_title">आकार</string>
   <string name="audio_metadata_name_title">नाम</string>
@@ -213,6 +215,10 @@
   <string name="action_transforming">परिवर्तन हो रहा है</string>
   <string name="rename_export_item_prefix_title">निर्यात आइटम उपसर्ग</string>
   <string name="rename_export_item_prefix_text">संपादित आइटम को निर्यात करते समय उपसर्ग जोड़ा जाएगा।</string>
+  <string name="recordings_artist_name_settings_title">कलाकार का नाम सेट करें</string>
+  <string name="recordings_artist_name_settings_text">ऑडियो मेटाडेटा में अपना नाम शामिल करें</string>
+  <string name="action_set">सेट करें</string>
+  <string name="recordings_artist_name_clear_warning_text">अगली रिकॉर्डिंग से मेटाडेटा में कलाकार का नाम जुड़ने से रोकने के लिए कलाकार का नाम हटा दें।</string>
   <string name="app_settings_files_subtitle_export">निर्यात</string>
   <string name="app_settings_files_subtitle_recordings">रिकॉर्डिंग्स</string>
   <string name="rename_export_item_label">निर्यात उपसर्ग</string>

@@ -49,11 +49,22 @@ internal class RecorderFileSettingsRepoImpl(
 		}
 	}
 
-	override suspend fun onExportItemPrefixChange(prefix: String) {
+	override suspend fun onExportItemPrefixChange(prefix: String?) {
 		dataStore.updateData { settings ->
 			settings.toBuilder()
 				.setExportedItemPrefix(prefix)
 				.build()
+		}
+	}
+
+	override suspend fun onAddArtistName(name: String?) {
+		dataStore.updateData { settings ->
+			val builder = settings.toBuilder()
+
+			if (name != null) builder.setAuthorOrArtistName(name)
+			else builder.clearAuthorOrArtistName()
+
+			builder.build()
 		}
 	}
 }

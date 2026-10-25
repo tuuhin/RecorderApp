@@ -4,7 +4,7 @@ android-compileSdk = "37"
 android-minSdk = "29"
 assertk = "0.28.1"
 concurrentFuturesKtx = "1.3.0"
-datastore = "1.2.1"
+datastore = "1.3.0"
 coreSplashscreen = "1.2.0"
 glance = "1.2.0"
 graphicsShapes = "1.1.0"
@@ -13,12 +13,13 @@ kotlin = "2.4.20"
 coreKtx = "1.19.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
+kotlinxIoCore = "0.9.1"
 leakcanaryAndroid = "2.14"
 runner = "1.7.0"
 espressoCore = "3.7.0"
 kotlinxCollectionsImmutable = "0.5.2"
 kotlinxDatetime = "0.8.0"
-kotlinxSerializationJson = "1.11.0"
+kotlinxSerializationJson = "1.12.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 composeBom = "2026.09.00"
@@ -28,6 +29,7 @@ media3Common = "1.11.1"
 navigationCompose = "2.10.2"
 playServicesLocationVersion = "21.4.0"
 room3 = "3.0.3"
+jaudiotagger = "1.0.0"
 uiTextGoogleFonts = "1.12.1"
 workRuntimeKtxVersion = "2.12.0"
 hiltWork = "1.4.0"
@@ -128,8 +130,11 @@ protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", ve
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protoc" }
 #fs
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIoCore" }
 #vosk
 vosk-android = { module = "com.alphacephei:vosk-android", version.ref = "vosk" }
+#audio tagger
+jaudiotagger-kmp = { module = "io.github.darkstar085:jaudiotagger-kt", version.ref = "jaudiotagger" }
 #gradle plugins
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }

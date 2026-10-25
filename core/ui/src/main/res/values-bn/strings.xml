@@ -71,6 +71,8 @@
   <string name="audio_metadata_channel_title">চ্যানেল</string>
   <string name="audio_metadata_last_edit_title">সর্বশেষ পরিবর্তিত</string>
   <string name="audio_metadata_mime_type_title">মাইম টাইপ</string>
+  <string name="audio_metadata_file_artist_name">শিল্পী</string>
+  <string name="audio_metadata_file_author_name">লেখক</string>
   <string name="audio_metadata_duration_title">মেয়াদ</string>
   <string name="audio_metadata_file_size_title">সাইজ</string>
   <string name="audio_metadata_name_title">নাম</string>
@@ -213,6 +215,10 @@
   <string name="action_transforming">রূপান্তর</string>
   <string name="rename_export_item_prefix_title">রপ্তানি আইটেম উপসর্গ</string>
   <string name="rename_export_item_prefix_text">সম্পাদিত আইটেম রপ্তানি করলে উপসর্গটি যোগ করা হবে.</string>
+  <string name="recordings_artist_name_settings_title">শিল্পীর নাম সেট করুন</string>
+  <string name="recordings_artist_name_settings_text">অডিও মেটাডেটাতে আপনার নাম অন্তর্ভুক্ত করুন</string>
+  <string name="action_set">সেট করুন</string>
+  <string name="recordings_artist_name_clear_warning_text">পরবর্তী রেকর্ডিং থেকে মেটাডেটাতে শিল্পীর নাম যোগ হওয়া বন্ধ করতে শিল্পীর নামটি মুছে ফেলুন</string>
   <string name="app_settings_files_subtitle_export">রপ্তানি</string>
   <string name="app_settings_files_subtitle_recordings">রেকর্ডিং</string>
   <string name="rename_export_item_label">রপ্তানি উপসর্গ</string>
