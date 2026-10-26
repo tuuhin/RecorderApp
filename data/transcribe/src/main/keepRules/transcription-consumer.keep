@@ -1,7 +1,7 @@
-# Keep Vosk classes and their members
+# Vosk Speech-to-Text dynamic JNI bindings
 -keep class org.vosk.** { *; }
 -keepclassmembers class org.vosk.** { *; }
 
-# Keep JNA (Java Native Access) classes
+# Java Native Access (JNA) reflection and dynamic dispatch
 -keep class com.sun.jna.** { *; }
 -dontwarn com.sun.jna.**

@@ -57,16 +57,13 @@ android {
 
 	buildTypes {
 		release {
-			isMinifyEnabled = true
+			optimization {
+				enable = true
+			}
 			applicationIdSuffix = ".release"
-			isShrinkResources = true
 			multiDexEnabled = true
 			// change the signing config if release is not found
 			signingConfig = signingConfigs.findByName("release")
-			proguardFiles(
-				getDefaultProguardFile("proguard-android-optimize.txt"),
-				"proguard-rules.pro"
-			)
 		}
 		debug {
 			applicationIdSuffix = ".debug"
