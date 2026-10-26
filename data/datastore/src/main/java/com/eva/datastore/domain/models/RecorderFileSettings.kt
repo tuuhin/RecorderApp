@@ -4,7 +4,7 @@ import com.eva.datastore.domain.enums.AudioFileNamingFormat
 
 data class RecorderFileSettings(
 	val name: String = NORMAL_FILE_PREFIX,
-	val exportItemPrefix: String = EXPORT_FILE_PREFIX,
+	val exportItemPrefix: String? = EXPORT_FILE_PREFIX,
 	val format: AudioFileNamingFormat = AudioFileNamingFormat.DATE_TIME,
 	val allowExternalRead: Boolean = false,
 	val artistName: String? = null,

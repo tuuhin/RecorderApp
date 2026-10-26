@@ -98,6 +98,7 @@
   <string name="app_settings_audio">ऑडियो</string>
   <string name="app_settings_files">फ़ाइलें</string>
   <string name="app_settings_common">सेटिंग्स</string>
+  <string name="recording_item_prefix_label">रिकॉर्डिंग उपसर्ग</string>
   <string name="recording_settings_file_format_title">फ़ाइल नामकरण</string>
   <string name="recording_settings_file_format_text">फ़ाइल नाम के लिए रणनीति चुनें, यह वर्तमान समय या एक काउंट हो सकता है</string>
   <string name="recording_settings_pause_recorder_on_calls">रिकॉर्डर रोकें</string>

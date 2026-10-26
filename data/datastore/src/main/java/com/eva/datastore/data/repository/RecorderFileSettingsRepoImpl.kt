@@ -51,9 +51,10 @@ internal class RecorderFileSettingsRepoImpl(
 
 	override suspend fun onExportItemPrefixChange(prefix: String?) {
 		dataStore.updateData { settings ->
-			settings.toBuilder()
-				.setExportedItemPrefix(prefix)
-				.build()
+			val builder = settings.toBuilder()
+			if (prefix != null) builder.setExportedItemPrefix(prefix)
+			else builder.clearExportedItemPrefix()
+			builder.build()
 		}
 	}
 

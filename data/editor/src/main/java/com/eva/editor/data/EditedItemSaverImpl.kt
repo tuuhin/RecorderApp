@@ -16,8 +16,7 @@ internal class EditedItemSaverImpl(
 		val prefix = settings.fileSettings().exportItemPrefix
 
 		val fileName = buildString {
-			append(prefix)
-			append(" ")
+			prefix?.let(::append)
 			append(model.title)
 		}
 

@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,6 +99,10 @@ private fun RenamePrefixDialog(
 
 	val state = rememberTextFieldState(initialName)
 
+	val isNameUpdateAllowed by remember(state) {
+		derivedStateOf { state.text.isNotBlank() }
+	}
+
 	BasicAlertDialog(
 		onDismissRequest = onDismiss,
 		modifier = modifier,
@@ -111,7 +116,7 @@ private fun RenamePrefixDialog(
 		) {
 			Column(modifier = Modifier.padding(24.dp)) {
 				Text(
-					text = stringResource(id = R.string.rename_recording_prefix_title),
+					text = stringResource(id = R.string.recording_settings_change_name_prefix),
 					style = MaterialTheme.typography.headlineSmall,
 					color = AlertDialogDefaults.titleContentColor,
 					modifier = Modifier.padding(12.dp)
@@ -124,14 +129,17 @@ private fun RenamePrefixDialog(
 				)
 				OutlinedTextField(
 					state = state,
-					label = { Text(text = stringResource(id = R.string.rename_label_text)) },
+					label = { Text(text = stringResource(id = R.string.recording_item_prefix_label)) },
 					shape = MaterialTheme.shapes.large,
 					onKeyboardAction = {
-						onRename(state.text.toString())
-						it()
+						if (isNameUpdateAllowed) {
+							onRename(state.text.toString())
+							it()
+						}
 					},
 					keyboardOptions = KeyboardOptions(
-						keyboardType = KeyboardType.Text, imeAction = ImeAction.Done
+						keyboardType = KeyboardType.Text,
+						imeAction = ImeAction.Done
 					)
 				)
 				Spacer(modifier = Modifier.height(8.dp))
@@ -143,9 +151,10 @@ private fun RenamePrefixDialog(
 						Text(text = stringResource(id = R.string.action_cancel))
 					}
 					Button(
+						enabled = isNameUpdateAllowed,
 						onClick = { onRename(state.text.toString()) },
 					) {
-						Text(text = stringResource(id = R.string.rename_recording_action))
+						Text(text = stringResource(id = R.string.action_set))
 					}
 				}
 
