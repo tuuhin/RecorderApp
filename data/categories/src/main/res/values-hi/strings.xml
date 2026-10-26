@@ -3,4 +3,5 @@
   <string name="select_category_screen">श्रेणी चुनें</string>
   <string name="categories_create_success">श्रेणी सफलतापूर्वक बनाई गई</string>
   <string name="categories_deleted">हटाई गई श्रेणियाँ</string>
+  <string name="categories_updated">रिकॉर्डिंग्स को %s श्रेणी में स्थानांतरित किया गया।</string>
 </resources>
