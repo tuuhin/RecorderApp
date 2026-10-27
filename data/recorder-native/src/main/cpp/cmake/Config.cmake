@@ -1,22 +1,22 @@
 include_guard(GLOBAL)
 
-# Configures compiler standards, extensions, and warning diagnostics for native targets.
-# - Enforces C++20 standard across native code without compiler extensions.
-# - Enables standard compiler warnings (-Wall, -Wextra, -Wpedantic) for Clang and GNU.
+# Sets up safety rules, modern C++20, and size optimizations for a native target
 function(configure_native_target target_name)
+    # Force C++20 standard
     target_compile_features(${target_name} PRIVATE cxx_std_20)
     set_target_properties(${target_name} PROPERTIES CXX_EXTENSIONS OFF)
+
+    # -Wl,--gc-sections: Removes unused code to shrink file size
+    # --exclude-libs,ALL: Hides internal library code so only JNI functions are exposed
+    target_link_options(${target_name} PRIVATE -Wl,--gc-sections -Wl,--exclude-libs,ALL)
+
+    # Turn on standard compiler warnings to catch bugs early
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         target_compile_options(${target_name} PRIVATE -Wall -Wextra -Wpedantic)
     endif ()
 endfunction()
 
 
-# Manages external third-party dependencies required by native targets.
-# - Fetches Google Oboe repository pinned to stable release tag 1.11.0.
-# - Uses shallow clone (GIT_SHALLOW TRUE) for fast, bit-for-bit reproducible builds.
-# - Employs an idempotency guard (if NOT TARGET oboe) to avoid re-declaring or
-#   re-configuring Oboe targets across repeated CMake configuration evaluations.
 include(FetchContent)
 
 if (NOT TARGET oboe)
@@ -29,15 +29,10 @@ if (NOT TARGET oboe)
     FetchContent_MakeAvailable(oboe)
 endif ()
 
-# ==============================================================================
-# SECTION 3: Shared Native Library Helper
-# ==============================================================================
-# Convenience helper function to define standardized shared native libraries.
-# - Creates a SHARED library target from specified source files.
-# - Applies standard compiler options via configure_native_target().
-# - Configures public and private include directories.
-# - Links public and private dependency libraries.
+
+# A helper function to easily create shared libraries (.so files) without repeating code
 function(add_custom_native_library target_name)
+    # Parse the arguments passed into this function (sources, include dirs, libraries)
     cmake_parse_arguments(
             ARG
             ""

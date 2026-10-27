@@ -14,6 +14,7 @@ dependencies {
 	implementation(libs.androidx.media3.common)
 
 	//local
+	implementation(project(":data:recorder-native"))
 	implementation(project(":core:utils"))
 	implementation(project(":data:use_case"))
 	implementation(project(":data:location"))
