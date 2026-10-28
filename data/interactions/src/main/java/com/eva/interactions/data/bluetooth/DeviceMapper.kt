@@ -5,5 +5,6 @@ import com.eva.interactions.domain.models.AudioDevice
 
 internal fun AudioDeviceInfo.toModel() = AudioDevice(
 	id = id,
-	productName = productName?.toString()
+	productName = productName?.toString(),
+	type = type,
 )
