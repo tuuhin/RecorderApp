@@ -15,3 +15,5 @@
 .cxx
 local.properties
 keystore.properties
+*.jks
+.junie

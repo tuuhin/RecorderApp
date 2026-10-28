@@ -1,7 +1,6 @@
 package com.eva.feature_recordings.recordings
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -36,7 +35,7 @@ import com.eva.feature_recordings.recordings.composables.RecordingsInteractiveLi
 import com.eva.feature_recordings.recordings.composables.RecordingsScreenTopBar
 import com.eva.feature_recordings.recordings.composables.SortOptionsSheetContent
 import com.eva.feature_recordings.recordings.state.RecordingScreenEvent
-import com.eva.feature_recordings.recordings.state.RecordingsSortInfo
+import com.eva.feature_recordings.recordings.state.UIRecordingSortInfo
 import com.eva.feature_recordings.recordings.state.SelectableRecordings
 import com.eva.feature_recordings.util.RecordingsPreviewFakes
 import com.eva.recordings.domain.models.RecordedVoiceModel
@@ -48,12 +47,12 @@ import com.eva.ui.utils.LocalSnackBarProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RecordingsScreen(
 	isRecordingsLoaded: Boolean,
 	selectedCategory: RecordingCategoryModel,
-	sortInfo: RecordingsSortInfo,
+	sortInfo: UIRecordingSortInfo,
 	recordings: ImmutableList<SelectableRecordings>,
 	categories: ImmutableList<RecordingCategoryModel>,
 	onScreenEvent: (RecordingScreenEvent) -> Unit,
@@ -202,7 +201,7 @@ private fun RecordingScreenPreview(
 		recordings = recordings,
 		selectedCategory = RecordingCategoryModel.ALL_CATEGORY,
 		categories = RecordingsPreviewFakes.FAKE_CATEGORIES_WITH_ALL_OPTION,
-		sortInfo = RecordingsSortInfo(),
+		sortInfo = UIRecordingSortInfo(),
 		onScreenEvent = {},
 		onRecordingSelect = {},
 		navigation = {

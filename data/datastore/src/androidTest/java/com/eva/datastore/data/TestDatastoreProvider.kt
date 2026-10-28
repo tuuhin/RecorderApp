@@ -7,10 +7,12 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.eva.datastore.data.serializers.FileSettingsSerializer
 import com.eva.datastore.data.serializers.RecorderSettingsSerializer
+import com.eva.datastore.data.serializers.RecordingsListOrderSerializer
 import com.eva.datastore.data.serializers.TranscriptionSettingsSerializer
 import com.eva.datastore.domain.DataStoreProvider
 import com.eva.datastore.proto.FileSettingsProto
 import com.eva.datastore.proto.RecorderSettingsProto
+import com.eva.datastore.proto.RecordingListSettingsProto
 import com.eva.datastore.proto.TranscriptionSettingsProto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -44,12 +46,15 @@ class TestDatastoreProvider(private val context: Context) : DataStoreProvider {
 			produceFile = { File(_tempDir, "file_test_3.pb") }
 		)
 
+	override val recordingsListSettingsDataStore: DataStore<RecordingListSettingsProto>
+		get() = DataStoreFactory.create(
+			serializer = RecordingsListOrderSerializer,
+			produceFile = { File(_tempDir, "file_test_4.pb") }
+		)
+
 	override suspend fun cleanUp() {
 		withContext(Dispatchers.IO) {
-			try {
-				_tempDir.deleteRecursively()
-			} catch (_: Exception) {
-			}
+			_tempDir.deleteRecursively()
 		}
 	}
 }

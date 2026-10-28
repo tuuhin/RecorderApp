@@ -6,7 +6,6 @@ import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.os.Build
 import androidx.core.net.toUri
-import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationAddressProvider
 import com.eva.location.domain.utils.parseLocationFromString
 import com.eva.recordings.domain.models.MediaMetaDataInfo
@@ -17,7 +16,6 @@ import kotlinx.coroutines.withContext
 
 class AudioInfoExtractorImpl(
 	private val context: Context,
-	private val settings: RecorderAudioSettingsRepo,
 	private val addressProvider: LocationAddressProvider,
 ) : AudioInfoExtractor {
 
@@ -38,9 +36,8 @@ class AudioInfoExtractorImpl(
 						?.toIntOrNull() ?: 0
 				} else mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 
+				// we will try to read location from the metadata if it's available
 				val locationAsString = async {
-					val audioSettings = settings.audioSettings()
-					if (!audioSettings.addLocationInfoInRecording) return@async null
 					val locationString =
 						retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION)
 					parseLocationFromString(locationString)
@@ -49,10 +46,15 @@ class AudioInfoExtractorImpl(
 				val bitRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
 					?.toIntOrNull() ?: mediaFormat.getInteger(MediaFormat.KEY_BIT_RATE)
 
+				val artists = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+				val author = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_AUTHOR)
+
 				MediaMetaDataInfo(
 					channelCount = channelCount,
 					sampleRate = sampleRate,
 					bitRate = bitRate,
+					artists = artists,
+					author = author,
 					locationString = locationAsString.await()
 				)
 			}

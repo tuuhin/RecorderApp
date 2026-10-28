@@ -1,0 +1,2 @@
+# Preserve line numbers and source file names for crash symbolication
+-keepattributes SourceFile,LineNumberTable

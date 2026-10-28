@@ -3,11 +3,13 @@ package com.eva.datastore.di
 import com.eva.datastore.data.repository.PreferencesSettingsRepoImpl
 import com.eva.datastore.data.repository.RecorderAudioSettingsRepoImpl
 import com.eva.datastore.data.repository.RecorderFileSettingsRepoImpl
+import com.eva.datastore.data.repository.RecordingsListPreferencesRepoImpl
 import com.eva.datastore.data.repository.TranscriptionSettingsRepoImpl
 import com.eva.datastore.domain.DataStoreProvider
 import com.eva.datastore.domain.repository.PreferencesSettingsRepo
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
+import com.eva.datastore.domain.repository.RecordingListPreferencesRepo
 import com.eva.datastore.domain.repository.TranscriptionSettingsRepo
 import dagger.Module
 import dagger.Provides
@@ -17,7 +19,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
+internal object RepositoryModule {
 
 	@Provides
 	@Singleton
@@ -38,4 +40,9 @@ object RepositoryModule {
 	@Singleton
 	fun providesTranscriptionSettings(provider: DataStoreProvider): TranscriptionSettingsRepo =
 		TranscriptionSettingsRepoImpl(provider.transcriptionsDataStore)
+
+	@Provides
+	@Singleton
+	fun providesRecordingListSettings(provider: DataStoreProvider): RecordingListPreferencesRepo =
+		RecordingsListPreferencesRepoImpl(provider.recordingsListSettingsDataStore)
 }

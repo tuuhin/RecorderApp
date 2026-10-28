@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_package = "com.eva.datastore.proto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+message  RecordingListSettingsProto {
+    SortingOrderProto order = 1;
+    bool isAsc =2;
+}
+
+enum SortingOrderProto {
+    DATE_CREATED = 0;
+    DURATION = 1;
+    NAME = 2;
+    SIZE = 3;
+}

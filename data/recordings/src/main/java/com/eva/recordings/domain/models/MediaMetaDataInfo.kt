@@ -5,6 +5,8 @@ data class MediaMetaDataInfo(
 	val sampleRate: Int = 0,
 	val bitRate: Int = 0,
 	val locationString: String? = null,
+	val artists: String? = null,
+	val author: String? = null,
 ) {
 	val sampleRateInKHz: Float
 		get() = sampleRate / 1_000f

@@ -7,10 +7,10 @@ import android.content.Context
 import android.database.ContentObserver
 import android.database.SQLException
 import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.net.toUri
-import androidx.core.os.bundleOf
 import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
 import com.eva.recordings.R
 import com.eva.recordings.data.wrapper.RecordingsConstants
@@ -72,7 +72,7 @@ internal class VoiceRecordingsProviderImpl(
 			)
 
 			awaitClose {
-				// the launch will get automatically cancelled when closed
+				// the launch will get automatically canceled when closed
 				Log.d(LOGGER_TAG, "CANCEL OBSERVER FOR RECORDINGS")
 				contentResolver.unregisterContentObserver(observer)
 			}
@@ -106,17 +106,17 @@ internal class VoiceRecordingsProviderImpl(
 		}
 
 	override suspend fun getVoiceRecordings(queryOthers: Boolean): VoiceRecordingModels {
-		val queryArgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && queryOthers) {
+		val queryBundle = Bundle()
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && queryOthers) {
 			// they are of owner package and external recordings
 			val selection = buildString {
 				append(MediaStore.Audio.AudioColumns.IS_RECORDING)
 				append(" = ? ")
 			}
 			val selectionArgs = arrayOf("1")
-			bundleOf(
-				ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
-				ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
-			)
+			queryBundle.putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+			queryBundle.putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
 		} else {
 			// only owner package
 			val selection = buildString {
@@ -125,19 +125,20 @@ internal class VoiceRecordingsProviderImpl(
 			}
 			val selectionArgs = arrayOf(context.packageName)
 			// items only of this package
-			bundleOf(
-				ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
-				ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
-			)
+			queryBundle.putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+			queryBundle.putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
 		}
 
 		val sortColumns = arrayOf(MediaStore.Audio.AudioColumns.DATE_ADDED)
-		val otherExtras = bundleOf(
-			ContentResolver.QUERY_ARG_SORT_COLUMNS to sortColumns,
-			ContentResolver.QUERY_ARG_SORT_DIRECTION to ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-		)
+		val otherExtras = Bundle().apply {
+			putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS, sortColumns)
+			putInt(
+				ContentResolver.QUERY_ARG_SORT_DIRECTION,
+				ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+			)
+		}
 
-		val selectionBundle = queryArgs.apply { putAll(otherExtras) }
+		val selectionBundle = queryBundle.apply { putAll(otherExtras) }
 
 		return withContext(Dispatchers.IO) {
 			contentResolver.query(
@@ -173,13 +174,13 @@ internal class VoiceRecordingsProviderImpl(
 		return withContext(Dispatchers.IO) {
 			try {
 				val deleteRow = contentResolver.delete(uri.toUri(), null, null)
-				return@withContext if (deleteRow == 1)
-					Resource.Success<Unit, Exception>(
-						data = Unit,
-						message = context.getString(R.string.rename_recording_success)
-					)
-				else Resource.Error(NoRecordingsModifiedOrDeletedException())
+				if (deleteRow == 0)
+					return@withContext Resource.Error(NoRecordingsModifiedOrDeletedException())
 
+				Resource.Success(
+					data = Unit,
+					message = context.getString(R.string.rename_recording_success)
+				)
 			} catch (e: SecurityException) {
 				Resource.Error(e, "SECURITY EXCEPTION")
 			} catch (e: CancellationException) {
@@ -194,10 +195,11 @@ internal class VoiceRecordingsProviderImpl(
 	override suspend fun deleteFileFromId(id: Long): Resource<Unit, Exception> {
 		val selection = "${MediaStore.Audio.AudioColumns._ID} = ? "
 		val selectionArgs = arrayOf("$id")
-		val bundle = bundleOf(
-			ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
-			ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs
-		)
+
+		val bundle = Bundle().apply {
+			putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+			putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+		}
 
 		return withContext(Dispatchers.IO) {
 			try {

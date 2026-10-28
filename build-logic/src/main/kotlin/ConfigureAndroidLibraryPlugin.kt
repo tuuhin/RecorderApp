@@ -41,6 +41,7 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
 		val testImplementations = listOf(
 			"junit",
+			"kotin.test.junit",
 			"kotlin.test",
 			"kotlinx.coroutines.test",
 			"turbine"
@@ -55,6 +56,7 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 		val androidTestImplementations = listOf(
 			"androidx.junit",
 			"androidx.espresso.core",
+			"kotin.test.junit",
 			"kotlin.test",
 			"kotlinx.coroutines.test",
 			"turbine"
@@ -77,19 +79,8 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
 		defaultConfig {
 			minSdk = catalog.findVersion("android.minSdk").get().toString().toInt()
-
 			testInstrumentationRunner = Constants.TEST_RUNNER_CLASS_NAME
-			consumerProguardFiles("consumer-rules.pro")
-		}
 
-		buildTypes {
-			release {
-				isMinifyEnabled = false
-				proguardFiles(
-					getDefaultProguardFile("proguard-android-optimize.txt"),
-					"proguard-rules.pro"
-				)
-			}
 		}
 		compileOptions {
 			sourceCompatibility = JavaVersion.VERSION_17

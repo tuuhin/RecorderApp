@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -36,7 +36,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -50,21 +49,14 @@ internal fun FilePrefixSelector(
 	modifier: Modifier = Modifier,
 ) {
 
-	var showDialog by remember {
-		mutableStateOf(false)
-	}
-
-	var textValue by remember {
-		mutableStateOf(TextFieldValue())
-	}
+	var showDialog by remember { mutableStateOf(false) }
 
 	RenamePrefixDialog(
 		showDialog = showDialog,
-		textFieldValue = textValue,
-		onTextFieldValueChange = { textValue = it },
+		initialName = prefix,
 		onDismiss = { showDialog = false },
 		onRename = {
-			onPrefixChange(it.text)
+			onPrefixChange(it)
 			showDialog = false
 		}
 	)
@@ -97,18 +89,18 @@ internal fun FilePrefixSelector(
 @Composable
 private fun RenamePrefixDialog(
 	showDialog: Boolean,
-	textFieldValue: TextFieldValue,
-	onTextFieldValueChange: (TextFieldValue) -> Unit,
 	onDismiss: () -> Unit,
-	onRename: (TextFieldValue) -> Unit,
-	modifier: Modifier = Modifier, properties: DialogProperties = DialogProperties(),
+	onRename: (String) -> Unit,
+	modifier: Modifier = Modifier,
+	initialName: String = "",
+	properties: DialogProperties = DialogProperties(),
 ) {
 	if (!showDialog) return
 
-	val isRenameEnabled by remember(textFieldValue) {
-		derivedStateOf {
-			textFieldValue.text.isBlank()
-		}
+	val state = rememberTextFieldState(initialName)
+
+	val isNameUpdateAllowed by remember(state) {
+		derivedStateOf { state.text.isNotBlank() }
 	}
 
 	BasicAlertDialog(
@@ -124,7 +116,7 @@ private fun RenamePrefixDialog(
 		) {
 			Column(modifier = Modifier.padding(24.dp)) {
 				Text(
-					text = stringResource(id = R.string.rename_recording_prefix_title),
+					text = stringResource(id = R.string.recording_settings_change_name_prefix),
 					style = MaterialTheme.typography.headlineSmall,
 					color = AlertDialogDefaults.titleContentColor,
 					modifier = Modifier.padding(12.dp)
@@ -136,13 +128,18 @@ private fun RenamePrefixDialog(
 					modifier = Modifier.padding(vertical = 6.dp),
 				)
 				OutlinedTextField(
-					value = textFieldValue,
-					onValueChange = onTextFieldValueChange,
-					label = { Text(text = stringResource(id = R.string.rename_label_text)) },
+					state = state,
+					label = { Text(text = stringResource(id = R.string.recording_item_prefix_label)) },
 					shape = MaterialTheme.shapes.large,
-					keyboardActions = KeyboardActions(onDone = { onRename(textFieldValue) }),
+					onKeyboardAction = {
+						if (isNameUpdateAllowed) {
+							onRename(state.text.toString())
+							it()
+						}
+					},
 					keyboardOptions = KeyboardOptions(
-						keyboardType = KeyboardType.Text, imeAction = ImeAction.Done
+						keyboardType = KeyboardType.Text,
+						imeAction = ImeAction.Done
 					)
 				)
 				Spacer(modifier = Modifier.height(8.dp))
@@ -154,10 +151,10 @@ private fun RenamePrefixDialog(
 						Text(text = stringResource(id = R.string.action_cancel))
 					}
 					Button(
-						onClick = { onRename(textFieldValue) },
-						enabled = !isRenameEnabled
+						enabled = isNameUpdateAllowed,
+						onClick = { onRename(state.text.toString()) },
 					) {
-						Text(text = stringResource(id = R.string.rename_recording_action))
+						Text(text = stringResource(id = R.string.action_set))
 					}
 				}
 
@@ -171,8 +168,6 @@ private fun RenamePrefixDialog(
 private fun RenamePrefixDialogPreview() = RecorderAppTheme {
 	RenamePrefixDialog(
 		showDialog = true,
-		textFieldValue = TextFieldValue(),
-		onTextFieldValueChange = {},
 		onDismiss = { },
 		onRename = {}
 	)

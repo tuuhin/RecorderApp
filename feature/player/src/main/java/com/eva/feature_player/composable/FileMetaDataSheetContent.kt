@@ -85,6 +85,22 @@ fun FileMetaDataSheetContent(
 				text = audio.mimeType
 			)
 		}
+		audio.metaData?.artists?.let {
+			item {
+				FileMetaData(
+					title = stringResource(R.string.audio_metadata_file_artist_name),
+					text = it
+				)
+			}
+		}
+		audio.metaData?.author?.let {
+			item {
+				FileMetaData(
+					title = stringResource(R.string.audio_metadata_file_author_name),
+					text = it
+				)
+			}
+		}
 		item {
 			FileMetaData(
 				title = stringResource(id = R.string.audio_metadata_last_edit_title),
@@ -156,7 +172,9 @@ private fun FileMetaData(
 	textColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
 	Column(
-		modifier = modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+		modifier = modifier
+			.fillMaxWidth()
+			.padding(vertical = 8.dp, horizontal = 4.dp)
 	) {
 		Text(
 			text = title,
