@@ -74,7 +74,7 @@ class WavAudioRecorder : CustomRecorder {
 		setConfig(handle, config.sampleRate, config.channel)
 	}
 
-	fun prepare() {
+	override fun prepare() {
 		if (!_isInitialized.load()) {
 			Log.w(TAG, "RECORDER WAS NOT INITIATED")
 			throw RecorderHandleException()
@@ -83,7 +83,7 @@ class WavAudioRecorder : CustomRecorder {
 		prepareRecorder(handle)
 	}
 
-	fun start() {
+	override fun start() {
 		if (!_isInitialized.load()) {
 			Log.w(TAG, "RECORDER WAS NOT INITIATED")
 			throw RecorderHandleException()
@@ -92,7 +92,7 @@ class WavAudioRecorder : CustomRecorder {
 		startRecorder(handle)
 	}
 
-	fun stop() {
+	override fun stop() {
 		if (!_isInitialized.load()) {
 			Log.w(TAG, "RECORDER WAS NOT INITIATED")
 			throw RecorderHandleException()
@@ -101,7 +101,7 @@ class WavAudioRecorder : CustomRecorder {
 		stopRecorder(handle)
 	}
 
-	fun pause() {
+	override fun pause() {
 		if (!_isInitialized.load()) {
 			Log.w(TAG, "RECORDER WAS NOT INITIATED")
 			throw RecorderHandleException()
@@ -110,7 +110,7 @@ class WavAudioRecorder : CustomRecorder {
 		pauseRecorder(handle)
 	}
 
-	fun resume() {
+	override fun resume() {
 		if (!_isInitialized.load()) {
 			Log.w(TAG, "RECORDER WAS NOT INITIATED")
 			throw RecorderHandleException()
@@ -119,7 +119,7 @@ class WavAudioRecorder : CustomRecorder {
 		resumeRecorder(handle)
 	}
 
-	fun reset() {
+	override fun reset() {
 		if (!_isInitialized.load()) {
 			Log.w(TAG, "RECORDER WAS NOT INITIATED")
 			throw RecorderHandleException()

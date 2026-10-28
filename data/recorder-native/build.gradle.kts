@@ -7,6 +7,15 @@ android {
 	namespace = "com.eva.recorder_native"
 	ndkVersion = libs.versions.android.ndk.get()
 
+	defaultConfig {
+		externalNativeBuild {
+			cmake {
+				cppFlags += listOf("-std=c++20")
+				arguments += "-DCMAKE_SYSTEM_VERSION=${libs.versions.android.minSdk.get().toInt()}"
+			}
+		}
+	}
+
 
 	externalNativeBuild {
 		cmake {

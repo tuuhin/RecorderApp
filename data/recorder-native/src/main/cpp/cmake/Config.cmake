@@ -30,6 +30,33 @@ if (NOT TARGET oboe)
 endif ()
 
 
+if (NOT TARGET FLAC::FLAC)
+    # Only the plain C encoder library is needed: no FLAC++ bindings,
+    # command line tools, examples, tests, docs, or Ogg container support.
+    set(BUILD_CXXLIBS OFF)
+    set(BUILD_PROGRAMS OFF)
+    set(BUILD_EXAMPLES OFF)
+    set(BUILD_TESTING OFF)
+    set(BUILD_DOCS OFF)
+    set(INSTALL_MANPAGES OFF)
+    set(INSTALL_PKGCONFIG_MODULES OFF)
+    set(INSTALL_CMAKE_CONFIG_MODULE OFF)
+    set(WITH_OGG OFF)
+
+    set(WITH_FORTIFY_SOURCE OFF)
+    set(WITH_STACK_PROTECTOR OFF)
+
+    set(BUILD_SHARED_LIBS OFF)
+
+    FetchContent_Declare(
+            flac
+            GIT_REPOSITORY https://github.com/xiph/flac.git
+            GIT_TAG 1.5.0
+            GIT_SHALLOW TRUE
+    )
+    FetchContent_MakeAvailable(flac)
+endif ()
+
 # A helper function to easily create shared libraries (.so files) without repeating code
 function(add_custom_native_library target_name)
     # Parse the arguments passed into this function (sources, include dirs, libraries)

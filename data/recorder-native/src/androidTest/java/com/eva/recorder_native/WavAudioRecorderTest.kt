@@ -13,6 +13,7 @@ import assertk.assertions.isFalse
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isNotNull
+import assertk.assertions.isTrue
 import com.eva.recorder_native.exception.RecorderAlreadyInitiatedException
 import com.eva.recorder_native.exception.RecorderHandleException
 import com.eva.recorder_native.models.RecorderConfig
@@ -24,9 +25,7 @@ import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 
 class WavAudioRecorderTest {
@@ -54,7 +53,7 @@ class WavAudioRecorderTest {
 	}
 
 	@Test
-	fun createThenReleaseReportsNotRecordingAndReleaseIsIdempotent() {
+	fun create_then_release_reports_not_recording_and_release_is_idempotent() {
 		recorder.create()
 
 		assertThat(recorder.isRecording).isFalse()
@@ -64,14 +63,14 @@ class WavAudioRecorderTest {
 	}
 
 	@Test
-	fun createTwiceThrowsRecorderAlreadyInitiated() {
+	fun create_twice_throws_recorder_already_initiated() {
 		recorder.create()
 
 		assertFailsWith<RecorderAlreadyInitiatedException> { recorder.create() }
 	}
 
 	@Test
-	fun everyMethodBeforeCreateThrowsRecorderHandleException() {
+	fun every_method_before_create_throws_recorder_handle_exception() {
 		val file = newOutputFile("before-create.wav")
 
 		assertFailsWith<RecorderHandleException> { recorder.isRecording }
@@ -86,7 +85,63 @@ class WavAudioRecorderTest {
 	}
 
 	@Test
-	fun recordAndStopProducesReadableWavFile() = runBlocking {
+	fun invalid_config_values_throw_illegal_argument() {
+		recorder.create()
+
+		assertFailsWith<IllegalArgumentException> {
+			recorder.setRecorderConfig(RecorderConfig(sampleRate = 0, channel = 1))
+		}
+		assertFailsWith<IllegalArgumentException> {
+			recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 0))
+		}
+		assertFailsWith<IllegalArgumentException> {
+			recorder.setRecorderConfig(RecorderConfig(sampleRate = -1, channel = 1))
+		}
+	}
+
+	@Test
+	fun start_before_prepare_throws_illegal_state() {
+		recorder.create()
+
+		assertFailsWith<IllegalStateException> { recorder.start() }
+	}
+
+	@Test
+	fun prepare_without_output_file_throws_illegal_state_and_is_retryable() {
+		recorder.create()
+		recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+
+		assertFailsWith<IllegalStateException> { recorder.prepare() }
+
+		// The failed prepare must not leave the recorder unusable.
+		recorder.setOutputFile(newOutputFile("prepare-retry.wav"))
+		recorder.prepare()
+
+		assertThat(recorder.isRecording).isFalse()
+	}
+
+	@Test
+	fun prepare_locks_output_file_and_config() {
+		recorder.create()
+		recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+		recorder.setOutputFile(newOutputFile("locked.wav"))
+		recorder.prepare()
+
+		assertFailsWith<IllegalStateException> { recorder.prepare() }
+		assertFailsWith<IllegalStateException> { recorder.setOutputFile(newOutputFile("other.wav")) }
+		assertFailsWith<IllegalStateException> { recorder.setRecorderConfig(RecorderConfig()) }
+	}
+
+	@Test
+	fun stop_before_prepare_is_silent_no_op() {
+		recorder.create()
+
+		// Nothing has been opened yet; stop has nothing to clean up.
+		recorder.stop()
+	}
+
+	@Test
+	fun record_and_stop_produces_readable_wav_file() = runBlocking {
 		val file = newOutputFile("recorded.wav")
 
 		recorder.create()
@@ -97,11 +152,14 @@ class WavAudioRecorderTest {
 
 		delay(RECORD_DURATION_MS)
 
-		assertTrue(recorder.isRecording)
+		assertThat(recorder.isRecording).isTrue()
 
 		recorder.stop()
 
-		assertEquals(false, recorder.isRecording)
+		// Stopping an already stopped recorder must not throw.
+		recorder.stop()
+
+		assertThat(recorder.isRecording).isFalse()
 
 		assertReadableWav(file, channelCount = 1)
 
@@ -109,7 +167,7 @@ class WavAudioRecorderTest {
 	}
 
 	@Test
-	fun pauseAndResumeToggleRecordingState() = runBlocking {
+	fun pause_and_resume_toggle_recording_state() = runBlocking {
 		val file = newOutputFile("paused.wav")
 
 		recorder.create()
@@ -121,24 +179,48 @@ class WavAudioRecorderTest {
 		delay(RECORD_DURATION_MS)
 
 		recorder.pause()
-
-		assertEquals(false, recorder.isRecording)
+		assertThat(recorder.isRecording).isFalse()
 
 		recorder.resume()
-
-		assertTrue(recorder.isRecording)
+		assertThat(recorder.isRecording).isTrue()
 
 		delay(RECORD_DURATION_MS)
 
 		recorder.stop()
+		assertThat(recorder.isRecording).isFalse()
 
-		assertEquals(false, recorder.isRecording)
+		assertReadableWav(file)
 
 		recorder.release()
 	}
 
 	@Test
-	fun resetAllowsRecordingToANewFile() = runBlocking {
+	fun pause_without_recording_throws_illegal_state() {
+		recorder.create()
+		recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+		recorder.setOutputFile(newOutputFile("not-recording.wav"))
+		recorder.prepare()
+
+		assertFailsWith<IllegalStateException> { recorder.pause() }
+	}
+
+	@Test
+	fun resume_while_recording_throws_illegal_state() {
+		recorder.create()
+		recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+		recorder.setOutputFile(newOutputFile("resume-conflict.wav"))
+		recorder.prepare()
+		recorder.start()
+
+		assertThat(recorder.isRecording).isTrue()
+
+		assertFailsWith<IllegalStateException> { recorder.resume() }
+
+		recorder.stop()
+	}
+
+	@Test
+	fun reset_allows_recording_to_a_new_file() = runBlocking {
 		val first = newOutputFile("reset-first.wav")
 		val second = newOutputFile("reset-second.wav")
 
@@ -152,6 +234,9 @@ class WavAudioRecorderTest {
 
 		recorder.stop()
 
+		// The previous recording is finalized; starting again requires reset.
+		assertFailsWith<IllegalStateException> { recorder.start() }
+
 		recorder.reset()
 
 		recorder.setOutputFile(second)
@@ -161,19 +246,70 @@ class WavAudioRecorderTest {
 
 		recorder.stop()
 
-		assertReadableWav(second, channelCount = 1)
+		assertReadableWav(first)
+		assertReadableWav(second)
 
 		recorder.release()
 	}
 
-	private fun assertReadableWav(file: File, channelCount: Int) {
+	@Test
+	fun immediate_stop_still_produces_parseable_file() {
+		val file = newOutputFile("immediate-stop.wav")
+
+		recorder.create()
+		recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+		recorder.setOutputFile(file)
+		recorder.prepare()
+		recorder.start()
+
+		// Stop before any meaningful amount of audio was captured.
+		recorder.stop()
+
+		assertThat(recorder.isRecording).isFalse()
+		assertThat(file.exists()).isTrue()
+
+		// The file must still be a well-formed container, even if nearly empty.
+		val output = TestUtil.extractAllSamplesFromFilePath(WavExtractor(), file.absolutePath)
+
+		assertThat(output.numberOfTracks).isEqualTo(1)
+	}
+
+	@Test
+	fun create_after_release_records_again() = runBlocking {
+		recorder.create()
+		recorder.release()
+
+		// After release the recorder behaves like a fresh instance
+		// that has not been created yet.
+		assertFailsWith<RecorderHandleException> { recorder.isRecording }
+		assertFailsWith<RecorderHandleException> { recorder.setOutputFile(newOutputFile("post-release.wav")) }
+		assertFailsWith<RecorderHandleException> { recorder.prepare() }
+		assertFailsWith<RecorderHandleException> { recorder.start() }
+		assertFailsWith<RecorderHandleException> { recorder.stop() }
+
+		val file = newOutputFile("recreated.wav")
+
+		recorder.create()
+		recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+		recorder.setOutputFile(file)
+		recorder.prepare()
+		recorder.start()
+
+		delay(RECORD_DURATION_MS)
+
+		recorder.stop()
+
+		assertReadableWav(file)
+	}
+
+	private fun assertReadableWav(file: File, channelCount: Int = 1) {
 		val output = TestUtil.extractAllSamplesFromFilePath(WavExtractor(), file.absolutePath)
 
 		assertThat(output.numberOfTracks).isEqualTo(1)
 
 		val seekMap = output.seekMap
 		assertThat(seekMap).isNotNull()
-		assertThat(seekMap.durationUs).isGreaterThanOrEqualTo(0)
+		assertThat(seekMap.durationUs).isGreaterThanOrEqualTo(MINIMUM_EXPECTED_DURATION_US)
 
 		val track = output.trackOutputs.valueAt(0)
 		val format = track.lastFormat
@@ -181,7 +317,37 @@ class WavAudioRecorderTest {
 		assertThat(format?.sampleRate).isNotNull().isGreaterThan(0)
 		assertThat(channelCount).isEqualTo(format?.channelCount)
 		assertThat(C.ENCODING_PCM_16BIT).isEqualTo(format?.pcmEncoding)
-		assertThat(track.sampleCount).isGreaterThan(0)
+
+		// The recording ran for RECORD_DURATION_MS, so the file must hold a
+		// meaningful amount of audio, not just a few stray frames.
+		//
+		// media3's FakeTrackOutput.sampleCount counts extractor-emitted chunks
+		// (~8KB of PCM each for WavExtractor), not audio samples, so assert on
+		// the file's own data-chunk size instead.
+		val sampleRate = requireNotNull(format?.sampleRate)
+		assertThat(wavSampleCount(file, channelCount)).isGreaterThanOrEqualTo(sampleRate / 4L)
+	}
+
+	// Reads the canonical 44-byte RIFF header our writer produces and returns
+	// the number of PCM samples the data chunk declares.
+	private fun wavSampleCount(file: File, channelCount: Int): Long {
+		val bytes = file.readBytes()
+
+		assertThat(bytes.size).isGreaterThanOrEqualTo(44)
+		assertThat(String(bytes, 0, 4, Charsets.US_ASCII)).isEqualTo("RIFF")
+		assertThat(String(bytes, 8, 4, Charsets.US_ASCII)).isEqualTo("WAVE")
+		assertThat(String(bytes, 36, 4, Charsets.US_ASCII)).isEqualTo("data")
+
+		fun u32LE(at: Int) =
+			(bytes[at].toLong() and 0xFF) or
+					((bytes[at + 1].toLong() and 0xFF) shl 8) or
+					((bytes[at + 2].toLong() and 0xFF) shl 16) or
+					((bytes[at + 3].toLong() and 0xFF) shl 24)
+
+		val dataSize = u32LE(40)
+
+		// 16-bit PCM: two bytes per sample per channel.
+		return dataSize / (2L * channelCount)
 	}
 
 	private fun newOutputFile(name: String): File = File(outputFolder, name)
@@ -190,5 +356,10 @@ class WavAudioRecorderTest {
 
 		private const val SAMPLE_RATE = 44_100
 		private val RECORD_DURATION_MS = 1_500.milliseconds
+
+		// Recordings asserted through assertReadableWav ran for at least
+		// RECORD_DURATION_MS, so anything shorter than a quarter second
+		// means the pipeline dropped audio or finalized too early.
+		private const val MINIMUM_EXPECTED_DURATION_US = 250_000L
 	}
 }

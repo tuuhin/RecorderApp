@@ -1,7 +1,6 @@
 add_library(wav_recorder SHARED
         src/wav_jni_interop.cpp
         src/wav_file_writer.cpp
-        src/wav_recorder.cpp
 )
 
 configure_native_target(wav_recorder)
@@ -12,4 +11,4 @@ target_include_directories(
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(wav_recorder PRIVATE oboe)
+target_link_libraries(wav_recorder PRIVATE recorder_common)
