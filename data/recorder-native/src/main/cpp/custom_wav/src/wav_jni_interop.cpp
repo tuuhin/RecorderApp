@@ -12,8 +12,8 @@
 
 namespace {
 
-#define LOG_TAG "WAV_JNI_INTEROP"
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define WAV_LOG_TAG "WAV_JNI_INTEROP"
+#define WAV_LOG_D(...) __android_log_print(ANDROID_LOG_DEBUG, WAV_LOG_TAG, __VA_ARGS__)
 
 using wav_recorder = audio_recorder<wave_file_writer>;
 
@@ -28,13 +28,13 @@ Java_com_eva_recorder_1native_WavAudioRecorder_createRecorder(JNIEnv* env, jobje
 
         const auto printableAddress = static_cast<unsigned long long>(address);
 
-        LOGD("createRecorder: allocated wav_recorder, pointer=0x%llx, top-byte tag=0x%02llx",
-             printableAddress,
-             (printableAddress >> 56U) & 0xFFULL);
+        WAV_LOG_D("createRecorder: allocated wav_recorder, pointer=0x%llx, top-byte tag=0x%02llx",
+                  printableAddress,
+                  (printableAddress >> 56U) & 0xFFULL);
 
         return static_cast<jlong>(address);
     } catch (...) {
-        LOGD("createRecorder: allocation failed, returning 0");
+        WAV_LOG_D("createRecorder: allocation failed, returning 0");
         recorder_jni::translateCurrentException(env);
         return 0;
     }
@@ -43,13 +43,13 @@ Java_com_eva_recorder_1native_WavAudioRecorder_createRecorder(JNIEnv* env, jobje
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_releaseNative(JNIEnv* env, jobject, jlong handle) {
     if (handle == 0) {
-        LOGD("releaseNative: null handle, nothing to release");
+        WAV_LOG_D("releaseNative: null handle, nothing to release");
         return;
     }
 
-    LOGD("releaseNative: releasing handle %lld (0x%llx)",
-         static_cast<long long>(handle),
-         static_cast<unsigned long long>(handle));
+    WAV_LOG_D("releaseNative: releasing handle %lld (0x%llx)",
+              static_cast<long long>(handle),
+              static_cast<unsigned long long>(handle));
 
     try {
         std::unique_ptr<wav_recorder> recorder(recorder_jni::get_recorder<wav_recorder>(handle));
@@ -62,7 +62,7 @@ Java_com_eva_recorder_1native_WavAudioRecorder_releaseNative(JNIEnv* env, jobjec
 extern "C" JNIEXPORT void JNICALL Java_com_eva_recorder_1native_WavAudioRecorder_setConfig(
     JNIEnv* env, jobject, jlong handle, jint sample_rate, jint channels) {
     recorder_jni::withRecorder<wav_recorder>(env, handle, [&](wav_recorder& recorder) {
-        LOGD("setConfig: sampleRate=%d, channels=%d", sample_rate, channels);
+        WAV_LOG_D("setConfig: sampleRate=%d, channels=%d", sample_rate, channels);
 
         if (sample_rate <= 0 || channels <= 0)
             throw std::invalid_argument("Sample rate and channel count must be positive");
@@ -87,7 +87,7 @@ Java_com_eva_recorder_1native_WavAudioRecorder_setOutputFileConfig(JNIEnv* env, 
     try {
         UtfChars path(env, file_path);
 
-        LOGD("setOutputFileConfig: path=%s", path.get());
+        WAV_LOG_D("setOutputFileConfig: path=%s", path.get());
 
         recorder_jni::withRecorder<wav_recorder>(env, handle, [&](wav_recorder& recorder) {
             recorder.setOutputFile(std::filesystem::path(path.get()));
@@ -99,42 +99,42 @@ Java_com_eva_recorder_1native_WavAudioRecorder_setOutputFileConfig(JNIEnv* env, 
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_prepareRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("prepareRecorder: handle %lld", static_cast<long long>(handle));
+    WAV_LOG_D("prepareRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<wav_recorder>(
         env, handle, [](wav_recorder& recorder) { recorder.prepare(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_startRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("startRecorder: handle %lld", static_cast<long long>(handle));
+    WAV_LOG_D("startRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<wav_recorder>(
         env, handle, [](wav_recorder& recorder) { recorder.start(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_stopRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("stopRecorder: handle %lld", static_cast<long long>(handle));
+    WAV_LOG_D("stopRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<wav_recorder>(
         env, handle, [](wav_recorder& recorder) { recorder.stop(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_pauseRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("pauseRecorder: handle %lld", static_cast<long long>(handle));
+    WAV_LOG_D("pauseRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<wav_recorder>(
         env, handle, [](wav_recorder& recorder) { recorder.pause(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_resumeRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("resumeRecorder: handle %lld", static_cast<long long>(handle));
+    WAV_LOG_D("resumeRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<wav_recorder>(
         env, handle, [](wav_recorder& recorder) { recorder.resume(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_resetRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("resetRecorder: handle %lld", static_cast<long long>(handle));
+    WAV_LOG_D("resetRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<wav_recorder>(
         env, handle, [](wav_recorder& recorder) { recorder.reset(); });
 }
@@ -147,7 +147,7 @@ Java_com_eva_recorder_1native_WavAudioRecorder_isRecordRunning(JNIEnv* env, jobj
         result = recorder.is_recording() ? JNI_TRUE : JNI_FALSE;
     });
 
-    LOGD("isRecordRunning: %s", result == JNI_TRUE ? "true" : "false");
+    WAV_LOG_D("isRecordRunning: %s", result == JNI_TRUE ? "true" : "false");
 
     return result;
 }

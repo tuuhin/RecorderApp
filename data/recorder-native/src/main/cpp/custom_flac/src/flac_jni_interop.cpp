@@ -13,8 +13,8 @@
 
 namespace {
 
-#define LOG_TAG "FLAC_JNI_INTEROP"
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define FLAC_LOG_TAG "FLAC_JNI_INTEROP"
+#define FLAC_LOG_D(...) __android_log_print(ANDROID_LOG_DEBUG, FLAC_LOG_TAG, __VA_ARGS__)
 
 using flac_recorder = audio_recorder<flac_file_writer>;
 
@@ -29,13 +29,13 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_createRecorder(JNIEnv* env, jobj
 
         const auto printableAddress = static_cast<unsigned long long>(address);
 
-        LOGD("createRecorder: allocated flac_recorder, pointer=0x%llx, top-byte tag=0x%02llx",
+        FLAC_LOG_D("createRecorder: allocated flac_recorder, pointer=0x%llx, top-byte tag=0x%02llx",
              printableAddress,
              (printableAddress >> 56U) & 0xFFULL);
 
         return static_cast<jlong>(address);
     } catch (...) {
-        LOGD("createRecorder: allocation failed, returning 0");
+        FLAC_LOG_D("createRecorder: allocation failed, returning 0");
         recorder_jni::translateCurrentException(env);
         return 0;
     }
@@ -44,11 +44,11 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_createRecorder(JNIEnv* env, jobj
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_FlacAudioRecorder_releaseNative(JNIEnv* env, jobject, jlong handle) {
     if (handle == 0) {
-        LOGD("releaseNative: null handle, nothing to release");
+        FLAC_LOG_D("releaseNative: null handle, nothing to release");
         return;
     }
 
-    LOGD("releaseNative: releasing handle %lld (0x%llx)",
+    FLAC_LOG_D("releaseNative: releasing handle %lld (0x%llx)",
          static_cast<long long>(handle),
          static_cast<unsigned long long>(handle));
 
@@ -63,7 +63,7 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_releaseNative(JNIEnv* env, jobje
 extern "C" JNIEXPORT void JNICALL Java_com_eva_recorder_1native_FlacAudioRecorder_setConfig(
     JNIEnv* env, jobject, jlong handle, jint sample_rate, jint channels) {
     recorder_jni::withRecorder<flac_recorder>(env, handle, [&](flac_recorder& recorder) {
-        LOGD("setConfig: sampleRate=%d, channels=%d", sample_rate, channels);
+        FLAC_LOG_D("setConfig: sampleRate=%d, channels=%d", sample_rate, channels);
 
         if (sample_rate <= 0 || channels <= 0)
             throw std::invalid_argument("Sample rate and channel count must be positive");
@@ -88,7 +88,7 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_setOutputFileConfig(JNIEnv* env,
     try {
         UtfChars path(env, file_path);
 
-        LOGD("setOutputFileConfig: path=%s", path.get());
+        FLAC_LOG_D("setOutputFileConfig: path=%s", path.get());
 
         recorder_jni::withRecorder<flac_recorder>(env, handle, [&](flac_recorder& recorder) {
             recorder.setOutputFile(std::filesystem::path(path.get()));
@@ -100,42 +100,42 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_setOutputFileConfig(JNIEnv* env,
 
 extern "C" JNIEXPORT void JNICALL Java_com_eva_recorder_1native_FlacAudioRecorder_prepareRecorder(
     JNIEnv* env, jobject, jlong handle) {
-    LOGD("prepareRecorder: handle %lld", static_cast<long long>(handle));
+    FLAC_LOG_D("prepareRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<flac_recorder>(
         env, handle, [](flac_recorder& recorder) { recorder.prepare(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_FlacAudioRecorder_startRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("startRecorder: handle %lld", static_cast<long long>(handle));
+    FLAC_LOG_D("startRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<flac_recorder>(
         env, handle, [](flac_recorder& recorder) { recorder.start(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_FlacAudioRecorder_stopRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("stopRecorder: handle %lld", static_cast<long long>(handle));
+    FLAC_LOG_D("stopRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<flac_recorder>(
         env, handle, [](flac_recorder& recorder) { recorder.stop(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_FlacAudioRecorder_pauseRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("pauseRecorder: handle %lld", static_cast<long long>(handle));
+    FLAC_LOG_D("pauseRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<flac_recorder>(
         env, handle, [](flac_recorder& recorder) { recorder.pause(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_FlacAudioRecorder_resumeRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("resumeRecorder: handle %lld", static_cast<long long>(handle));
+    FLAC_LOG_D("resumeRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<flac_recorder>(
         env, handle, [](flac_recorder& recorder) { recorder.resume(); });
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_FlacAudioRecorder_resetRecorder(JNIEnv* env, jobject, jlong handle) {
-    LOGD("resetRecorder: handle %lld", static_cast<long long>(handle));
+    FLAC_LOG_D("resetRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<flac_recorder>(
         env, handle, [](flac_recorder& recorder) { recorder.reset(); });
 }
@@ -149,7 +149,7 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_isRecordRunning(JNIEnv* env, job
         result = recorder.is_recording() ? JNI_TRUE : JNI_FALSE;
     });
 
-    LOGD("isRecordRunning: %s", result == JNI_TRUE ? "true" : "false");
+    FLAC_LOG_D("isRecordRunning: %s", result == JNI_TRUE ? "true" : "false");
 
     return result;
 }

@@ -44,8 +44,6 @@ coroutines = "1.11.0"
 turbine_version = "1.2.1"
 vosk = "0.3.75"
 okio = "3.18.2"
-appcompat = "1.8.0"
-material = "1.14.0"
 
 [libraries]
 #core
@@ -145,8 +143,6 @@ compose-compiler-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compos
 ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 room-gradlePlugin = { group = "androidx.room3", name = "room3-gradle-plugin", version.ref = "room3" }
 protobuf-gradlePlugin = { group = "com.google.protobuf", name = "protobuf-gradle-plugin", version.ref = "protobuf_version" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

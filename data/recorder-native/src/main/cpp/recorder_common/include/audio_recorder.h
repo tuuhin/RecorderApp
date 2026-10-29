@@ -3,6 +3,7 @@
 #include "recorder_config.h"
 #include "spsc_ring_buffer.h"
 
+#include <android/log.h>
 #include <oboe/Oboe.h>
 
 #include <algorithm>
@@ -20,6 +21,12 @@
 #include <string>
 #include <thread>
 #include <vector>
+
+#define AUDIO_RECORDER_LOG_TAG "AUDIO_RECORDER"
+#define AUDIO_RECORDER_D(...) \
+    __android_log_print(ANDROID_LOG_DEBUG, AUDIO_RECORDER_LOG_TAG, __VA_ARGS__)
+#define AUDIO_RECORDER_E(...) \
+    __android_log_print(ANDROID_LOG_ERROR, AUDIO_RECORDER_LOG_TAG, __VA_ARGS__)
 
 // The contract every format-specific writer must satisfy so it can be
 // driven by audio_recorder.
@@ -152,14 +159,21 @@ void audio_recorder<Writer>::prepare() {
 
     oboe::AudioStreamBuilder builder;
 
+    auto sampleRate = static_cast<std::int32_t>(_config.sampleRate);
+
     builder.setDirection(oboe::Direction::Input);
     builder.setFormat(oboe::AudioFormat::I16);
     builder.setChannelCount(_config.channelCount);
-    builder.setSampleRate(static_cast<std::int32_t>(_config.sampleRate));
+    builder.setSampleRate(sampleRate);
     builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
     builder.setSharingMode(oboe::SharingMode::Shared);
     builder.setDataCallback(this);
     builder.setErrorCallback(this);
+
+    AUDIO_RECORDER_D(
+        "Opening Oboe stream -> Channels: %d, SampleRate: %d, Format: I16, Mode: LowLatency",
+        _config.channelCount,
+        sampleRate);
 
     const auto result = builder.openStream(_oboe_stream);
 
@@ -391,11 +405,22 @@ oboe::DataCallbackResult audio_recorder<Writer>::onAudioReady(oboe::AudioStream*
 }
 
 template <audio_file_writer Writer>
-void audio_recorder<Writer>::onErrorAfterClose(oboe::AudioStream*, oboe::Result) {
+void audio_recorder<Writer>::onErrorAfterClose(oboe::AudioStream*, oboe::Result error) {
+    const char* error_message = oboe::convertToText(error);
+
+    AUDIO_RECORDER_E("Oboe stream encountered an error and was closed! Error code: %d (%s)",
+                     static_cast<int>(error),
+                     error_message);
+
     // Oboe invokes this after a stream error and closure.
     // A higher-level state/error reporting API can be added later.
     _is_accepting_audio.store(false, std::memory_order_release);
     _is_recording.store(false, std::memory_order_release);
+
+    // connection disconnected
+    if (error == oboe::Result::ErrorDisconnected) {
+        AUDIO_RECORDER_E("The audio device was disconnected");
+    }
 }
 
 template <audio_file_writer Writer>
