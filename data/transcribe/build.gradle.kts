@@ -6,10 +6,15 @@ plugins {
 
 android {
 	namespace = "com.eva.transcribe"
+	compileSdk = libs.versions.android.compileSdk.get().toInt()
+	ndkVersion = libs.versions.android.ndk.get()
 
 	defaultConfig {
+		minSdk = libs.versions.android.minSdk.get().toInt()
+		consumerProguardFiles("consumer-rules.pro")
+
 		ndk {
-			abiFilters.addAll(setOf("armeabi-v7a", "arm64-v8a"))
+			abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
 		}
 	}
 

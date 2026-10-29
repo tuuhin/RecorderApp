@@ -36,6 +36,7 @@
             <option value="$PROJECT_DIR$/data/location" />
             <option value="$PROJECT_DIR$/data/player" />
             <option value="$PROJECT_DIR$/data/recorder" />
+            <option value="$PROJECT_DIR$/data/recorder-native" />
             <option value="$PROJECT_DIR$/data/recordings" />
             <option value="$PROJECT_DIR$/data/transcribe" />
             <option value="$PROJECT_DIR$/data/use_case" />
