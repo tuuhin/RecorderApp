@@ -9,5 +9,8 @@ android {
 
 dependencies {
 	implementation(libs.androidx.media3.inspector)
-	implementation(project(":data:recordings"))
+    implementation(project(":data:recordings"))
+
+    // test
+    androidTestImplementation(libs.assertk)
 }
