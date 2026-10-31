@@ -5,6 +5,10 @@ plugins {
 
 android {
 	namespace = "com.eva.recorder"
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -21,4 +25,6 @@ dependencies {
 	implementation(project(":data:recordings"))
 	implementation(project(":data:bookmarks"))
 	implementation(project(":data:transcribe"))
+
+    testImplementation(libs.mockk)
 }
