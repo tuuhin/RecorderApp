@@ -41,13 +41,12 @@ inline void translateCurrentException(JNIEnv* env) noexcept {
     }
 }
 
-template <typename Fn> bool withExceptions(JNIEnv* env, Fn&& function) noexcept {
+template <typename Fn> jint withExceptions(JNIEnv* env, jint failureCode, Fn&& function) noexcept {
     try {
-        std::forward<Fn>(function)();
-        return true;
+        return std::forward<Fn>(function)();
     } catch (...) {
         translateCurrentException(env);
-        return false;
+        return failureCode;
     }
 }
 } // namespace jni_commons

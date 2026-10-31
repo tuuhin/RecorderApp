@@ -71,7 +71,7 @@ extern "C" JNIEXPORT jint JNICALL Java_com_eva_compression_LZ4NativeCompression_
     if (!get_buffer_window(env, input, inputWindow) || !get_buffer_window(env, output, outputWindow))
         return kInvalidBuffer;
 
-    jni_commons::withExceptions(env, [inputWindow, outputWindow]() {
+    return jni_commons::withExceptions(env, kCompressionFailure, [inputWindow, outputWindow]() -> jint {
         const std::span<const std::uint8_t> source(inputWindow.address, inputWindow.remaining);
 
         const std::vector<std::uint8_t> compressed = lz4_compressor::compress_frame(source);
@@ -82,8 +82,6 @@ extern "C" JNIEXPORT jint JNICALL Java_com_eva_compression_LZ4NativeCompression_
 
         return static_cast<jint>(compressed.size());
     });
-
-    return kCompressionFailure;
 }
 
 extern "C" JNIEXPORT jint JNICALL Java_com_eva_compression_LZ4NativeCompression_decompressBytes(JNIEnv* env,
@@ -96,7 +94,7 @@ extern "C" JNIEXPORT jint JNICALL Java_com_eva_compression_LZ4NativeCompression_
     if (!get_buffer_window(env, input, inputWindow) || !get_buffer_window(env, output, outputWindow))
         return kInvalidBuffer;
 
-    jni_commons::withExceptions(env, [inputWindow, outputWindow]() {
+    return jni_commons::withExceptions(env, kCompressionFailure, [inputWindow, outputWindow]() -> jint {
         const std::span<const std::uint8_t> source(inputWindow.address, inputWindow.remaining);
 
         const std::vector<std::uint8_t> decompressed = lz4_compressor::decompress_frame(source);
@@ -107,6 +105,4 @@ extern "C" JNIEXPORT jint JNICALL Java_com_eva_compression_LZ4NativeCompression_
 
         return static_cast<jint>(decompressed.size());
     });
-
-    return kCompressionFailure;
 }

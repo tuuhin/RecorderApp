@@ -115,5 +115,5 @@ object LZ4NativeCompression {
         System.loadLibrary("lz4_compression")
     }
 
-    private const val BLOCK_SIZE = 4 * 1024 * 10224
+    private const val BLOCK_SIZE = 4 * 1024 * 1024
 }
