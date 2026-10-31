@@ -24,6 +24,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 private const val CODEC_TAG = "CODEC_CALLBACK"
@@ -52,7 +53,7 @@ internal class MediaCodecPCMDataDecoder(
 
     // callbacks
     private var _onBufferDecoded: ((FloatArray) -> Unit)? = null
-    private var _onDecodeComplete: (() -> Unit)? = null
+    private var _onDecodeComplete: (suspend () -> Unit)? = null
 
     // number of points buffered before a batch is emitted, sized per run
     // from the length of the track
@@ -249,14 +250,14 @@ internal class MediaCodecPCMDataDecoder(
         // emit whatever is left before completing
         flushBatch()
         // stream read ended
-        _onDecodeComplete?.invoke()
+        runBlocking { _onDecodeComplete?.invoke() }
     }
 
     fun setOnBufferDecode(listener: (FloatArray) -> Unit) {
         _onBufferDecoded = listener
     }
 
-    fun setOnComplete(listener: () -> Unit) {
+    fun setOnComplete(listener: suspend () -> Unit) {
         _onDecodeComplete = listener
     }
 
