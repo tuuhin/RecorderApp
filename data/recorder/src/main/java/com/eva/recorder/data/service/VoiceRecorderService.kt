@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.eva.bookmarks.domain.provider.RecordingBookmarksProvider
+import com.eva.recorder.R
 import com.eva.recorder.data.VoiceRecorderManager
 import com.eva.recorder.domain.RecorderWidgetInteractor
 import com.eva.recorder.domain.models.RecordedPoint
@@ -18,7 +19,7 @@ import com.eva.use_case.usecases.BluetoothScoUseCase
 import com.eva.use_case.usecases.PhoneStateObserverUseCase
 import com.eva.utils.NotificationConstants
 import com.eva.utils.Resource
-import com.eva.utils.roundToClosestHundredMillis
+import com.eva.utils.roundToClosestSeconds
 import com.eva.utils.toDuration
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -27,6 +28,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,12 +37,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
 
-private const val LOGGER_TAG = "VOICE_RECORDER_SERVICE"
 
 @AndroidEntryPoint
 internal class VoiceRecorderService : LifecycleService() {
@@ -65,6 +67,7 @@ internal class VoiceRecorderService : LifecycleService() {
 
     private val binder = LocalBinder()
     private val _bookMarks = MutableStateFlow(emptySet<LocalTime>())
+    private val _warnings = Channel<String>(Channel.BUFFERED)
 
 
     inner class LocalBinder : Binder(), RecorderDataInterface {
@@ -86,6 +89,9 @@ internal class VoiceRecorderService : LifecycleService() {
 
         override val transcript: Flow<String>
             get() = voiceRecorder.transcription
+
+        override val warnings: Flow<String>
+            get() = _warnings.receiveAsFlow()
     }
 
     /**
@@ -103,7 +109,7 @@ internal class VoiceRecorderService : LifecycleService() {
 
     override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
-        Log.d(LOGGER_TAG, "SERVICE BOUNDED")
+        Log.d(TAG, "SERVICE BOUNDED")
         return binder
     }
 
@@ -126,7 +132,7 @@ internal class VoiceRecorderService : LifecycleService() {
             lifecycleScope.launch {
                 voiceRecorder.initTranscriptions()
             }
-            Log.i(LOGGER_TAG, "SERVICE CREATED WITH OBSERVERS")
+            Log.i(TAG, "SERVICE CREATED WITH OBSERVERS")
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -202,7 +208,7 @@ internal class VoiceRecorderService : LifecycleService() {
 
     override fun onUnbind(intent: Intent?): Boolean {
         // just a log.
-        Log.d(LOGGER_TAG, "SERVICE UN_BOUNDED")
+        Log.d(TAG, "SERVICE UN_BOUNDED")
         return super.onUnbind(intent)
     }
 
@@ -267,20 +273,25 @@ internal class VoiceRecorderService : LifecycleService() {
     }
 
     private fun addBookMark() {
+
         val timeWhenClicked = voiceRecorder.recorderTimer.value
-        //should be a multiple of 100
-        val closestSecond = timeWhenClicked.roundToClosestHundredMillis()
-        if (closestSecond <= timeWhenClicked) {
-            // add it to bookmarks
-            Log.d(LOGGER_TAG, "BOOKMARKS ADDED :$closestSecond")
-            _bookMarks.update { it + closestSecond }
+        val closestSecond = timeWhenClicked.roundToClosestSeconds()
+        val lastBookMark = _bookMarks.value.lastOrNull()
+
+        // Bookmarking is too fast
+        if (lastBookMark != null && timeWhenClicked.toMillisecondOfDay() - lastBookMark.toMillisecondOfDay() < 500) {
+            Log.w(TAG, "BOOKMARKING TOO CLOSE CLIPS IS NOT ALLOWED")
+            val message = applicationContext.getString(R.string.bookmarks_too_fast_warning)
+            _warnings.trySend(message)
+            return
         }
+
+        // Add it to bookmarks being a set if its already present its ignored
+        Log.d(TAG, "BOOKMARKS ADDED :$closestSecond")
+        _bookMarks.update { it + closestSecond }
     }
 
-    private suspend fun clearAndSaveBookMarks(
-        recordingId: Long,
-        lastRecordedTime: LocalTime,
-    ) {
+    private suspend fun clearAndSaveBookMarks(recordingId: Long, lastRecordedTime: LocalTime) {
         // no need to perform any actions if bookmarks is empty
         if (_bookMarks.value.isEmpty()) return
         // add the coroutines on a different coroutine
@@ -290,7 +301,7 @@ internal class VoiceRecorderService : LifecycleService() {
                 .filter { it <= lastRecordedTime }
                 .toSet()
 
-            Log.d(LOGGER_TAG, "SAVING ${bookmarks.size} BOOKMARKS ")
+            Log.d(TAG, "SAVING ${bookmarks.size} BOOKMARKS ")
 
             val result = bookmarksProvider.createBookMarks(
                 recordingId = recordingId,
@@ -299,23 +310,23 @@ internal class VoiceRecorderService : LifecycleService() {
             when (result) {
                 is Resource.Error -> {
                     val message = result.message ?: result.error.message ?: "ERROR"
-                    Log.wtf(LOGGER_TAG, message)
+                    Log.wtf(TAG, message)
                 }
 
                 is Resource.Success -> showBookmarksSavedMessage()
                 else -> {}
             }
         }
-        Log.d(LOGGER_TAG, "BOOKMARKS SAVED")
+        Log.d(TAG, "BOOKMARKS SAVED")
         // add logic to save bookmarks
-        Log.d(LOGGER_TAG, "BOOKMARKS CLEARED")
+        Log.d(TAG, "BOOKMARKS CLEARED")
         _bookMarks.update { emptySet() }
         // waits for the job completion
         job.join()
     }
 
     private fun clearBookMarks() {
-        Log.d(LOGGER_TAG, "BOOKMARKS CLEARED")
+        Log.d(TAG, "BOOKMARKS CLEARED")
         _bookMarks.update { emptySet() }
     }
 
@@ -326,7 +337,11 @@ internal class VoiceRecorderService : LifecycleService() {
         voiceRecorder.releaseResources()
         // release transcript
         voiceRecorder.transcriptCleanUp()
-        Log.i(LOGGER_TAG, "RECORDER SERVICE DESTROYED")
+        Log.i(TAG, "RECORDER SERVICE DESTROYED")
         super.onDestroy()
+    }
+
+    companion object {
+        private const val TAG = "VOICE_RECORDER_SERVICE"
     }
 }

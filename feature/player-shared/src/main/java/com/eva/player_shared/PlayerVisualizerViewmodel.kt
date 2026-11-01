@@ -16,6 +16,7 @@ import com.eva.ui.viewmodel.AppViewModel
 import com.eva.ui.viewmodel.UIEvents
 import com.eva.utils.RecorderConstants
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,7 +31,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import javax.inject.Inject
 
 @HiltViewModel
 class PlayerVisualizerViewmodel @Inject constructor(
@@ -47,11 +47,10 @@ class PlayerVisualizerViewmodel @Inject constructor(
 	private val _compressedVisualization = MutableStateFlow(floatArrayOf())
 	private val _clipConfigs = MutableStateFlow<AudioConfigToActionList>(emptyList())
 
-	private val _uiEvents = MutableSharedFlow<UIEvents>()
-	override val uiEvent: SharedFlow<UIEvents>
-		get() = _uiEvents
+    override val uiEvent: SharedFlow<UIEvents>
+        field = MutableSharedFlow<UIEvents>()
 
-	private var _prepareVisualsJob: Job? = null
+    private var _prepareVisualsJob: Job? = null
 
 	val isVisualsReady = visualizer.visualizerState
 		.map { it != VisualizerState.NOT_STARTED }
@@ -105,7 +104,7 @@ class PlayerVisualizerViewmodel @Inject constructor(
 			)
 			result.onFailure { err ->
 				if (err is DecoderExistsException) return@onFailure
-				_uiEvents.emit(UIEvents.ShowSnackBar(err.message ?: ""))
+                uiEvent.emit(UIEvents.ShowSnackBar(err.message ?: ""))
 			}
 		}.launchIn(viewModelScope)
 	}
@@ -122,7 +121,7 @@ class PlayerVisualizerViewmodel @Inject constructor(
 			)
 			_compressedVisualization.update { newVisuals }
 		} catch (_: IllegalStateException) {
-			_uiEvents.emit(UIEvents.ShowSnackBar("Cannot update visuals"))
+            uiEvent.emit(UIEvents.ShowSnackBar("Cannot update visuals"))
 		}
 	}.launchIn(viewModelScope)
 
@@ -130,4 +129,3 @@ class PlayerVisualizerViewmodel @Inject constructor(
 		visualizer.cleanUp()
 	}
 }
-

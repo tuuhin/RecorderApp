@@ -13,4 +13,5 @@ internal interface RecorderDataInterface {
     val bookMarks: Flow<Set<Duration>>
     val amplitudes: Flow<List<RecordedPoint>>
     val transcript: Flow<String>
+    val warnings: Flow<String>
 }

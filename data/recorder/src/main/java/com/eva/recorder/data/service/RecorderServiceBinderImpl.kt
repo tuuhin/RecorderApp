@@ -10,10 +10,14 @@ import com.eva.recorder.domain.RecorderServiceBinder
 import com.eva.recorder.domain.models.RecordedPoint
 import com.eva.recorder.domain.models.RecorderState
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.LocalTime
@@ -42,6 +46,13 @@ internal class RecorderServiceBinderImpl(private val context: Context) : Recorde
     override val amplitudes: Flow<List<RecordedPoint>> = serviceFlow(emptyList()) { it.amplitudes }
 
     override val transcriptions: Flow<String> = serviceFlow("") { it.transcript }
+
+    @OptIn(FlowPreview::class)
+    override fun recorderWarnings(): Flow<String> {
+        return serviceFlow(null) { it.warnings }
+            .debounce(100.milliseconds)
+            .filterNotNull()
+    }
 
     private val serviceConnection = object : ServiceConnection {
 

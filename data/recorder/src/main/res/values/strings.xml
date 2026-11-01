@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="recorder_action_pause" translatable="false">Pause</string>
-  <string name="recorder_action_resume" translatable="false">Resume</string>
-  <string name="recorder_action_stop" translatable="false">Stop</string>
-  <string name="recorder_action_cancel" translatable="false">Cancel</string>
-  <string name="recorder_notification_text_running">Recorder is running</string>
-  <string name="recorder_notification_text_paused">Recorder Paused</string>
-  <string name="recorder_recording_completed">Recording Completed</string>
-  <string name="recorder_recording_completed_text">Saved to external storage</string>
-  <string name="recorder_recording_completed_text_2">Click to play</string>
-  <string name="toast_recording_bluetooth">Using bluetooth mic</string>
-  <string name="toast_incoming_call">Incoming call</string>
-  <string name="bookmarks_saved">Bookmarks Added</string>
+    <string name="recorder_action_pause" translatable="false">Pause</string>
+    <string name="recorder_action_resume" translatable="false">Resume</string>
+    <string name="recorder_action_stop" translatable="false">Stop</string>
+    <string name="recorder_action_cancel" translatable="false">Cancel</string>
+    <string name="recorder_notification_text_running">Recorder is running</string>
+    <string name="recorder_notification_text_paused">Recorder Paused</string>
+    <string name="recorder_recording_completed">Recording Completed</string>
+    <string name="recorder_recording_completed_text">Saved to external storage</string>
+    <string name="recorder_recording_completed_text_2">Click to play</string>
+    <string name="toast_recording_bluetooth">Using bluetooth mic</string>
+    <string name="toast_incoming_call">Incoming call</string>
+    <string name="bookmarks_saved">Bookmarks Added</string>
+    <string name="bookmarks_too_fast_warning">Bookmarks need be 1 second apart</string>
 </resources>
