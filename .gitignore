@@ -14,7 +14,7 @@
 .externalNativeBuild
 .cxx
 local.properties
-keystore.properties
+app/keystore.properties
 *.jks
 .junie
 .idea/*
