@@ -47,170 +47,174 @@ import com.eva.ui.animation.sharedBoundsWrapper
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AudioPlayerScreenTopBar(
-	loadState: ContentLoadState<AudioFileModel>,
-	modifier: Modifier = Modifier,
-	onEdit: () -> Unit,
-	navigation: @Composable () -> Unit = {},
-	onRenameOption: (AudioFileModel) -> Unit = {},
-	onShareOption: () -> Unit = {},
-	onDetailsOptions: () -> Unit = {},
-	onToggleFavourite: (AudioFileModel) -> Unit = {},
-	scrollBehavior: TopAppBarScrollBehavior? = null,
-	colors: TopAppBarColors = TopAppBarDefaults
-		.topAppBarColors(actionIconContentColor = MaterialTheme.colorScheme.primary),
+    loadState: ContentLoadState<AudioFileModel>,
+    modifier: Modifier = Modifier,
+    onEdit: () -> Unit,
+    navigation: @Composable () -> Unit = {},
+    onRenameOption: (AudioFileModel) -> Unit = {},
+    onShareOption: () -> Unit = {},
+    onDetailsOptions: () -> Unit = {},
+    onToggleFavourite: (AudioFileModel) -> Unit = {},
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    isFavouritesActionEnabled: Boolean = true,
+    colors: TopAppBarColors = TopAppBarDefaults
+        .topAppBarColors(actionIconContentColor = MaterialTheme.colorScheme.primary),
 ) {
-	var showDropDown by remember { mutableStateOf(false) }
+    var showDropDown by remember { mutableStateOf(false) }
 
-	when (loadState) {
-		is ContentLoadState.Content -> {
-			val model = loadState.data
-			TopAppBar(
-				title = {
-					Text(
-						text = model.displayName,
-						overflow = TextOverflow.Ellipsis,
-						maxLines = 1,
-						modifier = Modifier.sharedBoundsWrapper(
-							key = SharedElementTransitionKeys.recordSharedEntryTitle(model.id)
-						)
-					)
-				},
-				actions = {
-					TooltipBox(
-						positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-							TooltipAnchorPosition.Below
-						),
-						tooltip = {
-							PlainTooltip {
-								Text(
-									text = if (model.isFavourite)
-										stringResource(R.string.menu_option_favourite)
-									else stringResource(R.string.menu_option_no_favourite)
-								)
-							}
-						},
-						state = rememberTooltipState()
-					) {
-						IconButton(onClick = { onToggleFavourite(model) }) {
-							AnimatedContent(
-								targetState = model.isFavourite,
-								label = "Is Audio Favourite",
-								transitionSpec = { favouriteAudioAnimation() },
-							) { isFavourite ->
-								if (isFavourite)
-									Icon(
-										painter = painterResource(R.drawable.ic_star_filled),
-										contentDescription = stringResource(R.string.menu_option_favourite),
-										modifier = Modifier.size(20.dp)
-									)
-								else Icon(
-									painter = painterResource(R.drawable.ic_star_outlined),
-									contentDescription = stringResource(R.string.menu_option_no_favourite),
-									modifier = Modifier.size(20.dp)
-								)
-							}
-						}
-					}
+    when (loadState) {
+        is ContentLoadState.Content -> {
+            val model = loadState.data
+            TopAppBar(
+                title = {
+                    Text(
+                        text = model.displayName,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier = Modifier.sharedBoundsWrapper(
+                            key = SharedElementTransitionKeys.recordSharedEntryTitle(model.id),
+                        ),
+                    )
+                },
+                actions = {
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                            TooltipAnchorPosition.Below,
+                        ),
+                        tooltip = {
+                            PlainTooltip {
+                                Text(
+                                    text = if (model.isFavourite)
+                                        stringResource(R.string.menu_option_favourite)
+                                    else stringResource(R.string.menu_option_no_favourite),
+                                )
+                            }
+                        },
+                        state = rememberTooltipState(),
+                    ) {
+                        IconButton(
+                            onClick = { onToggleFavourite(model) },
+                            enabled = isFavouritesActionEnabled,
+                        ) {
+                            AnimatedContent(
+                                targetState = model.isFavourite,
+                                label = "Is Audio Favourite",
+                                transitionSpec = { favouriteAudioAnimation() },
+                            ) { isFavourite ->
+                                if (isFavourite)
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_star_filled),
+                                        contentDescription = stringResource(R.string.menu_option_favourite),
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                else Icon(
+                                    painter = painterResource(R.drawable.ic_star_outlined),
+                                    contentDescription = stringResource(R.string.menu_option_no_favourite),
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                        }
+                    }
 
 
-					TooltipBox(
-						positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-							TooltipAnchorPosition.Below
-						),
-						tooltip = {
-							PlainTooltip {
-								Text(text = stringResource(id = R.string.player_action_edit))
-							}
-						},
-						state = rememberTooltipState(),
-					) {
-						IconButton(
-							onClick = onEdit,
-							modifier = Modifier.sharedBoundsWrapper(
-								key = SharedElementTransitionKeys.RECORDING_EDITOR_SHARED_BOUNDS,
-								resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-								clipShape = MaterialTheme.shapes.large
-							),
-						) {
-							Icon(
-								painter = painterResource(id = R.drawable.ic_edit),
-								contentDescription = stringResource(id = R.string.player_action_edit)
-							)
-						}
-					}
-					TooltipBox(
-						positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-							TooltipAnchorPosition.Below
-						),
-						tooltip = {
-							PlainTooltip {
-								Text(text = stringResource(id = R.string.menu_more_option))
-							}
-						},
-						state = rememberTooltipState()
-					) {
-						DropdownMenu(
-							expanded = showDropDown,
-							onDismissRequest = { showDropDown = false },
-							shape = MaterialTheme.shapes.large,
-						) {
-							DropdownMenuItem(
-								text = { Text(text = stringResource(id = R.string.menu_more_rename)) },
-								onClick = {
-									showDropDown = false
-									onRenameOption(model)
-								}
-							)
-							DropdownMenuItem(
-								text = { Text(text = stringResource(id = R.string.menu_option_share)) },
-								onClick = {
-									showDropDown = false
-									onShareOption()
-								}
-							)
-							DropdownMenuItem(
-								text = { Text(text = stringResource(id = R.string.menu_option_details)) },
-								onClick = {
-									showDropDown = false
-									onDetailsOptions()
-								}
-							)
-						}
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                            TooltipAnchorPosition.Below,
+                        ),
+                        tooltip = {
+                            PlainTooltip {
+                                Text(text = stringResource(id = R.string.player_action_edit))
+                            }
+                        },
+                        state = rememberTooltipState(),
+                    ) {
+                        IconButton(
+                            onClick = onEdit,
+                            modifier = Modifier.sharedBoundsWrapper(
+                                key = SharedElementTransitionKeys.RECORDING_EDITOR_SHARED_BOUNDS,
+                                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                                clipShape = MaterialTheme.shapes.large,
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_edit),
+                                contentDescription = stringResource(id = R.string.player_action_edit),
+                            )
+                        }
+                    }
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                            TooltipAnchorPosition.Below,
+                        ),
+                        tooltip = {
+                            PlainTooltip {
+                                Text(text = stringResource(id = R.string.menu_more_option))
+                            }
+                        },
+                        state = rememberTooltipState(),
+                    ) {
+                        DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = { showDropDown = false },
+                            shape = MaterialTheme.shapes.large,
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(text = stringResource(id = R.string.menu_more_rename)) },
+                                onClick = {
+                                    showDropDown = false
+                                    onRenameOption(model)
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(text = stringResource(id = R.string.menu_option_share)) },
+                                onClick = {
+                                    showDropDown = false
+                                    onShareOption()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(text = stringResource(id = R.string.menu_option_details)) },
+                                onClick = {
+                                    showDropDown = false
+                                    onDetailsOptions()
+                                },
+                            )
+                        }
 
-						IconButton(onClick = { showDropDown = true }) {
-							Icon(
-								imageVector = Icons.Default.MoreVert,
-								contentDescription = stringResource(R.string.menu_more_option)
-							)
-						}
-					}
-				},
-				colors = colors,
-				scrollBehavior = scrollBehavior,
-				navigationIcon = navigation,
-				modifier = modifier,
-			)
-		}
+                        IconButton(onClick = { showDropDown = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.menu_more_option),
+                            )
+                        }
+                    }
+                },
+                colors = colors,
+                scrollBehavior = scrollBehavior,
+                navigationIcon = navigation,
+                modifier = modifier,
+            )
+        }
 
-		ContentLoadState.Unknown -> {
-			TopAppBar(
-				title = {},
-				colors = colors,
-				scrollBehavior = scrollBehavior,
-				navigationIcon = navigation,
-				modifier = modifier,
-			)
-		}
+        ContentLoadState.Unknown -> {
+            TopAppBar(
+                title = {},
+                colors = colors,
+                scrollBehavior = scrollBehavior,
+                navigationIcon = navigation,
+                modifier = modifier,
+            )
+        }
 
-		else -> {}
-	}
+        else -> {}
+    }
 }
 
 private fun favouriteAudioAnimation(): ContentTransform {
-	val enter = fadeIn(animationSpec = tween(220)) +
-			slideInVertically(animationSpec = tween(220))
-	val exit = fadeOut(animationSpec = tween(90)) +
-			slideOutVertically(animationSpec = tween(90))
+    val enter = fadeIn(animationSpec = tween(220)) +
+        slideInVertically(animationSpec = tween(220))
+    val exit = fadeOut(animationSpec = tween(90)) +
+        slideOutVertically(animationSpec = tween(90))
 
-	return enter togetherWith exit
+    return enter togetherWith exit
 }
