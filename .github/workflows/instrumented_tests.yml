@@ -1,6 +1,8 @@
 name: Android Instrumented Tests
 
 on:
+    push:
+        branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -70,6 +72,16 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           script: echo "Generated AVD snapshot for caching."
+
+      -   name: Install dependencies for test assets
+          run: |
+              sudo apt-get update
+              sudo apt-get install -y ffmpeg jq
+
+      -   name: Build test assets
+          run: |
+              chmod +x data/visualizer/test_assets_builder.sh
+              OUTPUT_DIR="data/visualizer/src/androidTest/assets" ./data/visualizer/test_assets_builder.sh
 
       - name: Run instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
