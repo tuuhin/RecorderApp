@@ -68,7 +68,7 @@ fun DrawScope.drawGraphCompressed(
 
 	if (wavesSize == 0) return
 
-	val spacing = totalWidth.toFloat() / (wavesSize + 1)
+	val spacing = totalWidth / (wavesSize + 1)
 	val pointsList = mutableListOf<Offset>()
 
 	waves.forEachIndexed { index, wave ->
@@ -110,7 +110,7 @@ fun DrawScope.drawTimeLineCompressed(
 	textColor: Color = Color.Black,
 ) {
 	val blockTime = totalDuration.inWholeMilliseconds / sampleSize
-	val spacing = size.width.toFloat() / sampleSize
+	val spacing = size.width / sampleSize
 
 	repeat(sampleSize + 20) { idx ->
 		val xAxis = idx * spacing

@@ -20,56 +20,65 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-	private var navController: NavHostController? = null
+    private var navController: NavHostController? = null
 
-	override fun onCreate(savedInstanceState: Bundle?) {
-		// splash needs to be initiated here
-		val splash = installSplashScreen()
+    override fun onCreate(savedInstanceState: Bundle?) {
 
-		super.onCreate(savedInstanceState)
+        // splash needs to be initiated here
+        val splash = installSplashScreen()
 
-		// set enable edge to edge normally
-		enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
 
-		// on splash complete again enable edge to edge
-		splash.animateOnExit(onAnimationEnd = { enableEdgeToEdge() })
-		// set activity transitions
-		setTransitions()
+        // set enable edge to edge normally
+        enableEdgeToEdge()
 
-		setContent {
-			RecorderAppTheme {
-				Surface(color = MaterialTheme.colorScheme.background) {
-					AppNavHost(
-						onSetController = { controller ->
-							if (navController == null) navController = controller
-						},
-					)
-				}
-			}
-		}
-	}
+        // on splash complete again enable edge to edge
+        splash.animateOnExit(onAnimationEnd = { enableEdgeToEdge() })
+        // set activity transitions
+        setTransitions()
 
-	override fun onNewIntent(intent: Intent) {
-		super.onNewIntent(intent)
-		navController?.handleDeepLink(intent)
-	}
+        setContent {
+            RecorderAppTheme {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    AppNavHost(
+                        onSetController = { controller ->
+                            // set nav controller
+                            if (navController == null) navController = controller
+                            // handle the incoming intent if available via deeplinks
+                            if (intent != null && intent.data != null) {
+                                navController?.handleDeepLink(intent)
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
 
-	@Suppress("DEPRECATION")
-	private fun setTransitions() {
-		// allow activity transitions
-		window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
-		// set transitions
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-			overrideActivityTransition(
-				OVERRIDE_TRANSITION_OPEN,
-				R.anim.activity_enter_transition,
-				R.anim.activity_exit_transition
-			)
-		} else {
-			overridePendingTransition(
-				R.anim.activity_enter_transition,
-				R.anim.activity_exit_transition
-			)
-		}
-	}
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // set the intent
+        setIntent(intent)
+        // handle deeplink
+        navController?.handleDeepLink(intent)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun setTransitions() {
+        // allow activity transitions
+        window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
+        // set transitions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(
+                OVERRIDE_TRANSITION_OPEN,
+                R.anim.activity_enter_transition,
+                R.anim.activity_exit_transition,
+            )
+        } else {
+            overridePendingTransition(
+                R.anim.activity_enter_transition,
+                R.anim.activity_exit_transition,
+            )
+        }
+    }
 }

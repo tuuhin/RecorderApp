@@ -84,7 +84,7 @@ internal class ThreadLifecycleControllerImpl(private val threadName: String) :
 		}
 
 		val newThread = HandlerThread(threadName, Process.THREAD_PRIORITY_AUDIO).apply {
-			setUncaughtExceptionHandler(_exceptionHandler)
+            uncaughtExceptionHandler = _exceptionHandler
 			start()
 		}
 		// set the new handler
@@ -117,8 +117,7 @@ internal class ThreadLifecycleControllerImpl(private val threadName: String) :
 		handler.removeCallbacksAndMessages(null)
 		Log.i(TAG, "STOPPING THREAD THREAD_ID:${handler.looper.thread.thId}")
 		try {
-			val safeRequest = if (handlerThread.isAlive)
-				handlerThread.quitSafely() else false
+            val safeRequest = handlerThread.isAlive && handlerThread.quitSafely()
 
 			if (!safeRequest) {
 				Log.d(TAG, "LOOPER WAS NOT SET OF THE THREAD IS ALREADY KILLED")

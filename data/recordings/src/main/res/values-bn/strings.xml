@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="categories_create_success">বিভাগ সফলভাবে তৈরি করা হয়েছে</string>
-  <string name="categories_deleted">মুছে ফেলা বিভাগ</string>
-  <string name="recordings_add_to_favourite_success">পছন্দসই চিহ্নিত</string>
-  <string name="recordings_remove_favourite_failed">প্রিয় রেকর্ডিং সরানো হয়েছে</string>
-  <string name="recording_delete_request_success">রেকর্ডিংগুলি সফলভাবে মুছে ফেলা হয়েছে</string>
-  <string name="recording_delete_request_failed">অনুরোধ মুছে ফেলতে ব্যর্থ হয়েছে</string>
-  <string name="rename_recording_success">রেকর্ডিং এর নাম পরিবর্তন করা হয়েছে</string>
-  <string name="restore_recordings_success">নির্বাচিত রেকর্ডিং পুনরুদ্ধার করা হয়েছে</string>
+  <string name="categories_create_success">ক্যাটাগরি সফলভাবে তৈরি করা হয়েছে</string>
+  <string name="categories_deleted">ক্যাটাগরিগুলো মুছে ফেলা হয়েছে</string>
+  <string name="recordings_add_to_favourite_success">পছন্দের তালিকায় যোগ করা হয়েছে</string>
+  <string name="recordings_remove_favourite_failed">পছন্দের তালিকা থেকে সরানো হয়েছে</string>
+  <string name="recording_delete_request_success">রেকর্ডিংগুলো সফলভাবে মুছে ফেলা হয়েছে</string>
+  <string name="recording_delete_request_failed">মুছে ফেলার অনুরোধ ব্যর্থ হয়েছে</string>
+  <string name="rename_recording_success">রেকর্ডিংয়ের নাম সফলভাবে পরিবর্তন করা হয়��ছে</string>
+  <string name="restore_recordings_success">নির্বাচিত রেকর্ডিংগুলো পুনরুদ্ধার করা হয়েছে</string>
   <string name="recording_restore_request_failed">পুনরুদ্ধার ব্যর্থ হয়েছে</string>
-  <string name="recording_trash_request_success">রেকর্ডিং ট্র্যাশ</string>
-  <string name="recording_trash_request_failed">রেকর্ডিংগুলি ট্র্যাশে সরানো যাচ্ছে না</string>
+  <string name="recording_trash_request_success">রেকর্ডিংগুলো রিসাইকেল বিনে পাঠানো হয়েছে</string>
+  <string name="recording_trash_request_failed">রেকর্ডিংগুলো রিসাইকেল বিনে সরানো সম্ভব নয়</string>
+  <string name="recording_action_delete">মুছে ফেলুন</string>
+  <string name="recordings_restore_action">পুনরুদ্ধার করুন</string>
+  <string name="categories_updated">রেকর্ডিংগুলো %s ক্যাটাগরিতে সরানো হয়েছে।</string>
 </resources>

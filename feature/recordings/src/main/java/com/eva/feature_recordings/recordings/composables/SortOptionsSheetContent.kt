@@ -22,17 +22,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.eva.feature_recordings.recordings.state.RecordingsSortInfo
-import com.eva.feature_recordings.recordings.state.SortOptions
-import com.eva.feature_recordings.recordings.state.SortOrder
+import com.eva.feature_recordings.recordings.state.UIRecordingSortInfo
+import com.eva.feature_recordings.recordings.state.UISortIdentifier
+import com.eva.feature_recordings.recordings.state.UISortOrder
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 
 @Composable
 internal fun SortOptionsSheetContent(
-	sortInfo: RecordingsSortInfo,
-	onSortTypeChange: (SortOptions) -> Unit,
-	onSortOrderChange: (SortOrder) -> Unit,
+	sortInfo: UIRecordingSortInfo,
+	onSortTypeChange: (UISortIdentifier) -> Unit,
+	onSortOrderChange: (UISortOrder) -> Unit,
 	modifier: Modifier = Modifier,
 	contentPadding: PaddingValues = PaddingValues(12.dp),
 ) {
@@ -45,7 +45,7 @@ internal fun SortOptionsSheetContent(
 			fontWeight = FontWeight.Bold,
 			style = MaterialTheme.typography.titleMedium
 		)
-		SortOptions.entries.forEach { option ->
+		UISortIdentifier.entries.forEach { option ->
 			Row(
 				verticalAlignment = Alignment.CenterVertically,
 				modifier = Modifier
@@ -59,7 +59,7 @@ internal fun SortOptionsSheetContent(
 					modifier = Modifier.weight(1f),
 				)
 				RadioButton(
-					selected = sortInfo.options == option,
+					selected = sortInfo.identifier == option,
 					onClick = { onSortTypeChange(option) },
 					colors = RadioButtonDefaults
 						.colors(selectedColor = MaterialTheme.colorScheme.secondary),
@@ -75,7 +75,7 @@ internal fun SortOptionsSheetContent(
 			text = stringResource(id = R.string.sort_order_title),
 			style = MaterialTheme.typography.titleMedium,
 		)
-		SortOrder.entries.forEach { order ->
+		UISortOrder.entries.forEach { order ->
 			Row(
 				verticalAlignment = Alignment.CenterVertically,
 				modifier = Modifier
@@ -89,7 +89,7 @@ internal fun SortOptionsSheetContent(
 					modifier = Modifier.weight(1f)
 				)
 				RadioButton(
-					selected = sortInfo.order == order,
+					selected = sortInfo.sortDirection == order,
 					onClick = { onSortOrderChange(order) },
 					colors = RadioButtonDefaults
 						.colors(selectedColor = MaterialTheme.colorScheme.secondary),
@@ -105,7 +105,7 @@ internal fun SortOptionsSheetContent(
 private fun SortOptionsSheetContentPreview() = RecorderAppTheme {
 	Surface {
 		SortOptionsSheetContent(
-			sortInfo = RecordingsSortInfo(),
+			sortInfo = UIRecordingSortInfo(),
 			onSortTypeChange = {},
 			onSortOrderChange = {},
 			modifier = Modifier.fillMaxWidth()

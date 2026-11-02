@@ -15,6 +15,7 @@ internal fun AudioFileModel.toMediaItem(): MediaItem {
 		.setRecordingDay(lastModified.day)
 		.setRecordingMonth(lastModified.month.number)
 		.setRecordingYear(lastModified.year)
+		.setArtist(metaData?.artists)
 		.setIsBrowsable(false)
 		.build()
 

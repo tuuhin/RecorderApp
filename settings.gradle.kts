@@ -38,6 +38,8 @@ include(":data:worker")
 include(":data:bookmarks")
 include(":data:categories")
 include(":data:use_case")
+include(":data:compression")
+
 include(":feature:recorder")
 include(":core:ui")
 include(":feature:settings")

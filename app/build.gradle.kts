@@ -1,81 +1,79 @@
 import com.android.build.api.dsl.ApkSigningConfig
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
-import shadow.bundletool.com.android.tools.r8.internal.jS
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.recorderapp.hilt)
-    alias(libs.plugins.recorderapp.compose.compiler)
+	alias(libs.plugins.android.application)
+	// custom plugins
+	alias(libs.plugins.recorderapp.hilt)
+	alias(libs.plugins.recorderapp.compose.compiler)
     alias(libs.plugins.androidx.baselineprofile)
 }
 
 android {
-    namespace = "com.eva.recorderapp"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+	namespace = "com.eva.recorderapp"
+	compileSdk = libs.versions.android.compileSdk.get().toInt()
 
-    defaultConfig {
-        applicationId = "com.eva.recorderapp"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.compileSdk.get().toInt()
-        versionCode = 15
-        versionName = "1.5.0-beta1"
+	defaultConfig {
+		applicationId = "com.eva.recorderapp"
+		minSdk = libs.versions.android.minSdk.get().toInt()
+		targetSdk = libs.versions.android.compileSdk.get().toInt()
+		versionCode = 15
+		versionName = "1.5.0-beta1"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
-    }
+		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+		vectorDrawables {
+			useSupportLibrary = true
+		}
+	}
 
-    androidResources {
-        localeFilters.addAll(setOf("bn", "hi"))
-    }
+	androidResources {
+		localeFilters.addAll(setOf("bn", "hi"))
+	}
 
     signingConfigs {
         createReleaseConfig()
     }
 
-    buildTypes {
+	buildTypes {
         release {
-            applicationIdSuffix = ".release"
-            // change the signing config if release is not found
+            optimization {
+                enable = true
+            }
+            // using the release config if not configured unsigned apk
             signingConfig = signingConfigs.findByName("release")
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
         }
-        debug {
-            applicationIdSuffix = ".debug"
-            resValue("string", "app_name", "RecorderApp (DEBUG)")
-        }
+		debug {
+			applicationIdSuffix = ".debug"
+			resValue("string", "app_name", "RecorderApp (DEBUG)")
+		}
 
         create("benchmark") {
             initWith(buildTypes.getByName("release"))
             matchingFallbacks += listOf("release")
             isDebuggable = false
         }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    buildFeatures {
-        compose = true
-        buildConfig = true
-        resValues = true
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
+	}
+	compileOptions {
+		sourceCompatibility = JavaVersion.VERSION_17
+		targetCompatibility = JavaVersion.VERSION_17
+	}
+	buildFeatures {
+		compose = true
+		buildConfig = true
+		resValues = true
+	}
+	packaging {
+		resources {
+			excludes += "/META-INF/{AL2.0,LGPL2.1}"
+		}
+	}
 }
 
 kotlin {
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_17
-    }
+	compilerOptions {
+		jvmTarget = JvmTarget.JVM_17
+	}
 }
 
 baselineProfile {
@@ -86,36 +84,35 @@ baselineProfile {
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.core.splashscreen)
-    implementation(libs.work.runtime.ktx)
-    implementation(libs.androidx.hilt.work)
+	implementation(libs.androidx.core.ktx)
+	implementation(libs.androidx.navigation.compose)
+	implementation(libs.androidx.core.splashscreen)
+	implementation(libs.work.runtime.ktx)
+	implementation(libs.androidx.hilt.work)
+    // profile
     implementation(libs.androidx.profileinstaller)
 
-    implementation(project(":core:utils"))
-    implementation(project(":core:ui"))
-    implementation(project(":data:worker"))
-    implementation(project(":data:interactions"))
-    implementation(project(":feature:categories"))
-    implementation(project(":feature:player"))
-    implementation(project(":feature:recorder"))
-    implementation(project(":feature:recordings"))
-    implementation(project(":feature:editor"))
-    implementation(project(":feature:settings"))
-    implementation(project(":feature:widget"))
-    implementation(project(":feature:onboarding"))
-
-    // android testing
-    androidTestImplementation(libs.androidx.runner)
-
+	implementation(project(":core:utils"))
+	implementation(project(":core:ui"))
+	implementation(project(":data:worker"))
+	implementation(project(":data:interactions"))
+	implementation(project(":feature:categories"))
+	implementation(project(":feature:player"))
+	implementation(project(":feature:recorder"))
+	implementation(project(":feature:recordings"))
+	implementation(project(":feature:editor"))
+	implementation(project(":feature:settings"))
+	implementation(project(":feature:widget"))
+	implementation(project(":feature:onboarding"))
+	// android testing
+	androidTestImplementation(libs.androidx.runner)
     // baseline profile producer module
     baselineProfile(project(":baselineprofile"))
 }
 
 
 fun NamedDomainObjectContainer<out ApkSigningConfig>.createReleaseConfig() {
-    val keySecretFile = rootProject.file("keystore.properties")
+    val keySecretFile = project.file("keystore.properties")
 
     var storeFileName: String? = null
     var keyAlias: String? = null
@@ -139,7 +136,7 @@ fun NamedDomainObjectContainer<out ApkSigningConfig>.createReleaseConfig() {
     if (storePassword.isNullOrBlank()) storePassword = System.getenv("STORE_PASSWORD")
 
     // finally search for the jks file
-    val jksFile = project.rootProject.layout.files(storeFileName)
+    val jksFile = project.layout.files(storeFileName)
         .firstOrNull()
 
     val propertiesOk = keyAlias.isNotBlank() && keyPassword.isNotBlank() && storePassword.isNotBlank()

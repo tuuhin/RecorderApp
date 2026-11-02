@@ -15,8 +15,9 @@
     android:supportsRtl="true"
     android:theme="@style/Theme.App.Starting"
     tools:targetApi="33">
-    <!--    Marking its profilable-->
-    <profileable android:shell="true" />
+
+      <!--    Marking its profilable-->
+      <profileable android:shell="true" />
 
     <activity
       android:name="com.eva.feature_onboarding.OnBoardingActivity"
@@ -39,7 +40,7 @@
       android:theme="@style/Theme.App.Starting"
       android:windowSoftInputMode="adjustResize">
 
-      <!-- For app deep-links -->
+      <!-- For app deep-links-->
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
@@ -75,3 +76,4 @@
   </queries>
 
 </manifest>
+

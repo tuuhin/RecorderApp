@@ -11,7 +11,6 @@ import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -25,8 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
-@OptIn(ExperimentalCoroutinesApi::class)
-class RepositoryTests {
+internal class RepositoryTests {
 
 	@Inject
 	lateinit var recorderRepo: RecorderAudioSettingsRepo

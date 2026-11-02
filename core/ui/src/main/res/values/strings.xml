@@ -74,6 +74,8 @@
   <string name="audio_metadata_channel_title">Channel</string>
   <string name="audio_metadata_last_edit_title">Last Modified</string>
   <string name="audio_metadata_mime_type_title">MimeType</string>
+  <string name="audio_metadata_file_artist_name">Artist</string>
+  <string name="audio_metadata_file_author_name">Author</string>
   <string name="audio_metadata_duration_title">Duration</string>
   <string name="audio_metadata_file_size_title">Size</string>
   <string name="audio_metadata_name_title">Name</string>
@@ -106,6 +108,7 @@
   <string name="app_settings_audio">Audio</string>
   <string name="app_settings_files">Files</string>
   <string name="app_settings_common">Settings</string>
+  <string name="recording_item_prefix_label">Recording prefix</string>
   <string name="recording_settings_file_format_title">File Naming</string>
   <string name="recording_settings_file_format_text">Pick a naming strategy file names, for now it can be either the current time or a count</string>
   <string name="recording_settings_name_format_date_time" translatable="false">%s_2022–12–31–00:00:00</string>
@@ -246,9 +249,13 @@
   <string name="action_transforming">Transforming</string>
   <string name="rename_export_item_prefix_title">Export Item Prefix</string>
   <string name="rename_export_item_prefix_text">On exporting an edited item the prefix will be added.</string>
+  <string name="recordings_artist_name_settings_title">Set Artist name</string>
+  <string name="recordings_artist_name_settings_text">Include your name in audio metadata</string>
+  <string name="action_set">Set</string>
+  <string name="recordings_artist_name_clear_warning_text">Clear the artist name to stop adding artist name in metadata from next recording</string>
   <string name="app_settings_files_subtitle_export">Export</string>
   <string name="app_settings_files_subtitle_recordings">Recordings</string>
-  <string name="rename_export_item_label">Export Prefix</string>
+  <string name="rename_export_item_label">Prefix</string>
   <string name="action_undo">Undo</string>
   <string name="action_redo">Redo</string>
   <string name="onboarding_page_title_permissions">Permissions</string>

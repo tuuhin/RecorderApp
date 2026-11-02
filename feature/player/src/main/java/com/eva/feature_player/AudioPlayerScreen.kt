@@ -51,128 +51,128 @@ import com.eva.ui.utils.LocalSnackBarProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.launch
 
-@OptIn(
-	ExperimentalMaterial3Api::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AudioPlayerScreen(
-	loadState: AudioFileModelLoadState,
-	waveforms: PlayerGraphData,
-	bookMarkState: CreateBookmarkState,
-	trackData: () -> PlayerTrackData,
-	playerMetaData: PlayerMetaData,
-	bookmarks: ImmutableList<AudioBookmarkModel>,
-	onPlayerEvents: (PlayerEvents) -> Unit,
-	modifier: Modifier = Modifier,
-	isControllerReady: Boolean = false,
-	isPlayerPlaying: Boolean = true,
-	onBookmarkEvent: (BookMarkEvents) -> Unit = {},
-	onFileEvent: (UserAudioAction) -> Unit = {},
-	navigation: @Composable () -> Unit = {},
-	onNavigateToEdit: () -> Unit = {},
-	onRenameItem: (Long) -> Unit = {},
-	onNavigateToRecordings: () -> Unit = {},
+    loadState: AudioFileModelLoadState,
+    waveforms: PlayerGraphData,
+    bookMarkState: CreateBookmarkState,
+    trackData: () -> PlayerTrackData,
+    playerMetaData: PlayerMetaData,
+    bookmarks: ImmutableList<AudioBookmarkModel>,
+    onPlayerEvents: (PlayerEvents) -> Unit,
+    modifier: Modifier = Modifier,
+    isControllerReady: Boolean = false,
+    isPlayerPlaying: Boolean = true,
+    isAppActionsEnabled: Boolean = true,
+    onBookmarkEvent: (BookMarkEvents) -> Unit = {},
+    onFileEvent: (UserAudioAction) -> Unit = {},
+    navigation: @Composable () -> Unit = {},
+    onNavigateToEdit: () -> Unit = {},
+    onRenameItem: (Long) -> Unit = {},
+    onNavigateToRecordings: () -> Unit = {},
 ) {
 
-	val snackBarProvider = LocalSnackBarProvider.current
-	val scope = rememberCoroutineScope()
+    val snackBarProvider = LocalSnackBarProvider.current
+    val scope = rememberCoroutineScope()
 
-	val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-	var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showBottomSheet by remember { mutableStateOf(false) }
 
-	FileMetadataDetailsSheet(
-		contentLoadState = loadState,
-		sheetState = sheetState,
-		showBottomSheet = showBottomSheet,
-		onSheetDismiss = { showBottomSheet = false },
-	)
+    FileMetadataDetailsSheet(
+        contentLoadState = loadState,
+        sheetState = sheetState,
+        showBottomSheet = showBottomSheet,
+        onSheetDismiss = { showBottomSheet = false },
+    )
 
-	Scaffold(
-		topBar = {
-			AudioPlayerScreenTopBar(
-				loadState = loadState,
-				navigation = navigation,
-				onEdit = onNavigateToEdit,
-				onDetailsOptions = {
-					scope.launch { sheetState.show() }
-						.invokeOnCompletion { showBottomSheet = true }
-				},
-				onShareOption = { onFileEvent(UserAudioAction.ShareCurrentAudioFile) },
-				onRenameOption = { model -> onRenameItem(model.id) },
-				onToggleFavourite = { model ->
-					onFileEvent(UserAudioAction.ToggleIsFavourite(model))
-				}
-			)
-		},
-		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
-		modifier = modifier,
-	) { scPadding ->
-		ContentStateAnimatedContainer(
-			loadState = loadState,
-			modifier = Modifier
-				.padding(scPadding)
-				.padding(all = dimensionResource(id = R.dimen.sc_padding))
-				.fillMaxSize(),
-			onSuccess = { fileModel ->
-				AudioPlayerScreenContent(
-					fileModel = fileModel,
-					bookmarks = bookmarks,
-					waveforms = waveforms,
-					trackData = trackData,
-					playerMetaData = playerMetaData,
-					isControllerReady = isControllerReady,
-					isPlayerPlaying = isPlayerPlaying,
-					bookMarkState = bookMarkState,
-					onPlayerEvents = onPlayerEvents,
-					onBookmarkEvent = onBookmarkEvent,
-				)
-			},
-			onFailed = {
-				AudioFileNotFoundBox(
-					onNavigateToList = onNavigateToRecordings,
-					modifier = Modifier.align(Alignment.Center)
-				)
-			},
-			onLoading = {
-				Column(
-					verticalArrangement = Arrangement.spacedBy(16.dp),
-					horizontalAlignment = Alignment.CenterHorizontally,
-					modifier = Modifier.align(Alignment.Center)
-				) {
-					CircularProgressIndicator()
-					Text(
-						text = "Preparing player",
-						style = MaterialTheme.typography.titleMedium,
-						color = MaterialTheme.colorScheme.onSurface
-					)
-				}
-			},
-		)
-	}
+    Scaffold(
+        topBar = {
+            AudioPlayerScreenTopBar(
+                loadState = loadState,
+                navigation = navigation,
+                onEdit = onNavigateToEdit,
+                isFavouritesActionEnabled = isAppActionsEnabled,
+                onDetailsOptions = {
+                    scope.launch { sheetState.show() }
+                        .invokeOnCompletion { showBottomSheet = true }
+                },
+                onShareOption = { onFileEvent(UserAudioAction.ShareCurrentAudioFile) },
+                onRenameOption = { model -> onRenameItem(model.id) },
+                onToggleFavourite = { model ->
+                    onFileEvent(UserAudioAction.ToggleIsFavourite(model))
+                },
+            )
+        },
+        snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
+        modifier = modifier,
+    ) { scPadding ->
+        ContentStateAnimatedContainer(
+            loadState = loadState,
+            modifier = Modifier
+                .padding(scPadding)
+                .padding(all = dimensionResource(id = R.dimen.sc_padding))
+                .fillMaxSize(),
+            onSuccess = { _ ->
+                AudioPlayerScreenContent(
+                    bookmarks = bookmarks,
+                    waveforms = waveforms,
+                    trackData = trackData,
+                    isBookmarksEnabled = isAppActionsEnabled,
+                    playerMetaData = playerMetaData,
+                    isControllerReady = isControllerReady,
+                    isPlayerPlaying = isPlayerPlaying,
+                    bookMarkState = bookMarkState,
+                    onPlayerEvents = onPlayerEvents,
+                    onBookmarkEvent = onBookmarkEvent,
+                )
+            },
+            onFailed = {
+                AudioFileNotFoundBox(
+                    onNavigateToList = onNavigateToRecordings,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            },
+            onLoading = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.align(Alignment.Center),
+                ) {
+                    CircularProgressIndicator()
+                    Text(
+                        text = "Preparing player",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            },
+        )
+    }
 }
 
 @PreviewLightDark
 @Composable
 private fun AudioPlayerScreenPreview(
-	@PreviewParameter(ContentLoadStatePreviewParams::class)
-	loadState: AudioFileModelLoadState
+    @PreviewParameter(ContentLoadStatePreviewParams::class)
+    loadState: AudioFileModelLoadState,
 ) = RecorderAppTheme {
-	AudioPlayerScreen(
-		loadState = loadState,
-		waveforms = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
-		trackData = { PlayerTrackData(total = PlayerPreviewFakes.FAKE_AUDIO_MODEL.duration) },
-		playerMetaData = PlayerMetaData(),
-		bookMarkState = CreateBookmarkState(),
-		isControllerReady = true,
-		bookmarks = BookmarksPreviewFakes.FAKE_BOOKMARKS_LIST,
-		onPlayerEvents = {},
-		navigation = {
-			IconButton(onClick = {}) {
-				Icon(
-					imageVector = Icons.AutoMirrored.Default.ArrowBack,
-					contentDescription = stringResource(R.string.back_arrow)
-				)
-			}
-		}
-	)
+    AudioPlayerScreen(
+        loadState = loadState,
+        waveforms = { PlayerPreviewFakes.PREVIEW_RECORDER_AMPLITUDES },
+        trackData = { PlayerTrackData(total = PlayerPreviewFakes.FAKE_AUDIO_MODEL.duration) },
+        playerMetaData = PlayerMetaData(),
+        bookMarkState = CreateBookmarkState(),
+        isControllerReady = true,
+        bookmarks = BookmarksPreviewFakes.FAKE_BOOKMARKS_LIST,
+        onPlayerEvents = {},
+        navigation = {
+            IconButton(onClick = {}) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                    contentDescription = stringResource(R.string.back_arrow),
+                )
+            }
+        },
+    )
 }

@@ -1,11 +1,12 @@
 package com.eva.feature_settings.composables.files
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -17,9 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.datastore.domain.enums.AudioFileNamingFormat
@@ -50,30 +49,35 @@ internal fun FileNamingFormat(
 			style = MaterialTheme.typography.bodyMedium,
 			color = MaterialTheme.colorScheme.onSurfaceVariant
 		)
+		Spacer(modifier = Modifier.height(4.dp))
 		Column(
-			verticalArrangement = Arrangement.spacedBy(6.dp)
+			verticalArrangement = Arrangement.spacedBy(4.dp)
 		) {
 			AudioFileNamingFormat.entries.forEach { displayFormat ->
-				Row(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(vertical = 4.dp)
-						.clip(MaterialTheme.shapes.medium)
-						.clickable(role = Role.RadioButton) { onFormatChange(displayFormat) },
-					verticalAlignment = Alignment.CenterVertically,
-					horizontalArrangement = Arrangement.spacedBy(8.dp)
+				Surface(
+					shape = MaterialTheme.shapes.medium,
+					onClick = { onFormatChange(displayFormat) },
+					modifier = Modifier.wrapContentHeight()
 				) {
-					RadioButton(
-						selected = displayFormat == format,
-						onClick = { onFormatChange(displayFormat) },
-						modifier = Modifier.size(24.dp),
-						colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.secondary),
-					)
-					Text(
-						text = displayFormat.stringRes(prefix),
-						style = MaterialTheme.typography.labelLarge,
-						color = MaterialTheme.colorScheme.onBackground
-					)
+					Row(
+						modifier = Modifier
+							.fillMaxWidth()
+							.padding(horizontal = 12.dp, vertical = 4.dp),
+						verticalAlignment = Alignment.CenterVertically,
+						horizontalArrangement = Arrangement.spacedBy(8.dp)
+					) {
+						RadioButton(
+							selected = displayFormat == format,
+							onClick = { onFormatChange(displayFormat) },
+							modifier = Modifier.size(24.dp),
+							colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.secondary),
+						)
+						Text(
+							text = displayFormat.stringRes(prefix),
+							style = MaterialTheme.typography.labelLarge,
+							color = MaterialTheme.colorScheme.onBackground
+						)
+					}
 				}
 			}
 		}
