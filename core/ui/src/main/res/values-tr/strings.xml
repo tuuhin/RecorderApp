@@ -203,7 +203,7 @@
   <string name="action_save">Kaydet</string>
   <string name="action_export">Dışa Aktar</string>
   <string name="tooltip_text_editor_cut">Seçilen bölgeyi kaldır</string>
-  <string name="tooltip_text_editor_crop">"Seçili olmayan bölgeyi kaldır"</string>
+    <string name="tooltip_text_editor_crop">Seçili olmayan bölgeyi kaldır</string>
   <string name="save_edit_item_work_title">Medya Kaydediliyor</string>
   <string name="save_edit_item_work_text">Düzenlenen medya depolama alanına kaydediliyor</string>
   <string name="export_bottom_sheet_text">Dönüştürme tamamlandı, dosyayı depolama alanına kaydetmek için dışa aktarın</string>
@@ -239,4 +239,23 @@
   <string name="action_exit">Çıkış</string>
   <string name="editor_screen_exiting_warning_dialog_title">Düzenlemeyi İptal Et</string>
   <string name="editor_screen_exiting_warning_dialog_desc">Düzenleyici ekranından çıkmak devam eden düzenlemenizi iptal edecektir</string>
+    <string name="app_settings_transcriptions">Deşifre</string>
+    <string name="recordings_settings_transcriptions_title">Canlı deşifre</string>
+    <string name="recordings_settings_transcriptions_desc">Gerçek zamanlı deşifreyi yönetin</string>
+    <string name="recordings_transcriptions_settings_title">Deşifre Ayarları</string>
+    <string name="recorder_transcriptions_about_dialog_title">Canlı Deşifre</string>
+    <string name="recorder_transcriptions_about_dialog_text_enabled">Canlı Deşifre şu modelle çalışıyor: </string>
+    <string name="recorder_transcriptions_about_dialog_text_not_enabled">Canlı Deşifre etkin değil; kayıt sırasında canlı deşifre almak için ayarlardan açın</string>
+    <string name="delete_stt_model_dialog_text">Çeviri dosyasını silmek istediğinizden emin misiniz? Bunu silmek gerçek zamanlı deşifre yapılmasını engeller</string>
+    <string name="stt_models_list_title">Deşifre Modelleri</string>
+    <string name="recording_settings_features_title">Özellikler</string>
+    <string name="recording_settings_features_text">Kayıtlarınız için ek özelliklerin listesi</string>
+    <string name="recordings_artist_name_settings_title">Sanatçı Adı Ayarla</string>
+    <string name="recordings_artist_name_settings_text">Ses meta verilerine adınızı dahil edin</string>
+    <string name="recordings_artist_name_clear_warning_text">Sonraki kayıtlarda meta verilere sanatçı adı eklenmesini durdurmak için sanatçı adını temizleyin</string>
+    <string name="audio_metadata_file_artist_name">Sanatçı</string>
+    <string name="audio_metadata_file_author_name">Yazar</string>
+    <string name="action_set">Ayarla</string>
+    <string name="option_enable">Etkin</string>
+    <string name="recording_item_prefix_label">Kayıt ön eki</string>
 </resources>

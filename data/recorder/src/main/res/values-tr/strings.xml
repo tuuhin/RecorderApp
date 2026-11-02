@@ -8,4 +8,5 @@
   <string name="toast_recording_bluetooth">Bluetooth mikrofon kullanılıyor</string>
   <string name="toast_incoming_call">Gelen arama</string>
   <string name="bookmarks_saved">Yer İşaretleri Eklendi</string>
+    <string name="bookmarks_too_fast_warning">Yer işaretleri arasında en az 1 saniye olmalıdır</string>
 </resources>
