@@ -20,5 +20,4 @@ dependencies {
 	api(libs.kotlinx.collections.immutable)
 
     testImplementation(libs.kotlin.test)
-    testImplementation(libs.junit)
 }

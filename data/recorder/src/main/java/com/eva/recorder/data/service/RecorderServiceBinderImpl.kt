@@ -59,7 +59,11 @@ internal class RecorderServiceBinderImpl(private val context: Context) : Recorde
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             synchronized(_lock) {
                 // bound should be true for this method
-                if (!_isBounded) return
+                if (!_isBounded) {
+                    Log.w(TAG, "BOUND FLAG IS INVALID UNBINDING THE SERVICE CONNECTION")
+                    safeUnbind()
+                    return
+                }
 
                 // connected and we get the iBinder data
                 val dataInterface = service as? RecorderDataInterface
@@ -108,8 +112,6 @@ internal class RecorderServiceBinderImpl(private val context: Context) : Recorde
         Log.d(TAG, "SERVICE BIND REQUEST SUCCESS: $success")
         // mark bound is requested
         if (success) _isBounded = true
-        // failed to request bound
-        else safeUnbind()
     }
 
     override fun unBindService() = synchronized(_lock) {
