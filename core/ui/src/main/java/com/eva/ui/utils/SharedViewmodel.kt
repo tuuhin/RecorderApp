@@ -10,11 +10,26 @@ import com.eva.ui.viewmodel.AppViewModel
 @Composable
 inline fun <reified T : AppViewModel> NavBackStackEntry.sharedViewmodel(controller: NavController): T {
 
-	val parent = this.destination.parent?.route ?: return hiltViewModel<T>()
+    val parent = this.destination.parent?.route ?: return hiltViewModel<T>()
 
-	val parentBackstack = remember(this) {
-		controller.getBackStackEntry(parent)
-	}
+    val parentBackstack = remember(this) {
+        controller.getBackStackEntry(parent)
+    }
 
-	return hiltViewModel<T>(viewModelStoreOwner = parentBackstack)
+    return hiltViewModel<T>(viewModelStoreOwner = parentBackstack)
+}
+
+@Composable
+inline fun <reified VM : AppViewModel, reified VMF> NavBackStackEntry.sharedViewmodel(
+    controller: NavController,
+    noinline factory: (VMF) -> VM,
+): VM {
+
+    val parent = this.destination.parent?.route ?: return hiltViewModel<VM>()
+
+    val parentBackstack = remember(this) {
+        controller.getBackStackEntry(parent)
+    }
+
+    return hiltViewModel<VM, VMF>(viewModelStoreOwner = parentBackstack, creationCallback = factory)
 }

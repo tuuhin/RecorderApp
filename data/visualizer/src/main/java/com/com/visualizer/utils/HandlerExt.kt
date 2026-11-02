@@ -12,6 +12,5 @@ fun Handler?.safePOST(runnable: Runnable): Boolean {
 fun Handler?.isThreadAlive(ignoreMainThread: Boolean = true): Boolean {
 	val isAlive = this?.looper?.thread?.isAlive ?: false
 	val isMainLooper = this?.looper == Looper.getMainLooper()
-	return if (isMainLooper && ignoreMainThread) false
-	else isAlive
+    return !(isMainLooper && ignoreMainThread) && isAlive
 }

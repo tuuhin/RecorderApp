@@ -1,0 +1,2 @@
+# Protocol Buffers Lite field stripping optimization
+-shrinkunusedprotofields

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="recorder_notification_text_running">रिकॉर्डर चल रहा है</string>
-  <string name="recorder_notification_text_paused">रिकॉर्डर रुका हुआ है</string>
-  <string name="recorder_recording_completed">रिकॉर्डिंग पूरी हुई</string>
-  <string name="recorder_recording_completed_text">बाहरी स्टोरेज में सहेजा गया</string>
-  <string name="recorder_recording_completed_text_2">चलाने के लिए क्लिक करें</string>
-  <string name="toast_recording_bluetooth">ब्लूटूथ माइक्रोफोन का उपयोग हो रहा है</string>
-  <string name="toast_incoming_call">आने वाली कॉल</string>
-  <string name="bookmarks_saved">बुकमार्क जोड़े गए</string>
+    <string name="recorder_notification_text_running">रिकॉर्डर चल रहा है</string>
+    <string name="recorder_notification_text_paused">रिकॉर्डर रुका हुआ है</string>
+    <string name="recorder_action_pause">रोकें</string>
+    <string name="recorder_action_resume">फिर शुरू करें</string>
+    <string name="recorder_action_stop">बंद करें</string>
+    <string name="recorder_action_cancel">रद्द करें</string>
+    <string name="recorder_recording_completed">रिकॉर्डिंग पूरी हुई</string>
+    <string name="recorder_recording_completed_text">बाहरी स्टोरेज में सहेजा गया</string>
+    <string name="recorder_recording_completed_text_2">चलाने के लिए क्लिक करें</string>
+    <string name="toast_recording_bluetooth">ब्लूटूथ माइक्रोफोन का उपयोग हो रहा है</string>
+    <string name="toast_incoming_call">आने वाली कॉल</string>
+    <string name="bookmarks_saved">बुकमार्क जोड़े गए</string>
+    <string name="bookmarks_too_fast_warning">बुकमार्क के बीच 1 सेकंड का अंतर होना चाहिए</string>
 </resources>

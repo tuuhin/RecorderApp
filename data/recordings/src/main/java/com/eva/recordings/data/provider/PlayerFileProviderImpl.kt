@@ -5,9 +5,9 @@ import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
 import android.database.Cursor
+import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import androidx.core.os.bundleOf
 import com.eva.recordings.BuildConfig
 import com.eva.recordings.data.utils.evaluateWithTimeRead
 import com.eva.recordings.data.wrapper.RecordingsConstants
@@ -128,10 +128,11 @@ internal class PlayerFileProviderImpl(
 		val selection = "${MediaStore.Audio.AudioColumns._ID} = ?"
 		val selectionArgs = arrayOf("$id")
 
-		val bundle = bundleOf(
-			ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
-			ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs
-		)
+		val bundle = Bundle().apply {
+			putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+			putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+		}
+
 		return withContext(Dispatchers.IO) {
 			runCatching {
 				contentResolver.query(

@@ -1,5 +1,8 @@
 package com.eva.feature_settings.composables.files
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,8 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -23,10 +26,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -35,10 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -47,15 +46,15 @@ import com.eva.ui.theme.RecorderAppTheme
 
 @Composable
 internal fun ExportItemPrefixSelector(
-	currentPrefix: String,
-	onPrefixChange: (String) -> Unit,
-	modifier: Modifier = Modifier
+	onPrefixChange: (String?) -> Unit,
+	modifier: Modifier = Modifier,
+	currentPrefix: String? = null,
 ) {
 
 	var showDialog by rememberSaveable { mutableStateOf(false) }
 
 	EditItemPrefixSelectorDialog(
-		prefix = currentPrefix,
+		currentPrefix = currentPrefix ?: "",
 		showDialog = showDialog,
 		onDismiss = { showDialog = false },
 		onRename = {
@@ -77,7 +76,16 @@ internal fun ExportItemPrefixSelector(
 				contentDescription = "Set edit item prefix"
 			)
 		},
-		supportingContent = { Text(text = currentPrefix) },
+		supportingContent = {
+			AnimatedVisibility(
+				currentPrefix != null,
+				enter = expandHorizontally(),
+				exit = shrinkHorizontally()
+			) {
+				if (currentPrefix != null)
+					Text(text = currentPrefix)
+			}
+		},
 		modifier = modifier
 			.clip(shape = MaterialTheme.shapes.medium)
 			.clickable { showDialog = true },
@@ -90,28 +98,16 @@ internal fun ExportItemPrefixSelector(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditItemPrefixSelectorDialog(
-	prefix: String,
+	currentPrefix: String,
 	showDialog: Boolean,
 	onDismiss: () -> Unit,
-	onRename: (String) -> Unit,
+	onRename: (String?) -> Unit,
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = DialogProperties()
 ) {
 	if (!showDialog) return
 
-	var textValue by remember {
-		mutableStateOf(
-			TextFieldValue(
-				text = prefix,
-				selection = TextRange(0, prefix.length )
-			)
-		)
-	}
-
-	val canRenameItem by remember(textValue) {
-		derivedStateOf { textValue.text.isNotBlank() }
-	}
-
+	val state = rememberTextFieldState(initialText = currentPrefix)
 
 	BasicAlertDialog(
 		onDismissRequest = onDismiss,
@@ -138,11 +134,13 @@ private fun EditItemPrefixSelectorDialog(
 					modifier = Modifier.padding(vertical = 6.dp),
 				)
 				OutlinedTextField(
-					value = textValue,
-					onValueChange = { textValue = it },
+					state = state,
 					label = { Text(text = stringResource(id = R.string.rename_export_item_label)) },
 					shape = MaterialTheme.shapes.large,
-					keyboardActions = KeyboardActions(onDone = { onRename(textValue.text) }),
+					onKeyboardAction = {
+						val text = state.text.toString().ifBlank { null }
+						onRename(text)
+					},
 					keyboardOptions = KeyboardOptions(
 						keyboardType = KeyboardType.Text, imeAction = ImeAction.Done
 					)
@@ -156,10 +154,12 @@ private fun EditItemPrefixSelectorDialog(
 						Text(text = stringResource(id = R.string.action_cancel))
 					}
 					Button(
-						onClick = { onRename(textValue.text) },
-						enabled = canRenameItem
+						onClick = {
+							val text = state.text.toString().ifBlank { null }
+							onRename(text)
+						},
 					) {
-						Text(text = stringResource(id = R.string.rename_recording_action))
+						Text(text = stringResource(id = R.string.action_set))
 					}
 				}
 			}
@@ -172,7 +172,7 @@ private fun EditItemPrefixSelectorDialog(
 private fun EditItemPrefixSelectorDialogPreview() = RecorderAppTheme {
 	EditItemPrefixSelectorDialog(
 		showDialog = true,
-		prefix = "EDITED",
+		currentPrefix = "EDITED",
 		onDismiss = {},
 		onRename = {},
 	)

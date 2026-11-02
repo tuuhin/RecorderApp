@@ -74,6 +74,17 @@ internal fun FileSettingsTabContent(
 			}
 		}
 		item {
+			ArtistNameSelector(
+				artistName = settings.artistName ?: "None",
+				onNameChanged = {
+					onEvent(FileSettingsChangeEvent.OnSetArtistName(it))
+				},
+				modifier = Modifier
+					.fillMaxWidth()
+					.animateItem()
+			)
+		}
+		item {
 			Text(
 				text = stringResource(R.string.app_settings_files_subtitle_export),
 				style = MaterialTheme.typography.titleLarge,

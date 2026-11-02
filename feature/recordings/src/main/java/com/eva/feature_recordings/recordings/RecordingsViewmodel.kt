@@ -6,11 +6,14 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.lifecycle.viewModelScope
 import com.eva.categories.domain.models.RecordingCategoryModel
 import com.eva.categories.domain.provider.RecordingCategoryProvider
+import com.eva.datastore.domain.repository.RecordingListPreferencesRepo
 import com.eva.feature_recordings.recordings.state.RecordingScreenEvent
-import com.eva.feature_recordings.recordings.state.RecordingsSortInfo
 import com.eva.feature_recordings.recordings.state.SelectableRecordings
+import com.eva.feature_recordings.recordings.state.UIRecordingSortInfo
+import com.eva.feature_recordings.recordings.state.UISortOrder
 import com.eva.feature_recordings.recordings.state.sortedResults
 import com.eva.feature_recordings.recordings.state.toSelectableRecordings
+import com.eva.feature_recordings.recordings.state.toUIOrder
 import com.eva.feature_recordings.util.DeleteOrTrashRequestEvent
 import com.eva.interactions.domain.ShareRecordingsUtil
 import com.eva.recordings.domain.models.RecordedVoiceModel
@@ -48,16 +51,26 @@ internal class RecordingsViewmodel @Inject constructor(
 	private val categoriesProvider: RecordingCategoryProvider,
 	private val secondaryDataProvider: RecordingsSecondaryDataProvider,
 	private val shareUtils: ShareRecordingsUtil,
+	private val recordingListPreferences: RecordingListPreferencesRepo,
 ) : AppViewModel() {
 
-	private val _sortInfo = MutableStateFlow(RecordingsSortInfo())
-	val sortInfo = _sortInfo.asStateFlow()
+	val sortInfo = recordingListPreferences.listPreferencesOrder
+		.map {
+			UIRecordingSortInfo(
+				identifier = it.sortOrder.toUIOrder(),
+				sortDirection = if (it.isAsc) UISortOrder.ASC else UISortOrder.DESC
+			)
+		}.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.Eagerly,
+			initialValue = UIRecordingSortInfo()
+		)
 
 	private val _selectedCategory = MutableStateFlow(RecordingCategoryModel.ALL_CATEGORY)
 	val selectedCategory = _selectedCategory.asStateFlow()
 
 	private val _recordings = MutableStateFlow(emptyList<SelectableRecordings>())
-	val recordings = combine(_recordings, _sortInfo, transform = ::sortedResults)
+	val recordings = combine(_recordings, sortInfo, transform = ::sortedResults)
 		.map { it.toImmutableList() }
 		.stateIn(
 			scope = viewModelScope,
@@ -151,14 +164,20 @@ internal class RecordingsViewmodel @Inject constructor(
 			RecordingScreenEvent.OnSelectAllRecordings -> onSelectOrUnSelectAllRecordings(true)
 			RecordingScreenEvent.OnUnSelectAllRecordings -> onSelectOrUnSelectAllRecordings(false)
 			RecordingScreenEvent.OnSelectedItemTrashRequest -> onTrashSelectedRecordings()
-			is RecordingScreenEvent.OnSortOptionChange -> _sortInfo.update { it.copy(options = event.sort) }
-			is RecordingScreenEvent.OnSortOrderChange -> _sortInfo.update { it.copy(order = event.order) }
+
 			RecordingScreenEvent.ShareSelectedRecordings -> shareSelectedRecordings()
 			RecordingScreenEvent.PopulateRecordings -> populateRecordings()
 			is RecordingScreenEvent.OnCategoryChanged -> _selectedCategory.update { event.categoryModel }
 			RecordingScreenEvent.OnToggleFavourites -> onToggleFavourites()
 			is RecordingScreenEvent.OnPostTrashRequest -> viewModelScope.launch {
 				_uiEvents.emit(UIEvents.ShowToast(event.message))
+			}
+			is RecordingScreenEvent.OnSortOptionChange -> viewModelScope.launch {
+				recordingListPreferences.setSortOrder(event.sort.domainOrder)
+			}
+
+			is RecordingScreenEvent.OnSortOrderChange -> viewModelScope.launch {
+				recordingListPreferences.setIsAscending(event.order.isAsc)
 			}
 		}
 	}

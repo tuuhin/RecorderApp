@@ -18,4 +18,7 @@ dependencies {
 	// kotlinx datetime
 	api(libs.kotlinx.datetime)
 	api(libs.kotlinx.collections.immutable)
+
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.junit)
 }

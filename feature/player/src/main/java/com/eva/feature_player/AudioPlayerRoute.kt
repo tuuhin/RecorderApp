@@ -25,6 +25,8 @@ import com.eva.feature_player.viewmodel.AudioPlayerViewModel
 import com.eva.feature_player.viewmodel.PlayerViewmodelFactory
 import com.eva.player_shared.PlayerMetadataViewmodel
 import com.eva.player_shared.PlayerVisualizerViewmodel
+import com.eva.player_shared.factory.PlayerMetadataViewmodelFactory
+import com.eva.player_shared.factory.PlayerVisualizerViewmodelFactory
 import com.eva.ui.R
 import com.eva.ui.animation.SharedElementTransitionKeys
 import com.eva.ui.animation.sharedBoundsWrapper
@@ -39,106 +41,120 @@ import com.eva.utils.NavDeepLinks
 import kotlinx.coroutines.flow.merge
 
 fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
-	animatedComposable<PlayerSubGraph.AudioPlayerRoute>(
-		deepLinks = listOf(
-			navDeepLink {
-				uriPattern = NavDeepLinks.PLAYER_DESTINATION_PATTERN
-				action = Intent.ACTION_VIEW
-			},
-		),
-	) { backStackEntry ->
+    animatedComposable<PlayerSubGraph.AudioPlayerRoute>(
+        deepLinks = listOf(
+            navDeepLink {
+                uriPattern = NavDeepLinks.PLAYER_DESTINATION_PATTERN
+                action = Intent.ACTION_VIEW
+            },
+            navDeepLink {
+                uriPattern = "content://{authority}/.*/{audioId}"
+                action = Intent.ACTION_VIEW
+                mimeType = "audio/*"
+            },
+        ),
+    ) { backStackEntry ->
 
-		val route = backStackEntry.toRoute<PlayerSubGraph.AudioPlayerRoute>()
+        val route = backStackEntry.toRoute<PlayerSubGraph.AudioPlayerRoute>()
 
-		val visualsViewModel = backStackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
-		val metaDataViewmodel = backStackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
+        // shared view models
+        val visualsViewModel =
+            backStackEntry.sharedViewmodel<PlayerVisualizerViewmodel, PlayerVisualizerViewmodelFactory>(
+                controller = controller,
+                factory = { factory -> factory.create(route.audioId) },
+            )
 
-		val visuals by visualsViewModel.fullVisualization.collectAsStateWithLifecycle()
+        val metaDataViewmodel = backStackEntry.sharedViewmodel<PlayerMetadataViewmodel, PlayerMetadataViewmodelFactory>(
+            controller = controller,
+            factory = { factory -> factory.create(route.audioId) },
+        )
 
-		// route based viewmodel
-		val bookmarkViewmodel = hiltViewModel<BookMarksViewModel, BookmarksViewmodelFactory>(
-			creationCallback = { factory -> factory.create(route.audioId) },
-		)
-		val playerViewModel = hiltViewModel<AudioPlayerViewModel, PlayerViewmodelFactory>(
-			creationCallback = { factory -> factory.create(route.audioId) },
-		)
+        // route based view models
+        val bookmarkViewmodel = hiltViewModel<BookMarksViewModel, BookmarksViewmodelFactory>(
+            creationCallback = { factory -> factory.create(route.audioId) },
+        )
+        val playerViewModel = hiltViewModel<AudioPlayerViewModel, PlayerViewmodelFactory>(
+            creationCallback = { factory -> factory.create(route.audioId) },
+        )
 
-		val contentState by metaDataViewmodel.loadState.collectAsStateWithLifecycle()
+        val visuals by visualsViewModel.fullVisualization.collectAsStateWithLifecycle()
+        val contentState by metaDataViewmodel.loadState.collectAsStateWithLifecycle()
 
-		// player states
-		val trackData by playerViewModel.trackData.collectAsStateWithLifecycle()
-		val isPlaying by playerViewModel.isPlayerPlaying.collectAsStateWithLifecycle()
-		val playerMetadata by playerViewModel.playerMetaData.collectAsStateWithLifecycle()
-		val isControllerReady by playerViewModel.isControllerReady.collectAsStateWithLifecycle()
+        // player states
+        val trackData by playerViewModel.trackData.collectAsStateWithLifecycle()
+        val isPlaying by playerViewModel.isPlayerPlaying.collectAsStateWithLifecycle()
+        val playerMetadata by playerViewModel.playerMetaData.collectAsStateWithLifecycle()
+        val isControllerReady by playerViewModel.isControllerReady.collectAsStateWithLifecycle()
 
-		// bookmarks state
-		val bookMarkState by bookmarkViewmodel.bookmarkState.collectAsStateWithLifecycle()
-		val bookMarks by bookmarkViewmodel.bookMarksFlow.collectAsStateWithLifecycle()
+        // bookmarks state
+        val bookMarkState by bookmarkViewmodel.bookmarkState.collectAsStateWithLifecycle()
+        val bookMarks by bookmarkViewmodel.bookMarksFlow.collectAsStateWithLifecycle()
 
-		ControllerLifeCycleObserver(
-			audioId = route.audioId,
-			onEvent = playerViewModel::onControllerEvents
-		)
+        ControllerLifeCycleObserver(
+            audioId = route.audioId,
+            onEvent = playerViewModel::onControllerEvents,
+        )
 
-		// Handle UI Events
-		UiEventsHandler(
-			eventsFlow = {
-				merge(
-					metaDataViewmodel.uiEvent,
-					visualsViewModel.uiEvent,
-					playerViewModel.uiEvent,
-					bookmarkViewmodel.uiEvent
-				)
-			},
-			onNavigateBack = controller::popBackStack
-		)
+        // Handle UI Events
+        UiEventsHandler(
+            eventsFlow = {
+                merge(
+                    metaDataViewmodel.uiEvent,
+                    visualsViewModel.uiEvent,
+                    playerViewModel.uiEvent,
+                    bookmarkViewmodel.uiEvent,
+                )
+            },
+            onNavigateBack = controller::popBackStack,
+        )
 
-		val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+        val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
-		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
-			AudioPlayerScreen(
-				loadState = contentState,
-				bookmarks = bookMarks,
-				waveforms = { visuals },
-				trackData = { trackData },
-				playerMetaData = playerMetadata,
-				isControllerReady = isControllerReady,
-				isPlayerPlaying = isPlaying,
-				bookMarkState = bookMarkState,
-				onFileEvent = metaDataViewmodel::onFileEvent,
-				onPlayerEvents = playerViewModel::onPlayerEvents,
-				onBookmarkEvent = bookmarkViewmodel::onBookMarkEvent,
-				onNavigateToEdit = dropUnlessResumed {
-					controller.navigate(PlayerSubGraph.AudioEditorRoute(route.audioId))
-				},
-				onRenameItem = { audioId ->
-					if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
-						val dialog = NavDialogs.RenameRecordingDialog(audioId)
-						controller.navigate(dialog)
-					}
-				},
-				onNavigateToRecordings = {
-					controller.navigate(NavRoutes.VoiceRecordings) {
-						popUpTo<PlayerSubGraph.AudioPlayerRoute>()
-					}
-				},
-				navigation = {
-					if (controller.previousBackStackEntry?.destination?.route != null) {
-						IconButton(
-							onClick = dropUnlessResumed(block = controller::popBackStack),
-						) {
-							Icon(
-								imageVector = Icons.AutoMirrored.Default.ArrowBack,
-								contentDescription = stringResource(R.string.back_arrow)
-							)
-						}
-					}
-				},
-				modifier = Modifier.sharedBoundsWrapper(
-						key = SharedElementTransitionKeys.recordSharedEntryContainer(route.audioId),
-						resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-					),
-				)
-		}
-	}
+        CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
+            AudioPlayerScreen(
+                loadState = contentState,
+                bookmarks = bookMarks,
+                waveforms = { visuals },
+                trackData = { trackData },
+                playerMetaData = playerMetadata,
+                isControllerReady = isControllerReady,
+                isPlayerPlaying = isPlaying,
+                bookMarkState = bookMarkState,
+                isAppActionsEnabled = route.appActionsEnabled,
+                onFileEvent = metaDataViewmodel::onFileEvent,
+                onPlayerEvents = playerViewModel::onPlayerEvents,
+                onBookmarkEvent = bookmarkViewmodel::onBookMarkEvent,
+                onNavigateToEdit = dropUnlessResumed {
+                    controller.navigate(PlayerSubGraph.AudioEditorRoute(route.audioId))
+                },
+                onRenameItem = { audioId ->
+                    if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
+                        val dialog = NavDialogs.RenameRecordingDialog(audioId)
+                        controller.navigate(dialog)
+                    }
+                },
+                onNavigateToRecordings = {
+                    controller.navigate(NavRoutes.VoiceRecordings) {
+                        popUpTo<PlayerSubGraph.AudioPlayerRoute>()
+                    }
+                },
+                navigation = {
+                    if (controller.previousBackStackEntry?.destination?.route != null) {
+                        IconButton(
+                            onClick = dropUnlessResumed(block = controller::popBackStack),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                contentDescription = stringResource(R.string.back_arrow),
+                            )
+                        }
+                    }
+                },
+                modifier = Modifier.sharedBoundsWrapper(
+                    key = SharedElementTransitionKeys.recordSharedEntryContainer(route.audioId),
+                    resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                ),
+            )
+        }
+    }
 

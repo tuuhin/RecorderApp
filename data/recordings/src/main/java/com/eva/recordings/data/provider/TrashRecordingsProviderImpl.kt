@@ -5,11 +5,12 @@ import android.content.Context
 import android.database.ContentObserver
 import android.database.SQLException
 import android.os.Build
+import android.os.Bundle
+import android.os.CancellationSignal
 import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
-import androidx.core.os.bundleOf
 import com.eva.database.dao.RecordingsMetadataDao
 import com.eva.database.entity.RecordingsMetaDataEntity
 import com.eva.recordings.R
@@ -21,14 +22,18 @@ import com.eva.recordings.domain.provider.ResourcedTrashRecordingModels
 import com.eva.recordings.domain.provider.TrashRecordingsProvider
 import com.eva.utils.Resource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 private const val LOGGER_TAG = "TRASHED_RECORDINGS_PROVIDER"
 
@@ -40,20 +45,23 @@ internal class TrashRecordingsProviderImpl(
 
 	override val trashedRecordingsFlow: Flow<ResourcedTrashRecordingModels>
 		get() = callbackFlow {
+			var fetchJob: Job? = null
 
-			launch(Dispatchers.IO) {
-				// for the first time we need the query the current
-				val recordings = getTrashedVoiceRecordings()
-				send(recordings)
+			fun triggerNewData() {
+				fetchJob?.cancel()
+				fetchJob = launch {
+					val recordings = getTrashedVoiceRecordings()
+					send(recordings)
+				}
 			}
+
+			// for the first time we need the query the current
+			triggerNewData()
 
 			val observer = object : ContentObserver(null) {
 				override fun onChange(selfChange: Boolean) {
 					super.onChange(selfChange)
-					launch(Dispatchers.IO) {
-						val recordings = getTrashedVoiceRecordings()
-						send(recordings)
-					}
+					triggerNewData()
 				}
 			}
 
@@ -65,6 +73,9 @@ internal class TrashRecordingsProviderImpl(
 			)
 
 			awaitClose {
+				// cancels the fetch job
+				fetchJob?.cancel()
+				fetchJob = null
 				Log.d(LOGGER_TAG, "CANCELED OBSERVER FOR TRASH ITEMS")
 				contentResolver.unregisterContentObserver(observer)
 			}
@@ -76,34 +87,48 @@ internal class TrashRecordingsProviderImpl(
 		val selectionArgs = arrayOf(context.packageName)
 		val sortColumns = arrayOf(MediaStore.Audio.AudioColumns.DATE_EXPIRES)
 
-		val queryArgs = bundleOf(
-			ContentResolver.QUERY_ARG_SQL_SELECTION to selection,
-			ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to selectionArgs,
-			MediaStore.QUERY_ARG_MATCH_TRASHED to MediaStore.MATCH_ONLY,
-			ContentResolver.QUERY_ARG_SORT_COLUMNS to sortColumns,
-			ContentResolver.QUERY_ARG_SORT_DIRECTION to ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-		)
+		val queryBundle = Bundle().apply {
+			putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+			putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+			putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_ONLY)
+			putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS, sortColumns)
+			putInt(
+				ContentResolver.QUERY_ARG_SORT_DIRECTION,
+				ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+			)
+		}
+		val signal = CancellationSignal()
 
 		return withContext(Dispatchers.IO) {
-			try {
-				val models = contentResolver.query(
-					RecordingsConstants.AUDIO_VOLUME_URI,
-					trashRecordingsProjection,
-					queryArgs,
-					null
-				)
-					?.use(::readTrashedRecordingsFromCursor)
-					?: emptyList()
+			suspendCancellableCoroutine { cont ->
+				try {
+					val models = contentResolver.query(
+						RecordingsConstants.AUDIO_VOLUME_URI,
+						trashRecordingsProjection,
+						queryBundle,
+						signal
+					)?.use(::readTrashedRecordingsFromCursor) ?: emptyList()
 
-				Resource.Success(models)
-			} catch (e: SQLException) {
-				Resource.Error(e, e.localizedMessage ?: "SQL EXCEPTION")
-			} catch (e: SecurityException) {
-				Resource.Error(e, e.localizedMessage ?: "SECURITY EXCEPTION")
-			} catch (e: Exception) {
-				if (e is CancellationException) throw e
-				e.printStackTrace()
-				Resource.Error(e, e.message)
+					if (cont.isActive) cont.resume(Resource.Success(models))
+				} catch (e: SQLException) {
+					if (cont.isActive)
+						cont.resume(Resource.Error(e, e.localizedMessage ?: "SQL EXCEPTION"))
+				} catch (e: SecurityException) {
+					if (cont.isActive)
+						cont.resume(Resource.Error(e, e.localizedMessage ?: "SECURITY EXCEPTION"))
+				} catch (e: Exception) {
+					if (e is CancellationException && cont.isActive) cont.resumeWithException(e)
+					e.printStackTrace()
+					cont.resume(Resource.Error(e, e.message))
+				}
+
+				cont.invokeOnCancellation {
+					// if the parent coroutine is canceled we perform a cancellation
+					if (!signal.isCanceled) {
+						Log.w(LOGGER_TAG, "COROUTINE IS BEING CANCELLED")
+						signal.cancel()
+					}
+				}
 			}
 		}
 	}

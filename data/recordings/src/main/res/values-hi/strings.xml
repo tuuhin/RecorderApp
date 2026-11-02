@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="categories_updated" translatable="false">Recordings moved to %s category.</string>
+  <string name="categories_updated">रिकॉर्डिंग्स को %s श्रेणी में स्थानांतरित किया गया।</string>
   <string name="categories_create_success">श्रेणी सफलतापूर्वक बनाई गई</string>
   <string name="categories_deleted">हटाई गई श्रेणियाँ</string>
   <string name="recordings_add_to_favourite_success">पसंदीदा में जोड़ा गया</string>

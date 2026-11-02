@@ -28,6 +28,7 @@ internal fun FileSettingsProto.toDomain(): RecorderFileSettings = RecorderFileSe
 	format = format.toDomain,
 	allowExternalRead = allowExternalRead,
 	exportItemPrefix = exportedItemPrefix,
+	artistName = authorOrArtistName.ifBlank { null }
 )
 
 internal fun TranscriptionSettingsProto.toDomain(): TranscriptionSettings =

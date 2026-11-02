@@ -4,11 +4,11 @@ import android.content.Context
 import android.os.Build
 import com.eva.database.dao.RecordingsMetadataDao
 import com.eva.database.dao.TrashFileDao
-import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.datastore.domain.repository.RecorderFileSettingsRepo
 import com.eva.location.domain.repository.LocationAddressProvider
 import com.eva.recordings.data.RecordingWidgetInteractorImpl
 import com.eva.recordings.data.provider.AudioInfoExtractorImpl
+import com.eva.recordings.data.provider.AudioTagWriterImpl
 import com.eva.recordings.data.provider.PlayerFileProviderImpl
 import com.eva.recordings.data.provider.RecorderFileProviderImpl
 import com.eva.recordings.data.provider.RecordingSecondaryDataProviderImpl
@@ -17,6 +17,7 @@ import com.eva.recordings.data.provider.TrashRecordingsProviderApi29Impl
 import com.eva.recordings.data.provider.TrashRecordingsProviderImpl
 import com.eva.recordings.data.provider.VoiceRecordingsProviderImpl
 import com.eva.recordings.domain.provider.AudioInfoExtractor
+import com.eva.recordings.domain.provider.AudioTagWriter
 import com.eva.recordings.domain.provider.PlayerFileProvider
 import com.eva.recordings.domain.provider.RecorderFileProvider
 import com.eva.recordings.domain.provider.RecordingsSecondaryDataProvider
@@ -40,9 +41,7 @@ object RecordingsProviderModule {
 	fun providesAudioExtractor(
 		@ApplicationContext context: Context,
 		locationProvider: LocationAddressProvider,
-		settings: RecorderAudioSettingsRepo,
-	): AudioInfoExtractor =
-		AudioInfoExtractorImpl(context, settings, locationProvider)
+	): AudioInfoExtractor = AudioInfoExtractorImpl(context, locationProvider)
 
 	@Provides
 	@Singleton
@@ -87,7 +86,8 @@ object RecordingsProviderModule {
 		@ApplicationContext context: Context,
 		recordingsDao: RecordingsMetadataDao,
 		settings: RecorderFileSettingsRepo,
-	): RecorderFileProvider = RecorderFileProviderImpl(context, recordingsDao, settings)
+		tagWriter: AudioTagWriter,
+	): RecorderFileProvider = RecorderFileProviderImpl(context, recordingsDao, settings, tagWriter)
 
 	@Provides
 	@Singleton
@@ -99,4 +99,7 @@ object RecordingsProviderModule {
 	fun providesStorageInfoProvider(@ApplicationContext context: Context): StorageInfoProvider =
 		StorageInfoProviderImpl(context)
 
+	@Provides
+	@Singleton
+	fun providesAudioTagWriter(): AudioTagWriter = AudioTagWriterImpl()
 }
