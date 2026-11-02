@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="recorder_notification_text_running">Kaydedici çalışıyor</string>
+  <string name="recorder_notification_text_paused">Kaydedici duraklatıldı</string>
+  <string name="recorder_recording_completed">Kayıt Tamamlandı</string>
+  <string name="recorder_recording_completed_text">Harici depolama alanına kaydedildi</string>
+  <string name="recorder_recording_completed_text_2">Oynatmak için dokunun</string>
+  <string name="toast_recording_bluetooth">Bluetooth mikrofon kullanılıyor</string>
+  <string name="toast_incoming_call">Gelen arama</string>
+  <string name="bookmarks_saved">Yer İşaretleri Eklendi</string>
+</resources>
