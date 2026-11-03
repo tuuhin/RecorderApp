@@ -15,6 +15,7 @@ import com.eva.transcribe.domain.models.ModelDownloadState
 import com.eva.utils.NotificationConstants
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlin.random.Random
 
 @HiltWorker
 internal class STTModelDownloaderWorker @AssistedInject constructor(
@@ -30,6 +31,8 @@ internal class STTModelDownloaderWorker @AssistedInject constructor(
                     WorkerParams.WORK_DATA_SST_MODEL_WORK_FAILED to WorkerParams.WORK_DATA_SST_MODEL_ID_MISSING,
                 ),
             )
+
+        val notificationMarker = Random.nextInt()
 
         val taskResult = task.downloadAndSaveModel(
             modelId = modelId,
@@ -51,7 +54,7 @@ internal class STTModelDownloaderWorker @AssistedInject constructor(
                         ),
                     )
                 }
-                setForeground(createNotification(state))
+                setForeground(createNotification(state, notificationMarker))
             },
         )
         if (taskResult.isFailure) {
@@ -75,7 +78,7 @@ internal class STTModelDownloaderWorker @AssistedInject constructor(
     }
 
 
-    private fun createNotification(state: ModelDownloadState): ForegroundInfo {
+    private fun createNotification(state: ModelDownloadState, notifyId: Int): ForegroundInfo {
 
         val title = applicationContext.getString(R.string.stt_model_download_notification_text)
         val intent = WorkManager.getInstance(applicationContext).createCancelPendingIntent(id)
@@ -111,7 +114,7 @@ internal class STTModelDownloaderWorker @AssistedInject constructor(
         }
 
         return ForegroundInfo(
-            NotificationConstants.DOWNLOAD_STT_MODEL_WORKER_NOTIFICATION_ID,
+            NotificationConstants.DOWNLOAD_STT_MODEL_WORKER_NOTIFICATION_ID + notifyId,
             notification.build(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
         )

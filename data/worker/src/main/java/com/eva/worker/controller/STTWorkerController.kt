@@ -6,59 +6,70 @@ import androidx.work.WorkManager
 import androidx.work.await
 import com.eva.worker.WorkerParams
 import com.eva.worker.domain.WorkResource
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.util.UUID
 
 abstract class STTWorkerController(context: Context) {
 
-	protected val workManager by lazy { WorkManager.getInstance(context) }
+    protected val workManager by lazy { WorkManager.getInstance(context) }
 
-	fun observeWorker(uuid: UUID): Flow<WorkResource?> {
-		return workManager.getWorkInfoByIdFlow(uuid).map { info ->
-			if (info == null) return@map null
-			when (info.state) {
-				WorkInfo.State.ENQUEUED -> WorkResource.Enqueued
-				WorkInfo.State.SUCCEEDED -> {
-					val message = info.outputData
-						.getString(WorkerParams.WORK_DATA_SST_MODEL_WORK_SUCCESS)
-					WorkResource.Success(message)
-				}
+    fun observeWorker(uuid: Uuid): Flow<WorkResource?> {
+        val jUuid = uuid.toJavaUuid()
+        return workManager.getWorkInfoByIdFlow(jUuid).map { info ->
+            if (info == null) return@map null
+            mapWorkInfo(info)
+        }
+    }
 
-				WorkInfo.State.RUNNING -> {
-					val progress = info.progress
-						.getInt(WorkerParams.WORK_DATA_WORK_PROGRESS_PERCENTAGE, -1)
-					val progressMessage = info.progress
-						.getString(WorkerParams.WORK_DATA_WORK_PROGRESS_MESSAGE) ?: ""
-					WorkResource.Running(
-						message = progressMessage,
-						progress = if (progress == -1) null else progress
-					)
-				}
+    protected fun mapWorkInfo(info: WorkInfo): WorkResource {
+        val observedModelId = info.outputData.getString(WorkerParams.WORK_DATA_STT_MODEL_ID)
+            ?: info.progress.getString(WorkerParams.WORK_DATA_STT_MODEL_ID)
+        val workId = info.id.toKotlinUuid()
 
-				WorkInfo.State.FAILED -> {
-					val reason = info.outputData
-						.getString(WorkerParams.WORK_DATA_SST_MODEL_WORK_FAILED) ?: ""
-					WorkResource.Failed(reason)
-				}
+        return when (info.state) {
+            WorkInfo.State.ENQUEUED -> WorkResource.Enqueued(workId, observedModelId)
+            WorkInfo.State.SUCCEEDED -> {
+                val message = info.outputData.getString(WorkerParams.WORK_DATA_SST_MODEL_WORK_SUCCESS)
+                WorkResource.Success(workId, message, observedModelId)
+            }
 
-				WorkInfo.State.BLOCKED -> WorkResource.Blocked
-				WorkInfo.State.CANCELLED -> {
-					val reason = when (info.stopReason) {
-						WorkInfo.STOP_REASON_TIMEOUT -> "Timeout"
-						else -> "Worker cancelled for some reason"
-					}
-					WorkResource.Canceled(reason)
-				}
-			}
-		}
-	}
+            WorkInfo.State.RUNNING -> {
+                val progress = info.progress.getInt(WorkerParams.WORK_DATA_WORK_PROGRESS_PERCENTAGE, -1)
+                val progressMessage = info.progress.getString(WorkerParams.WORK_DATA_WORK_PROGRESS_MESSAGE) ?: ""
+                WorkResource.Running(
+                    workId = workId,
+                    message = progressMessage,
+                    progress = if (progress == -1) null else progress,
+                    modelId = observedModelId,
+                )
+            }
 
-	fun cancelWorkAsync(uuid: UUID) {
-		workManager.cancelWorkById(uuid)
-	}
+            WorkInfo.State.FAILED -> {
+                val reason = info.outputData.getString(WorkerParams.WORK_DATA_SST_MODEL_WORK_FAILED) ?: ""
+                WorkResource.Failed(workId, modelId = observedModelId, reason)
+            }
 
-	suspend fun cancelWork(uuid: UUID) {
-		workManager.cancelWorkById(uuid).await()
-	}
+            WorkInfo.State.BLOCKED -> WorkResource.Blocked(workId, observedModelId)
+            WorkInfo.State.CANCELLED -> {
+                val reason = when (info.stopReason) {
+                    WorkInfo.STOP_REASON_TIMEOUT -> "Timeout"
+                    else -> "Worker cancelled for some reason"
+                }
+                WorkResource.Canceled(workId, reason = reason, modelId = observedModelId)
+            }
+        }
+    }
+
+    fun cancelWorkAsync(uuid: Uuid) {
+        val jUid = uuid.toJavaUuid()
+        workManager.cancelWorkById(jUid)
+    }
+
+    suspend fun cancelWork(uuid: Uuid) {
+        val jUid = uuid.toJavaUuid()
+        workManager.cancelWorkById(jUid).await()
+    }
 }

@@ -10,8 +10,10 @@ import com.eva.transcribe.domain.models.STTModelState
 import com.eva.transcribe.domain.repository.STTModelsRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onDownload
+import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentLength
 import io.ktor.http.isSuccess
 import io.ktor.utils.io.readAvailable
@@ -184,6 +186,10 @@ internal class ModelDownloadMangerImpl(
         var lastProgress = -1
 
         httpClient.prepareGet(zipFileURL) {
+            // no caching
+            header(HttpHeaders.CacheControl, "no-cache, no-store")
+            header(HttpHeaders.Pragma, "no-cache")
+
             onDownload { readBytes, totalBytes ->
                 val total = totalBytes ?: 0
                 if (total > 0) {
@@ -203,7 +209,8 @@ internal class ModelDownloadMangerImpl(
             val channel = response.bodyAsChannel()
 
             withContext(Dispatchers.IO) {
-                fs.sink(outputFilePath).buffer().use { sink ->
+
+            fs.sink(outputFilePath).buffer().use { sink ->
                     val buffer = ByteArray(DOWNLOAD_BUFFER_SIZE)
                     while (!channel.isClosedForRead && isActive) {
                         val read = channel.readAvailable(buffer, 0, buffer.size)
@@ -211,7 +218,6 @@ internal class ModelDownloadMangerImpl(
                         if (read == 0) continue
                         sink.write(buffer, 0, read)
                     }
-                    sink.flush()
                 }
             }
             Log.d(TAG, "FILE SAVED SUCCESSFULLY AT $outputFilePath")

@@ -15,7 +15,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -29,47 +30,52 @@ import kotlinx.serialization.serializer
 @InstallIn(SingletonComponent::class)
 internal object ModelProviderModule {
 
-	@Provides
-	@Singleton
-	fun providesJsonConfig(): Json = Json {
-		serializersModule = SerializersModule {
-			serializer<TranscriptionResult>()
-		}
-	}
+    @Provides
+    @Singleton
+    fun providesJsonConfig(): Json = Json {
+        serializersModule = SerializersModule {
+            serializer<TranscriptionResult>()
+        }
+    }
 
-	@Provides
-	@Singleton
-	fun providesHTTPClient(): HttpClient = HttpClient(Android) {
-		install(Logging) {
-			level = if (BuildConfig.DEBUG) LogLevel.INFO else LogLevel.NONE
-			logger = Logger.ANDROID
-		}
-	}
+    @Provides
+    @Singleton
+    fun providesHTTPClient(): HttpClient = HttpClient(CIO) {
+        install(Logging) {
+            level = if (BuildConfig.DEBUG) LogLevel.HEADERS else LogLevel.NONE
+            logger = Logger.ANDROID
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 60_000
+            socketTimeoutMillis = 60_000
+            connectTimeoutMillis = 15_000
+        }
+    }
 
-	@Provides
-	@Singleton
-	fun providesModelDownloader(
-		@ApplicationContext context: Context,
-		client: HttpClient,
-		repo: STTModelsRepository,
-	): ModelDownloadManager = ModelDownloadMangerImpl(
-		context = context,
-		httpClient = client,
-		repository = repo
-	)
+    @Provides
+    @Singleton
+    fun providesModelDownloader(
+        @ApplicationContext context: Context,
+        client: HttpClient,
+        repo: STTModelsRepository,
+    ): ModelDownloadManager = ModelDownloadMangerImpl(
+        context = context,
+        httpClient = client,
+        repository = repo,
+    )
 
 
-	@Provides
-	@Singleton
-	fun providesAssetsReader(
+    @Provides
+    @Singleton
+    fun providesAssetsReader(
         @ApplicationContext context: Context,
         json: Json,
     ): STTModelMetadataReader = STTModelMetadataReader(context, json)
 
-	@Provides
-	@Singleton
-	fun providesSTTModelsRepo(
-		dao: STTModelsDao,
-		reader: STTModelMetadataReader
-	): STTModelsRepository = STTModelsRepositoryImpl(dao = dao, metaData = reader)
+    @Provides
+    @Singleton
+    fun providesSTTModelsRepo(
+        dao: STTModelsDao,
+        reader: STTModelMetadataReader,
+    ): STTModelsRepository = STTModelsRepositoryImpl(dao = dao, metaData = reader)
 }
