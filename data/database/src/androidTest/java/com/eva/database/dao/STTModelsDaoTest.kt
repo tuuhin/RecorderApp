@@ -5,11 +5,13 @@ import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
-import assertk.assertions.isGreaterThan
 import assertk.assertions.isNull
 import com.eva.database.entity.STTModelEntity
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import javax.inject.Inject
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -19,9 +21,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import javax.inject.Inject
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
@@ -40,7 +39,7 @@ class STTModelsDaoTest {
 	private fun createModel(
 		modelId: String = "model-1",
 		status: STTModelEntity.ModelStatus = STTModelEntity.ModelStatus.NOT_READY,
-		modelSize: Long = 1024,
+        archiveSize: Long = 1024,
 	) = STTModelEntity(
 		modelId = modelId,
 		locale = "en-in",
@@ -48,7 +47,7 @@ class STTModelsDaoTest {
 		externalModelVersion = "v1.0",
 		version = 1,
 		modelURI = null,
-		modelSize = modelSize,
+        archiveSize = archiveSize,
 		status = status,
 		updatedAt = updatedAt,
 	)
@@ -63,33 +62,32 @@ class STTModelsDaoTest {
 	fun updateOrInsertEntity_inserts_and_reads_back() = runTest {
 		val entity = createModel(status = STTModelEntity.ModelStatus.DOWNLOADED)
 
-		val rowId = dao.updateOrInsertEntity(entity)
+        dao.updateOrInsertEntity(entity)
 
-		assertThat(rowId).isGreaterThan(0L)
 		assertThat(dao.readModelById("model-1")).isEqualTo(entity)
 	}
 
 	@Test
 	fun updateOrInsertEntity_updates_existing_model() = runTest {
-		dao.updateOrInsertEntity(createModel(modelSize = 1024))
+        dao.updateOrInsertEntity(createModel(archiveSize = 1024))
 
-		dao.updateOrInsertEntity(createModel(modelSize = 2048))
+        dao.updateOrInsertEntity(createModel(archiveSize = 2048))
 
 		val stored = dao.readAllModelData()
 
 		assertThat(stored).hasSize(1)
-		assertThat(stored.single().modelSize).isEqualTo(2048L)
+        assertThat(stored.single().archiveSize).isEqualTo(2048L)
 	}
 
 	@Test
 	fun updateOrInsertModelEntities_upserts_all() = runTest {
-		dao.updateOrInsertEntity(createModel(modelId = "model-1", modelSize = 1024))
+        dao.updateOrInsertEntity(createModel(modelId = "model-1", archiveSize = 1024))
 
 		dao.updateOrInsertModelEntities(
-			listOf(createModel(modelId = "model-1", modelSize = 2048), createModel(modelId = "model-2"))
-		)
+            listOf(createModel(modelId = "model-1", archiveSize = 2048), createModel(modelId = "model-2")),
+        )
 
-		val sizes = dao.readAllModelData().associate { it.modelId to it.modelSize }
+        val sizes = dao.readAllModelData().associate { it.modelId to it.archiveSize }
 
 		assertThat(sizes).hasSize(2)
 		assertThat(sizes["model-1"]).isEqualTo(2048L)

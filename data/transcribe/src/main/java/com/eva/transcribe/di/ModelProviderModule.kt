@@ -20,10 +20,10 @@ import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import javax.inject.Singleton
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -62,9 +62,9 @@ internal object ModelProviderModule {
 	@Provides
 	@Singleton
 	fun providesAssetsReader(
-		@ApplicationContext context: Context,
-		json: Json
-	): STTModelMetadataReader = STTModelMetadataReader(json, context)
+        @ApplicationContext context: Context,
+        json: Json,
+    ): STTModelMetadataReader = STTModelMetadataReader(context, json)
 
 	@Provides
 	@Singleton
