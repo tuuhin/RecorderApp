@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +21,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -27,73 +30,90 @@ import com.eva.feature_settings.utils.SettingsTabs
 import com.eva.ui.R
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingsTabContent(
-	audioSettings: @Composable () -> Unit,
-	filesSettings: @Composable () -> Unit,
-	modifier: Modifier = Modifier,
-	transcriptionSettings: @Composable () -> Unit = {},
-	initialTab: SettingsTabs = SettingsTabs.AUDIO_SETTINGS,
-	contentPadding: PaddingValues = PaddingValues(0.dp),
+    audioSettings: @Composable () -> Unit,
+    filesSettings: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    transcriptionSettings: @Composable () -> Unit = {},
+    initialTab: SettingsTabs = SettingsTabs.AUDIO_SETTINGS,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-	val scope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
-	val pagerState = rememberPagerState(
-		initialPage = initialTab.tabIndex,
-		pageCount = { SettingsTabs.entries.size }
-	)
+    val pagerState = rememberPagerState(
+        initialPage = initialTab.tabIndex,
+        pageCount = { SettingsTabs.entries.size },
+    )
 
-	val selectedTabIndex by remember(pagerState) {
-		derivedStateOf(pagerState::currentPage)
-	}
+    val selectedTabIndex by remember(pagerState) {
+        derivedStateOf(pagerState::currentPage)
+    }
 
-	Column(
-		modifier = modifier.padding(contentPadding),
-		verticalArrangement = Arrangement.spacedBy(2.dp)
-	) {
-		PrimaryTabRow(
-			selectedTabIndex = selectedTabIndex,
-		) {
-			SettingsTabs.entries.forEach { tab ->
-				Tab(
-					selected = tab.tabIndex == selectedTabIndex,
-					onClick = {
-						val index = tab.tabIndex
-						if (index != selectedTabIndex) scope.launch {
-							pagerState.animateScrollToPage(index)
-						}
-					},
-					text = {
-						Text(
-							text = tab.textRes,
-							maxLines = 2,
-							overflow = TextOverflow.Ellipsis
-						)
-					},
-				)
-			}
-		}
+    Column(
+        modifier = modifier.padding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        PrimaryTabRow(
+            selectedTabIndex = selectedTabIndex,
+        ) {
+            SettingsTabs.entries.forEach { tab ->
+                Tab(
+                    selected = tab.tabIndex == selectedTabIndex,
+                    onClick = {
+                        val index = tab.tabIndex
+                        if (index != selectedTabIndex)
+                            scope.launch { pagerState.animateScrollToPage(index) }
+                    },
+                    text = {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = tab.textRes,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (tab == SettingsTabs.TRANSCRIPTIONS_SETTINGS) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    shape = RoundedCornerShape(12.dp),
+                                ) {
+                                    Text(
+                                        text = "Alpha",
+                                        maxLines = 1,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    )
+                                }
+                            }
+                        }
+                    },
+                )
+            }
+        }
 
-		HorizontalPager(
-			state = pagerState,
-			flingBehavior = PagerDefaults.flingBehavior(
-				state = pagerState,
-				snapPositionalThreshold = .4f,
-				snapAnimationSpec = spring(
-					dampingRatio = Spring.DampingRatioNoBouncy,
-					stiffness = Spring.StiffnessLow
-				)
-			),
-			pageSpacing = dimensionResource(id = R.dimen.sc_padding_secondary),
-			modifier = Modifier.fillMaxSize(),
-		) { idx ->
-			when (idx) {
-				SettingsTabs.AUDIO_SETTINGS.tabIndex -> audioSettings()
-				SettingsTabs.FILES_SETTINGS.tabIndex -> filesSettings()
-				SettingsTabs.TRANSCRIPTIONS_SETTINGS.tabIndex -> transcriptionSettings()
-				else -> {}
-			}
-		}
-	}
+        HorizontalPager(
+            state = pagerState,
+            flingBehavior = PagerDefaults.flingBehavior(
+                state = pagerState,
+                snapPositionalThreshold = .4f,
+                snapAnimationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessLow,
+                ),
+            ),
+            pageSpacing = dimensionResource(id = R.dimen.sc_padding_secondary),
+            modifier = Modifier.fillMaxSize(),
+        ) { idx ->
+            when (idx) {
+                SettingsTabs.AUDIO_SETTINGS.tabIndex -> audioSettings()
+                SettingsTabs.FILES_SETTINGS.tabIndex -> filesSettings()
+                SettingsTabs.TRANSCRIPTIONS_SETTINGS.tabIndex -> transcriptionSettings()
+                else -> {}
+            }
+        }
+    }
 }
