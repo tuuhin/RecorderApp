@@ -28,7 +28,7 @@ android {
 	}
 
 	androidResources {
-		localeFilters.addAll(setOf("bn", "hi", "tr"))
+        localeFilters.addAll(setOf("bn", "hi", "tr", "es", "de"))
 	}
 
     signingConfigs {
