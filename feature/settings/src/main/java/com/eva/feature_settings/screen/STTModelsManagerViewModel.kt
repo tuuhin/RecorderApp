@@ -104,7 +104,7 @@ internal class STTModelsManagerViewModel @Inject constructor(
                     is WorkResource.Enqueued -> UIEvents.ShowToast("Deleting model files")
                     is WorkResource.Failed if (res.reason.isNotBlank()) -> UIEvents.ShowSnackBar(res.reason)
                     is WorkResource.Running if (res.message.isNotBlank()) -> UIEvents.ShowSnackBar(res.message)
-                    is WorkResource.Success if (res.message?.isNotBlank() == true) ->
+                    is WorkResource.Success if (!res.message.isNullOrBlank()) ->
                         UIEvents.ShowSnackBar(res.message ?: "Success")
 
                     else -> return@onEach
@@ -153,7 +153,7 @@ internal class STTModelsManagerViewModel @Inject constructor(
                     is Resource.Success -> _modelsInfo.update {
                         resModels.data.map { model ->
                             // read in worker info progress and state
-                            val workerResource = workers.lastOrNull { it.modelId == model.modelId }
+                            val workerResource = workers.findLast { it.modelId == model.modelId }
                             val progress = if (workerResource is WorkResource.Running)
                                 workerResource.progress?.div(100f) else 0f
 

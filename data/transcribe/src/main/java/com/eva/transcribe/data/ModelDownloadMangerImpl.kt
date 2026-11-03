@@ -29,7 +29,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import okio.Buffer
 import okio.FileSystem
-import okio.HashingSink
+import okio.HashingSource
 import okio.Path
 import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
@@ -210,7 +210,7 @@ internal class ModelDownloadMangerImpl(
 
             withContext(Dispatchers.IO) {
 
-            fs.sink(outputFilePath).buffer().use { sink ->
+                fs.sink(outputFilePath).buffer().use { sink ->
                     val buffer = ByteArray(DOWNLOAD_BUFFER_SIZE)
                     while (!channel.isClosedForRead && isActive) {
                         val read = channel.readAvailable(buffer, 0, buffer.size)
@@ -225,14 +225,13 @@ internal class ModelDownloadMangerImpl(
     }
 
     private suspend fun calculateSha256Hash(filePath: Path): String = withContext(Dispatchers.IO) {
-        HashingSink.sha256(blackholeSink()).use { hashingSink ->
-            fs.source(filePath).use { source ->
-                HashingSink.sha256(blackholeSink()).use { hashingSink ->
-                    hashingSink.buffer().use { sink -> sink.writeAll(source) }
-                    hashingSink.hash.hex()
+        fs.source(filePath).use { source ->
+            HashingSource.sha256(source).use { hashingSource ->
+                hashingSource.buffer().use { bufferedSource ->
+                    bufferedSource.readAll(blackholeSink())
                 }
+                hashingSource.hash.hex()
             }
-            hashingSink.hash.hex()
         }
     }
 
@@ -246,7 +245,23 @@ internal class ModelDownloadMangerImpl(
         fs.openZip(zipFile).use { zipFs ->
             val rootPath = "/".toPath()
 
-            for (path in zipFs.listRecursively(rootPath)) {
+            val entries = zipFs.listRecursively(rootPath)
+                .filter { it != rootPath }
+                .toList()
+
+            val topLevelEntries = entries
+                .map { it.relativeTo(rootPath).toString().substringBefore('/') }
+                .distinct()
+
+            val singleRootDirectory = topLevelEntries.singleOrNull()
+                ?.takeIf { root ->
+                    entries.all { path ->
+                        val relative = path.relativeTo(rootPath).toString()
+                        relative == root || relative.startsWith("$root/")
+                    } && zipFs.metadata(entries.first { it.relativeTo(rootPath).toString() == root }).isDirectory
+                }
+
+            for (path in entries) {
                 ensureActive()
 
                 entryCount++
@@ -263,7 +278,12 @@ internal class ModelDownloadMangerImpl(
                 if (normalizedPath.startsWith("/") || normalizedPath.split("/").any { it == ".." })
                     throw SecurityException("Unsafe ZIP entry: $relativePath")
 
-                val outputFile = destination.resolve(normalizedPath)
+                // Remove the common root directory when present.
+                val outputPath = if (singleRootDirectory != null)
+                    normalizedPath.removePrefix("$singleRootDirectory/").takeIf { it.isNotEmpty() } ?: continue
+                else normalizedPath
+
+                val outputFile = destination.resolve(outputPath)
 
                 if (zipFs.metadata(path).isDirectory) {
                     fs.createDirectories(outputFile)

@@ -40,7 +40,10 @@ class STTModelDownloadController(context: Context) : STTWorkerController(context
 
     fun observeDownloadWorkers(): Flow<List<WorkResource>> {
         return workManager.getWorkInfosByTagFlow(WorkerParams.WORKER_TAG_STT_MODEL)
-            .map { infos -> infos.map { info -> mapWorkInfo(info) } }
+            .map { infos ->
+                infos.filterNot { it.state.isFinished }
+                    .map(::mapWorkInfo)
+            }
     }
 
 }
