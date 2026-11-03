@@ -9,14 +9,14 @@ import androidx.test.platform.app.InstrumentationRegistry
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
+import java.io.File
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.offsetAt
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
-import kotlin.time.Clock
 
 private const val TEST_DB_NAME = "migration-test-db"
 
@@ -168,7 +168,7 @@ class DBMigrationsTests {
 		assertThat(db.countOf("recording_meta_data")).isEqualTo(1L)
 		assertThat(db.countOf("recording_bookmark_table")).isEqualTo(1L)
 
-		db.execSQL("INSERT INTO stt_models_table VALUES (\"model-1\", \"en-in\", \"https://example.com/model.zip\", \"v1.0\", 1, null, 1024, 0, 12345)")
+        db.execSQL("INSERT INTO stt_models_table VALUES (\"model-1\", \"en-in\", \"https://example.com/model.zip\", \"v1.0\", 1, null, 1024, 2, 12345)")
 
 		db.prepare("SELECT _id, local_model_status, local_model_size FROM stt_models_table")
 			.use { statement ->
@@ -182,7 +182,39 @@ class DBMigrationsTests {
 	}
 
 	@Test
-	fun migrate_1_to_7_end_to_end_preserves_data() = runTest {
+    fun migrate_7_to_8_updates_stt_schema_and_preserves_model_data() = runTest {
+        deleteTestDatabase()
+
+        var db = testHelper.createDatabase(7).apply {
+            execSQL("INSERT INTO stt_models_table VALUES (\"model-1\", \"en-in\", \"https://example.com/model.zip\", \"v1.0\", 1, \"file:///models/model-1\", 1024, 2, 12345)")
+        }
+        db.close()
+
+        db = testHelper.runMigrationsAndValidate(8)
+
+        db.prepare("SELECT _id, model_name, model_display_name, model_archive_size, local_saved_model_uri, local_model_status, updated_at FROM stt_models_table")
+            .use { statement ->
+                assertThat(statement.step()).isTrue()
+                assertThat(statement.getText(0)).isEqualTo("model-1")
+                assertThat(statement.getText(1)).isEqualTo("")
+                assertThat(statement.getText(2)).isEqualTo("")
+                assertThat(statement.getLong(3)).isEqualTo(0L)
+                assertThat(statement.getText(4)).isEqualTo("file:///models/model-1")
+                assertThat(statement.getLong(5)).isEqualTo(2L)
+                assertThat(statement.getLong(6)).isEqualTo(12345L)
+            }
+        db.prepare("PRAGMA table_info(stt_models_table)").use { statement ->
+            var foundLegacySizeColumn = false
+            while (statement.step()) {
+                if (statement.getText(1) == "local_model_size") foundLegacySizeColumn = true
+            }
+            assertThat(foundLegacySizeColumn).isEqualTo(false)
+        }
+        db.close()
+    }
+
+    @Test
+    fun migrate_1_to_8_end_to_end_preserves_data() = runTest {
 		deleteTestDatabase()
 
 		var db = testHelper.createDatabase(1).apply {
@@ -190,7 +222,7 @@ class DBMigrationsTests {
 		}
 		db.close()
 
-		db = testHelper.runMigrationsAndValidate(7, listOf(DBMigrations.MIGRATE_5_6))
+        db = testHelper.runMigrationsAndValidate(8, listOf(DBMigrations.MIGRATE_5_6))
 
 		db.prepare("SELECT DATE_ADDED, DATE_EXPIRES FROM trash_files_data_table").use { statement ->
 			assertThat(statement.step()).isTrue()

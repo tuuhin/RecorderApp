@@ -25,45 +25,47 @@ import kotlinx.coroutines.flow.merge
 
 fun NavGraphBuilder.settingsRoute(controller: NavController) = composable<NavRoutes.AudioSettings> {
 
-	val settingsViewModel = hiltViewModel<AudioSettingsViewModel>()
-	val sttModelsViewmodel = hiltViewModel<STTModelsManagerViewModel>()
+    val settingsViewModel = hiltViewModel<AudioSettingsViewModel>()
+    val sttModelsViewmodel = hiltViewModel<STTModelsManagerViewModel>()
 
-	val audioSettings by settingsViewModel.audioSettings.collectAsStateWithLifecycle()
-	val fileSettings by settingsViewModel.fileSettings.collectAsStateWithLifecycle()
-	val storageData by settingsViewModel.storageData.collectAsStateWithLifecycle()
+    val audioSettings by settingsViewModel.audioSettings.collectAsStateWithLifecycle()
+    val fileSettings by settingsViewModel.fileSettings.collectAsStateWithLifecycle()
+    val storageData by settingsViewModel.storageData.collectAsStateWithLifecycle()
 
-	val sttModels by sttModelsViewmodel.modelsInfo.collectAsStateWithLifecycle()
-	val transcriptionSettings by sttModelsViewmodel.transcriptionSettings.collectAsStateWithLifecycle()
+    val sttModels by sttModelsViewmodel.modelsInfo.collectAsStateWithLifecycle()
+    val transcriptionSettings by sttModelsViewmodel.transcriptionSettings.collectAsStateWithLifecycle()
 
-	UiEventsHandler(eventsFlow = {
-		merge(settingsViewModel.uiEvent, sttModelsViewmodel.uiEvent)
-	})
+    UiEventsHandler(
+        eventsFlow = {
+            merge(settingsViewModel.uiEvent, sttModelsViewmodel.uiEvent)
+        },
+    )
 
-	CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
-		AudioSettingsScreen(
-			audioSettings = audioSettings,
-			fileSettings = fileSettings,
-			storageModel = storageData,
-			sttModels = sttModels,
-			transcriptionSettings = transcriptionSettings,
-			onTranscriptionSettingChange = sttModelsViewmodel::onEvent,
-			onAudioSettingsChange = settingsViewModel::onAudioEvent,
-			onFileSettingsChange = settingsViewModel::onFileEvent,
-			onNavigateToInfo = dropUnlessResumed {
-				controller.navigate(NavDialogs.ApplicationInfo)
-			},
-			navigation = {
-				if (controller.previousBackStackEntry?.destination?.route != null) {
-					IconButton(
-						onClick = dropUnlessResumed(block = controller::popBackStack)
-					) {
-						Icon(
-							imageVector = Icons.AutoMirrored.Default.ArrowBack,
-							contentDescription = stringResource(R.string.back_arrow)
-						)
-					}
-				}
-			},
-		)
-	}
+    CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
+        AudioSettingsScreen(
+            audioSettings = audioSettings,
+            fileSettings = fileSettings,
+            storageModel = storageData,
+            sttModels = sttModels,
+            transcriptionSettings = transcriptionSettings,
+            onTranscriptionSettingChange = sttModelsViewmodel::onEvent,
+            onAudioSettingsChange = settingsViewModel::onAudioEvent,
+            onFileSettingsChange = settingsViewModel::onFileEvent,
+            onNavigateToInfo = dropUnlessResumed {
+                controller.navigate(NavDialogs.ApplicationInfo)
+            },
+            navigation = {
+                if (controller.previousBackStackEntry?.destination?.route != null) {
+                    IconButton(
+                        onClick = dropUnlessResumed(block = controller::popBackStack),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back_arrow),
+                        )
+                    }
+                }
+            },
+        )
+    }
 }

@@ -1,0 +1,8 @@
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>Graba audio de alta calidad con un solo toque</item>
+        <item>Reproduce tus grabaciones fácilmente con controles</item>
+        <item>Recorta y corta grabaciones con precisión</item>
+        <item>Mantén tu audio organizado y accesible</item>
+    </string-array>
+</resources>

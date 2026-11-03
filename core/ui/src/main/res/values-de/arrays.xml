@@ -1,0 +1,8 @@
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>Hochwertiges Audio mit nur einer Berührung aufnehmen</item>
+        <item>Aufnahmen dank der Bedienelemente einfach abspielen</item>
+        <item>Aufnahmen präzise trimmen und schneiden</item>
+        <item>Audio organisiert und zugänglich halten</item>
+    </string-array>
+</resources>

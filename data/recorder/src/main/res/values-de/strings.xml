@@ -1,0 +1,11 @@
+<resources>
+    <string name="recorder_notification_text_running">Rekorder läuft</string>
+    <string name="recorder_notification_text_paused">Rekorder pausiert</string>
+    <string name="recorder_recording_completed">Aufnahme abgeschlossen</string>
+    <string name="recorder_recording_completed_text">Im externen Speicher gespeichert</string>
+    <string name="recorder_recording_completed_text_2">Zum Abspielen tippen</string>
+    <string name="toast_recording_bluetooth">Bluetooth-Mikrofon wird verwendet</string>
+    <string name="toast_incoming_call">Eingehender Anruf</string>
+    <string name="bookmarks_saved">Lesezeichen hinzugefügt</string>
+    <string name="bookmarks_too_fast_warning">Lesezeichen müssen eine Sekunde Abstand haben</string>
+</resources>

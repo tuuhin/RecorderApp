@@ -21,77 +21,81 @@ import com.eva.database.entity.STTModelEntity
 import com.eva.database.entity.TrashFileEntity
 import kotlinx.coroutines.Dispatchers
 
+
 @Database(
-	entities = [
-		TrashFileEntity::class,
-		RecordingsMetaDataEntity::class,
-		RecordingCategoryEntity::class,
-		RecordingBookMarkEntity::class,
-		STTModelEntity::class,
-	],
-	version = 7,
-	exportSchema = true,
-	autoMigrations = [
-		AutoMigration(from = 1, to = 2),
-		AutoMigration(from = 2, to = 3),
-		AutoMigration(from = 3, to = 4),
-		AutoMigration(from = 4, to = 5),
-		AutoMigration(from = 6, to = 7)
-	]
+    entities = [
+        TrashFileEntity::class,
+        RecordingsMetaDataEntity::class,
+        RecordingCategoryEntity::class,
+        RecordingBookMarkEntity::class,
+        STTModelEntity::class,
+    ],
+    version = 9,
+    exportSchema = true,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4),
+        AutoMigration(from = 4, to = 5),
+        // manual migration from 5 to 6
+        AutoMigration(from = 6, to = 7),
+        AutoMigration(from = 7, to = 8, spec = DBMigrations.STTModelMigrationSpec::class),
+        // manual migration from 8 to 9
+    ],
 )
 @ColumnTypeConverters(
-	value = [
-		LocalDateTimeConvertors::class,
-		LocalTimeConvertors::class,
-		STTModelConvertors::class
-	],
+    value = [
+        LocalDateTimeConvertors::class,
+        LocalTimeConvertors::class,
+        STTModelConvertors::class,
+    ],
 )
 abstract class RecorderDataBase : RoomDatabase() {
 
-	abstract fun trashMetadataEntityDao(): TrashFileDao
+    abstract fun trashMetadataEntityDao(): TrashFileDao
 
-	abstract fun categoriesDao(): RecordingCategoryDao
+    abstract fun categoriesDao(): RecordingCategoryDao
 
-	abstract fun recordingMetaData(): RecordingsMetadataDao
+    abstract fun recordingMetaData(): RecordingsMetadataDao
 
-	abstract fun recordingBookMarkDao(): RecordingsBookmarkDao
+    abstract fun recordingBookMarkDao(): RecordingsBookmarkDao
 
-	abstract fun sTTModelDao(): STTModelsDao
+    abstract fun sTTModelDao(): STTModelsDao
 
-	companion object {
+    companion object {
 
-		@Volatile
-		private var instance: RecorderDataBase? = null
+        @Volatile
+        private var instance: RecorderDataBase? = null
 
-		private val localDateTimeConvertor = LocalDateTimeConvertors()
-		private val localtimeConvertor = LocalTimeConvertors()
-		private val sttStausConvertors = STTModelConvertors()
+        private val localDateTimeConvertor = LocalDateTimeConvertors()
+        private val localtimeConvertor = LocalTimeConvertors()
+        private val sttStausConvertors = STTModelConvertors()
 
-		fun createDataBase(context: Context): RecorderDataBase {
-			return synchronized(this) {
-				instance ?: Room.databaseBuilder(
-					context,
-					RecorderDataBase::class.java,
-					DataBaseConstants.DATABASE_NAME
-				)
-					.addColumnTypeConverter(localtimeConvertor)
-					.addColumnTypeConverter(localDateTimeConvertor)
-					.addColumnTypeConverter(sttStausConvertors)
-					.addMigrations(DBMigrations.MIGRATE_5_6)
-					.setQueryCoroutineContext(Dispatchers.IO)
-					.build()
-					.also { db -> instance = db }
-			}
-		}
+        fun createDataBase(context: Context): RecorderDataBase {
+            return synchronized(this) {
+                instance ?: Room.databaseBuilder(
+                    context,
+                    RecorderDataBase::class.java,
+                    DataBaseConstants.DATABASE_NAME,
+                )
+                    .addColumnTypeConverter(localtimeConvertor)
+                    .addColumnTypeConverter(localDateTimeConvertor)
+                    .addColumnTypeConverter(sttStausConvertors)
+                    .addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_8_9)
+                    .setQueryCoroutineContext(Dispatchers.IO)
+                    .build()
+                    .also { db -> instance = db }
+            }
+        }
 
-		fun createInMemoryDatabase(context: Context): RecorderDataBase {
-			return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
-				.addColumnTypeConverter(localtimeConvertor)
-				.addColumnTypeConverter(localDateTimeConvertor)
-				.addColumnTypeConverter(sttStausConvertors)
-				.addMigrations(DBMigrations.MIGRATE_5_6)
-				.setQueryCoroutineContext(Dispatchers.IO)
-				.build()
-		}
-	}
+        fun createInMemoryDatabase(context: Context): RecorderDataBase {
+            return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
+                .addColumnTypeConverter(localtimeConvertor)
+                .addColumnTypeConverter(localDateTimeConvertor)
+                .addColumnTypeConverter(sttStausConvertors)
+                .addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_8_9)
+                .setQueryCoroutineContext(Dispatchers.IO)
+                .build()
+        }
+    }
 }

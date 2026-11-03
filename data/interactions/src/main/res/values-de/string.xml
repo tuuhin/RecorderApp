@@ -1,0 +1,9 @@
+<resources>
+    <string name="share_audio_extra_subject">Aufgenommene Audiodateien teilen</string>
+    <string name="share_intent_choose_title">Anwendung zum Teilen von Dateien auswählen</string>
+    <string name="sharing_bookmarks">Lesezeichen teilen</string>
+    <string name="app_shortcuts_recordings">Aufnahmen</string>
+    <string name="app_shortcuts_recordings_text">Zeigt alle Aufnahmen der App</string>
+    <string name="app_shortcuts_open_last_played">Zuletzt wiedergegebenes Element</string>
+    <string name="app_shortcuts_open_last_played_text">Öffnet die zuletzt wiedergegebene Audiodatei</string>
+</resources>

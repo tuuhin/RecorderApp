@@ -29,9 +29,9 @@ import com.eva.feature_settings.composables.transcribe.TranscribeSettingsTabCont
 import com.eva.feature_settings.utils.AudioSettingsEvent
 import com.eva.feature_settings.utils.FileSettingsChangeEvent
 import com.eva.feature_settings.utils.SettingsTabs
+import com.eva.feature_settings.utils.SpeechToTextUIModel
 import com.eva.feature_settings.utils.TranscriptionSettingsEvents
 import com.eva.recordings.domain.models.DeviceTotalStorageModel
-import com.eva.transcribe.domain.models.STTModel
 import com.eva.ui.R
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.ui.utils.LocalSnackBarProvider
@@ -41,89 +41,89 @@ import kotlinx.collections.immutable.toImmutableList
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AudioSettingsScreen(
-	audioSettings: RecorderAudioSettings,
-	fileSettings: RecorderFileSettings,
-	transcriptionSettings: TranscriptionSettings,
-	sttModels: ImmutableList<STTModel>,
-	onTranscriptionSettingChange: (TranscriptionSettingsEvents) -> Unit,
-	onFileSettingsChange: (FileSettingsChangeEvent) -> Unit,
-	onAudioSettingsChange: (AudioSettingsEvent) -> Unit,
-	modifier: Modifier = Modifier,
-	initialTab: SettingsTabs = SettingsTabs.AUDIO_SETTINGS,
-	storageModel: DeviceTotalStorageModel = DeviceTotalStorageModel(),
-	navigation: @Composable () -> Unit = {},
-	onNavigateToInfo: () -> Unit = {},
+    audioSettings: RecorderAudioSettings,
+    fileSettings: RecorderFileSettings,
+    transcriptionSettings: TranscriptionSettings,
+    sttModels: ImmutableList<SpeechToTextUIModel>,
+    onTranscriptionSettingChange: (TranscriptionSettingsEvents) -> Unit,
+    onFileSettingsChange: (FileSettingsChangeEvent) -> Unit,
+    onAudioSettingsChange: (AudioSettingsEvent) -> Unit,
+    modifier: Modifier = Modifier,
+    initialTab: SettingsTabs = SettingsTabs.AUDIO_SETTINGS,
+    storageModel: DeviceTotalStorageModel = DeviceTotalStorageModel(),
+    navigation: @Composable () -> Unit = {},
+    onNavigateToInfo: () -> Unit = {},
 ) {
 
-	val snackBarProvider = LocalSnackBarProvider.current
-	val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior ()
+    val snackBarProvider = LocalSnackBarProvider.current
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-	Scaffold(
-		topBar = {
-			SettingsScreenTopAppbar(
-				navigation = navigation,
-				onNavigateToInfo = onNavigateToInfo,
-				scrollBehavior = scrollBehavior
-			)
-		},
-		snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
-		modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-	) { scPadding ->
-		SettingsTabContent(
-			initialTab = initialTab,
-			audioSettings = {
-				AudioSettingsTabContent(
-					settings = audioSettings,
-					onEvent = onAudioSettingsChange,
-					contentPadding = PaddingValues(all = dimensionResource(R.dimen.sc_padding)),
-				)
-			},
-			filesSettings = {
-				FileSettingsTabContent(
-					settings = fileSettings,
-					model = storageModel,
-					onEvent = onFileSettingsChange,
-					contentPadding = PaddingValues(all = dimensionResource(R.dimen.sc_padding)),
-				)
-			},
-			transcriptionSettings = {
-				TranscribeSettingsTabContent(
-					sttModels = sttModels,
-					onEvent = onTranscriptionSettingChange,
-					settings = transcriptionSettings,
-					contentPadding = PaddingValues(dimensionResource(R.dimen.sc_padding))
-				)
-			},
-			contentPadding = scPadding,
-			modifier = Modifier.fillMaxSize(),
-		)
-	}
+    Scaffold(
+        topBar = {
+            SettingsScreenTopAppbar(
+                navigation = navigation,
+                onNavigateToInfo = onNavigateToInfo,
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        snackbarHost = { SnackbarHost(hostState = snackBarProvider) },
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    ) { scPadding ->
+        SettingsTabContent(
+            initialTab = initialTab,
+            audioSettings = {
+                AudioSettingsTabContent(
+                    settings = audioSettings,
+                    onEvent = onAudioSettingsChange,
+                    contentPadding = PaddingValues(all = dimensionResource(R.dimen.sc_padding)),
+                )
+            },
+            filesSettings = {
+                FileSettingsTabContent(
+                    settings = fileSettings,
+                    model = storageModel,
+                    onEvent = onFileSettingsChange,
+                    contentPadding = PaddingValues(all = dimensionResource(R.dimen.sc_padding)),
+                )
+            },
+            transcriptionSettings = {
+                TranscribeSettingsTabContent(
+                    sttModels = sttModels,
+                    onEvent = onTranscriptionSettingChange,
+                    settings = transcriptionSettings,
+                    contentPadding = PaddingValues(dimensionResource(R.dimen.sc_padding)),
+                )
+            },
+            contentPadding = scPadding,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
 }
 
 
 private class SettingsTabPreviewParams :
-	CollectionPreviewParameterProvider<SettingsTabs>(SettingsTabs.entries)
+    CollectionPreviewParameterProvider<SettingsTabs>(SettingsTabs.entries)
 
 @Preview
 @Composable
 private fun AudioSettingsScreenPreview(
-	@PreviewParameter(SettingsTabPreviewParams::class)
-	initialTab: SettingsTabs,
+    @PreviewParameter(SettingsTabPreviewParams::class)
+    initialTab: SettingsTabs,
 ) = RecorderAppTheme {
-	AudioSettingsScreen(
-		audioSettings = RecorderAudioSettings(),
-		fileSettings = RecorderFileSettings(),
-		transcriptionSettings = TranscriptionSettings(),
-		sttModels = SettingsPreviewFakes.STT_MODELS_LIST.toImmutableList(),
-		onTranscriptionSettingChange = {},
-		onAudioSettingsChange = {},
-		onFileSettingsChange = {},
-		initialTab = initialTab,
-		navigation = {
-			Icon(
-				imageVector = Icons.AutoMirrored.Default.ArrowBack,
-				contentDescription = stringResource(R.string.back_arrow)
-			)
-		},
-	)
+    AudioSettingsScreen(
+        audioSettings = RecorderAudioSettings(),
+        fileSettings = RecorderFileSettings(),
+        transcriptionSettings = TranscriptionSettings(),
+        sttModels = SettingsPreviewFakes.STT_MODELS_LIST.toImmutableList(),
+        onTranscriptionSettingChange = {},
+        onAudioSettingsChange = {},
+        onFileSettingsChange = {},
+        initialTab = initialTab,
+        navigation = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                contentDescription = stringResource(R.string.back_arrow),
+            )
+        },
+    )
 }
