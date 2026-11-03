@@ -1,5 +1,6 @@
 package com.eva.feature_settings
 
+import com.eva.feature_settings.utils.SpeechToTextUIModel
 import com.eva.transcribe.domain.models.STTModel
 
 internal object SettingsPreviewFakes {
@@ -21,11 +22,13 @@ internal object SettingsPreviewFakes {
             name = "bn",
             displayName = "Bangla",
         ),
-    )
+    ).map { SpeechToTextUIModel(it) }
 
-    val STT_MODEL = STTModel(
-        modelId = "Custom model 01",
-        name = "English",
-        displayName = "English",
+    val STT_MODEL = SpeechToTextUIModel(
+        STTModel(
+            modelId = "Custom model 01",
+            name = "English",
+            displayName = "English",
+        ),
     )
 }
