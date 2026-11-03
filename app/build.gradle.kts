@@ -18,8 +18,8 @@ android {
 		applicationId = "com.eva.recorderapp"
 		minSdk = libs.versions.android.minSdk.get().toInt()
 		targetSdk = libs.versions.android.compileSdk.get().toInt()
-		versionCode = 15
-		versionName = "1.5.0-beta1"
+        versionCode = 16
+        versionName = "1.5.0"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -136,11 +136,10 @@ fun NamedDomainObjectContainer<out ApkSigningConfig>.createReleaseConfig() {
     if (storePassword.isNullOrBlank()) storePassword = System.getenv("STORE_PASSWORD")
 
     // finally search for the jks file
-    val jksFile = project.layout.files(storeFileName)
-        .firstOrNull()
+    val jksFile = storeFileName?.takeIf { it.isNotBlank() }?.let(project::file)
 
-    val propertiesOk = keyAlias.isNotBlank() && keyPassword.isNotBlank() && storePassword.isNotBlank()
-    val isJskFileOk = jksFile != null && jksFile.exists()
+    val propertiesOk = !keyAlias.isNullOrBlank() && !keyPassword.isNullOrBlank() && !storePassword.isNullOrBlank()
+    val isJskFileOk = jksFile?.exists() == true
 
     if (!propertiesOk || !isJskFileOk) return
 
