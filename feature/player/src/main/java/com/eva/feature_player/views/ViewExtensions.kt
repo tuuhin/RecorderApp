@@ -17,6 +17,8 @@ fun Canvas.drawGraph(
 	color: Int,
 	drawPoints: Boolean = true,
 	startIdx: Int = 0,
+    sourceStartIdx: Int = 0,
+    sourceEndIdx: Int = waves.size,
 	topPadding: Int = 0,
 	bottomPadding: Int = 0,
 	leftPadding: Int = 0,
@@ -30,7 +32,8 @@ fun Canvas.drawGraph(
 		isAntiAlias = true
 	}
 
-	for ((idx, value) in waves.withIndex()) {
+    for (idx in sourceStartIdx.coerceIn(0, waves.size) until sourceEndIdx.coerceIn(0, waves.size)) {
+        val value = waves[idx]
 		val actualIndex = startIdx + idx
 		val sizeFactor = value * .8f
 		val xAxis = leftPadding + spikesWidth * actualIndex
@@ -71,8 +74,10 @@ fun Canvas.drawTimeLine(
 	topPadding: Int = 0,
 	bottomPadding: Int = 0,
 	leftPadding: Int = 0,
+    visibleStartMillis: Long = 0L,
+    visibleEndMillis: Long = Long.MAX_VALUE,
 ) {
-	val durationAsMillis = (totalDurationInMillis + 2 * 1_000).toInt()
+    val durationAsMillis = totalDurationInMillis.coerceIn(0L, Long.MAX_VALUE - 2_000L) + 2_000L
 	val spacing = spikesWidth / sampleSize
 
 	val paintThick = Paint().apply {
@@ -97,9 +102,11 @@ fun Canvas.drawTimeLine(
 		this.typeface = typeface
 	}
 
-	repeat(durationAsMillis) { millis ->
+    var millis = (visibleStartMillis.coerceAtLeast(0L) / 500L) * 500L
+    val lastMillis = minOf(durationAsMillis, visibleEndMillis.coerceAtLeast(0L))
+    while (millis <= lastMillis) {
 		val xAxis = millis * spacing + leftPadding
-		if (millis % 2000 == 0) {
+        if (millis % 2000L == 0L) {
 			val time = millis.milliseconds
 			val minutes = time.inWholeMinutes
 			val seconds = (time.inWholeSeconds % 60)
@@ -110,13 +117,13 @@ fun Canvas.drawTimeLine(
 
 			drawLine(xAxis, topPadding.toFloat(), xAxis, topPadding + dpToPx(8f), paintThick)
 			drawLine(
-				xAxis,
-				height - dpToPx(8f) - bottomPadding,
-				xAxis,
-				height.toFloat() - bottomPadding,
-				paintThick
-			)
-		} else if (millis % 500 == 0) {
+                xAxis,
+                height - dpToPx(8f) - bottomPadding,
+                xAxis,
+                height.toFloat() - bottomPadding,
+                paintThick,
+            )
+        } else if (millis % 500L == 0L) {
 			drawLine(xAxis, topPadding.toFloat(), xAxis, topPadding + dpToPx(4f), paintLight)
 			drawLine(
 				xAxis,
@@ -126,6 +133,8 @@ fun Canvas.drawTimeLine(
 				paintLight
 			)
 		}
+        if (millis > Long.MAX_VALUE - 500L) break
+        millis += 500L
 	}
 }
 
@@ -149,6 +158,8 @@ fun Canvas.drawTimeLineWithBookMarks(
 	leftPadding: Int = 0,
 	topPadding: Int = 0,
 	bottomPadding: Int = 0,
+    visibleStartMillis: Long = 0L,
+    visibleEndMillis: Long = Long.MAX_VALUE,
 ) {
 	drawTimeLine(
 		totalDurationInMillis = totalDurationInMillis,
@@ -165,6 +176,8 @@ fun Canvas.drawTimeLineWithBookMarks(
 		topPadding = topPadding,
 		bottomPadding = bottomPadding,
 		leftPadding = leftPadding,
+        visibleStartMillis = visibleStartMillis,
+        visibleEndMillis = visibleEndMillis,
 	)
 
 	val spacing = spikesWidth / sampleSize
@@ -178,6 +191,7 @@ fun Canvas.drawTimeLineWithBookMarks(
 	}
 
 	bookMarks.forEach { timeInMillis ->
+        if (timeInMillis.toLong() !in visibleStartMillis..visibleEndMillis) return@forEach
 		val xAxis = timeInMillis * spacing + leftPadding
 
 		// Draw vertical line

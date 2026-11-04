@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -41,6 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 private fun AudioClipChip(
 	duration: Duration,
 	modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 	onMinus: (Duration) -> Unit = {},
 	onPlus: (Duration) -> Unit = {},
 	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -49,29 +51,29 @@ private fun AudioClipChip(
 	numberFontFamily: FontFamily? = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
 ) {
 	Row(
-		modifier = modifier,
+        modifier = modifier.alpha(if (enabled) 1f else 0.38f),
 		verticalAlignment = Alignment.CenterVertically,
 		horizontalArrangement = Arrangement.spacedBy(4.dp),
 	) {
 		Box(
-			contentAlignment = Alignment.Center,
-			modifier = Modifier
-				.clip(
-					cornerShape.copy(
-						topStart = CornerSize(24.dp),
-						bottomStart = CornerSize(24.dp)
-					),
-				)
-				.clickable(onClick = { onMinus(duration - 1.seconds) })
-				.background(
-					color = containerColor,
-					shape = cornerShape.copy(
-						topStart = CornerSize(24.dp),
-						bottomStart = CornerSize(24.dp)
-					)
-				)
-				.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
-		) {
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .clip(
+                    cornerShape.copy(
+                        topStart = CornerSize(24.dp),
+                        bottomStart = CornerSize(24.dp)
+                    ),
+                )
+                .clickable(enabled = enabled, onClick = { onMinus(duration - 1.seconds) })
+                .background(
+                    color = containerColor,
+                    shape = cornerShape.copy(
+                        topStart = CornerSize(24.dp),
+                        bottomStart = CornerSize(24.dp)
+                    )
+                )
+                .sizeIn(minWidth = 32.dp, minHeight = 32.dp),
+        ) {
 			Icon(
 				imageVector = Icons.Default.Remove,
 				contentDescription = "Subtract  Action",
@@ -83,9 +85,9 @@ private fun AudioClipChip(
 		Box(
 			contentAlignment = Alignment.Center,
 			modifier = Modifier
-				.clip(cornerShape)
-				.background(color = containerColor, shape = cornerShape)
-				.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
+                .clip(cornerShape)
+                .background(color = containerColor, shape = cornerShape)
+                .sizeIn(minWidth = 32.dp, minHeight = 32.dp)
 		) {
 			DurationText(
 				duration = duration,
@@ -97,24 +99,24 @@ private fun AudioClipChip(
 		}
 
 		Box(
-			contentAlignment = Alignment.Center,
-			modifier = Modifier
-				.clip(
-					cornerShape.copy(
-						topEnd = CornerSize(24.dp),
-						bottomEnd = CornerSize(24.dp)
-					),
-				)
-				.clickable(onClick = { onPlus(duration + 1.seconds) })
-				.background(
-					color = containerColor,
-					shape = cornerShape.copy(
-						topEnd = CornerSize(24.dp),
-						bottomEnd = CornerSize(24.dp)
-					)
-				)
-				.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
-		) {
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .clip(
+                    cornerShape.copy(
+                        topEnd = CornerSize(24.dp),
+                        bottomEnd = CornerSize(24.dp)
+                    ),
+                )
+                .clickable(enabled = enabled, onClick = { onPlus(duration + 1.seconds) })
+                .background(
+                    color = containerColor,
+                    shape = cornerShape.copy(
+                        topEnd = CornerSize(24.dp),
+                        bottomEnd = CornerSize(24.dp)
+                    )
+                )
+                .sizeIn(minWidth = 32.dp, minHeight = 32.dp),
+        ) {
 			Icon(
 				imageVector = Icons.Default.Add,
 				contentDescription = "Add Action",
@@ -132,6 +134,7 @@ internal fun AudioClipChipRow(
 	modifier: Modifier = Modifier,
 	minClipLength: Duration = AudioClipConfig.MIN_CLIP_DURATION,
 	clipConfig: AudioClipConfig? = null,
+    enabled: Boolean = true,
 ) {
 	val localClipConfig by remember(trackDuration, clipConfig) {
 		val supposeToBe = AudioClipConfig(0.milliseconds, trackDuration)
@@ -145,6 +148,7 @@ internal fun AudioClipChipRow(
 		// start clipper
 		AudioClipChip(
 			duration = localClipConfig.start,
+            enabled = enabled,
 			onPlus = { duration ->
 				if (duration <= trackDuration && localClipConfig.end - duration >= minClipLength)
 					onEvent(EditorScreenEvent.OnClipConfigChange(localClipConfig.copy(start = duration)))
@@ -157,6 +161,7 @@ internal fun AudioClipChipRow(
 		// end clipper
 		AudioClipChip(
 			duration = localClipConfig.end,
+            enabled = enabled,
 			onPlus = { duration ->
 				val newEnd = if (duration <= trackDuration) duration else trackDuration
 				onEvent(EditorScreenEvent.OnClipConfigChange(localClipConfig.copy(end = newEnd)))

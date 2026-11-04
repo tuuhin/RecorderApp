@@ -35,6 +35,7 @@ internal fun EditorTopBar(
 	navigation: @Composable () -> Unit = {},
 	scrollBehavior: TopAppBarScrollBehavior? = null,
 	isActionsEnabled: Boolean = true,
+    isEditingEnabled: Boolean = true,
 	state: UndoRedoState = UndoRedoState(),
 	onUndoAction: () -> Unit = {},
 	onRedoAction: () -> Unit = {},
@@ -67,27 +68,27 @@ internal fun EditorTopBar(
 					shape = MaterialTheme.shapes.medium,
 				) {
 					DropdownMenuItem(
-						text = { Text(text = stringResource(R.string.action_undo)) },
-						enabled = state.canUndo,
-						leadingIcon = {
-							Icon(
-								Icons.AutoMirrored.Filled.Undo,
-								contentDescription = "Undo Action"
-							)
-						},
-						onClick = onUndoAction
-					)
+                        text = { Text(text = stringResource(R.string.action_undo)) },
+                        enabled = isEditingEnabled && state.canUndo,
+                        leadingIcon = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Undo,
+                                contentDescription = "Undo Action"
+                            )
+                        },
+                        onClick = onUndoAction,
+                    )
 					DropdownMenuItem(
-						text = { Text(text = stringResource(R.string.action_redo)) },
-						enabled = state.canRedo,
-						leadingIcon = {
-							Icon(
-								Icons.AutoMirrored.Filled.Redo,
-								contentDescription = "Redo Action"
-							)
-						},
-						onClick = onRedoAction
-					)
+                        text = { Text(text = stringResource(R.string.action_redo)) },
+                        enabled = isEditingEnabled && state.canRedo,
+                        leadingIcon = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Redo,
+                                contentDescription = "Redo Action"
+                            )
+                        },
+                        onClick = onRedoAction,
+                    )
 				}
 			}
 		},

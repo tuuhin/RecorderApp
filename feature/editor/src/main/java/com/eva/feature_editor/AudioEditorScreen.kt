@@ -61,9 +61,9 @@ import com.eva.ui.animation.sharedTransitionSkipChildSize
 import com.eva.ui.theme.DownloadableFonts
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.ui.utils.LocalSnackBarProvider
-import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,18 +119,19 @@ internal fun AudioEditorScreen(
 	Scaffold(
 		topBar = {
 			EditorTopBar(
-				onExport = {
-					scope.launch { bottomSheetState.show() }
-						.invokeOnCompletion { showSheet = true }
-				},
-				scrollBehavior = scrollBehavior,
-				isActionsEnabled = isMediaEdited,
-				state = undoRedoState,
-				onRedoAction = { onEvent(EditorScreenEvent.OnRedoEdit) },
-				onUndoAction = { onEvent(EditorScreenEvent.OnUndoEdit) },
-				navigation = navigation,
-				modifier = Modifier.sharedTransitionSkipChildSize()
-			)
+                onExport = {
+                    scope.launch { bottomSheetState.show() }
+                        .invokeOnCompletion { showSheet = true }
+                },
+                scrollBehavior = scrollBehavior,
+                isActionsEnabled = isMediaEdited && isVisualsReady,
+                isEditingEnabled = isVisualsReady,
+                state = undoRedoState,
+                onRedoAction = { onEvent(EditorScreenEvent.OnRedoEdit) },
+                onUndoAction = { onEvent(EditorScreenEvent.OnUndoEdit) },
+                navigation = navigation,
+                modifier = Modifier.sharedTransitionSkipChildSize(),
+            )
 		},
 		snackbarHost = { SnackbarHost(snackBarHostProvider) },
 		modifier = modifier.sharedBoundsWrapper(
@@ -140,75 +141,77 @@ internal fun AudioEditorScreen(
 		),
 	) { scPadding ->
 		ContentStateAnimatedContainer(
-			loadState = loadState,
-			onSuccess = { model ->
-				PlayerDurationText(
-					track = {
-						val track = trackData()
-						if (track.allPositiveAndFinite) track
-						else PlayerTrackData(Duration.ZERO, model.duration)
-					},
-					fontFamily = DownloadableFonts.SPLINE_SANS_MONO_FONT_FAMILY,
-					modifier = Modifier.align(Alignment.TopCenter)
-				)
-				Column(
-					modifier = Modifier
-						.fillMaxWidth()
-						.align(Alignment.Center)
-						.offset(y = (-80).dp),
-					horizontalAlignment = Alignment.CenterHorizontally,
-					verticalArrangement = Arrangement.spacedBy(12.dp),
-				) {
-					PlayerTrimSelector(
-						graphData = graphData,
-						trackData = {
-							val track = trackData()
-							if (track.allPositiveAndFinite) track
-							else PlayerTrackData(Duration.ZERO, model.duration)
-						},
-						enabled = isVisualsReady,
-						clipConfig = clipConfig,
-						onClipConfigChange = { onEvent(EditorScreenEvent.OnClipConfigChange(it)) },
-						modifier = Modifier.fillMaxWidth(),
-						contentPadding = PaddingValues(
-							horizontal = dimensionResource(R.dimen.graph_card_padding),
-							vertical = dimensionResource(R.dimen.graph_card_padding_other)
-						)
-					)
-					AudioClipChipRow(
-						clipConfig = clipConfig,
-						onEvent = onEvent,
-						trackDuration = totalTrackDuration
-					)
-				}
-				Box(
-					modifier = Modifier
-						.heightIn(min = 180.dp)
-						.fillMaxWidth()
-						.align(Alignment.BottomCenter)
-						.offset(y = (-20).dp),
-					contentAlignment = Alignment.Center
-				) {
-					EditorActionsAndControls(
-						trackData = trackData,
-						isMediaPlaying = isPlaying,
-						onEvent = onEvent,
-						modifier = Modifier.fillMaxWidth()
-					)
-				}
-			},
-			onFailed = {
-				AudioFileNotFoundBox(
-					onNavigateToList = {},
-					modifier = Modifier.align(Alignment.Center)
-				)
-			},
-			modifier = Modifier
-				.padding(scPadding)
-				.padding(all = dimensionResource(id = R.dimen.sc_padding))
-				.sharedTransitionSkipChildSize()
-				.sharedTransitionSkipChildPosition()
-		)
+            loadState = loadState,
+            onSuccess = { model ->
+                PlayerDurationText(
+                    track = {
+                        val track = trackData()
+                        if (track.allPositiveAndFinite) track
+                        else PlayerTrackData(Duration.ZERO, model.duration)
+                    },
+                    fontFamily = DownloadableFonts.SPLINE_SANS_MONO_FONT_FAMILY,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.Center)
+                        .offset(y = (-80).dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    PlayerTrimSelector(
+                        graphData = graphData,
+                        trackData = {
+                            val track = trackData()
+                            if (track.allPositiveAndFinite) track
+                            else PlayerTrackData(Duration.ZERO, model.duration)
+                        },
+                        enabled = isVisualsReady,
+                        clipConfig = clipConfig,
+                        onClipConfigChange = { onEvent(EditorScreenEvent.OnClipConfigChange(it)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(
+                            horizontal = dimensionResource(R.dimen.graph_card_padding),
+                            vertical = dimensionResource(R.dimen.graph_card_padding_other)
+                        )
+                    )
+                    AudioClipChipRow(
+                        clipConfig = clipConfig,
+                        onEvent = onEvent,
+                        trackDuration = totalTrackDuration,
+                        enabled = isVisualsReady,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .heightIn(min = 180.dp)
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .offset(y = (-20).dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EditorActionsAndControls(
+                        trackData = trackData,
+                        isMediaPlaying = isPlaying,
+                        onEvent = onEvent,
+                        isEditingEnabled = isVisualsReady,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            onFailed = {
+                AudioFileNotFoundBox(
+                    onNavigateToList = {},
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            },
+            modifier = Modifier
+                .padding(scPadding)
+                .padding(all = dimensionResource(id = R.dimen.sc_padding))
+                .sharedTransitionSkipChildSize()
+                .sharedTransitionSkipChildPosition(),
+        )
 	}
 }
 
