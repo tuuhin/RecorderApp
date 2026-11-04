@@ -1,13 +1,12 @@
 package com.eva.utils
 
 object NavDeepLinks {
-	private const val BASE_URI = "app://com.eva.recorderapp"
+    private const val BASE_URI = "app://com.eva.recorderapp"
 
-	const val RECORDER_DESTINATION_PATTERN = BASE_URI
-	const val RECORDING_DESTINATION_PATTERN = "$BASE_URI/recordings"
+    const val RECORDER_DESTINATION_PATTERN = BASE_URI
+    const val RECORDING_DESTINATION_PATTERN = "$BASE_URI/recordings"
 
-	const val PLAYER_DESTINATION_PATTERN = "$BASE_URI/player/{audioId}"
+    const val PLAYER_DESTINATION_PATTERN = "$BASE_URI/player/{audioId}?show_actions={actions}"
 
-
-	fun audioPlayerDestinationUri(id: Long) = (BASE_URI + "/player" + "/${id}")
+    fun audioPlayerDestinationUri(id: Long) = BASE_URI + "/player" + "/${id}" + "?show_actions=true"
 }

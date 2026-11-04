@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="categories_create_success">Kategori Başarıyla Oluşturuldu</string>
+  <string name="categories_deleted">Silinen Kategoriler</string>
+  <string name="recordings_add_to_favourite_success">Favorilere eklendi</string>
+  <string name="recordings_remove_favourite_failed">Favorilerden kaldırıldı</string>
+  <string name="recording_delete_request_success">Kayıtlar Başarıyla Silindi</string>
+  <string name="recording_delete_request_failed">Silme isteği başarısız oldu</string>
+  <string name="rename_recording_success">Kayıt Başarıyla Yeniden Adlandırıldı</string>
+  <string name="restore_recordings_success">Seçilen Kayıtlar Geri Yüklendi</string>
+  <string name="recording_restore_request_failed">Geri yükleme başarısız oldu</string>
+  <string name="recording_trash_request_success">Kayıtlar Çöp Kutusuna Taşındı</string>
+  <string name="recording_trash_request_failed">Kayıtlar çöp kutusuna taşınamadı</string>
+</resources>

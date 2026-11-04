@@ -5,11 +5,11 @@ import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.editor.domain.model.AudioEditAction
 import io.mockk.every
 import io.mockk.mockkStatic
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
-import org.junit.Test
-import kotlin.test.BeforeTest
-import kotlin.test.assertEquals
 
 class UpdateArrayViaConfigsTest {
 

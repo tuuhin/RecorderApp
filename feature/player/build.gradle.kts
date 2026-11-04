@@ -12,8 +12,7 @@ android {
 }
 
 dependencies {
-
-	//navigation
+    //navigation
 	implementation(libs.androidx.navigation.compose)
 	implementation(libs.androidx.hilt.navigation.compose)
 
@@ -29,4 +28,6 @@ dependencies {
 
 	// feature
 	implementation(project(":feature:player-shared"))
+    // ui test for the player
+    androidTestImplementation(libs.androidx.ui.test.junit4)
 }

@@ -1,11 +1,13 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.android.build.api.dsl.ApkSigningConfig
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
 	alias(libs.plugins.android.application)
 	// custom plugins
 	alias(libs.plugins.recorderapp.hilt)
 	alias(libs.plugins.recorderapp.compose.compiler)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 android {
@@ -17,8 +19,8 @@ android {
 		applicationId = "com.eva.recorderapp"
 		minSdk = libs.versions.android.minSdk.get().toInt()
 		targetSdk = libs.versions.android.compileSdk.get().toInt()
-		versionCode = 15
-		versionName = "1.5.0-beta1"
+        versionCode = 16
+        versionName = "1.5.0"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -27,52 +29,31 @@ android {
 	}
 
 	androidResources {
-		localeFilters.addAll(setOf("bn", "hi"))
+        localeFilters.addAll(setOf("bn", "hi", "tr", "es", "de"))
 	}
 
-	signingConfigs {
-		// find if there is a properties file
-		val keySecretFile = rootProject.file("keystore.properties")
-		if (!keySecretFile.exists()) return@signingConfigs
-
-		// load the properties
-		val properties = Properties()
-		keySecretFile.inputStream().use { properties.load(it) }
-
-		val userHome = System.getProperty("user.home")
-		val storeFileName = properties.getProperty("STORE_FILE_NAME")
-
-		val keyStoreFolder = File(userHome, "keystore")
-		if (!keyStoreFolder.exists()) return@signingConfigs
-
-		val keyStoreFile = File(keyStoreFolder, storeFileName)
-		if (!keyStoreFile.exists()) return@signingConfigs
-
-		create("release") {
-			storeFile = keyStoreFile
-			keyAlias = properties.getProperty("KEY_ALIAS")
-			keyPassword = properties.getProperty("KEY_PASSWORD")
-			storePassword = properties.getProperty("STORE_PASSWORD")
-		}
-	}
+    signingConfigs {
+        createReleaseConfig()
+    }
 
 	buildTypes {
-		release {
-			isMinifyEnabled = true
-			applicationIdSuffix = ".release"
-			isShrinkResources = true
-			multiDexEnabled = true
-			// change the signing config if release is not found
-			signingConfig = signingConfigs.findByName("release")
-			proguardFiles(
-				getDefaultProguardFile("proguard-android-optimize.txt"),
-				"proguard-rules.pro"
-			)
-		}
+        release {
+            optimization {
+                enable = true
+            }
+            // using the release config if not configured unsigned apk
+            signingConfig = signingConfigs.findByName("release")
+        }
 		debug {
 			applicationIdSuffix = ".debug"
 			resValue("string", "app_name", "RecorderApp (DEBUG)")
 		}
+
+        create("benchmark") {
+            initWith(buildTypes.getByName("release"))
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+        }
 	}
 	compileOptions {
 		sourceCompatibility = JavaVersion.VERSION_17
@@ -96,6 +77,12 @@ kotlin {
 	}
 }
 
+baselineProfile {
+    // one merged profile for every variant (release + benchmark),
+    // output to src/main/generated/baselineProfiles
+    mergeIntoMain = true
+}
+
 dependencies {
 
 	implementation(libs.androidx.core.ktx)
@@ -103,6 +90,8 @@ dependencies {
 	implementation(libs.androidx.core.splashscreen)
 	implementation(libs.work.runtime.ktx)
 	implementation(libs.androidx.hilt.work)
+    // profile
+    implementation(libs.androidx.profileinstaller)
 
 	implementation(project(":core:utils"))
 	implementation(project(":core:ui"))
@@ -116,7 +105,50 @@ dependencies {
 	implementation(project(":feature:settings"))
 	implementation(project(":feature:widget"))
 	implementation(project(":feature:onboarding"))
-
 	// android testing
 	androidTestImplementation(libs.androidx.runner)
+    // baseline profile producer module
+    baselineProfile(project(":baselineprofile"))
+}
+
+
+fun NamedDomainObjectContainer<out ApkSigningConfig>.createReleaseConfig() {
+    val keySecretFile = project.file("keystore.properties")
+
+    var storeFileName: String? = null
+    var keyAlias: String? = null
+    var keyPassword: String? = null
+    var storePassword: String? = null
+
+    // first check if keystore exists in the root project
+    if (keySecretFile.exists()) {
+        val properties = Properties()
+        keySecretFile.inputStream().use { properties.load(it) }
+        storeFileName = properties.getProperty("STORE_FILE_NAME")
+        keyAlias = properties.getProperty("KEY_ALIAS")
+        keyPassword = properties.getProperty("KEY_PASSWORD")
+        storePassword = properties.getProperty("STORE_PASSWORD")
+    }
+
+    // if not found fallback to env
+    if (storeFileName.isNullOrBlank()) storeFileName = System.getenv("STORE_FILE_NAME")
+    if (keyAlias.isNullOrBlank()) keyAlias = System.getenv("KEY_ALIAS")
+    if (keyPassword.isNullOrBlank()) keyPassword = System.getenv("KEY_PASSWORD")
+    if (storePassword.isNullOrBlank()) storePassword = System.getenv("STORE_PASSWORD")
+
+    // finally search for the jks file
+    val jksFile = storeFileName?.takeIf { it.isNotBlank() }?.let(project::file)
+
+    val propertiesOk = !keyAlias.isNullOrBlank() && !keyPassword.isNullOrBlank() && !storePassword.isNullOrBlank()
+    val isJskFileOk = jksFile?.exists() == true
+
+    if (!propertiesOk || !isJskFileOk) return
+
+    // Create the release config
+    create("release") {
+        storeFile = jksFile
+        this.keyAlias = keyAlias
+        this.keyPassword = keyPassword
+        this.storePassword = storePassword
+    }
 }

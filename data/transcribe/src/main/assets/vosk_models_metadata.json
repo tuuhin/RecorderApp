@@ -1,22 +1,82 @@
 {
-  "models": [
-    {
-      "model": "vosk-model-small-en-in",
-      "locale": "en-IN",
-      "version": "0.4",
-      "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-en-in-0.4.zip"
-    },
-    {
-      "model": "vosk-model-small-en-us",
-      "locale": "en-US",
-      "version": "0.15",
-      "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
-    },
-    {
-      "model": "vosk-model-small-hi",
-      "locale": "hi-IN",
-      "version": "0.22",
-      "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-hi-0.22.zip"
-    }
-  ]
+    "models": [
+        {
+            "id": "vosk-en-in-small",
+            "name": "vosk-model-small-en-in",
+            "display_name": "English (India)",
+            "locale": "en-IN",
+            "version": "0.4",
+            "engine": "vosk",
+            "size_bytes": 37573330,
+            "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-en-in-0.4.zip",
+            "archive_format": "zip",
+            "checksum_sha256": "20663dcac4d5cb783a579c54d98339344a688e4ec6e1b4a4b059fd1235454cc7",
+            "license": "Apache-2.0"
+        },
+        {
+            "id": "vosk-en-us-small",
+            "name": "vosk-model-small-en-us",
+            "display_name": "English (US)",
+            "locale": "en-US",
+            "version": "0.15",
+            "engine": "vosk",
+            "size_bytes": 41205931,
+            "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip",
+            "archive_format": "zip",
+            "checksum_sha256": "30f26242c4eb449f948e42cb302dd7a686cb29a3423a8367f99ff41780942498",
+            "license": "Apache-2.0"
+        },
+        {
+            "id": "vosk-hi-small",
+            "name": "vosk-model-small-hi",
+            "display_name": "Hindi",
+            "locale": "hi-IN",
+            "version": "0.22",
+            "engine": "vosk",
+            "size_bytes": 44458845,
+            "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-hi-0.22.zip",
+            "archive_format": "zip",
+            "checksum_sha256": "7c50a10866889f0ac21d912c20537a055a597ed09fc1d3e5bcd798f9f0017e48",
+            "license": "Apache-2.0"
+        },
+        {
+            "id": "vosk-tr-small",
+            "name": "vosk-model-small-tr",
+            "display_name": "Turkish",
+            "locale": "tr",
+            "version": "0.3",
+            "engine": "vosk",
+            "size_bytes": 36855784,
+            "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-tr-0.3.zip",
+            "archive_format": "zip",
+            "checksum_sha256": "8c8d07cec1bce31add14967c16891c84152cdf76d391e33c08278119b9ea96e5",
+            "license": "Apache-2.0"
+        },
+        {
+            "id": "vosk-es-small",
+            "name": "vosk-model-small-es",
+            "display_name": "Spanish",
+            "locale": "es-ES",
+            "version": "0.42",
+            "engine": "vosk",
+            "size_bytes": 39817833,
+            "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip",
+            "archive_format": "zip",
+            "checksum_sha256": "09b239888f633ef2f0b4e09736e3d9936acfd810bc65d53fad45261762c6511f",
+            "license": "Apache-2.0"
+        },
+        {
+            "id": "vosk-de-small",
+            "name": "vosk-model-small-de",
+            "display_name": "German",
+            "locale": "de-DE",
+            "version": "0.15",
+            "engine": "vosk",
+            "size_bytes": 46499967,
+            "model_uri": "https://alphacephei.com/vosk/models/vosk-model-small-de-0.15.zip",
+            "archive_format": "zip",
+            "checksum_sha256": "b7e53c90b1f0a38456f4cd62b366ecd58803cd97cd42b06438e2c131713d5e43",
+            "license": "Apache-2.0"
+        }
+    ]
 }

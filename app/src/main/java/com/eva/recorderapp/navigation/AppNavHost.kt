@@ -1,6 +1,5 @@
 package com.eva.recorderapp.navigation
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -28,8 +27,6 @@ import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.utils.LocalSharedTransitionScopeProvider
 import com.eva.ui.utils.LocalSnackBarProvider
 
-
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavHost(
 	modifier: Modifier = Modifier,

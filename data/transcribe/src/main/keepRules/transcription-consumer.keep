@@ -1,0 +1,7 @@
+# Vosk Speech-to-Text dynamic JNI bindings
+-keep class org.vosk.** { *; }
+-keepclassmembers class org.vosk.** { *; }
+
+# Java Native Access (JNA) reflection and dynamic dispatch
+-keep class com.sun.jna.** { *; }
+-dontwarn com.sun.jna.**

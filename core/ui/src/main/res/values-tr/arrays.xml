@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array name="onboarding_page_features">
+    <item>Tek dokunuşla yüksek kaliteli ses kaydedin</item>
+    <item>Kontrollerle kayıtlarınızı kolayca oynatın</item>
+    <item>Kayıtları hassas bir şekilde kırpın ve kesin</item>
+    <item>Ses kayıtlarınızı düzenli ve erişilebilir tutun</item>
+  </string-array>
+</resources>

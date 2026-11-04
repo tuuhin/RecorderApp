@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="share_audio_extra_subject">Kaydedilen ses dosyaları paylaşılıyor</string>
+  <string name="share_intent_choose_title">Dosyaları paylaşmak için bir uygulama seçin</string>
+  <string name="sharing_bookmarks">Yer işaretleri paylaşılıyor</string>
+  <string name="app_shortcuts_recordings">Kayıtlar</string>
+  <string name="app_shortcuts_recordings_text">Uygulamanın tüm kayıtlarını gösterir</string>
+  <string name="app_shortcuts_open_last_played">Son Çalınan Öğe</string>
+  <string name="app_shortcuts_open_last_played_text">Son çalınan ses dosyasını açar</string>
+</resources>

@@ -9,102 +9,91 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
-	override fun apply(project: Project) {
-		project.addPlugins()
-		project.configureLibrary()
-		project.configureCompileOptions()
-		project.addDependencies()
-	}
+    override fun apply(project: Project) {
+        project.addPlugins()
+        project.configureLibrary()
+        project.configureCompileOptions()
+        project.addDependencies()
+    }
 
-	private fun Project.addPlugins() = plugins.apply {
-		val aliases = listOf("android.library")
-		aliases.forEach {
-			catalog.findPlugin(it).ifPresent { libraryProvider ->
-				val plugin = libraryProvider.get()
-				apply(plugin.pluginId)
-			}
-		}
-	}
+    private fun Project.addPlugins() = plugins.apply {
+        val aliases = listOf("android.library")
+        aliases.forEach {
+            catalog.findPlugin(it).ifPresent { libraryProvider ->
+                val plugin = libraryProvider.get()
+                apply(plugin.pluginId)
+            }
+        }
+    }
 
-	private fun Project.addDependencies() = dependencies.apply {
+    private fun Project.addDependencies() = dependencies.apply {
 
-		val implementations = listOf(
-			"androidx.core.ktx",
-			"androidx.lifecycle.runtime.ktx",
-			"androidx.activity.compose"
-		)
-		implementations.forEach {
-			catalog.findLibrary(it).ifPresent { dependency ->
-				add("implementation", dependency.get())
-			}
-		}
+        val implementations = listOf(
+            "androidx.core.ktx",
+            "androidx.lifecycle.runtime.ktx",
+            "androidx.activity.compose",
+        )
+        implementations.forEach {
+            catalog.findLibrary(it).ifPresent { dependency ->
+                add("implementation", dependency.get())
+            }
+        }
 
-		val testImplementations = listOf(
-			"junit",
-			"kotin.test.junit",
-			"kotlin.test",
-			"kotlinx.coroutines.test",
-			"turbine"
-		)
+        val testImplementations = listOf(
+            "junit",
+            "kotlin.test",
+            "kotlin.test.junit",
+            "kotlinx.coroutines.test",
+            "turbine",
+        )
 
-		testImplementations.forEach {
-			catalog.findLibrary(it).ifPresent { dependency ->
-				add("testImplementation", dependency.get())
-			}
-		}
+        testImplementations.forEach {
+            catalog.findLibrary(it).ifPresent { dependency ->
+                add("testImplementation", dependency.get())
+            }
+        }
 
-		val androidTestImplementations = listOf(
-			"androidx.junit",
-			"androidx.espresso.core",
-			"kotin.test.junit",
-			"kotlin.test",
-			"kotlinx.coroutines.test",
-			"turbine"
-		)
+        val androidTestImplementations = listOf(
+            "androidx.junit",
+            "androidx.espresso.core",
+            "kotin.test.junit",
+            "kotlin.test",
+            "kotlinx.coroutines.test",
+            "turbine",
+        )
 
-		androidTestImplementations.forEach {
-			catalog.findLibrary(it).ifPresent { dependency ->
-				add("androidTestImplementation", dependency.get())
-			}
-		}
-		// include the testing runtime module
-		if (findProject(":testing:runtime") != null) {
-			add("androidTestImplementation", project(":testing:runtime"))
-		}
-	}
+        androidTestImplementations.forEach {
+            catalog.findLibrary(it).ifPresent { dependency ->
+                add("androidTestImplementation", dependency.get())
+            }
+        }
+        // include the testing runtime module
+        if (findProject(":testing:runtime") != null) {
+            add("androidTestImplementation", project(":testing:runtime"))
+        }
+    }
 
-	private fun Project.configureLibrary() = extensions.configure<LibraryExtension> {
+    private fun Project.configureLibrary() = extensions.configure<LibraryExtension> {
 
-		compileSdk = catalog.findVersion("android.compileSdk").get().toString().toInt()
+        compileSdk = catalog.findVersion("android.compileSdk").get().toString().toInt()
 
-		defaultConfig {
-			minSdk = catalog.findVersion("android.minSdk").get().toString().toInt()
+        defaultConfig {
+            minSdk = catalog.findVersion("android.minSdk").get().toString().toInt()
+            testInstrumentationRunner = Constants.TEST_RUNNER_CLASS_NAME
 
-			testInstrumentationRunner = Constants.TEST_RUNNER_CLASS_NAME
-			consumerProguardFiles("consumer-rules.pro")
-		}
+        }
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
+    }
 
-		buildTypes {
-			release {
-				isMinifyEnabled = false
-				proguardFiles(
-					getDefaultProguardFile("proguard-android-optimize.txt"),
-					"proguard-rules.pro"
-				)
-			}
-		}
-		compileOptions {
-			sourceCompatibility = JavaVersion.VERSION_17
-			targetCompatibility = JavaVersion.VERSION_17
-		}
-	}
-
-	private fun Project.configureCompileOptions() {
-		tasks.withType<KotlinCompile>().configureEach {
-			compilerOptions {
-				jvmTarget.set(JvmTarget.JVM_17)
-			}
-		}
-	}
+    private fun Project.configureCompileOptions() {
+        tasks.withType<KotlinCompile>().configureEach {
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_17)
+            }
+        }
+    }
 }
 

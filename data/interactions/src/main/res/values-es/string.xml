@@ -1,0 +1,9 @@
+<resources>
+    <string name="share_audio_extra_subject">Compartir archivos de audio grabados</string>
+    <string name="share_intent_choose_title">Selecciona una aplicación para compartir archivos</string>
+    <string name="sharing_bookmarks">Compartir marcadores</string>
+    <string name="app_shortcuts_recordings">Grabaciones</string>
+    <string name="app_shortcuts_recordings_text">Muestra todas las grabaciones de la aplicación</string>
+    <string name="app_shortcuts_open_last_played">Último elemento reproducido</string>
+    <string name="app_shortcuts_open_last_played_text">Abre el último archivo de audio reproducido</string>
+</resources>

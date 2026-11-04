@@ -19,10 +19,12 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.eva.editor.domain.model.AudioEditAction
@@ -45,6 +47,7 @@ private fun EditorActionsAndControls(
 	onPlay: () -> Unit,
 	onPause: () -> Unit,
 	onSeekEnd: () -> Unit = {},
+    isEditingEnabled: Boolean = true,
 	playButtonColor: Color = MaterialTheme.colorScheme.primary,
 	actionButtonColor: Color = MaterialTheme.colorScheme.secondary,
 ) {
@@ -67,6 +70,7 @@ private fun EditorActionsAndControls(
 				title = stringResource(R.string.action_cut),
 				text = stringResource(R.string.tooltip_text_editor_cut),
 				onClick = onCutMedia,
+                enabled = isEditingEnabled,
 				containerColor = actionButtonColor,
 			) {
 				Icon(
@@ -84,6 +88,7 @@ private fun EditorActionsAndControls(
 				title = stringResource(R.string.action_crop),
 				text = stringResource(R.string.tooltip_text_editor_crop),
 				onClick = onCropMedia,
+                enabled = isEditingEnabled,
 				containerColor = actionButtonColor,
 			) {
 				Icon(
@@ -101,6 +106,7 @@ private fun SecondaryActions(
 	title: String,
 	text: String,
 	onClick: () -> Unit,
+    enabled: Boolean = true,
 	containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
 	contentDescription: String? = null,
 	action: @Composable () -> Unit,
@@ -130,12 +136,15 @@ private fun SecondaryActions(
 			state = rememberTooltipState(),
 		) {
 			SmallFloatingActionButton(
-				onClick = onClick,
-				shape = CircleShape,
-				containerColor = containerColor,
-				contentColor = contentColorFor(containerColor),
-				elevation = FloatingActionButtonDefaults.loweredElevation()
-			) {
+                onClick = { if (enabled) onClick() },
+                modifier = Modifier
+                    .alpha(if (enabled) 1f else 0.38f)
+                    .semantics { if (!enabled) disabled() },
+                shape = CircleShape,
+                containerColor = containerColor,
+                contentColor = contentColorFor(containerColor),
+                elevation = FloatingActionButtonDefaults.loweredElevation(),
+            ) {
 				action()
 			}
 		}
@@ -152,11 +161,13 @@ internal fun EditorActionsAndControls(
 	isMediaPlaying: Boolean,
 	onEvent: (EditorScreenEvent) -> Unit,
 	modifier: Modifier = Modifier,
+    isEditingEnabled: Boolean = true,
 ) {
 	EditorActionsAndControls(
 		isItemPlaying = isMediaPlaying,
 		trackData = trackData,
 		modifier = modifier,
+        isEditingEnabled = isEditingEnabled,
 		onSeek = { onEvent(EditorScreenEvent.OnSeekTrack(it)) },
 		onPlay = { onEvent(EditorScreenEvent.PlayAudio) },
 		onPause = { onEvent(EditorScreenEvent.PauseAudio) },

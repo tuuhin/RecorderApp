@@ -11,31 +11,28 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.extractor.ExtractorsFactory
 import androidx.media3.inspector.MediaExtractorCompat
+import com.com.visualizer.data.ext.MediaCodecState
+import com.com.visualizer.data.ext.channels
+import com.com.visualizer.data.ext.duration
+import com.com.visualizer.data.ext.isEndOfStream
+import com.com.visualizer.data.ext.mimeType
+import com.com.visualizer.data.ext.pcmEncoding
+import com.com.visualizer.data.ext.sampleRate
 import com.com.visualizer.domain.exception.InvalidMimeTypeException
 import com.com.visualizer.domain.exception.MediaExtractorException
 import com.com.visualizer.utils.isThreadAlive
-import com.com.visualizer.utils.safePOST
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
-import java.nio.ByteOrder
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.nio.ByteBuffer
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.concurrent.atomics.plusAssign
-import kotlin.math.sqrt
+import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 
 private const val CODEC_TAG = "CODEC_CALLBACK"
 private const val PROCESSING_TAG = "CODEC_PROCESSING"
@@ -44,382 +41,378 @@ private const val EXTRACTOR_TAG = "MEDIA_EXTRACTOR"
 @UnstableApi
 @OptIn(ExperimentalAtomicApi::class)
 internal class MediaCodecPCMDataDecoder(
-	private val seekDurationMillis: Int,
-	private val handler: Handler? = null,
+    private val seekDurationMillis: Int,
+    private val handler: Handler? = null,
 ) : MediaCodec.Callback() {
 
-	val ioDispatcher = Dispatchers.IO.limitedParallelism(1)
+    private val ioDispatcher = Dispatchers.IO.limitedParallelism(1)
 
-	@Volatile
-	private var _mediaCodec: MediaCodec? = null
+    @Volatile
+    private var _mediaCodec: MediaCodec? = null
 
-	@Volatile
-	private var _extractor: MediaExtractorCompat? = null
+    @Volatile
+    private var _extractor: MediaExtractorCompat? = null
 
-	@Volatile
-	private var _codecState = MediaCodecState.RELEASED
+    @Volatile
+    private var _codecState = MediaCodecState.RELEASED
 
-	private val _codecList by lazy { MediaCodecList(MediaCodecList.REGULAR_CODECS) }
+    private val _codecList by lazy { MediaCodecList(MediaCodecList.REGULAR_CODECS) }
 
-	private val _mutex = Mutex()
-	private val _scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-	private val _operations = ConcurrentLinkedQueue<Deferred<Float>>()
+    // callbacks
+    private var _onBufferDecoded: ((FloatArray) -> Unit)? = null
+    private var _onDecodeComplete: (() -> Unit)? = null
+    private var _onDecodeFailure: ((Throwable) -> Unit)? = null
 
-	// callbacks
-	private var _onBufferDecoded: ((FloatArray) -> Unit)? = null
-	private var _onDecodeComplete: (() -> Unit)? = null
+    // number of points buffered before a batch is emitted, sized per run
+    // from the length of the track
+    private var _batchSize = 1
 
-	// need to play with the size to get the optimal results
-	private val batchSize = 50
+    // accumulates the RMS of each decoded window before emitting a batch
+    private var _batch = FloatArray(1)
+    private var _batchedPoints = 0
 
-	// time constraints
-	private val _currentTimeInMs = AtomicLong(0L)
-	private val _totalTimeInMs = AtomicLong(0L)
+    private val _accumulator = PcmWindowAccumulator(seekDurationMillis, ::emitWindowPoint)
 
-	// flags
-	private val _isBatchProcessing = AtomicBoolean(false)
-	private var _isCleaningUp = AtomicBoolean(false)
+    // time constraints
+    private val _totalTimeInMs = AtomicLong(0L)
 
-	override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
-		// clean up is called thus no more processing
-		if (_isCleaningUp.load()) {
-			Log.i(CODEC_TAG, "IGNORING READING INPUT CALLBACK ")
-			return
-		}
-		try {
-			// codec state is non exec means work is done return END_OF_STREAM
-			if (_codecState != MediaCodecState.EXEC) {
-				Log.w(PROCESSING_TAG, "WRONG CODEC STATE")
-				codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-				return
-			}
-			// if timeInMs is greater than totalTime+extra return END_OF_STREAM
-			if (_currentTimeInMs.load() >= _totalTimeInMs.load() + seekDurationMillis) {
-				Log.i(PROCESSING_TAG, "TOTAL TIME HAS REACHED SENDING END OF STREAM")
-				codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-				return
-			}
-		} catch (e: Exception) {
-			Log.e(PROCESSING_TAG, "UNABLE TO SEND EOS FLAG", e)
-		}
+    // flags
+    private var _isCleaningUp = AtomicBoolean(false)
+    private val _failureReported = AtomicBoolean(false)
 
-		try {
-			// receive a buffer
-			if (index < 0) return
-			val inputBuffer = codec.getInputBuffer(index) ?: return
+    override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
+        // clean up is called thus no more processing
+        if (_isCleaningUp.load()) {
+            Log.i(CODEC_TAG, "IGNORING READING INPUT CALLBACK ")
+            return
+        }
+        if (_codecState != MediaCodecState.EXEC) {
+            reportFailure(IllegalStateException("Codec is not executing"))
+            return
+        }
 
-			val extractor = _extractor ?: run {
-				codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-				Log.w(EXTRACTOR_TAG, "EXTRACTOR RELEASED CANNOT CALCULATE")
-				return
-			}
-			// seek the extractor as we don't need extra data
-			extractor.seekTo(
-				_currentTimeInMs.load() * 1_000L,
-				MediaExtractorCompat.SEEK_TO_CLOSEST_SYNC
-			)
-			val sampleSize = extractor.readSampleData(inputBuffer, 0)
+        try {
+            // receive a buffer
+            if (index < 0) return
+            val inputBuffer = checkNotNull(codec.getInputBuffer(index)) { "Codec input buffer is unavailable" }
+            val extractor = checkNotNull(_extractor) { "Audio extractor is unavailable" }
 
-			// sample size is zero thus processing done END_OF_STREAM
-			if (sampleSize <= 0) {
-				codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-				Log.i(PROCESSING_TAG, "INPUT BUFFER :END OF INPUT STREAM")
-				return
-			}
+            // Feed every sample of the stream: compressed frames are not
+            // self-contained, mp3 and aac borrow bytes of earlier frames
+            // through the bit reservoir, so frames cannot be skipped on the
+            // input side without breaking to decode. The visualization
+            // windows are cut from the decoded output instead.
+            val sampleTimeUs = extractor.sampleTime
 
-			// advance the extractor to read the next sample if not END_OF_STREAM
-			if (!extractor.advance()) {
-				Log.d(PROCESSING_TAG, "CANNOT ADVANCE EXTRACTOR")
-				Log.d(PROCESSING_TAG, "INPUT BUFFER :END OF INPUT STREAM")
-				codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-			} else if (_codecState == MediaCodecState.EXEC) {
-				// update the current time
-				_currentTimeInMs.plusAssign(seekDurationMillis.toLong())
-				codec.queueInputBuffer(index, 0, sampleSize, extractor.sampleTime, 0)
-			}
-		} catch (e: MediaCodec.CodecException) {
-			Log.e(PROCESSING_TAG, "MEDIA CODEC EXCEPTION ${e.diagnosticInfo} ${e.errorCode} ", e)
-		} catch (e: IllegalStateException) {
-			Log.e(PROCESSING_TAG, "MEDIA CODEC IS NOT IN EXECUTION STATE", e)
-		}
-	}
+            // no more samples left in the stream
+            if (sampleTimeUs < 0) {
+                codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                Log.i(PROCESSING_TAG, "INPUT BUFFER :END OF INPUT STREAM")
+                return
+            }
+
+            val sampleSize = extractor.readSampleData(inputBuffer, 0)
+
+            // sample size is zero thus processing done END_OF_STREAM
+            if (sampleSize <= 0) {
+                codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                Log.i(PROCESSING_TAG, "INPUT BUFFER :END OF INPUT STREAM")
+                return
+            }
+
+            // advance the extractor for the next callback, the sample time
+            // was read before advancing so it belongs to the fed sample
+            extractor.advance()
+
+            codec.queueInputBuffer(index, 0, sampleSize, sampleTimeUs, 0)
+        } catch (e: MediaCodec.CodecException) {
+            Log.e(PROCESSING_TAG, "MEDIA CODEC EXCEPTION ${e.diagnosticInfo} ${e.errorCode} ", e)
+            reportFailure(e)
+        } catch (e: IllegalStateException) {
+            Log.e(PROCESSING_TAG, "MEDIA CODEC IS NOT IN EXECUTION STATE", e)
+            reportFailure(e)
+        } catch (e: Exception) {
+            Log.e(PROCESSING_TAG, "UNABLE TO READ AUDIO INPUT", e)
+            reportFailure(e)
+        }
+    }
 
 
-	override fun onOutputBufferAvailable(
-		codec: MediaCodec,
-		index: Int,
-		info: MediaCodec.BufferInfo
-	) {
-		// look is this cleaning up
-		if (_isCleaningUp.load()) {
-			Log.i(CODEC_TAG, "IGNORING PROCESSING OUTPUT CALLBACK")
-			return
-		}
-		// correct state or not
-		if (_codecState != MediaCodecState.EXEC) {
-			Log.w(PROCESSING_TAG, "WRONG STATE SHOULD BE EXEC FOUND :$_codecState")
-			return
-		}
-		// special case to handle end of stream
-		if (info.isEndOfStream) {
-			codec.stop()
-			_codecState = MediaCodecState.RELEASED
-			handleEndOfStream()
-			return
-		}
-		if (info.size > 0) {
-			try {
-				if (_codecState != MediaCodecState.EXEC) return
-				val outputBuffer = codec.getOutputBuffer(index) ?: return
-				outputBuffer.position(info.offset)
-				outputBuffer.rewind()
-				outputBuffer.order(ByteOrder.LITTLE_ENDIAN)
+    override fun onOutputBufferAvailable(
+        codec: MediaCodec,
+        index: Int,
+        info: MediaCodec.BufferInfo,
+    ) {
+        // look is this cleaning up
+        if (_isCleaningUp.load()) {
+            Log.i(CODEC_TAG, "IGNORING PROCESSING OUTPUT CALLBACK")
+            return
+        }
+        // correct state or not
+        if (_codecState != MediaCodecState.EXEC) {
+            reportFailure(IllegalStateException("Codec output arrived while not executing"))
+            return
+        }
+        try {
+            val outputBuffer = if (info.size > 0) codec.getOutputBuffer(index) else null
+            val format = if (info.size > 0) codec.outputFormat else null
+            // consume the accumulator codec output
+            _accumulator.consumeCodecOutput(outputBuffer, info, format)
+            // clear the buffer
+            codec.releaseOutputBuffer(index, false)
+            if (info.isEndOfStream) {
+                _isCleaningUp.store(true)
+                handleEndOfStream()
+            }
+        } catch (e: Exception) {
+            Log.e(PROCESSING_TAG, "UNABLE TO HANDLE THE OUTPUT BUFFER", e)
+            reportFailure(e)
+        }
+    }
 
-				val format = codec.outputFormat
-				val pcmEncoding = format.pcmEncoding
-				val channelCount = format.channels
-				val floatArray = outputBuffer.asFloatArray(info.size, pcmEncoding, channelCount)
-				handleFloatArray(floatArray)
+    override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+        if (_isCleaningUp.load()) return
+        Log.e(CODEC_TAG, "ERROR HAPPENED", e)
+        reportFailure(e)
+    }
 
-				// release the buffer as work is done
-				if (_codecState == MediaCodecState.EXEC)
-					codec.releaseOutputBuffer(index, false)
-			} catch (e: IllegalStateException) {
-				Log.e(PROCESSING_TAG, "WRONG STATE TO HANDLE THE OUTPUT BUFFERS", e)
-			}
-		}
-	}
+    override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+        if (format.keys.contains(MediaFormat.KEY_DURATION)) {
+            _totalTimeInMs.store(format.duration?.inWholeMilliseconds ?: 0L)
+        }
+        Log.d(CODEC_TAG, "MEDIA FORMAT CHANGED: KEYS:${format.keys}")
+    }
 
-	override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-		if (e.isRecoverable) codec.stop()
+    private fun emitWindowPoint(value: Float) {
+        _batch[_batchedPoints++] = value
+        if (_batchedPoints == _batchSize) flushBatch()
+    }
 
-		Log.e(CODEC_TAG, "ERROR HAPPENED", e)
-	}
+    private fun flushBatch() {
+        if (_batchedPoints == 0) return
+        _onBufferDecoded?.invoke(_batch.copyOf(_batchedPoints))
+        _batchedPoints = 0
+    }
 
-	override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-		if (format.keys.contains(MediaFormat.KEY_DURATION)) {
-			_totalTimeInMs.store(format.duration?.inWholeMilliseconds ?: 0L)
-		}
-		Log.d(CODEC_TAG, "MEDIA FORMAT CHANGED: KEYS:${format.keys}")
-	}
+    private fun handleEndOfStream() {
+        Log.d(PROCESSING_TAG, "END OF BUFFER REACHED, FLUSHING LEFT OUT POINTS")
+        flushBatch()
+        _onDecodeComplete?.invoke()
+    }
 
-	private fun handleFloatArray(pcm: FloatArray) {
-		// if there is some pcm data available
-		if (pcm.isNotEmpty()) {
-			val action = _scope.async { pcm.performRMS() }
-			_operations.offer(action)
-		}
+    fun setOnBufferDecode(listener: (FloatArray) -> Unit) {
+        _onBufferDecoded = listener
+    }
 
-		// Try to acquire the lock atomically BEFORE launching
-		if (!_isBatchProcessing.compareAndSet(expectedValue = false, newValue = true)) return
+    fun setOnComplete(listener: () -> Unit) {
+        _onDecodeComplete = listener
+    }
 
-		_scope.launch {
-			try {
-				_mutex.withLock {
-					if (_operations.size >= batchSize && isActive) {
-						// batched operation
-						_isBatchProcessing.compareAndSet(expectedValue = false, newValue = true)
-						val operations = buildSet {
-							repeat(batchSize) {
-								val item = _operations.poll() ?: return@repeat
-								add(item)
-							}
-						}
-						Log.d(PROCESSING_TAG, "EVALUATING INFORMATION BATCH :${operations.size}")
-						val resultAsFloatArray = operations.awaitAll().toFloatArray()
-						_onBufferDecoded?.invoke(resultAsFloatArray)
-					}
-				}
-			} catch (e: Exception) {
-				if (e is CancellationException)
-					Log.d(PROCESSING_TAG, "CANCELLATION IN BATCH PROCESSING")
-				Log.e(PROCESSING_TAG, "Exception at the end of stream", e)
-			} finally {
-				_isBatchProcessing.store(false)
-			}
-		}
-	}
+    fun setOnFailure(listener: (Throwable) -> Unit) {
+        _onDecodeFailure = listener
+    }
 
-	private fun handleEndOfStream() {
-		Log.d(PROCESSING_TAG, "END OF BUFFER REACHED, AWAITING OPERATIONS")
-		_scope.launch {
-			try {
-				_mutex.withLock {
-					val leftItems = buildSet {
-						while (isActive) {
-							val item = _operations.poll() ?: break
-							add(item)
-						}
-					}
-					Log.d(PROCESSING_TAG, "EVALUATING INFORMATION END :${leftItems.size}")
-					if (leftItems.isEmpty()) return@withLock
-					val results = leftItems.awaitAll()
-					val resultAsFloatArray = results.toFloatArray()
-					_onBufferDecoded?.invoke(resultAsFloatArray)
-				}
-			} catch (e: Exception) {
-				if (e is CancellationException) {
-					Log.d(PROCESSING_TAG, "CANCELLATION IN HANDLING END OF STREAM")
-					return@launch
-				}
-				Log.e(PROCESSING_TAG, "Exception at the end of stream", e)
-			} finally {
-				// stream read ended
-				_onDecodeComplete?.invoke()
-			}
-		}
-	}
+    suspend fun initiateExtraction(extractor: ExtractorsFactory, dataSource: DataSource.Factory, fileURI: Uri)
+        : Result<Unit> = withContext(ioDispatcher) {
 
-	fun setOnBufferDecode(listener: (FloatArray) -> Unit) {
-		_onBufferDecoded = listener
-	}
+        _extractor?.release()
+        _extractor = MediaExtractorCompat(extractor, dataSource).apply {
+            setDataSource(fileURI, 0)
+        }
+        // check track count
+        if (_extractor?.trackCount == 0)
+            return@withContext Result.failure(MediaExtractorException("No track found"))
 
-	fun setOnComplete(listener: () -> Unit) {
-		_onDecodeComplete = listener
-	}
+        val format = _extractor!!.getTrackFormat(0)
+        val mimeType = format.mimeType
 
-	suspend fun initiateExtraction(
-		extractor: ExtractorsFactory,
-		dataSource: DataSource.Factory,
-		fileURI: Uri
-	): Result<Unit> = withContext(ioDispatcher) {
-		_extractor?.release()
-		_extractor = MediaExtractorCompat(extractor, dataSource).apply {
-			setDataSource(fileURI, 0)
-		}
-		// check track count
-		if (_extractor?.trackCount == 0)
-			return@withContext Result.failure(MediaExtractorException("No track found"))
+        // check audio duration
+        if (!format.keys.contains(MediaFormat.KEY_DURATION))
+            return@withContext Result.failure(MediaExtractorException("Cannot determine track duration"))
 
-		val format = _extractor!!.getTrackFormat(0)
-		val mimeType = format.mimeType
+        // check mime type
+        if (mimeType == null || !mimeType.startsWith("audio"))
+            return@withContext Result.failure(InvalidMimeTypeException())
 
-		// check audio duration
-		if (!format.keys.contains(MediaFormat.KEY_DURATION))
-			return@withContext Result.failure(MediaExtractorException("Cannot determine track duration"))
+        // set the total time
+        _totalTimeInMs.store(format.duration?.inWholeMilliseconds ?: 0L)
 
-		// check mime type
-		if (mimeType == null || !mimeType.startsWith("audio"))
-			return@withContext Result.failure(InvalidMimeTypeException())
-
-		// set the total time
-		_totalTimeInMs.store(format.duration?.inWholeMilliseconds ?: 0L)
-
-		Log.i(EXTRACTOR_TAG, "EXTRACTOR PREPARED")
-		_extractor?.selectTrack(0)
-		initiateCodec(format)
-		Result.success(Unit)
-	}
+        Log.i(EXTRACTOR_TAG, "EXTRACTOR PREPARED")
+        _extractor?.selectTrack(0)
+        initiateCodec(format)
+        Result.success(Unit)
+    }
 
 
-	private fun initiateCodec(format: MediaFormat) {
-		_isCleaningUp.store(false)
-		_isBatchProcessing.store(false)
-		_currentTimeInMs.store(0)
+    private fun initiateCodec(format: MediaFormat) {
+        _isCleaningUp.store(false)
+        _failureReported.store(false)
 
-		if (_codecState == MediaCodecState.RELEASED)
-			Log.d(CODEC_TAG, "FRESH INSTANCE FOUND")
+        // determines the batch size based on the total time of the clip
+        val batchMs = if (_totalTimeInMs.load() > longRecordingDuration.inWholeMilliseconds)
+            longBatchDuration.inWholeMilliseconds
+        else normalBatchDuration.inWholeMilliseconds
 
-		// codec is reset
-		_mediaCodec?.reset()
-		_codecState = MediaCodecState.STOPPED
+        _batchSize = (batchMs / seekDurationMillis).toInt().coerceAtLeast(1)
+        if (_batch.size < _batchSize) _batch = FloatArray(_batchSize)
+        _batchedPoints = 0
+        Log.i(PROCESSING_TAG, "EMITTING $_batchSize POINTS PER BATCH COVERING ${batchMs / 1000}S OF AUDIO")
 
-		val isAlive = handler?.isThreadAlive() ?: false
+        if (_codecState == MediaCodecState.RELEASED) Log.d(CODEC_TAG, "FRESH INSTANCE FOUND")
 
-		Log.i(CODEC_TAG, "HANDLER THREAD ALIVE :$isAlive")
-		if (!isAlive) return
+        // codec is reset
+        _mediaCodec?.reset()
+        _codecState = MediaCodecState.STOPPED
 
-		// codec is configured
-		val codecName = _codecList.findDecoderForFormat(format)
-		_mediaCodec = MediaCodec.createByCodecName(codecName).apply {
-			setCallback(this@MediaCodecPCMDataDecoder, handler)
-			configure(format, null, null, 0)
-		}
+        val isAlive = handler?.isThreadAlive() ?: false
 
-		Log.i(CODEC_TAG, "MEDIA CODEC CONFIGURED THREAD:${handler.looper.thread}")
-		Log.d(CODEC_TAG, "MEDIA CODEC NAME :${_mediaCodec?.name}")
+        Log.i(CODEC_TAG, "HANDLER THREAD ALIVE :$isAlive")
+        check(isAlive) { "The codec handler thread is not alive" }
+        val callbackHandler = handler
 
-		val caller = Runnable {
-			_mediaCodec?.start()
-			_codecState = MediaCodecState.EXEC
-			Log.i(CODEC_TAG, "MEDIA CODEC STARTED ON :${Thread.currentThread()}")
-		}
-		// start the codec
-		if (handler.looper == Looper.getMainLooper()) caller.run()
-		else {
-			val isPosted = handler.post(caller)
-			if (!isPosted) caller.run()
-		}
-	}
+        // codec is configured
+        _mediaCodec = _codecList.findDecoderForFormat(format)?.let { codecName ->
+            Log.i(CODEC_TAG, "CONFIGURING CODEC BY NAME :$codecName")
+            MediaCodec.createByCodecName(codecName)
+        } ?: run {
+            val mimeType = format.getString(MediaFormat.KEY_MIME) ?: "audio/mp4a-latm"
+            Log.i(CODEC_TAG, "CONFIGURING CODEC BY DECODER TYPE :$mimeType ")
+            MediaCodec.createDecoderByType(mimeType)
+        }
+
+        _mediaCodec?.setCallback(this@MediaCodecPCMDataDecoder, callbackHandler)
+        _mediaCodec?.configure(format, null, null, 0)
+
+        Log.i(CODEC_TAG, "MEDIA CODEC CONFIGURED THREAD:${callbackHandler.looper.thread}")
+        Log.d(CODEC_TAG, "MEDIA CODEC NAME :${_mediaCodec?.name}")
+
+        val caller = Runnable {
+            try {
+                _mediaCodec?.start()
+                _codecState = MediaCodecState.EXEC
+                Log.i(CODEC_TAG, "MEDIA CODEC STARTED ON :${Thread.currentThread()}")
+            } catch (e: Exception) {
+                reportFailure(e)
+            }
+        }
+        // start the codec
+        if (callbackHandler.looper == Looper.getMainLooper()) caller.run()
+        else {
+            check(callbackHandler.post(caller)) { "Unable to start the media codec" }
+        }
+    }
 
 
-	@Synchronized
-	fun cleanUp() {
-		if (_operations.isNotEmpty()) {
-			Log.d(PROCESSING_TAG, "CANCELLING DEFERRED CALCULATIONS")
-			_operations.forEach { it.cancel() }
-			_operations.clear()
-		}
-		Log.d(PROCESSING_TAG, "CANCELLING OPERATIONS SCOPE")
-		_scope.cancel()
+    suspend fun cleanUp() {
+        _isCleaningUp.store(true)
+        val callbackHandler = handler
 
-		val caller = Runnable { codecClean() }
+        if (callbackHandler == null || Looper.myLooper() == callbackHandler.looper) {
+            codecClean()
+            return
+        }
 
-		if (handler == null || handler.looper == Looper.getMainLooper()) {
-			caller.run()
-		} else {
-			val isPosted = handler.safePOST(caller)
-			if (!isPosted) caller.run()
-		}
+        withContext(NonCancellable + ioDispatcher) {
+            suspendCancellableCoroutine { continuation ->
+                val cleanup = Runnable {
+                    try {
+                        codecClean()
+                    } finally {
+                        continuation.resume(Unit)
+                    }
+                }
+                // post the cleanup on a handler if failed run directly
+                if (!callbackHandler.post(cleanup)) cleanup.run()
+            }
+        }
+    }
 
-	}
+    private fun codecClean() {
+        _isCleaningUp.store(true)
+        try {
+            Log.i(CODEC_TAG, "CLEANING UP IN :${Thread.currentThread()}")
+            if (_codecState == MediaCodecState.EXEC) {
+                try {
+                    _mediaCodec?.flush()
+                } catch (e: Exception) {
+                    Log.w(CODEC_TAG, "UNABLE TO FLUSH CODEC", e)
+                }
+                try {
+                    _mediaCodec?.stop()
+                } catch (e: Exception) {
+                    Log.w(CODEC_TAG, "UNABLE TO STOP CODEC", e)
+                } finally {
+                    _codecState = MediaCodecState.STOPPED
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(CODEC_TAG, "UNABLE TO STOP CODEC", e)
+        }
 
-	private fun codecClean() {
-		try {
-			Log.i(CODEC_TAG, "CLEANING UP IN :${Thread.currentThread()}")
-			_isCleaningUp.compareAndSet(expectedValue = false, newValue = true)
-			if (_codecState == MediaCodecState.EXEC) {
-				// flush all the buffers
-				_mediaCodec?.flush()
-				// codec is stopped then switched to stopped state
-				_mediaCodec?.stop()
-				_codecState = MediaCodecState.STOPPED
-			}
-		} catch (e: Exception) {
-			Log.e(CODEC_TAG, "UNABLE TO STOP CODEC", e)
-		} finally {
-			_isCleaningUp.compareAndSet(expectedValue = true, newValue = false)
-		}
+        try {
+            if (_codecState == MediaCodecState.STOPPED) {
+                // clear the codec
+                val clearDuration = measureTime { _mediaCodec?.setCallback(null) }
+                // Give it time to process
+                Log.d(CODEC_TAG, "CALLBACK CLEAR POSTED TO HANDLER $clearDuration")
+            }
+        } catch (e: Exception) {
+            Log.e(CODEC_TAG, "FAILED TO CLEAR CALLBACK", e)
+        }
 
-		try {
-			if (_codecState == MediaCodecState.STOPPED) {
-				// clear the codec
-				val clearDuration = measureTime { _mediaCodec?.setCallback(null) }
-				// Give it time to process
-				Log.d(CODEC_TAG, "CALLBACK CLEAR POSTED TO HANDLER $clearDuration")
-			}
-		} catch (e: Exception) {
-			Log.e(CODEC_TAG, "FAILED TO CLEAR CALLBACK", e)
-		}
+        try {
+            _mediaCodec?.release()
+            Log.i(CODEC_TAG, "MEDIA CODEC RELEASED")
+        } catch (e: Exception) {
+            Log.e(CODEC_TAG, "FAILED TO RELEASE CODEC", e)
+        } finally {
+            _codecState = MediaCodecState.RELEASED
+            _mediaCodec = null
+        }
 
-		// release the codec
-		try {
-			_mediaCodec?.release()
-			Log.i(CODEC_TAG, "MEDIA CODEC RELEASED")
-		} finally {
-			_codecState = MediaCodecState.RELEASED
-			_mediaCodec = null
-		}
+        try {
+            _extractor?.release()
+            Log.d(EXTRACTOR_TAG, "EXTRACTOR RELEASED")
+        } catch (e: Exception) {
+            Log.e(EXTRACTOR_TAG, "FAILED TO RELEASE EXTRACTOR", e)
+        } finally {
+            _extractor = null
+        }
+    }
 
-		// release the extractor
-		_extractor?.release()
-		Log.d(EXTRACTOR_TAG, "EXTRACTOR RELEASED")
-	}
+    private fun reportFailure(failure: Throwable) {
+        if (!_failureReported.compareAndSet(expectedValue = false, newValue = true)) return
+        _isCleaningUp.store(true)
+        _onDecodeFailure?.invoke(failure)
+    }
 
-	private suspend fun FloatArray.performRMS(): Float {
-		return withContext(Dispatchers.Default) {
-			val squaredAvg = map { it * it }.average().toFloat()
-			sqrt(squaredAvg)
-		}
-	}
+    companion object {
+        // a batch covers this much audio for regular length recordings
+        private val normalBatchDuration = 10.seconds
+        private val longBatchDuration = 20.seconds
+
+        // long batch min milliseconds
+        private val longRecordingDuration = 10.minutes
+    }
+}
+
+internal fun PcmWindowAccumulator.consumeCodecOutput(
+    buffer: ByteBuffer?,
+    info: MediaCodec.BufferInfo,
+    format: MediaFormat?,
+) {
+    if (info.size > 0) {
+        val output = checkNotNull(buffer) { "Codec output buffer is unavailable" }
+        val pcmFormat = checkNotNull(format) { "Codec output format is unavailable" }
+        append(
+            buffer = output,
+            offset = info.offset,
+            size = info.size,
+            presentationTimeUs = info.presentationTimeUs,
+            sampleRate = pcmFormat.sampleRate,
+            channelCount = pcmFormat.channels,
+            encoding = pcmFormat.pcmEncoding,
+        )
+    }
+    if (info.isEndOfStream) finish(info.presentationTimeUs)
 }

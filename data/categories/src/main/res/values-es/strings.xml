@@ -1,0 +1,5 @@
+<resources>
+    <string name="select_category_screen">Seleccionar categoría</string>
+    <string name="categories_create_success">Categoría creada correctamente</string>
+    <string name="categories_deleted">Categorías eliminadas</string>
+</resources>

@@ -6,10 +6,9 @@ import kotlin.random.Random
 
 internal object RecorderPreviewFakes {
 
-	 val PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE: List<RecordedPoint> = List(150) {
+    val PREVIEW_RECORDER_AMPLITUDE_FLOAT_ARRAY_LARGE: List<RecordedPoint> = List(100) {
 		Random.nextFloat()
 	}.mapIndexed { idx, amp ->
-//		Google Sans Code
 		RecordedPoint(
 			timeInMillis = RecorderConstants.AMPS_READ_DELAY_RATE.times(idx).inWholeMilliseconds,
 			rmsValue = amp

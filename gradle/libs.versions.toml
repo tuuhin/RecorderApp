@@ -1,5 +1,5 @@
 [versions]
-agp = "9.4.1"
+agp = "9.5.0"
 android-compileSdk = "37"
 android-minSdk = "29"
 android-ndk = "30.0.16248370"
@@ -44,6 +44,10 @@ coroutines = "1.11.0"
 turbine_version = "1.2.1"
 vosk = "0.3.75"
 okio = "3.18.2"
+uiautomator = "2.4.0"
+benchmarkJunit4 = "1.5.0"
+baselineprofile = "1.5.0"
+profileinstaller = "1.4.1"
 
 [libraries]
 #core
@@ -115,11 +119,14 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 #kotlinx
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+#serialization
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
-kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
-kotin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinxSerializationJson" }
+#kotlin test
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
+kotlin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlin" }
 #worker
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 work-runtime-testing = { module = "androidx.work:work-testing", version.ref = "workRuntimeKtxVersion" }
@@ -134,6 +141,11 @@ okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIoCore" }
 #vosk
 vosk-android = { module = "com.alphacephei:vosk-android", version.ref = "vosk" }
+# benchmarking
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmarkJunit4" }
+androidx-benchmark-junit4 = { module = "androidx.benchmark:benchmark-junit4", version.ref = "benchmarkJunit4" }
+androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 #audio tagger
 jaudiotagger-kmp = { module = "io.github.darkstar085:jaudiotagger-kt", version.ref = "jaudiotagger" }
 #gradle plugins
@@ -162,3 +174,5 @@ recorderapp-hilt = { id = "recorderapp.hilt.plugin", version = "unspecified" }
 recorderapp-android-library = { id = "recorderapp.android.library.plugin", version = "unspecified" }
 recorderapp-protobuf = { id = "recorderapp.protobuf.plugin", version = "unspecified" }
 recorderapp-compose-compiler = { id = "recorderapp.compose.compiler.plugin", version = "unspecified" }
+android-test = { id = "com.android.test", version.ref = "agp" }
+androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "baselineprofile" }

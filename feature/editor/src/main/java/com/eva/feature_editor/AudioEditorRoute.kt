@@ -23,6 +23,8 @@ import com.eva.feature_editor.viewmodel.AudioEditorViewModel
 import com.eva.feature_editor.viewmodel.EditorViewmodelFactory
 import com.eva.player_shared.PlayerMetadataViewmodel
 import com.eva.player_shared.PlayerVisualizerViewmodel
+import com.eva.player_shared.factory.PlayerMetadataViewmodelFactory
+import com.eva.player_shared.factory.PlayerVisualizerViewmodelFactory
 import com.eva.ui.R
 import com.eva.ui.navigation.NavRoutes
 import com.eva.ui.navigation.PlayerSubGraph
@@ -34,94 +36,103 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.merge
 
 fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
-	animatedComposable<PlayerSubGraph.AudioEditorRoute> { backstackEntry ->
+    animatedComposable<PlayerSubGraph.AudioEditorRoute> { backstackEntry ->
 
-		val route = backstackEntry.toRoute<PlayerSubGraph.AudioEditorRoute>()
+        val route = backstackEntry.toRoute<PlayerSubGraph.AudioEditorRoute>()
 
-		val sharedViewmodel = backstackEntry.sharedViewmodel<PlayerMetadataViewmodel>(controller)
-		val visualsViewmodel = backstackEntry.sharedViewmodel<PlayerVisualizerViewmodel>(controller)
+        // shared view models
+        val visualsViewmodel =
+            backstackEntry.sharedViewmodel<PlayerVisualizerViewmodel, PlayerVisualizerViewmodelFactory>(
+                controller = controller,
+                factory = { factory -> factory.create(route.audioId) },
+            )
 
-		val editorViewModel = hiltViewModel<AudioEditorViewModel, EditorViewmodelFactory>(
-			creationCallback = { factory -> factory.create(route.audioId) },
-		)
+        val sharedViewmodel = backstackEntry.sharedViewmodel<PlayerMetadataViewmodel, PlayerMetadataViewmodelFactory>(
+            controller = controller,
+            factory = { factory -> factory.create(route.audioId) },
+        )
 
-		val loadState by sharedViewmodel.loadState.collectAsStateWithLifecycle()
-		val compressedVisuals by visualsViewmodel.compressedVisuals.collectAsStateWithLifecycle()
-		val isVisualsReady by visualsViewmodel.isVisualsReady.collectAsStateWithLifecycle()
+        val editorViewModel = hiltViewModel<AudioEditorViewModel, EditorViewmodelFactory>(
+            creationCallback = { factory -> factory.create(route.audioId) },
+        )
 
-		val isPlaying by editorViewModel.isPlayerPlaying.collectAsStateWithLifecycle()
-		val trackData by editorViewModel.trackData.collectAsStateWithLifecycle()
-		val clipConfig by editorViewModel.clipConfig.collectAsStateWithLifecycle()
-		val transformationState by editorViewModel.transformationState.collectAsStateWithLifecycle()
-		val undoRedoState by editorViewModel.undoRedoState.collectAsStateWithLifecycle()
+        val loadState by sharedViewmodel.loadState.collectAsStateWithLifecycle()
+        val compressedVisuals by visualsViewmodel.compressedVisuals.collectAsStateWithLifecycle()
+        val isVisualsReady by visualsViewmodel.isVisualsReady.collectAsStateWithLifecycle()
 
-		val totalConfigs by editorViewModel.clipConfigs.collectAsStateWithLifecycle()
-		val isMediaEdited by remember(totalConfigs) {
-			derivedStateOf { totalConfigs.count() >= 1 }
-		}
+        val isPlaying by editorViewModel.isPlayerPlaying.collectAsStateWithLifecycle()
+        val trackData by editorViewModel.trackData.collectAsStateWithLifecycle()
+        val clipConfig by editorViewModel.clipConfig.collectAsStateWithLifecycle()
+        val transformationState by editorViewModel.transformationState.collectAsStateWithLifecycle()
+        val undoRedoState by editorViewModel.undoRedoState.collectAsStateWithLifecycle()
 
-		val lifecycleOwner = LocalLifecycleOwner.current
+        val totalConfigs by editorViewModel.clipConfigs.collectAsStateWithLifecycle()
+        val isMediaEdited by remember(totalConfigs) {
+            derivedStateOf { totalConfigs.isNotEmpty() }
+        }
 
-		// ui events handler
-		UiEventsHandler(
-			eventsFlow = {
-				merge(
-					sharedViewmodel.uiEvent,
-					visualsViewmodel.uiEvent,
-					editorViewModel.uiEvent
-				)
-			},
-		)
+        val lifecycleOwner = LocalLifecycleOwner.current
 
-		LaunchedEffect(lifecycleOwner) {
-			lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				editorViewModel.exportBegun.collectLatest {
-					// handle nav event
-					controller.navigate(NavRoutes.VoiceRecordings) {
-						popUpTo<NavRoutes.VoiceRecordings> {
-							inclusive = true
-						}
-					}
-				}
-			}
-		}
+        // ui events handler
+        UiEventsHandler(
+            eventsFlow = {
+                merge(
+                    sharedViewmodel.uiEvent,
+                    visualsViewmodel.uiEvent,
+                    editorViewModel.uiEvent,
+                )
+            },
+        )
 
-		LaunchedEffect(lifecycleOwner) {
-			lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				editorViewModel.clipConfigs.collectLatest {
-					// when clip configs are updated the compressed visuals also get updated
-					visualsViewmodel.updateClipConfigs(it)
-				}
-			}
-		}
+        LaunchedEffect(lifecycleOwner) {
+            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                editorViewModel.exportBegun.collectLatest {
+                    // handle nav event
+                    controller.navigate(NavRoutes.VoiceRecordings) {
+                        popUpTo<NavRoutes.VoiceRecordings> {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
+        }
 
-		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
-			AudioEditorScreen(
-				loadState = loadState,
-				trackData = { trackData },
-				graphData = { compressedVisuals },
-				onEvent = editorViewModel::onEvent,
-				isVisualsReady = isVisualsReady,
-				isPlaying = isPlaying,
-				clipConfig = clipConfig,
-				isMediaEdited = isMediaEdited,
-				undoRedoState = undoRedoState,
-				transformationState = transformationState,
-				onDismissScreen = {
-					if (controller.previousBackStackEntry != null) {
-						controller.popBackStack()
-					}
-				},
-				navigation = {
-					if (controller.previousBackStackEntry != null) {
-						IconButton(onClick = dropUnlessResumed(block = controller::popBackStack)) {
-							Icon(
-								imageVector = Icons.AutoMirrored.Default.ArrowBack,
-								contentDescription = stringResource(R.string.back_arrow)
-							)
-						}
-					}
-				},
-			)
-		}
-	}
+        LaunchedEffect(lifecycleOwner) {
+            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                editorViewModel.clipConfigs.collectLatest {
+                    // when clip configs are updated the compressed visuals also get updated
+                    visualsViewmodel.updateClipConfigs(it)
+                }
+            }
+        }
+
+        CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
+            AudioEditorScreen(
+                loadState = loadState,
+                trackData = { trackData },
+                graphData = { compressedVisuals },
+                onEvent = editorViewModel::onEvent,
+                isVisualsReady = isVisualsReady,
+                isPlaying = isPlaying,
+                clipConfig = clipConfig,
+                isMediaEdited = isMediaEdited,
+                undoRedoState = undoRedoState,
+                transformationState = transformationState,
+                onDismissScreen = {
+                    if (controller.previousBackStackEntry != null) {
+                        controller.popBackStack()
+                    }
+                },
+                navigation = {
+                    if (controller.previousBackStackEntry != null) {
+                        IconButton(onClick = dropUnlessResumed(block = controller::popBackStack)) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                contentDescription = stringResource(R.string.back_arrow),
+                            )
+                        }
+                    }
+                },
+            )
+        }
+    }

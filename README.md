@@ -76,13 +76,22 @@ playing stuff.
 
 ## :new: What's new
 
-The latest update to the **RecorderApp** makes the Player audio graph smoother alongside scrollable
-to seek player position
+**RecorderApp 1.5.0** builds on the 1.5.0 beta with improvements across transcription, audio
+visualization, recording, and editing:
+
+- Preview real-time, on-device speech-to-text with downloadable Vosk models and improved download
+  progress and reliability.
+- Added Turkish, German, and Spanish localizations.
+- Improved audio visualizations, including more accurate decoding and cached visualization data.
+- Improved editor validation, recorder service lifecycle handling, and bookmark timing feedback.
+- Added support for opening audio links and `audio/*` content from other apps.
+- Updated build tooling and dependencies, expanded automated tests, and added benchmarking and
+  baseline-profile groundwork.
 
 ## :next_track_button: What's next
 
-For the time being, RecorderApp encompasses all initially planned features and is
-considered complete. Future releases are not currently scheduled.
+Add support for lossless recording formats, giving users the option to record without lossy
+compression.
 
 If you have any new ideas or suggestions for enhancements, we encourage you to create a
 new [Issue](https://github.com/tuuhin/RecorderApp/issues) on GitHub.
@@ -96,20 +105,10 @@ Here are the steps to get started with this app:
    ```bash
    git clone https://github.com/tuuhin/RecorderApp.git
    ```
-2. **Download transcription models**
-   In order to let the transcription work you need to download `vosk` models
-    ```bash
-    mkdir -p data/transcribe/src/main/assets/models
-    curl -L https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip -o model.zip
-    unzip model.zip -d data/transcribe/src/main/assets/models
-    mv data/transcribe/src/main/assets/models/model data/transcribe/src/main/assets/models/vosk-model-small-en-us-0.15
-    rm model.zip
-   ```    
+2. **Open Project**
+   Open the project in Android Studio
 
-3. **Open Project**
-   Open the project in android studio
-
-4. **Build and Run**
+3. **Build and Run**
    Build and run on android device with api 29 and above
 
 You have your app running this is just simple as that.

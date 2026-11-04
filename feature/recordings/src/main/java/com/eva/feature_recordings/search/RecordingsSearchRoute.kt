@@ -22,45 +22,45 @@ import com.eva.ui.utils.LocalSharedTransitionVisibilityScopeProvider
 import com.eva.ui.utils.UiEventsHandler
 
 fun NavGraphBuilder.recordingsSearchRoute(controller: NavController) =
-	animatedComposable<NavRoutes.SearchRecordings> {
+    animatedComposable<NavRoutes.SearchRecordings> {
 
-		val lifecycleOwner = LocalLifecycleOwner.current
+        val lifecycleOwner = LocalLifecycleOwner.current
 
-		val viewModel = hiltViewModel<SearchRecordingsViewmodel>()
+        val viewModel = hiltViewModel<SearchRecordingsViewmodel>()
 
-		val categories by viewModel.categories.collectAsStateWithLifecycle()
-		val searchResults by viewModel.recordings.collectAsStateWithLifecycle()
-		val screenState by viewModel.searchState.collectAsStateWithLifecycle()
+        val categories by viewModel.categories.collectAsStateWithLifecycle()
+        val searchResults by viewModel.recordings.collectAsStateWithLifecycle()
+        val screenState by viewModel.searchState.collectAsStateWithLifecycle()
 
-		// lifeCycleState
-		val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+        // lifeCycleState
+        val lifeCycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
 
-		UiEventsHandler(eventsFlow = viewModel::uiEvent)
+        UiEventsHandler(eventsFlow = viewModel::uiEvent)
 
-		CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
-			SearchRecordingsScreen(
-				state = screenState,
-				categories = categories,
-				searchResults = searchResults,
-				onEvent = viewModel::onEvent,
-				onSelectRecording = { record ->
-					if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
-						val audioRoute = PlayerSubGraph.NavGraph(record.id)
-						controller.navigate(audioRoute)
-					}
-				},
-				navigation = {
-					if (controller.previousBackStackEntry?.destination?.route != null) {
-						IconButton(
-							onClick = dropUnlessResumed(block = controller::popBackStack)
-						) {
-							Icon(
-								imageVector = Icons.AutoMirrored.Default.ArrowBack,
-								contentDescription = stringResource(R.string.back_arrow)
-							)
-						}
-					}
-				},
-			)
-		}
-	}
+        CompositionLocalProvider(LocalSharedTransitionVisibilityScopeProvider provides this) {
+            SearchRecordingsScreen(
+                state = screenState,
+                categories = categories,
+                searchResults = searchResults,
+                onEvent = viewModel::onEvent,
+                onSelectRecording = { record ->
+                    if (lifeCycleState.isAtLeast(Lifecycle.State.RESUMED)) {
+                        val audioRoute = PlayerSubGraph.AudioPlayerRoute(record.id, true)
+                        controller.navigate(audioRoute)
+                    }
+                },
+                navigation = {
+                    if (controller.previousBackStackEntry?.destination?.route != null) {
+                        IconButton(
+                            onClick = dropUnlessResumed(block = controller::popBackStack),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                contentDescription = stringResource(R.string.back_arrow),
+                            )
+                        }
+                    }
+                },
+            )
+        }
+    }

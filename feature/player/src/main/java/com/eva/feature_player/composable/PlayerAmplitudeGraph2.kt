@@ -26,14 +26,15 @@ import androidx.compose.ui.text.font.resolveAsTypeface
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.eva.feature_player.views.PlayerAmplitudeGraph2View
+import com.eva.feature_player.views.WaveformStyle
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.util.PlayRatio
 import com.eva.player_shared.util.PlayerGraphData
 import com.eva.ui.R
+import kotlin.time.Duration
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.datetime.LocalTime
-import kotlin.time.Duration
 
 @Composable
 fun PlayerAmplitudeGraph2(
@@ -59,7 +60,7 @@ fun PlayerAmplitudeGraph2(
 	val density = LocalDensity.current
 	val layoutDirection = LocalLayoutDirection.current
 
-	val typeFace by remember(timelineTextStyle) {
+    val typeFace by remember(timelineTextStyle, resolver) {
 		resolver.resolveAsTypeface(
 			fontFamily = timelineTextStyle.fontFamily ?: FontFamily.Monospace,
 			fontWeight = timelineTextStyle.fontWeight ?: FontWeight.Normal,
@@ -69,48 +70,40 @@ fun PlayerAmplitudeGraph2(
 	}
 
 	AndroidView(
-		factory = { ctx ->
-			PlayerAmplitudeGraph2View(ctx).also { view ->
-				// colors and font
-				view.plotColor = plotColor.toArgb()
-				view.timelineColor = timelineColor.toArgb()
-				view.timelineColorVariant = timelineColorVariant.toArgb()
-				view.timelineTextColor = timelineTextColor.toArgb()
-				view.bookMarkColor = bookMarkColor.toArgb()
-				view.trackPointerColor = trackPointerColor.toArgb()
-				view.canvasBackground = containerColor.toArgb()
-				// text config
-				view.textTypeface = typeFace
-				with(density) {
-					view.textFontSizeAsPx = timelineTextStyle.fontSize.toPx()
-					view.setPadding(
-						contentPadding.calculateLeftPadding(layoutDirection).roundToPx(),
-						contentPadding.calculateTopPadding().roundToPx(),
-						contentPadding.calculateRightPadding(layoutDirection).roundToPx(),
-						contentPadding.calculateBottomPadding().roundToPx(),
-					)
-				}
-				view.isSwipeToScrollEnabled = isSwipeToScrollEnabled
-				// callbacks
-				view.onSwipeToChangeEnd(onSwipeEnd)
-				view.onSwipeToChangePlayPosition(onSwipe)
-			}
-		},
-		update = { view ->
-			// enable gesture detection
-			view.isSwipeToScrollEnabled = isSwipeToScrollEnabled
-			// if the view is visible then only show the values
-			if (view.isShown) {
-				view.onUpdateTrackDuration(totalTrackDuration)
-				view.onUpdateBookMarks(bookMarkTimeStamps)
-				view.onUpdatePlotColor(plotColor.toArgb())
-				view.onUpdatePlayRatio { trackPlayRatio() }
-				view.onUpdateGraphData { graphData() }
-			}
-		},
-		onRelease = { view -> view.cleanUp() },
-		modifier = modifier.defaultMinSize(minHeight = dimensionResource(id = R.dimen.line_graph_min_height))
-	)
+        factory = { ctx -> PlayerAmplitudeGraph2View(ctx) },
+        update = { view ->
+            view.onUpdateStyle(
+                WaveformStyle(
+                    plotColor = plotColor.toArgb(),
+                    bookmarkColor = bookMarkColor.toArgb(),
+                    timelineColor = timelineColor.toArgb(),
+                    timelineVariant = timelineColorVariant.toArgb(),
+                    timelineTextColor = timelineTextColor.toArgb(),
+                    pointerColor = trackPointerColor.toArgb(),
+                    background = containerColor.toArgb(),
+                    typeface = typeFace,
+                    textSizePx = with(density) { timelineTextStyle.fontSize.toPx() },
+                ),
+            )
+            with(density) {
+                view.onUpdatePadding(
+                    contentPadding.calculateLeftPadding(layoutDirection).roundToPx(),
+                    contentPadding.calculateTopPadding().roundToPx(),
+                    contentPadding.calculateRightPadding(layoutDirection).roundToPx(),
+                    contentPadding.calculateBottomPadding().roundToPx(),
+                )
+            }
+            view.isSwipeToScrollEnabled = isSwipeToScrollEnabled
+            view.onSwipeToChangeEnd(onSwipeEnd)
+            view.onSwipeToChangePlayPosition(onSwipe)
+            view.onUpdateTrackDuration(totalTrackDuration)
+            view.onUpdateBookMarks(bookMarkTimeStamps)
+            view.onUpdatePlayRatio { trackPlayRatio() }
+            view.onUpdateGraphData { graphData() }
+        },
+        onRelease = { view -> view.cleanUp() },
+        modifier = modifier.defaultMinSize(minHeight = dimensionResource(id = R.dimen.line_graph_min_height)),
+    )
 }
 
 @Composable
@@ -137,7 +130,7 @@ internal fun PlayerAmplitudeGraph2(
 		vertical = dimensionResource(id = R.dimen.graph_card_padding_other)
 	),
 ) {
-	val totalDuration by remember { derivedStateOf { trackData().total } }
+    val totalDuration by remember(trackData) { derivedStateOf { trackData().total } }
 
 	Surface(
 		shape = shape,

@@ -30,13 +30,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: 🏗️ Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
-
-      - name: Check if there is any build errors
-        run: |
-          if grep -q "BUILD FAILED" build/outputs/logs/*.txt; then
-            echo "Build failed with errors!"
-            exit 1
-          else
-            echo "Build successful with no errors."
-          fi
+        run: ./gradlew :app:assembleDebug --stacktrace
