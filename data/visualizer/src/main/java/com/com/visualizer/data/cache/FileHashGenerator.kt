@@ -3,6 +3,7 @@ package com.com.visualizer.data.cache
 import android.content.Context
 import android.net.Uri
 import androidx.core.net.toFile
+import androidx.core.net.toUri
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,7 +20,8 @@ internal class FileHashGenerator(private val context: Context) {
 
     private val fs = FileSystem.SYSTEM
 
-    suspend fun generateHash(uri: Uri): String? = withContext(Dispatchers.IO) {
+    suspend fun generateHash(uri: String): String? = withContext(Dispatchers.IO) {
+        val uri = uri.toUri()
         try {
             when (uri.scheme) {
                 "file" -> uri.toFilePath()?.let(::hashFile)

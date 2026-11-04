@@ -1,4 +1,4 @@
-package com.com.visualizer.data
+package com.com.visualizer.data.ext
 
 import kotlin.math.PI
 import kotlin.math.cos
@@ -70,6 +70,31 @@ fun FloatArray.compressFloatArray(m: Int): FloatArray {
     return compressed
 }
 
+internal fun FloatArray.resampleRms(sourcePointMs: Int, requestedPointMs: Int): FloatArray {
+    require(sourcePointMs > 0 && requestedPointMs > 0)
+    if (isEmpty() || sourcePointMs == requestedPointMs) return copyOf()
+
+    val totalMs = size.toLong() * sourcePointMs
+    val outputSize = (totalMs + requestedPointMs - 1L) / requestedPointMs
+    require(outputSize <= Int.MAX_VALUE) { "Requested waveform contains too many points" }
+
+    return FloatArray(outputSize.toInt()) { index ->
+        val start = index.toLong() * requestedPointMs
+        val end = minOf(totalMs, start + requestedPointMs)
+        var cursor = start
+        var sourceIndex = (start / sourcePointMs).toInt()
+        var weightedEnergy = 0.0
+
+        while (cursor < end) {
+            val next = minOf(end, (sourceIndex + 1L) * sourcePointMs)
+            val value = this[sourceIndex].toDouble()
+            weightedEnergy += value * value * (next - cursor)
+            cursor = next
+            sourceIndex++
+        }
+        sqrt(weightedEnergy / (end - start)).toFloat()
+    }
+}
 
 internal fun FloatArray.normalize(): FloatArray {
 

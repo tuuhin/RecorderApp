@@ -7,16 +7,16 @@ import com.com.visualizer.domain.ThreadController
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(ActivityRetainedComponent::class)
 object VisualizerModule {
 
 	@Provides
-	@ViewModelScoped
+    @ActivityRetainedScoped
 	fun providesPlainVisualizer(
 		@ApplicationContext context: Context,
 		controller: ThreadController
