@@ -12,7 +12,7 @@ internal object RecordingsListOrderSerializer : Serializer<RecordingListSettings
 
 	override val defaultValue: RecordingListSettingsProto
 		get() = recordingListSettingsProto {
-			isAsc = true
+            isAsc = false
 			order = SortingOrderProto.DATE_CREATED
 		}
 
