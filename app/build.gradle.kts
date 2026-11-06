@@ -13,6 +13,7 @@ plugins {
 android {
 	namespace = "com.eva.recorderapp"
 	compileSdk = libs.versions.android.compileSdk.get().toInt()
+	ndkVersion = libs.versions.android.ndk.get()
 
 	defaultConfig {
 		applicationId = "com.eva.recorderapp"
