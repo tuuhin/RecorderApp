@@ -2,8 +2,8 @@
 
 Native audio recording for RecorderApp. The module exposes one Kotlin class per container format,
 `WavAudioRecorder` and `FlacAudioRecorder`, behind an identical
-`CustomRecorder` API. Everything below that line is C++ reached over JNI: audio capture with oboe
-(AAudio), a lock-free SPSC ring buffer, a worker thread, and a per-format file writer. `oboe` and
+`CustomRecorder` API. Everything below that line is C++ reached over JNI: audio capture with oboe (AAudio), a lock-free
+SPSC ring buffer, a worker thread, and a per-format file writer. `oboe` and
 `libFLAC` are built from source at CMake configure time, so the module ships no prebuilt binaries.
 
 ## Layout
@@ -26,8 +26,8 @@ src/main/cpp/
     └── src/                  # flac_file_writer.cpp (libFLAC writer) + flac_jni_interop.cpp
 ```
 
-The two `custom_*` directories contain only a file writer and a JNI interop layer. All shared logic
-(lifecycle, capture, buffering, error handling) lives once in
+The two `custom_*` directories contain only a file writer and a JNI interop layer. All shared logic (lifecycle, capture,
+buffering, error handling) lives once in
 `recorder_common`, and each format instantiates the same template with its own writer type, so
 nothing is copied between formats.
 
@@ -35,7 +35,7 @@ nothing is copied between formats.
 
 `WavAudioRecorder` and `FlacAudioRecorder` behave identically; only the produced file differs. Both
 load their own shared library (`System.loadLibrary("wav_recorder")` /
-`System.loadLibrary("custom_flac")`) and call through 11 JNI entry points:
+`System.loadLibrary("custom_flac")`) and expose matching JNI entry points:
 
 ```
 create()            allocate the native recorder, returns a handle
@@ -45,9 +45,11 @@ setRecorderConfig(RecorderConfig(sampleRate, channel))
 prepare()           open the oboe stream and the output file
 start()             begin capturing (throws before prepare, when already recording)
 stop()              stop capturing, finalize the file (idempotent)
-pause() / resume()  flag-based pause of the accepting state (see limitations)
+pause() / resume()  stop and reopen input stream while preserving the output
 reset()             release everything, clear path and config, record again
 isRecording          state flag, throws before create()
+droppedFrames        cumulative input frames not accepted by the native buffer
+onError              optional callback for failures; the original call still throws
 ```
 
 Lifecycle misuse surfaces as the standard Kotlin exceptions (`IllegalStateException`,
@@ -90,9 +92,12 @@ oboe callback thread          worker thread
 - **stop ()** requests a stream stop, closes the stream (so the callback is provably dead), joins
   the worker (which drains the buffer), and finalizes the writer. Calling stop again is a no-op, and
   stop before prepare is silent.
-- Worker and oboe errors never vanish: worker exceptions are captured and rethrown on the next
-  lifecycle call, and oboe stream errors flip the recorder out of the recording state via
-  `onErrorAfterClose`.
+- Worker and oboe errors are retained and rethrown at the next lifecycle boundary; Kotlin invokes
+  `onError` before rethrowing. The handler itself cannot suppress or replace the original failure.
+- `droppedFrames` reports the cumulative number of input frames the callback could not enqueue.
+- **pause () / resume ()** stop and close the input stream on pause, then reopen it using the same
+  actual format on resume. The worker and writer remain alive, so resumed audio appends to the same
+  output; samples during the pause are not captured.
 
 ## How the files are written
 
@@ -119,15 +124,14 @@ valid, finalized container.
   NDK r30's legacy toolchain resets it to 1 with the pinned CMake 3.22.1, which made libFLAC's
   `fseeko` probe fail on `armeabi-v7a`.
 - Release builds minify, and JNI binding is name-based: the keep rules live in
-  `consumer-rules.pro` and `src/main/keepRules/rules.keep`. Dropping either surfaces as
+  `src/main/keepRules/rules.keep`. Dropping them surfaces as
   `UnsatisfiedLinkError` in the release app.
 
 ## Testing
 
-30 instrumented tests, mirrored across `WavAudioRecorderTest` and
-`FlacAudioRecorderTest` (15 each): lifecycle contracts, before-create guards, invalid configs,
-record/stop idempotency, pause/resume, reset to a new file, release-and-record-again, and an
-immediate stop.
+34 instrumented tests in `WavAudioRecorderTest` and `FlacAudioRecorderTest` cover lifecycle contracts,
+before-create guards, invalid configs, native error callbacks, dropped-frame access, concurrent
+release, resumed sample continuity, reset to a new file, release-and-record-again, and immediate stop.
 
 ```
 ANDROID_SERIAL=<device> ./gradlew :data:recorder-native:connectedDebugAndroidTest
@@ -149,9 +153,7 @@ ANDROID_SERIAL=<device> ./gradlew :data:recorder-native:connectedDebugAndroidTes
 
 ## Known limitations
 
-- `pause()` is flag-based: AAudio input streams cannot be paused (`requestPause` returns
-  `ErrorUnimplemented`), so pause stops accepting audio and the stream winds down; `resume()`
-  re-arms the flags. Restarting the stream on resume (so the second window captures audio into the
-  same file) is in-flight work; today only the window before the pause reaches the file.
+- Dropped-frame reporting is cumulative and read on demand; it does not currently provide a push
+  notification when the count increases.
 - Only 16-bit PCM is supported in either format; `recorder_config` validates and both writers reject
   anything else.

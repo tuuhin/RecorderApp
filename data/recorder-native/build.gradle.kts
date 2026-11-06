@@ -26,7 +26,11 @@ android {
 }
 
 dependencies {
+    // core testing
+    androidTestImplementation(libs.kotlin.test)
+    androidTestImplementation(libs.kotlin.test.junit)
 	androidTestImplementation(libs.assertk)
+    // android annotations
 	androidTestImplementation(libs.androidx.rules)
 	androidTestImplementation(libs.androidx.media3.test.utils)
 	androidTestImplementation(libs.androidx.media3.extractor)

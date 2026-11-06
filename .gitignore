@@ -18,3 +18,4 @@ app/keystore.properties
 *.jks
 .junie
 .idea/*
+.scratch/*

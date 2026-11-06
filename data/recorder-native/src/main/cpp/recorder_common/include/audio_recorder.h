@@ -16,6 +16,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -77,6 +78,9 @@ class audio_recorder final : public oboe::AudioStreamDataCallback, oboe::AudioSt
     [[nodiscard]]
     std::uint16_t channel_count() const noexcept;
 
+    [[nodiscard]]
+    std::optional<recorder_config> active_config() const;
+
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream* stream, void* audioData,
                                           std::int32_t numFrames) override;
 
@@ -88,6 +92,7 @@ class audio_recorder final : public oboe::AudioStreamDataCallback, oboe::AudioSt
 
     void start_worker_th();
     void stop_worker_th();
+    void open_input_stream();
     void worker_loop() noexcept;
     void rethrow_worker_error();
 
@@ -157,31 +162,12 @@ void audio_recorder<Writer>::prepare() {
 
     _config.validate();
 
-    oboe::AudioStreamBuilder builder;
-
-    auto sampleRate = static_cast<std::int32_t>(_config.sampleRate);
-
-    builder.setDirection(oboe::Direction::Input);
-    builder.setFormat(oboe::AudioFormat::I16);
-    builder.setChannelCount(_config.channelCount);
-    builder.setSampleRate(sampleRate);
-    builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
-    builder.setSharingMode(oboe::SharingMode::Shared);
-    builder.setDataCallback(this);
-    builder.setErrorCallback(this);
-
     AUDIO_RECORDER_D(
         "Opening Oboe stream -> Channels: %d, SampleRate: %d, Format: I16, Mode: LowLatency",
         _config.channelCount,
-        sampleRate);
+        _config.sampleRate);
 
-    const auto result = builder.openStream(_oboe_stream);
-
-    if (result != oboe::Result::OK || !_oboe_stream) {
-        _oboe_stream.reset();
-        auto error = std::string(oboe::convertToText(result));
-        throw std::runtime_error("Failed to open Oboe input stream: " + error);
-    }
+    open_input_stream();
 
     try {
         if (_oboe_stream->getFormat() != oboe::AudioFormat::I16)
@@ -248,6 +234,10 @@ void audio_recorder<Writer>::start() {
     if (!_is_prepared) throw std::logic_error("Recorder must be prepared before start");
     if (_is_recording.load(std::memory_order_acquire))
         throw std::logic_error("Recorder is already recording");
+
+    if (_is_paused.load(std::memory_order_acquire))
+        throw std::logic_error("Recorder is paused; call resume instead");
+
     if (_is_finalized)
         throw std::logic_error("Recorder has been finalized; prepare it again before restarting");
 
@@ -272,6 +262,7 @@ void audio_recorder<Writer>::start() {
     }
 
     _is_recording.store(true, std::memory_order_release);
+    _is_paused.store(false, std::memory_order_release);
 }
 
 template <audio_file_writer Writer>
@@ -282,11 +273,15 @@ void audio_recorder<Writer>::stop() {
 
     _is_accepting_audio.store(false, std::memory_order_release);
     _is_recording.store(false, std::memory_order_release);
+    _is_paused.store(false, std::memory_order_release);
 
     if (_oboe_stream) {
         const auto result = _oboe_stream->requestStop();
 
         if (result != oboe::Result::OK && result != oboe::Result::ErrorInvalidState) {
+            const auto error_message =
+                "FAILED TO STOP STREAM" + std::string(oboe::convertToText(result));
+            AUDIO_RECORDER_E("%s", error_message.c_str());
             // Continue cleanup even if stopping reports an error.
         }
 
@@ -316,6 +311,7 @@ void audio_recorder<Writer>::release() {
 
     _is_accepting_audio.store(false, std::memory_order_release);
     _is_recording.store(false, std::memory_order_release);
+    _is_paused.store(false, std::memory_order_release);
 
     if (_oboe_stream) {
         _oboe_stream->requestStop();
@@ -368,12 +364,23 @@ std::uint16_t audio_recorder<Writer>::channel_count() const noexcept {
 }
 
 template <audio_file_writer Writer>
+std::optional<recorder_config> audio_recorder<Writer>::active_config() const {
+    std::scoped_lock lock(_lifecycle_lock);
+    if (!_is_prepared) return std::nullopt;
+    return _config;
+}
+
+template <audio_file_writer Writer>
 oboe::DataCallbackResult audio_recorder<Writer>::onAudioReady(oboe::AudioStream* /*stream*/,
                                                               void* audioData,
                                                               std::int32_t numFrames) {
-    if (!_is_accepting_audio.load(std::memory_order_acquire) ||
-        _has_worker_failed.load(std::memory_order_acquire))
+    if (_has_worker_failed.load(std::memory_order_acquire)) {
+        AUDIO_RECORDER_D("FAILED TO SET UP THE WORKER");
         return oboe::DataCallbackResult::Stop;
+    }
+
+    if (!_is_accepting_audio.load(std::memory_order_acquire))
+        return oboe::DataCallbackResult::Continue;
 
     if (audioData == nullptr || numFrames <= 0 || !_ring_buffer)
         return oboe::DataCallbackResult::Continue;
@@ -416,7 +423,15 @@ void audio_recorder<Writer>::onErrorAfterClose(oboe::AudioStream*, oboe::Result 
     // A higher-level state/error reporting API can be added later.
     _is_accepting_audio.store(false, std::memory_order_release);
     _is_recording.store(false, std::memory_order_release);
+    _is_paused.store(false, std::memory_order_release);
 
+    {
+        std::scoped_lock lock(_error_lock);
+        if (!_worker_error) {
+            _worker_error = std::make_exception_ptr(
+                std::runtime_error("Oboe input stream failed: " + std::string(error_message)));
+        }
+    }
     // connection disconnected
     if (error == oboe::Result::ErrorDisconnected) {
         AUDIO_RECORDER_E("The audio device was disconnected");
@@ -433,6 +448,34 @@ void audio_recorder<Writer>::start_worker_th() {
     } catch (...) {
         _is_worker_running.store(false, std::memory_order_release);
         throw;
+    }
+}
+
+template <audio_file_writer Writer>
+void audio_recorder<Writer>::open_input_stream() {
+    oboe::AudioStreamBuilder builder;
+    builder.setDirection(oboe::Direction::Input);
+    builder.setFormat(oboe::AudioFormat::I16);
+    builder.setChannelCount(_config.channelCount);
+    builder.setSampleRate(static_cast<std::int32_t>(_config.sampleRate));
+    builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
+    builder.setSharingMode(oboe::SharingMode::Shared);
+    builder.setDataCallback(this);
+    builder.setErrorCallback(this);
+
+    const auto result = builder.openStream(_oboe_stream);
+    if (result != oboe::Result::OK || !_oboe_stream) {
+        _oboe_stream.reset();
+        throw std::runtime_error("Failed to open Oboe input stream: " +
+                                 std::string(oboe::convertToText(result)));
+    }
+
+    if (_oboe_stream->getFormat() != oboe::AudioFormat::I16 ||
+        _oboe_stream->getSampleRate() != static_cast<std::int32_t>(_config.sampleRate) ||
+        _oboe_stream->getChannelCount() != _config.channelCount) {
+        _oboe_stream->close();
+        _oboe_stream.reset();
+        throw std::runtime_error("Resumed Oboe stream configuration does not match the writer");
     }
 }
 
@@ -497,11 +540,20 @@ template <audio_file_writer Writer>
 void audio_recorder<Writer>::pause() {
     std::scoped_lock lock(_lifecycle_lock);
 
-    if (!_is_prepared || !_oboe_stream) throw std::logic_error("Recorder is not prepared");
+    if (!_is_prepared) throw std::logic_error("Recorder is not prepared");
     if (!_is_recording.load(std::memory_order_acquire))
         throw std::logic_error("Recorder is not recording");
 
     _is_accepting_audio.store(false, std::memory_order_release);
+    const auto result = _oboe_stream->requestStop();
+    if (result != oboe::Result::OK && result != oboe::Result::ErrorInvalidState) {
+        _is_accepting_audio.store(true, std::memory_order_release);
+        throw std::runtime_error("Failed to stop Oboe input stream for pause: " +
+                                 std::string(oboe::convertToText(result)));
+    }
+    _oboe_stream->close();
+    _oboe_stream.reset();
+    _is_paused.store(true, std::memory_order_release);
     _is_recording.store(false, std::memory_order_release);
 }
 
@@ -509,16 +561,29 @@ template <audio_file_writer Writer>
 void audio_recorder<Writer>::resume() {
     std::scoped_lock lock(_lifecycle_lock);
 
-    if (!_is_prepared || !_oboe_stream) throw std::logic_error("Recorder is not prepared");
+    if (!_is_prepared) throw std::logic_error("Recorder is not prepared");
 
     if (_is_finalized) throw std::logic_error("Cannot resume a finalized recording");
 
     if (_is_recording.load(std::memory_order_acquire))
         throw std::logic_error("Recorder is already recording");
 
+    if (!_is_paused.load(std::memory_order_acquire))
+        throw std::logic_error("Recorder is not paused");
+
     rethrow_worker_error();
 
+    open_input_stream();
+    const auto result = _oboe_stream->requestStart();
+    if (result != oboe::Result::OK) {
+        _oboe_stream->close();
+        _oboe_stream.reset();
+        throw std::runtime_error("Failed to resume Oboe input stream: " +
+                                 std::string(oboe::convertToText(result)));
+    }
+
     _is_accepting_audio.store(true, std::memory_order_release);
+    _is_paused.store(false, std::memory_order_release);
     _is_recording.store(true, std::memory_order_release);
 }
 

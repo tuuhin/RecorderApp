@@ -153,3 +153,30 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_isRecordRunning(JNIEnv* env, job
 
     return result;
 }
+
+extern "C" JNIEXPORT jlong JNICALL Java_com_eva_recorder_1native_FlacAudioRecorder_getDroppedFrames(
+    JNIEnv* env, jobject, jlong handle) {
+    jlong result = 0;
+    recorder_jni::withRecorder<flac_recorder>(env, handle, [&](flac_recorder& recorder) {
+        result = static_cast<jlong>(recorder.dropped_frames());
+    });
+    return result;
+}
+
+extern "C" JNIEXPORT jintArray JNICALL
+Java_com_eva_recorder_1native_FlacAudioRecorder_getRecorderConfig(JNIEnv* env, jobject,
+                                                                  jlong handle) {
+    jintArray result = nullptr;
+    recorder_jni::withRecorder<flac_recorder>(env, handle, [&](flac_recorder& recorder) {
+        const auto config = recorder.active_config();
+        if (!config) return;
+
+        result = env->NewIntArray(2);
+        if (result == nullptr) return;
+
+        const jint values[] = {static_cast<jint>(config->sampleRate),
+                               static_cast<jint>(config->channelCount)};
+        env->SetIntArrayRegion(result, 0, 2, values);
+    });
+    return result;
+}
