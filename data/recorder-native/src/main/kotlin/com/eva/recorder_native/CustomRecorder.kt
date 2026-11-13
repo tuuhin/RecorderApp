@@ -26,10 +26,13 @@ import java.io.File
  *     ▼
  *  prepare()  ── opens the oboe input stream and the output file,
  *     │           locks the config and the path, is retryable on failure
+ *     ├─ cancel() ──► CREATED, output file deleted
  *     ▼
  *  start()  ──► RECORDING
  *                 │
  *                 ├─ pause() ──► paused ──► resume() ──► RECORDING
+ *                 │               └─ cancel() ──► CREATED, output deleted
+ *                 ├─ cancel() ──► CREATED, output file deleted
  *                 │
  *                 └─ stop() ──► FINALIZED, the file is complete and closed
  *                                  │
@@ -85,7 +88,7 @@ interface CustomRecorder {
      * Valid from every state and idempotent: releasing a recorder that was
      * never created, or was already released, is a no-op. Every other method
      * throws [RecorderHandleException]
-     * afterwards, until [create] is called again.
+     * afterward, until [create] is called again.
      *
      * @throws RuntimeException if native teardown fails, for example when a
      *         background recording error surfaces during cleanup.
@@ -177,6 +180,17 @@ interface CustomRecorder {
      *         if a background recording error surfaces here.
      */
     fun stop()
+
+    /**
+     * Stops capture, discards buffered and encoded audio, closes native resources,
+     * and deletes the configured output file. The recorder remains created and
+     * can be configured and prepared again; cancellation is safe to repeat and
+     * is a no-op when no output file exists.
+     *
+     * @throws RecorderHandleException before [create] or after [release].
+     * @throws RuntimeException if stopping or deleting the discarded output fails.
+     */
+    fun cancel()
 
     /**
      * Pauses capture while keeping the output open. The input stream is stopped

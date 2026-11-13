@@ -1,14 +1,11 @@
 package com.eva.recorder.data.recorder
 
-import android.content.Context
-import android.media.MediaRecorder
-import android.os.Build
 import android.util.Log
+import com.eva.datastore.domain.enums.RecordingEncoders
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
-import com.eva.location.domain.repository.LocationProvider
-import com.eva.recorder.data.RecordFormats
-import com.eva.recorder.data.hasAudioRecordPermission
-import com.eva.recorder.domain.exceptions.RecorderNotConfiguredException
+import com.eva.recorder.data.models.AndroidGenricRecordFormats
+import com.eva.recorder.data.models.CustomRecordingFormats
+import com.eva.recorder.domain.GenericVoiceRecorder
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.domain.recorder.AudioByteDataProvider
 import com.eva.recorder.domain.recorder.AudioDataReader
@@ -16,326 +13,190 @@ import com.eva.recorder.domain.recorder.VoiceRecorder
 import com.eva.recorder.domain.stopwatch.RecorderStopWatch
 import com.eva.recordings.domain.provider.RecorderFileProvider
 import com.eva.utils.tryWithLock
+import java.io.File
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
-import java.io.File
-import java.io.IOException
 
 private const val TAG = "VOICE_RECORDER"
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VoiceRecorderImpl(
-	private val context: Context,
-	private val stopWatch: RecorderStopWatch,
-	private val fileProvider: RecorderFileProvider,
-	private val settings: RecorderAudioSettingsRepo,
-	private val locationProvider: LocationProvider,
-	private val pcmReader: AudioDataReader,
+    private val stopWatch: RecorderStopWatch,
+    private val fileProvider: RecorderFileProvider,
+    private val settings: RecorderAudioSettingsRepo,
+    private val pcmReader: AudioDataReader,
+    private val androidRecorder: GenericVoiceRecorder,
+    private val customRecorder: GenericVoiceRecorder,
 ) : VoiceRecorder, AudioByteDataProvider {
 
-	private val _scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val _scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-	@Volatile
-	private var _recorder: MediaRecorder? = null
+    @Volatile
+    private var _recorder: GenericVoiceRecorder? = null
 
-	@Volatile
-	private var _recordingFile: File? = null
+    // locks ensures an operation complete before another operation can start
+    private val _lock = Mutex()
 
-	// locks ensures an operation complete before another operation can start
-	private val _lock = Mutex(false)
+    override val recorderState: StateFlow<RecorderState>
+        get() = stopWatch.recorderState
 
-	override val recorderState: StateFlow<RecorderState>
-		get() = stopWatch.recorderState
+    override val recorderTimer: StateFlow<LocalTime>
+        get() = stopWatch.elapsedTime
 
-	override val recorderTimer: StateFlow<LocalTime>
-		get() = stopWatch.elapsedTime
+    override val stream: Flow<Pair<ShortArray, Int>> = stopWatch.recorderState
+        .flatMapLatest { pcmReader.readRecorderRawBytes(it) }
+        .shareIn(_scope, SharingStarted.Lazily, replay = 0)
 
-	override val stream: Flow<Pair<ShortArray, Int>> = stopWatch.recorderState
-		.flatMapLatest { pcmReader.readRecorderRawBytes(it) }
-		.shareIn(_scope, SharingStarted.Lazily, replay = 0)
 
-	private val errorListener = MediaRecorder.OnErrorListener { _, what, extra ->
-		if (what == MediaRecorder.MEDIA_ERROR_SERVER_DIED) releaseResources()
-		Log.w(TAG, "SOME ERROR OCCURRED :$what CODE: $extra")
-	}
+    private suspend fun updateRecordingToExternalStorage(recordingFile: File): Result<Long> {
+        try {
+            val settings = settings.audioSettings()
+            val mimeType = when (val encoder = settings.encoders) {
+                RecordingEncoders.WAV, RecordingEncoders.FLAC -> CustomRecordingFormats.fromEncoder(encoder).mimeType
+                else -> AndroidGenricRecordFormats.fromEncoder(encoder).mimeType
+            }
 
-	@Suppress("DEPRECATION")
-	private fun createRecorder(): Boolean {
-		// no perms granted
-		if (!context.hasAudioRecordPermission) {
-			Log.i(TAG, "NO RECORD PERMISSION FOUND")
-			return false
-		}
-		// recorder already set
-		if (_recorder != null) {
-			Log.i(TAG, "RECORDER ALREADY INITIATED")
-			return false
-		}
-		// set recorder
-		_recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-			MediaRecorder(context)
-		else MediaRecorder()
+            Log.d(TAG, "COPYING THE RECORDED FILE")
+            return fileProvider.transferFileDataToStorage(recordingFile, mimeType)
+        } finally {
+            Log.d(TAG, "RELEASING RECORDING RESOURCES")
+            pcmReader.releaseRecorder()
+        }
+    }
 
-		_recorder?.setOnErrorListener(errorListener)
-		Log.d(TAG, "CREATED RECORDER AND AMPLITUDE SUCCESSFULLY")
-		return true
-	}
 
-	/**
-	 * Creates the file uri in which the audio to be recorded and initiate
-	 * the recorder parameters
-	 */
-	private suspend fun initiateRecorderParams() = coroutineScope {
+    override suspend fun startRecording() {
+        _lock.tryWithLock(this) {
 
-		if (_recorder == null) {
-			val isSuccess = createRecorder()
-			if (!isSuccess) return@coroutineScope
-		}
+            Log.i(TAG, "PREPARING FILE FOR RECORDING")
+            try {
+                // sets the recorder
+                val recorder = setupRecorder()
 
-		val audioSettings = settings.audioSettings()
-		val format = RecordFormats.fromEncoder(audioSettings.encoders)
-		val quality = audioSettings.quality
-		val channelCount = if (audioSettings.enableStereo) 2 else 1
+                stopWatch.prepare()
+                recorder.prepareAndStart {
+                    pcmReader.initiateRecorder()
+                    pcmReader.startRecorder()
+                }.getOrThrow()
+                stopWatch.startOrResume()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                stopWatch.cancel()
+                pcmReader.releaseRecorder()
+            }
+            Log.d(TAG, "RECORDER STARTED")
+        }
+    }
 
-		// recorder should be ready by now
-		val recorder = _recorder ?: return@coroutineScope
-		// initiate the amplitude reader
-		pcmReader.initiateRecorder()
 
-		// ensures the file is being created in a different coroutine
-		val fileDeferred = async {
-			fileProvider.createFileForRecording(format.fileExtension)
-		}
+    override suspend fun stopRecording(): Result<Long> {
+        // staring an operation lock it
+        return _lock.withLock(this) {
+            val recorder = _recorder ?: throw IllegalStateException("MediaRecorder could not be created")
+            //stop the ongoing recording
+            recorder.stopRecording().fold(
+                onSuccess = { recordingFile ->
+                    Log.d(TAG, "STOPWATCH STOPPED")
+                    stopWatch.stop()
+                    updateRecordingToExternalStorage(recordingFile).also { transferResult ->
+                        if (transferResult.isFailure) {
+                            recorder.discardRecordingFile(recordingFile)
+                        }
+                    }
+                },
+                onFailure = { Result.failure(it) },
+            )
+        }
+    }
 
-		// location deferred for current location if available
-		val locationDeferred = async {
-			// if settings is enabled
-			if (!audioSettings.addLocationInfoInRecording) return@async null
-			// if format supports it
-			if (format.outputFormat != MediaRecorder.OutputFormat.THREE_GPP && format.outputFormat != MediaRecorder.OutputFormat.MPEG_4) return@async null
-			locationProvider.invoke()
-		}
+    override suspend fun pauseRecording() {
+        _lock.tryWithLock(this) {
+            try {
+                val recorder = _recorder ?: throw IllegalStateException("MediaRecorder could not be created")
+                Log.d(TAG, "STOPWATCH PAUSED")
+                recorder.pauseRecording().getOrThrow()
+                stopWatch.pause()
+                Log.d(TAG, "RECORDER PAUSED")
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e(TAG, "FAILED TO PAUSE RECORDING", e)
+            }
+        }
+    }
 
-		Log.d(TAG, "CONCURRENTLY FETCHING LOCATION AND PREPARING FILE")
-		awaitAll(locationDeferred, fileDeferred)
-		Log.d(TAG, "DEFERRED CALL ARE READY")
+    override suspend fun resumeRecording() {
+        _lock.tryWithLock(this) {
+            try {
+                val recorder = _recorder ?: throw IllegalStateException("MediaRecorder could not be created")
+                //resume recorder
+                recorder.resumeRecording()
+                Log.d(TAG, "STOPWATCH RESUMED")
+                stopWatch.startOrResume()
+                Log.d(TAG, "RECORDER RESUMED")
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e(TAG, "FAILED TO RESUME RECORDING", e)
+            }
+        }
+    }
 
-		_recordingFile = fileDeferred.await()
+    override suspend fun cancelRecording() {
+        // if it's holding the lock don't do anything
+        _lock.tryWithLock(this) {
+            try {
+                val recorder = _recorder ?: throw IllegalStateException("MediaRecorder could not be created")
+                // cancel the timer watch
+                Log.d(TAG, "STOPWATCH STOPPED")
+                stopWatch.cancel()
+                //stop the ongoing recording
+                Log.d(TAG, "RECORDER STOPPED")
+                recorder.cancelOngoingRecording()
+                Log.d(TAG, "RECORDER STOPPED")
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e(TAG, "FAILED TO CANCEL RECORDING", e)
+            } finally {
+                pcmReader.releaseRecorder()
+            }
+        }
+    }
 
-		val locationResult = locationDeferred.await()
-		// log if any location error
-		if (locationResult?.isFailure == true) {
-			Log.w(TAG, "Location Cannot be fetched", locationResult.exceptionOrNull())
-		}
+    override fun releaseResources() {
+        try {
+            Log.d(TAG, "RELEASING RECORDER")
+            _recorder?.release()
+        } catch (e: Exception) {
+            Log.w(TAG, "FAILED TO RELEASE RESOURCES ", e)
+        } finally {
+            Log.d(TAG, "CLEANING THE RECORDER")
+            // clear the scope
+            _scope.cancel()
+            //set buffer reader to null
+            pcmReader.releaseRecorder()
+            // resetting the stopwatch
+            Log.d(TAG, "RESETTING STOPWATCH")
+            stopWatch.reset()
+        }
+    }
 
-		recorder.apply {
-			setOutputFile(_recordingFile)
-			setAudioSource(MediaRecorder.AudioSource.MIC)
-			// recorder format
-			setOutputFormat(format.outputFormat)
-			// formater channel and sampling
-			setAudioEncoder(format.encoder)
-			setAudioChannels(channelCount)
-			// recording quality
-			setAudioSamplingRate(quality.sampleRate)
-			setAudioEncodingBitRate(quality.bitRate)
-			//set location can only add location to mp4 and 3gp files
-			if (locationResult != null && locationResult.isSuccess) {
-				val location = locationResult.getOrNull() ?: return@apply
-				setLocation(
-					location.latitude.toFloat(),
-					location.longitude.toFloat()
-				)
-			}
-		}
-		recorder.logMetrics()
-	}
-
-	/**
-	 * Method to be called when recording has been finished, and you update the file
-	 * metadata
-	 */
-	private suspend fun updateRecordingToExternalStorage(recordingFile: File): Result<Long> {
-		// update the file
-		try {
-			val audioSettings = settings.audioSettings()
-			val format = RecordFormats.fromEncoder(audioSettings.encoders)
-
-			Log.d(TAG, "RECORDER FILE UPDATED")
-			return fileProvider.transferFileDataToStorage(
-				file = recordingFile,
-				mimeType = format.mimeType
-			)
-		} finally {
-			// set recording uri to null and close the socket
-			_recordingFile = null
-			// resets the recorder for  next recording
-			Log.d(TAG, "RESTING THE RECORDER")
-			_recorder?.reset()
-			pcmReader.releaseRecorder()
-		}
-	}
-
-	private suspend fun stopAndDeleteFileMetaData() {
-		// update the file
-		try {
-			val file = _recordingFile ?: return
-			// non-cancellable as file should be deleted
-			withContext(NonCancellable) {
-				fileProvider.deleteCreatedFile(file)
-				Log.d(TAG, "RECORDER FILE DELETED")
-			}
-		} finally {
-			// set recording uri to null and close the socket
-			_recordingFile = null
-			// resets the recorder for  next recording
-			Log.d(TAG, "RESTING THE RECORDER")
-			_recorder?.reset()
-			pcmReader.releaseRecorder()
-		}
-	}
-
-	override suspend fun startRecording() {
-		_lock.tryWithLock(this) {
-			// current uri is already set cannot set it again
-			if (_recordingFile != null) {
-				Log.d(TAG, "CURRENT URI IS ALREADY SET")
-				return@tryWithLock
-			}
-			Log.i(TAG, "PREPARING FILE FOR RECORDING")
-			initiateRecorderParams()
-			// now start the stopwatch
-			stopWatch.prepare()
-			// prepare the recorder
-			_recorder?.prepare()
-			Log.d(TAG, "RECORDER PREPARED")
-			//start the recorder
-			stopWatch.startOrResume()
-			pcmReader.startRecorder()
-			_recorder?.start()
-			Log.d(TAG, "RECORDER STARTED")
-		}
-	}
-
-	override suspend fun stopRecording(): Result<Long> {
-		// staring an operation lock it
-		return _lock.withLock(this) {
-			val file = _recordingFile ?: return Result.failure(RecorderNotConfiguredException())
-			// reset the timer
-			Log.d(TAG, "STOPWATCH STOPPED")
-			stopWatch.stop()
-			//stop the ongoing recording
-			_recorder?.stop()
-			Log.d(TAG, "RECORDER STOPPED")
-			Result.success(0L)
-			// update the file
-			updateRecordingToExternalStorage(file)
-		}
-	}
-
-	override suspend fun pauseRecording() {
-		_lock.tryWithLock(this) {
-			try {
-				//pause recorder
-				Log.d(TAG, "STOPWATCH PAUSED")
-				stopWatch.pause()
-				//pause recorder
-				_recorder?.pause()
-				Log.d(TAG, "RECORDER PAUSED")
-			} catch (e: IOException) {
-				e.printStackTrace()
-			}
-		}
-	}
-
-	override suspend fun resumeRecording() {
-		_lock.tryWithLock(this) {
-			try {
-				//resume stopwatch
-				Log.d(TAG, "STOPWATCH RESUMED")
-				stopWatch.startOrResume()
-				//resume recorder
-				_recorder?.resume()
-				Log.d(TAG, "RECORDER RESUMED")
-			} catch (e: IOException) {
-				e.printStackTrace()
-			}
-		}
-	}
-
-	override suspend fun cancelRecording() {
-		// if it's holding the lock don't do anything
-		_lock.tryWithLock(this) {
-			try {
-				// cancel the timer watch
-				Log.d(TAG, "STOPWATCH STOPPED")
-				stopWatch.cancel()
-				//stop the ongoing recording
-				Log.d(TAG, "RECORDER STOPPED")
-				_recorder?.stop()
-				// delete the current recording
-				stopAndDeleteFileMetaData()
-				Log.d(TAG, "RECORDER STOPPED")
-			} catch (e: Exception) {
-				e.printStackTrace()
-			}
-		}
-	}
-
-	override fun releaseResources() {
-		// delete the recording file if its exits
-		try {
-			val file = _recordingFile ?: return
-			// run blocking as we want to run this blocking code in the IO thread.
-			runBlocking {
-				withContext(NonCancellable) {
-					Log.d(TAG, "CLEARING THE FILE AS RECORDER CLEAR METHOD IS CALLED")
-					fileProvider.deleteCreatedFile(file)
-				}
-			}
-		} finally {
-			// clear the scope
-			_scope.cancel()
-			//set recording file to null
-			_recordingFile = null
-			//set buffer reader to null
-			pcmReader.releaseRecorder()
-			// clear the recorder resources
-			Log.d(TAG, "RELEASE RECORDER")
-			_recorder?.release()
-			_recorder = null
-			// resetting the stopwatch
-			Log.d(TAG, "RESETTING STOPWATCH")
-			stopWatch.reset()
-		}
-	}
-}
-
-private fun MediaRecorder.logMetrics() {
-	val currentMetrics = metrics ?: return
-	val bitrate = currentMetrics.getInt(MediaRecorder.MetricsConstants.AUDIO_BITRATE)
-	val sampleRte = currentMetrics.getInt(MediaRecorder.MetricsConstants.AUDIO_SAMPLERATE)
-	val channel = currentMetrics.getInt(MediaRecorder.MetricsConstants.AUDIO_CHANNELS)
-	Log.i(TAG, "RECORDER METRICS AFTER CONFIGURATION")
-	Log.i(TAG, "SAMPLING RATE : $sampleRte")
-	Log.i(TAG, "ENCODING BIT RATE : $bitrate")
-	Log.i(TAG, "CHANNEL COUNT :$channel")
-
+    private suspend fun setupRecorder(): GenericVoiceRecorder {
+        val settings = settings.audioSettings()
+        val encoder = settings.encoders
+        return when (encoder) {
+            RecordingEncoders.ACC, RecordingEncoders.OPTUS, RecordingEncoders.AMR_NB, RecordingEncoders.AMR_WB -> androidRecorder
+            RecordingEncoders.WAV, RecordingEncoders.FLAC -> customRecorder
+        }.apply { _recorder = this }
+    }
 }

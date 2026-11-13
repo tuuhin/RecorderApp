@@ -97,6 +97,7 @@ dependencies {
 	implementation(project(":core:ui"))
 	implementation(project(":data:worker"))
 	implementation(project(":data:interactions"))
+    implementation(project(":data:recordings"))
 	implementation(project(":feature:categories"))
 	implementation(project(":feature:player"))
 	implementation(project(":feature:recorder"))
