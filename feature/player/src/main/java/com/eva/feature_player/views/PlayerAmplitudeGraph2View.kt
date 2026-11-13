@@ -177,7 +177,7 @@ internal class PlayerAmplitudeGraph2View(
 
     fun onUpdateBookMarks(bookMarks: List<LocalTime>) {
         val times = bookMarks.map { it.toMillisecondOfDay() }.distinct().sorted()
-        synchronized(stateLock) {
+        stateLock.withLock {
             if (state.bookmarks == times) return
             state = state.copy(bookmarks = times)
             markDirtyLocked()
@@ -186,7 +186,7 @@ internal class PlayerAmplitudeGraph2View(
 
     fun onUpdateGraphData(array: () -> FloatArray) {
         val values = array()
-        synchronized(stateLock) {
+        stateLock.withLock {
             if (state.data.contentEquals(values)) return
             state = state.copy(data = values.copyOf())
             markDirtyLocked()
@@ -194,7 +194,7 @@ internal class PlayerAmplitudeGraph2View(
     }
 
     fun onUpdateStyle(style: WaveformStyle) {
-        synchronized(stateLock) {
+        stateLock.withLock {
             if (state.style == style) return
             state = state.copy(style = style)
             markDirtyLocked()
@@ -203,7 +203,7 @@ internal class PlayerAmplitudeGraph2View(
 
     fun onUpdatePadding(left: Int, top: Int, right: Int, bottom: Int) {
         val padding = WaveformPadding(left, top, right, bottom)
-        synchronized(stateLock) {
+        stateLock.withLock {
             if (state.padding == padding) return
             state = state.copy(padding = padding)
             markDirtyLocked()
@@ -213,7 +213,7 @@ internal class PlayerAmplitudeGraph2View(
 
     fun onUpdatePlayRatio(ratio: () -> Float) {
         val value = ratio().let { if (it.isFinite()) it.coerceIn(0f, 1f) else 0f }
-        synchronized(stateLock) {
+        stateLock.withLock {
             if (state.playRatio == value) return
             state = state.copy(playRatio = value)
             markDirtyLocked()
