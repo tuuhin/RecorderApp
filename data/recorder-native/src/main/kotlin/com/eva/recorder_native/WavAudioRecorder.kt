@@ -5,6 +5,7 @@ import com.eva.recorder_native.exception.InvalidHandleResultException
 import com.eva.recorder_native.exception.RecorderAlreadyInitiatedException
 import com.eva.recorder_native.exception.RecorderHandleException
 import com.eva.recorder_native.models.RecorderConfig
+import dalvik.annotation.optimization.FastNative
 import java.io.File
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicLong
@@ -83,6 +84,8 @@ class WavAudioRecorder : CustomRecorder {
 
     override fun stop() = withNativeHandle(::stopRecorder)
 
+    override fun cancel() = withNativeHandle(::cancelRecorder)
+
     override fun pause() = withNativeHandle(::pauseRecorder)
 
     override fun resume() = withNativeHandle(::resumeRecorder)
@@ -122,12 +125,24 @@ class WavAudioRecorder : CustomRecorder {
     // lifecycle
     private external fun prepareRecorder(handle: Long)
     private external fun startRecorder(handle: Long)
+
+    @FastNative
     private external fun stopRecorder(handle: Long)
+
+    @FastNative
+    private external fun cancelRecorder(handle: Long)
+
+    @FastNative
     private external fun pauseRecorder(handle: Long)
+
+    @FastNative
     private external fun resumeRecorder(handle: Long)
+
+    @FastNative
     private external fun resetRecorder(handle: Long)
 
     // helpers
+    @FastNative
     private external fun isRecordRunning(handle: Long): Boolean
     private external fun getDroppedFrames(handle: Long): Long
     private external fun getRecorderConfig(handle: Long): IntArray?

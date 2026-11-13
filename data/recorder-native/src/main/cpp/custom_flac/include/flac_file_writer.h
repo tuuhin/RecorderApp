@@ -26,6 +26,7 @@ class flac_file_writer final {
     std::size_t write(std::span<const std::int16_t> samples);
 
     void finalize();
+    void abort();
 
     [[nodiscard]] bool is_open() const noexcept;
 
@@ -34,6 +35,7 @@ class flac_file_writer final {
 
    private:
     FLAC__StreamEncoder* _encoder = nullptr;
+    std::filesystem::path _output_path;
     recorder_config config_{};
     std::vector<FLAC__int32> _sample_buffer;
     std::uint64_t _frames_written = 0;

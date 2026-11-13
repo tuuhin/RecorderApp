@@ -119,6 +119,12 @@ Java_com_eva_recorder_1native_WavAudioRecorder_stopRecorder(JNIEnv* env, jobject
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_com_eva_recorder_1native_WavAudioRecorder_cancelRecorder(JNIEnv* env, jobject, jlong handle) {
+    recorder_jni::withRecorder<wav_recorder>(
+        env, handle, [](wav_recorder& recorder) { recorder.cancel(); });
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_pauseRecorder(JNIEnv* env, jobject, jlong handle) {
     WAV_LOG_D("pauseRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<wav_recorder>(

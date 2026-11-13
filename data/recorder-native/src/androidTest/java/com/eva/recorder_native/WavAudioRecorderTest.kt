@@ -226,6 +226,80 @@ class WavAudioRecorderTest {
     }
 
     @Test
+    fun cancel_recording_deletes_file_and_recorder_can_record_again() = runBlocking {
+        val canceledFile = newOutputFile("canceled.wav")
+        recorder.create()
+        recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+        recorder.setOutputFile(canceledFile)
+        recorder.prepare()
+        recorder.start()
+        delay(RECORD_DURATION_MS)
+
+        recorder.cancel()
+        assertThat(recorder.isRecording).isFalse()
+        assertThat(canceledFile.exists()).isFalse()
+        recorder.cancel()
+        assertThat(canceledFile.exists()).isFalse()
+
+        val nextFile = newOutputFile("after-cancel.wav")
+        recorder.setOutputFile(nextFile)
+        recorder.prepare()
+        recorder.start()
+        delay(RECORD_DURATION_MS)
+        recorder.stop()
+
+        assertReadableWav(nextFile)
+    }
+
+    @Test
+    fun cancel_paused_recording_deletes_file() = runBlocking {
+        val file = newOutputFile("canceled-while-paused.wav")
+        recorder.create()
+        recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+        recorder.setOutputFile(file)
+        recorder.prepare()
+        recorder.start()
+        delay(RECORD_DURATION_MS)
+        recorder.pause()
+
+        recorder.cancel()
+
+        assertThat(recorder.isRecording).isFalse()
+        assertThat(file.exists()).isFalse()
+    }
+
+    @Test
+    fun cancel_prepared_recording_deletes_file() {
+        val file = newOutputFile("canceled-before-start.wav")
+        recorder.create()
+        recorder.setOutputFile(file)
+        recorder.prepare()
+
+        assertThat(file.exists()).isTrue()
+        recorder.cancel()
+
+        assertThat(recorder.isRecording).isFalse()
+        assertThat(file.exists()).isFalse()
+    }
+
+    @Test
+    fun cancel_after_stop_deletes_finalized_file() = runBlocking {
+        val file = newOutputFile("stopped-then-canceled.wav")
+        recorder.create()
+        recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+        recorder.setOutputFile(file)
+        recorder.prepare()
+        recorder.start()
+        delay(RECORD_DURATION_MS)
+        recorder.stop()
+
+        assertThat(file.exists()).isTrue()
+        recorder.cancel()
+
+        assertThat(file.exists()).isFalse()
+    }
+
+    @Test
     fun pause_and_resume_toggle_recording_state() = runBlocking {
         val file = newOutputFile("paused.wav")
 

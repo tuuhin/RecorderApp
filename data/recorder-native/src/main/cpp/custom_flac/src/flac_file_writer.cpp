@@ -2,6 +2,7 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 
 #include "flac_file_writer.h"
 
@@ -13,18 +14,9 @@ constexpr std::uint32_t FLAC_COMPRESSION_LEVEL = 5;
 }  // namespace
 
 flac_file_writer::~flac_file_writer() noexcept {
-    if (is_open()) {
-        try {
-            finalize();
-        } catch (...) {
-        }
-    }
-
-    // finalize() rethrows a failed finish() before deleting; release
-    // the encoder here so a failed finalization cannot leak it.
-    if (_encoder != nullptr) {
-        FLAC__stream_encoder_delete(_encoder);
-        _encoder = nullptr;
+    try {
+        abort();
+    } catch (...) {
     }
 }
 
@@ -39,6 +31,7 @@ void flac_file_writer::open(const std::filesystem::path& outputPath,
     if (outputPath.empty()) throw std::invalid_argument("Output path must not be empty");
 
     config_ = config;
+    _output_path = outputPath;
     _frames_written = 0;
     _finalized = false;
 
@@ -114,6 +107,24 @@ void flac_file_writer::finalize() {
     FLAC__stream_encoder_delete(_encoder);
     _encoder = nullptr;
     _finalized = true;
+}
+
+void flac_file_writer::abort() {
+    const bool shouldRemoveOutput = !_finalized;
+    // always clean the encoder first
+    if (_encoder != nullptr) {
+        FLAC__stream_encoder_delete(_encoder);
+        _encoder = nullptr;
+    }
+    _finalized = true;
+
+    // check if the file need to be removed
+    std::error_code err;
+    if (shouldRemoveOutput && !_output_path.empty()) std::filesystem::remove(_output_path, err);
+
+    _output_path.clear();
+
+    if (err) throw std::system_error(err, "Failed to delete aborted FLAC output file");
 }
 
 bool flac_file_writer::is_open() const noexcept {

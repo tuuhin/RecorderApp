@@ -4,6 +4,7 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "recorder_config.h"
@@ -41,13 +42,10 @@ void writeFourCC(std::ostream& stream, const char (&id)[5]) {
 }  // namespace
 
 wave_file_writer::~wave_file_writer() noexcept {
-    if (is_open() && !_finalized) {
-        try {
-            finalize();
-        } catch (...) {
-            // Destructors must not throw.
-            // Call finalize() explicitly to handle errors.
-        }
+    try {
+        abort();
+    } catch (...) {
+        if (is_open()) _file.close();
     }
 }
 
@@ -62,6 +60,7 @@ void wave_file_writer::open(const std::filesystem::path& outputPath,
     if (outputPath.empty()) throw std::invalid_argument("Output path must not be empty");
 
     config_ = config;
+    _output_path = outputPath;
     _blockSize = 0;
     _finalized = false;
 
@@ -119,6 +118,20 @@ void wave_file_writer::finalize() {
 
     if (_file.fail()) throw std::runtime_error("Failed to close WAV output file");
     _finalized = true;
+}
+
+void wave_file_writer::abort() {
+    const bool shouldRemoveOutput = !_finalized;
+    if (is_open()) _file.close();
+    _finalized = true;
+
+    // check the file is present if yes delete it
+    std::error_code err;
+    if (shouldRemoveOutput && !_output_path.empty()) std::filesystem::remove(_output_path, err);
+    _output_path.clear();
+
+    if (_file.fail()) throw std::runtime_error("Failed to close WAV output file");
+    if (err) throw std::system_error(err, "Failed to delete aborted WAV output file");
 }
 
 bool wave_file_writer::is_open() const noexcept {

@@ -26,13 +26,6 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_createRecorder(JNIEnv* env, jobj
         auto recorder = std::make_unique<flac_recorder>();
 
         const auto address = reinterpret_cast<std::uintptr_t>(recorder.release());
-
-        const auto printableAddress = static_cast<unsigned long long>(address);
-
-        FLAC_LOG_D("createRecorder: allocated flac_recorder, pointer=0x%llx, top-byte tag=0x%02llx",
-             printableAddress,
-             (printableAddress >> 56U) & 0xFFULL);
-
         return static_cast<jlong>(address);
     } catch (...) {
         FLAC_LOG_D("createRecorder: allocation failed, returning 0");
@@ -47,10 +40,6 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_releaseNative(JNIEnv* env, jobje
         FLAC_LOG_D("releaseNative: null handle, nothing to release");
         return;
     }
-
-    FLAC_LOG_D("releaseNative: releasing handle %lld (0x%llx)",
-         static_cast<long long>(handle),
-         static_cast<unsigned long long>(handle));
 
     try {
         std::unique_ptr<flac_recorder> recorder(recorder_jni::get_recorder<flac_recorder>(handle));
@@ -117,6 +106,13 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_stopRecorder(JNIEnv* env, jobjec
     FLAC_LOG_D("stopRecorder: handle %lld", static_cast<long long>(handle));
     recorder_jni::withRecorder<flac_recorder>(
         env, handle, [](flac_recorder& recorder) { recorder.stop(); });
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_eva_recorder_1native_FlacAudioRecorder_cancelRecorder(JNIEnv* env, jobject, jlong handle) {
+    FLAC_LOG_D("cancelRecorder: handle %lld", static_cast<long long>(handle));
+    recorder_jni::withRecorder<flac_recorder>(
+        env, handle, [](flac_recorder& recorder) { recorder.cancel(); });
 }
 
 extern "C" JNIEXPORT void JNICALL

@@ -20,6 +20,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -38,6 +39,7 @@ concept audio_file_writer =
         { writer.open(outputPath, config) };
         { writer.write(samples) } -> std::same_as<std::size_t>;
         { writer.finalize() };
+        { writer.abort() };
         { writer.is_open() } -> std::same_as<bool>;
     };
 
@@ -62,6 +64,7 @@ class audio_recorder final : public oboe::AudioStreamDataCallback, oboe::AudioSt
     void prepare();
     void start();
     void stop();
+    void cancel();
     void release();
     void pause();
     void resume();
@@ -304,6 +307,71 @@ void audio_recorder<Writer>::stop() {
 }
 
 template <audio_file_writer Writer>
+void audio_recorder<Writer>::cancel() {
+    std::scoped_lock lock(_lifecycle_lock);
+    std::exception_ptr cleanupError;
+    const auto recordError = [&cleanupError]() {
+        if (!cleanupError) cleanupError = std::current_exception();
+    };
+
+    _is_accepting_audio.store(false, std::memory_order_release);
+    _is_recording.store(false, std::memory_order_release);
+    _is_paused.store(false, std::memory_order_release);
+
+    if (_oboe_stream) {
+        const auto result = _oboe_stream->requestStop();
+        if (result != oboe::Result::OK && result != oboe::Result::ErrorInvalidState) {
+            auto errorString = std::string(oboe::convertToText(result));
+            auto exception = std::runtime_error(
+                "Failed to stop Oboe input stream during cancellation: " + errorString);
+
+            cleanupError = std::make_exception_ptr(exception);
+        }
+        _oboe_stream->close();
+        _oboe_stream.reset();
+    }
+
+    try {
+        stop_worker_th();
+    } catch (...) {
+        recordError();
+    }
+
+    if (_writer && _writer->is_open()) {
+        try {
+            // abort the writer
+            _writer->abort();
+        } catch (...) {
+            recordError();
+        }
+    }
+    _writer.reset();
+    _ring_buffer.reset();
+    _worker_buffer.clear();
+    _is_prepared = false;
+    _is_finalized = false;
+
+    // check if the output file path is present
+    if (!_output_path.empty()) {
+        std::error_code error;
+        std::filesystem::remove(_output_path, error);
+        if (error && !cleanupError) {
+            auto exception = std::system_error(error, "Failed to delete canceled recording");
+            cleanupError = std::make_exception_ptr(exception);
+        }
+    }
+
+    _has_worker_failed.store(false, std::memory_order_release);
+    {
+        std::scoped_lock errorLock(_error_lock);
+        _worker_error = nullptr;
+    }
+
+    // if we face some errors rethrow it with exception
+    if (cleanupError) std::rethrow_exception(cleanupError);
+}
+
+template <audio_file_writer Writer>
 void audio_recorder<Writer>::release() {
     std::scoped_lock lock(_lifecycle_lock);
 
@@ -460,8 +528,21 @@ void audio_recorder<Writer>::open_input_stream() {
     builder.setSampleRate(static_cast<std::int32_t>(_config.sampleRate));
     builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
     builder.setSharingMode(oboe::SharingMode::Shared);
+    // check this one later if we need any other input type
+    builder.setInputPreset(oboe::InputPreset::Generic);
     builder.setDataCallback(this);
     builder.setErrorCallback(this);
+
+    AUDIO_RECORDER_D("========== Actual Audio Stream Configuration ==========");
+    AUDIO_RECORDER_D("Direct: %s", builder.getDirection() == oboe::Direction::Input ? "In" : "Out");
+    AUDIO_RECORDER_D("Format: %d", static_cast<int>(builder.getFormat()));
+    AUDIO_RECORDER_D("Sample Rate: %d", builder.getSampleRate());
+    AUDIO_RECORDER_D("Channel Count: %d", builder.getChannelCount());
+    AUDIO_RECORDER_D("Performance Mode: %d", static_cast<int>(builder.getPerformanceMode()));
+    AUDIO_RECORDER_D("Sharing Mode: %d", static_cast<int>(builder.getSharingMode()));
+    AUDIO_RECORDER_D("Buffer Size (Frames): %d", builder.getBufferSizeInFrames());
+    AUDIO_RECORDER_D("Buffer Capacity (Frames): %d", builder.getBufferCapacityInFrames());
+    AUDIO_RECORDER_D("Device ID: %d", builder.getDeviceId());
 
     const auto result = builder.openStream(_oboe_stream);
     if (result != oboe::Result::OK || !_oboe_stream) {

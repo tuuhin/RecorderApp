@@ -23,6 +23,7 @@ class wave_file_writer final {
     std::size_t write(std::span<const std::int16_t> samples);
 
     void finalize();
+    void abort();
 
     [[nodiscard]] bool is_open() const noexcept;
     [[nodiscard]] std::uint64_t data_size() const noexcept;
@@ -32,6 +33,7 @@ class wave_file_writer final {
     void update_header();
 
     std::fstream _file;
+    std::filesystem::path _output_path;
     recorder_config config_{};
     std::uint64_t _blockSize = 0;
     bool _finalized = false;
