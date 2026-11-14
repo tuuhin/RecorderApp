@@ -12,10 +12,10 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object DatastoreModule {
+object DatastoreModule {
 
-	@Provides
-	@Singleton
-	fun providesDatastoreInstance(@ApplicationContext context: Context): DataStoreProvider =
-		DefaultDataStoreProvider(context)
+    @Provides
+    @Singleton
+    fun providesDatastoreInstance(@ApplicationContext context: Context): DataStoreProvider =
+        DefaultDataStoreProvider(context)
 }

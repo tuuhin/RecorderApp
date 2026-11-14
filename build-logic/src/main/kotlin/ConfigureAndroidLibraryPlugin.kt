@@ -75,7 +75,11 @@ class ConfigureAndroidLibraryPlugin : Plugin<Project> {
 
     private fun Project.configureLibrary() = extensions.configure<LibraryExtension> {
 
-        compileSdk = catalog.findVersion("android.compileSdk").get().toString().toInt()
+        compileSdk {
+            version = release(catalog.findVersion("android.compileSdk.major").get().toString().toInt()) {
+                minorApiLevel = catalog.findVersion("android.compileSdk.revision").get().toString().toInt()
+            }
+        }
 
         defaultConfig {
             minSdk = catalog.findVersion("android.minSdk").get().toString().toInt()

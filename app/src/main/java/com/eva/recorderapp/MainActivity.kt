@@ -31,9 +31,10 @@ class MainActivity : ComponentActivity() {
 
         // set enable edge to edge normally
         enableEdgeToEdge()
+        window.isNavigationBarContrastEnforced = false
 
         // on splash complete again enable edge to edge
-        splash.animateOnExit(onAnimationEnd = { enableEdgeToEdge() })
+        splash.animateOnExit(onAnimationEnd = { })
         // set activity transitions
         setTransitions()
 

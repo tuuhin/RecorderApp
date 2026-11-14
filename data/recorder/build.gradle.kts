@@ -1,10 +1,10 @@
 plugins {
-	alias(libs.plugins.recorderapp.android.library)
-	alias(libs.plugins.recorderapp.hilt)
+    alias(libs.plugins.recorderapp.android.library)
+    alias(libs.plugins.recorderapp.hilt)
 }
 
 android {
-	namespace = "com.eva.recorder"
+    namespace = "com.eva.recorder"
 
     testOptions {
         unitTests.isReturnDefaultValues = true
@@ -13,18 +13,17 @@ android {
 
 dependencies {
 
-	// lifecyle service and media3 common
-	implementation(libs.androidx.lifecycle.service)
-	implementation(libs.androidx.media3.common)
+    // lifecyle service and media3 common
+    implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.media3.common)
 
-	//local
-	implementation(project(":core:utils"))
-	implementation(project(":data:use_case"))
-	implementation(project(":data:location"))
-	implementation(project(":data:datastore"))
-	implementation(project(":data:recordings"))
-	implementation(project(":data:bookmarks"))
-	implementation(project(":data:transcribe"))
-
-    testImplementation(libs.mockk)
+    //local
+    implementation(project(":data:recorder-native"))
+    implementation(project(":core:utils"))
+    implementation(project(":data:use_case"))
+    implementation(project(":data:location"))
+    implementation(project(":data:datastore"))
+    implementation(project(":data:recordings"))
+    implementation(project(":data:bookmarks"))
+    implementation(project(":data:transcribe"))
 }

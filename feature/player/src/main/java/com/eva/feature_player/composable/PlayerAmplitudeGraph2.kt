@@ -38,38 +38,38 @@ import kotlinx.datetime.LocalTime
 
 @Composable
 fun PlayerAmplitudeGraph2(
-	totalTrackDuration: Duration,
-	trackPlayRatio: PlayRatio,
-	graphData: PlayerGraphData,
-	modifier: Modifier = Modifier,
-	isSwipeToScrollEnabled: Boolean = false,
-	onSwipe: (ratio: Float) -> Unit = {},
-	onSwipeEnd: () -> Unit = {},
-	bookMarkTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
-	plotColor: Color = MaterialTheme.colorScheme.secondary,
-	trackPointerColor: Color = MaterialTheme.colorScheme.primary,
-	bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
-	timelineColor: Color = MaterialTheme.colorScheme.outline,
-	timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
-	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
-	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
-	contentPadding: PaddingValues = PaddingValues(20.dp),
+    totalTrackDuration: Duration,
+    trackPlayRatio: PlayRatio,
+    graphData: PlayerGraphData,
+    modifier: Modifier = Modifier,
+    isSwipeToScrollEnabled: Boolean = false,
+    onSwipe: (ratio: Float) -> Unit = {},
+    onSwipeEnd: () -> Unit = {},
+    bookMarkTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
+    plotColor: Color = MaterialTheme.colorScheme.secondary,
+    trackPointerColor: Color = MaterialTheme.colorScheme.primary,
+    bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
+    timelineColor: Color = MaterialTheme.colorScheme.outline,
+    timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
+    timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
+    timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    contentPadding: PaddingValues = PaddingValues(20.dp),
 ) {
-	val resolver = LocalFontFamilyResolver.current
-	val density = LocalDensity.current
-	val layoutDirection = LocalLayoutDirection.current
+    val resolver = LocalFontFamilyResolver.current
+    val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
 
     val typeFace by remember(timelineTextStyle, resolver) {
-		resolver.resolveAsTypeface(
-			fontFamily = timelineTextStyle.fontFamily ?: FontFamily.Monospace,
-			fontWeight = timelineTextStyle.fontWeight ?: FontWeight.Normal,
-			fontStyle = timelineTextStyle.fontStyle ?: FontStyle.Normal,
-			fontSynthesis = timelineTextStyle.fontSynthesis ?: FontSynthesis.None
-		)
-	}
+        resolver.resolveAsTypeface(
+            fontFamily = timelineTextStyle.fontFamily ?: FontFamily.Monospace,
+            fontWeight = timelineTextStyle.fontWeight ?: FontWeight.Normal,
+            fontStyle = timelineTextStyle.fontStyle ?: FontStyle.Normal,
+            fontSynthesis = timelineTextStyle.fontSynthesis ?: FontSynthesis.None,
+        )
+    }
 
-	AndroidView(
+    AndroidView(
         factory = { ctx -> PlayerAmplitudeGraph2View(ctx) },
         update = { view ->
             view.onUpdateStyle(
@@ -108,55 +108,55 @@ fun PlayerAmplitudeGraph2(
 
 @Composable
 internal fun PlayerAmplitudeGraph2(
-	trackData: () -> PlayerTrackData,
-	graphData: PlayerGraphData,
-	modifier: Modifier = Modifier,
-	bookMarksTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
-	plotColor: Color = MaterialTheme.colorScheme.secondary,
-	trackPointerColor: Color = MaterialTheme.colorScheme.primary,
-	bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
-	timelineColor: Color = MaterialTheme.colorScheme.outline,
-	timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
-	timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
-	timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
-	timelineFontFamily: FontFamily = FontFamily.Monospace,
-	isSwipeToScrollEnabled: Boolean = false,
-	onSeek: (Duration) -> Unit = {},
-	onSeekEnd: () -> Unit = {},
-	shape: Shape = MaterialTheme.shapes.small,
-	contentPadding: PaddingValues = PaddingValues(
-		horizontal = dimensionResource(id = R.dimen.graph_card_padding),
-		vertical = dimensionResource(id = R.dimen.graph_card_padding_other)
-	),
+    trackData: () -> PlayerTrackData,
+    graphData: PlayerGraphData,
+    modifier: Modifier = Modifier,
+    bookMarksTimeStamps: ImmutableList<LocalTime> = persistentListOf(),
+    plotColor: Color = MaterialTheme.colorScheme.secondary,
+    trackPointerColor: Color = MaterialTheme.colorScheme.primary,
+    bookMarkColor: Color = MaterialTheme.colorScheme.tertiary,
+    timelineColor: Color = MaterialTheme.colorScheme.outline,
+    timelineColorVariant: Color = MaterialTheme.colorScheme.outlineVariant,
+    timelineTextStyle: TextStyle = MaterialTheme.typography.labelSmall,
+    timelineTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    timelineFontFamily: FontFamily = FontFamily.Monospace,
+    isSwipeToScrollEnabled: Boolean = false,
+    onSeek: (Duration) -> Unit = {},
+    onSeekEnd: () -> Unit = {},
+    shape: Shape = MaterialTheme.shapes.small,
+    contentPadding: PaddingValues = PaddingValues(
+        horizontal = dimensionResource(id = R.dimen.graph_card_padding),
+        vertical = dimensionResource(id = R.dimen.graph_card_padding_other),
+    ),
 ) {
     val totalDuration by remember(trackData) { derivedStateOf { trackData().total } }
 
-	Surface(
-		shape = shape,
-		color = containerColor,
-		modifier = modifier.aspectRatio(1.6f)
-	) {
-		PlayerAmplitudeGraph2(
-			trackPlayRatio = { trackData().playRatio },
-			totalTrackDuration = totalDuration,
-			graphData = graphData,
-			bookMarkTimeStamps = bookMarksTimeStamps,
-			isSwipeToScrollEnabled = isSwipeToScrollEnabled,
-			onSwipe = { ratio ->
-				val duration = trackData().calculateSeekAmount(ratio)
-				onSeek(duration)
-			},
-			onSwipeEnd = onSeekEnd,
-			plotColor = plotColor,
-			trackPointerColor = trackPointerColor,
-			bookMarkColor = bookMarkColor,
-			timelineColor = timelineColor,
-			timelineColorVariant = timelineColorVariant,
-			timelineTextColor = timelineTextColor,
-			timelineTextStyle = timelineTextStyle.copy(fontFamily = timelineFontFamily),
-			contentPadding = contentPadding,
-			containerColor = containerColor,
-		)
-	}
+    Surface(
+        shape = shape,
+        color = containerColor,
+        modifier = modifier.aspectRatio(1.6f),
+    ) {
+        PlayerAmplitudeGraph2(
+            trackPlayRatio = { trackData().playRatio },
+            totalTrackDuration = totalDuration,
+            graphData = graphData,
+            bookMarkTimeStamps = bookMarksTimeStamps,
+            isSwipeToScrollEnabled = isSwipeToScrollEnabled,
+            onSwipe = { ratio ->
+                val duration = trackData().calculateSeekAmount(ratio)
+                onSeek(duration)
+            },
+            onSwipeEnd = onSeekEnd,
+            plotColor = plotColor,
+            trackPointerColor = trackPointerColor,
+            bookMarkColor = bookMarkColor,
+            timelineColor = timelineColor,
+            timelineColorVariant = timelineColorVariant,
+            timelineTextColor = timelineTextColor,
+            timelineTextStyle = timelineTextStyle.copy(fontFamily = timelineFontFamily),
+            contentPadding = contentPadding,
+            containerColor = containerColor,
+        )
+    }
 }

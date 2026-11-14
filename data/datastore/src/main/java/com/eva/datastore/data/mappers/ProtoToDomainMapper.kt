@@ -60,4 +60,6 @@ internal val RecorderEncodingFormatsProto.toDomain: RecordingEncoders
 		RecorderEncodingFormatsProto.ENCODER_ACC -> RecordingEncoders.ACC
 		RecorderEncodingFormatsProto.ENCODER_OPTUS -> RecordingEncoders.OPTUS
 		RecorderEncodingFormatsProto.UNRECOGNIZED -> RecordingEncoders.ACC
+        RecorderEncodingFormatsProto.ENCODER_WAV -> RecordingEncoders.WAV
+        RecorderEncodingFormatsProto.ENCODER_FLAC -> RecordingEncoders.FLAC
 	}

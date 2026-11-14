@@ -1,0 +1,33 @@
+Language: Cpp
+BasedOnStyle: Google
+
+# Indentation & Limits
+IndentWidth: 4
+ColumnLimit: 100
+TabWidth: 4
+UseTab: Never
+
+# Brace Placement
+BreakBeforeBraces: Attach
+
+# Pointers & References
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Spacing & Whitespace
+SpacesInParentheses: false
+SpacesBeforeTrailingComments: 2
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+
+# Function & Parameter Wrapping
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AlwaysBreakTemplateDeclarations: Yes
+BinPackParameters: BinPack
+BinPackArguments: false
+
+# Include Sorting
+SortIncludes: CaseInsensitive
+IncludeBlocks: Preserve
