@@ -20,7 +20,7 @@ import java.io.File
  * ```
  *  create()  ── required once, before anything else
  *     │
- *     ├─ setRecorderConfig()   optional, defaults to 44_100 Hz mono
+ *     ├─ setRecorderConfig()   optional, defaults to 48_000 Hz mono
  *     ├─ setOutputFile()       required before prepare()
  *     │
  *     ▼
@@ -127,7 +127,7 @@ interface CustomRecorder {
 
     /**
      * Configures the capture parameters of the next recording. Optional: the
-     * default [RecorderConfig] is 44_100 Hz mono. Must be called before
+     * default [RecorderConfig] is 48_000 Hz mono. Must be called before
      * [prepare]; once prepared, the config is locked until [reset] or
      * [release].
      *

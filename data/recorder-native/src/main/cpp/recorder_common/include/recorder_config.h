@@ -11,7 +11,9 @@ struct recorder_config final {
 
     [[nodiscard]] std::uint16_t bytes_per_sample() const { return bitsPerSample / 8; }
 
-    [[nodiscard]] std::uint16_t block_align() const { return channelCount * bytes_per_sample(); }
+    [[nodiscard]] std::uint16_t block_align() const {
+        return static_cast<std::uint16_t>(channelCount * bytes_per_sample());
+    }
 
     [[nodiscard]] std::uint32_t byteRate() const { return sampleRate * block_align(); }
 
@@ -21,6 +23,8 @@ struct recorder_config final {
             throw std::invalid_argument("Channel count must be greater than zero");
         if (bitsPerSample != 16)
             throw std::invalid_argument("Only 16-bit PCM is currently supported");
+        if (channelCount > UINT16_MAX / bytes_per_sample())
+            throw std::invalid_argument("Channel count exceeds the PCM block-alignment limit");
         const auto calculatedByteRate =
             static_cast<std::uint64_t>(sampleRate) * channelCount * (bitsPerSample / 8);
 

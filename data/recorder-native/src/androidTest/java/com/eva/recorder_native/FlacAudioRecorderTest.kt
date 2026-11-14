@@ -220,6 +220,7 @@ class FlacAudioRecorderTest {
         assertThat(recorder.droppedFrames).isGreaterThanOrEqualTo(droppedFramesBeforeCapture)
 
         assertReadableFlac(file, channelCount = 1)
+        assertFlacPayloadIsPresent(file)
 
         recorder.release()
     }
@@ -257,6 +258,7 @@ class FlacAudioRecorderTest {
         recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
         recorder.setOutputFile(file)
         recorder.prepare()
+        val activeSampleRate = recorder.getReadRecorderConfig()!!.sampleRate
         recorder.start()
         delay(RECORD_DURATION_MS)
         recorder.pause()
@@ -307,6 +309,7 @@ class FlacAudioRecorderTest {
         recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
         recorder.setOutputFile(file)
         recorder.prepare()
+        val activeSampleRate = recorder.getReadRecorderConfig()!!.sampleRate
         recorder.start()
         val droppedFramesBeforeCapture = recorder.droppedFrames
 
@@ -325,9 +328,9 @@ class FlacAudioRecorderTest {
         assertReadableFlac(file)
         assertStructurallyValidFlac(
             file,
-            sampleRate = SAMPLE_RATE,
+            sampleRate = activeSampleRate,
             channelCount = 1,
-            minimumTotalSamples = SAMPLE_RATE.toLong(),
+            minimumTotalSamples = activeSampleRate.toLong(),
         )
         assertThat(recorder.droppedFrames).isGreaterThanOrEqualTo(droppedFramesBeforeCapture)
 
@@ -438,7 +441,11 @@ class FlacAudioRecorderTest {
         // hold zero frames. media3's FlacExtractor cannot parse a zero-frame
         // FLAC (EOFException in FlacMetadataReader), but the container itself
         // must still be finalized and structurally valid.
-        assertStructurallyValidFlac(file, sampleRate = SAMPLE_RATE, channelCount = 1)
+        assertStructurallyValidFlac(
+            file,
+            sampleRate = recorder.getReadRecorderConfig()!!.sampleRate,
+            channelCount = 1,
+        )
     }
 
     @Test
@@ -505,6 +512,24 @@ class FlacAudioRecorderTest {
         )
     }
 
+    private fun assertFlacPayloadIsPresent(file: File) {
+        val bytes = file.readBytes()
+        assertThat(bytes.size).isGreaterThan(42)
+        var metadataOffset = 4
+        var lastMetadataBlock = false
+        while (!lastMetadataBlock) {
+            val header = bytes[metadataOffset].toInt() and 0xFF
+            lastMetadataBlock = header and 0x80 != 0
+            val blockSize = ((bytes[metadataOffset + 1].toInt() and 0xFF) shl 16) or
+                ((bytes[metadataOffset + 2].toInt() and 0xFF) shl 8) or
+                (bytes[metadataOffset + 3].toInt() and 0xFF)
+            metadataOffset += 4 + blockSize
+        }
+        val audioPayload = bytes.copyOfRange(metadataOffset, bytes.size)
+        assertThat(audioPayload.size).isGreaterThan(0)
+        assertThat(audioPayload.any { it.toInt() != 0 }).isTrue()
+    }
+
     // Validates the FLAC container structure directly: the "fLaC" magic, the
     // STREAMINFO metadata block, and the stream description it declares,
     // including the total sample count libFLAC rewrites at finalize. This
@@ -560,7 +585,7 @@ class FlacAudioRecorderTest {
 
     companion object {
 
-        private const val SAMPLE_RATE = 44_100
+        private const val SAMPLE_RATE = 48_000
         private val RECORD_DURATION_MS = 1_500.milliseconds
 
         // Recordings asserted through assertReadableFlac ran for at least

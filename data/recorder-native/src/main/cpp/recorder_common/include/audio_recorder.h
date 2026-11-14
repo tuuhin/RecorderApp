@@ -115,9 +115,12 @@ class audio_recorder final : public oboe::AudioStreamDataCallback, oboe::AudioSt
     std::atomic<bool> _is_recording{false};
     std::atomic<bool> _is_paused{false};
     std::atomic<bool> _is_accepting_audio{false};
+    std::atomic<bool> _is_closing_stream{false};
     std::atomic<bool> _is_worker_running{false};
     std::atomic<bool> _has_worker_failed{false};
     std::atomic<std::uint64_t> _dropped_frames{0};
+    std::atomic<std::uint64_t> _callback_count{0};
+    std::atomic<std::uint32_t> _largest_callback_frames{0};
 
     std::exception_ptr _worker_error;
 
@@ -166,7 +169,8 @@ void audio_recorder<Writer>::prepare() {
     _config.validate();
 
     AUDIO_RECORDER_D(
-        "Opening Oboe stream -> Channels: %d, SampleRate: %d, Format: I16, Mode: LowLatency",
+        "Opening Oboe stream -> requested channels: %d, sample rate: %d, format: I16, "
+        "mode: Shared, performance: None, preset: Unprocessed",
         _config.channelCount,
         _config.sampleRate);
 
@@ -204,6 +208,8 @@ void audio_recorder<Writer>::prepare() {
         _writer->open(_output_path, _config);
 
         _dropped_frames.store(0, std::memory_order_relaxed);
+        _callback_count.store(0, std::memory_order_relaxed);
+        _largest_callback_frames.store(0, std::memory_order_relaxed);
         _has_worker_failed.store(false, std::memory_order_relaxed);
 
         {
@@ -224,6 +230,7 @@ void audio_recorder<Writer>::prepare() {
         _ring_buffer.reset();
         _worker_buffer.clear();
 
+        _is_closing_stream.store(true, std::memory_order_release);
         _oboe_stream->close();
         _oboe_stream.reset();
         throw;
@@ -257,7 +264,10 @@ void audio_recorder<Writer>::start() {
 
     if (result != oboe::Result::OK) {
         _is_accepting_audio.store(false, std::memory_order_release);
+        _is_closing_stream.store(true, std::memory_order_release);
         _oboe_stream->requestStop();
+        _oboe_stream->close();
+        _oboe_stream.reset();
         stop_worker_th();
 
         auto error = std::string(oboe::convertToText(result));
@@ -279,6 +289,7 @@ void audio_recorder<Writer>::stop() {
     _is_paused.store(false, std::memory_order_release);
 
     if (_oboe_stream) {
+        _is_closing_stream.store(true, std::memory_order_release);
         const auto result = _oboe_stream->requestStop();
 
         if (result != oboe::Result::OK && result != oboe::Result::ErrorInvalidState) {
@@ -319,6 +330,7 @@ void audio_recorder<Writer>::cancel() {
     _is_paused.store(false, std::memory_order_release);
 
     if (_oboe_stream) {
+        _is_closing_stream.store(true, std::memory_order_release);
         const auto result = _oboe_stream->requestStop();
         if (result != oboe::Result::OK && result != oboe::Result::ErrorInvalidState) {
             auto errorString = std::string(oboe::convertToText(result));
@@ -382,6 +394,7 @@ void audio_recorder<Writer>::release() {
     _is_paused.store(false, std::memory_order_release);
 
     if (_oboe_stream) {
+        _is_closing_stream.store(true, std::memory_order_release);
         _oboe_stream->requestStop();
         _oboe_stream->close();
         _oboe_stream.reset();
@@ -456,6 +469,22 @@ oboe::DataCallbackResult audio_recorder<Writer>::onAudioReady(oboe::AudioStream*
     const auto channels = static_cast<std::size_t>(_config.channelCount);
 
     const auto frameCount = static_cast<std::size_t>(numFrames);
+    if (channels == 0 || frameCount > std::numeric_limits<std::size_t>::max() / channels) {
+        AUDIO_RECORDER_E(
+            "Ignoring callback with invalid frame/channel dimensions: frames=%d channels=%zu",
+            numFrames,
+            channels);
+        _dropped_frames.fetch_add(frameCount, std::memory_order_relaxed);
+        return oboe::DataCallbackResult::Continue;
+    }
+
+    _callback_count.fetch_add(1, std::memory_order_relaxed);
+    auto largest = _largest_callback_frames.load(std::memory_order_relaxed);
+    while (frameCount > largest &&
+           !_largest_callback_frames.compare_exchange_weak(
+               largest, static_cast<std::uint32_t>(frameCount), std::memory_order_relaxed)) {
+    }
+
     const auto sampleCount = frameCount * channels;
 
     const auto* samples = static_cast<const std::int16_t*>(audioData);
@@ -482,6 +511,11 @@ oboe::DataCallbackResult audio_recorder<Writer>::onAudioReady(oboe::AudioStream*
 template <audio_file_writer Writer>
 void audio_recorder<Writer>::onErrorAfterClose(oboe::AudioStream*, oboe::Result error) {
     const char* error_message = oboe::convertToText(error);
+
+    if (_is_closing_stream.load(std::memory_order_acquire)) {
+        AUDIO_RECORDER_D("Oboe stream closed intentionally (%s)", error_message);
+        return;
+    }
 
     AUDIO_RECORDER_E("Oboe stream encountered an error and was closed! Error code: %d (%s)",
                      static_cast<int>(error),
@@ -521,42 +555,92 @@ void audio_recorder<Writer>::start_worker_th() {
 
 template <audio_file_writer Writer>
 void audio_recorder<Writer>::open_input_stream() {
+    oboe::Result oboeResults = oboe::Result::OK;
+
+    const auto configure_builder = [this](oboe::AudioStreamBuilder& builder, bool useOpenSles) {
+        builder.setDirection(oboe::Direction::Input);
+        builder.setFormat(oboe::AudioFormat::I16);
+        builder.setChannelCount(_config.channelCount);
+        builder.setSampleRate(static_cast<std::int32_t>(_config.sampleRate));
+        builder.setPerformanceMode(oboe::PerformanceMode::None);
+        builder.setSharingMode(oboe::SharingMode::Shared);
+        builder.setInputPreset(oboe::InputPreset::Generic);
+        builder.setDataCallback(this);
+        builder.setErrorCallback(this);
+        if (useOpenSles) builder.setAudioApi(oboe::AudioApi::OpenSLES);
+    };
+
+    // configure the builder without opensl es
     oboe::AudioStreamBuilder builder;
-    builder.setDirection(oboe::Direction::Input);
-    builder.setFormat(oboe::AudioFormat::I16);
-    builder.setChannelCount(_config.channelCount);
-    builder.setSampleRate(static_cast<std::int32_t>(_config.sampleRate));
-    builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
-    builder.setSharingMode(oboe::SharingMode::Shared);
-    // check this one later if we need any other input type
-    builder.setInputPreset(oboe::InputPreset::Generic);
-    builder.setDataCallback(this);
-    builder.setErrorCallback(this);
+    configure_builder(builder, false);
 
-    AUDIO_RECORDER_D("========== Actual Audio Stream Configuration ==========");
-    AUDIO_RECORDER_D("Direct: %s", builder.getDirection() == oboe::Direction::Input ? "In" : "Out");
-    AUDIO_RECORDER_D("Format: %d", static_cast<int>(builder.getFormat()));
-    AUDIO_RECORDER_D("Sample Rate: %d", builder.getSampleRate());
-    AUDIO_RECORDER_D("Channel Count: %d", builder.getChannelCount());
-    AUDIO_RECORDER_D("Performance Mode: %d", static_cast<int>(builder.getPerformanceMode()));
-    AUDIO_RECORDER_D("Sharing Mode: %d", static_cast<int>(builder.getSharingMode()));
-    AUDIO_RECORDER_D("Buffer Size (Frames): %d", builder.getBufferSizeInFrames());
-    AUDIO_RECORDER_D("Buffer Capacity (Frames): %d", builder.getBufferCapacityInFrames());
-    AUDIO_RECORDER_D("Device ID: %d", builder.getDeviceId());
+    auto result = builder.openStream(_oboe_stream);
+    if (result != oboe::Result::OK) {
+        oboeResults = result;
 
-    const auto result = builder.openStream(_oboe_stream);
-    if (result != oboe::Result::OK || !_oboe_stream) {
+        auto error_code = oboe::convertToText(result);
+        AUDIO_RECORDER_D("Default Oboe backend failed (%s); retrying with OpenSL ES", error_code);
+
         _oboe_stream.reset();
-        throw std::runtime_error("Failed to open Oboe input stream: " +
-                                 std::string(oboe::convertToText(result)));
+
+        // configure with opensl es
+        oboe::AudioStreamBuilder newBuilder;
+        configure_builder(newBuilder, true);
+
+        result = newBuilder.openStream(_oboe_stream);
+        if (result == oboe::Result::OK && _oboe_stream) {
+            auto new_builder_error = oboe::convertToText(result);
+            AUDIO_RECORDER_D("Opened Oboe with OpenSL ES after default backend failure (%s)",
+                             new_builder_error);
+        } else {
+            auto new_builder_error = oboe::convertToText(result);
+            AUDIO_RECORDER_E(
+                "Oboe input stream failed with both backends: default=%s, OpenSL ES=%s",
+                error_code,
+                new_builder_error);
+        }
     }
 
-    if (_oboe_stream->getFormat() != oboe::AudioFormat::I16 ||
-        _oboe_stream->getSampleRate() != static_cast<std::int32_t>(_config.sampleRate) ||
-        _oboe_stream->getChannelCount() != _config.channelCount) {
+    if (result != oboe::Result::OK || !_oboe_stream) {
+        _oboe_stream.reset();
+        throw std::runtime_error("Failed to open Oboe input stream with default backend (" +
+                                 std::string(oboe::convertToText(oboeResults)) +
+                                 ") and OpenSL ES (" + std::string(oboe::convertToText(result)) +
+                                 ")");
+    }
+
+    _is_closing_stream.store(false, std::memory_order_release);
+
+    AUDIO_RECORDER_D(
+        "Negotiated input: format=%d sampleRate=%d channels=%d framesPerCallback=%d "
+        "bufferSize=%d bufferCapacity=%d deviceId=%d preset=%d performance=%d sharing=%d",
+        static_cast<int>(_oboe_stream->getFormat()),
+        _oboe_stream->getSampleRate(),
+        _oboe_stream->getChannelCount(),
+        _oboe_stream->getFramesPerDataCallback(),
+        _oboe_stream->getBufferSizeInFrames(),
+        _oboe_stream->getBufferCapacityInFrames(),
+        _oboe_stream->getDeviceId(),
+        static_cast<int>(_oboe_stream->getInputPreset()),
+        static_cast<int>(_oboe_stream->getPerformanceMode()),
+        static_cast<int>(_oboe_stream->getSharingMode()));
+
+    if (_oboe_stream->getFormat() != oboe::AudioFormat::I16) {
+        _is_closing_stream.store(true, std::memory_order_release);
         _oboe_stream->close();
         _oboe_stream.reset();
-        throw std::runtime_error("Resumed Oboe stream configuration does not match the writer");
+        throw std::runtime_error(
+            "Oboe negotiated a non-I16 input stream; the writer requires PCM16");
+    }
+
+    if (_is_prepared &&
+        (_oboe_stream->getSampleRate() != static_cast<std::int32_t>(_config.sampleRate) ||
+         _oboe_stream->getChannelCount() != _config.channelCount)) {
+        _is_closing_stream.store(true, std::memory_order_release);
+        _oboe_stream->close();
+        _oboe_stream.reset();
+        throw std::runtime_error(
+            "Oboe negotiated a different format while resuming; cannot append incompatible PCM");
     }
 }
 
@@ -626,9 +710,11 @@ void audio_recorder<Writer>::pause() {
         throw std::logic_error("Recorder is not recording");
 
     _is_accepting_audio.store(false, std::memory_order_release);
+    _is_closing_stream.store(true, std::memory_order_release);
     const auto result = _oboe_stream->requestStop();
     if (result != oboe::Result::OK && result != oboe::Result::ErrorInvalidState) {
         _is_accepting_audio.store(true, std::memory_order_release);
+        _is_closing_stream.store(false, std::memory_order_release);
         throw std::runtime_error("Failed to stop Oboe input stream for pause: " +
                                  std::string(oboe::convertToText(result)));
     }
@@ -657,6 +743,7 @@ void audio_recorder<Writer>::resume() {
     open_input_stream();
     const auto result = _oboe_stream->requestStart();
     if (result != oboe::Result::OK) {
+        _is_closing_stream.store(true, std::memory_order_release);
         _oboe_stream->close();
         _oboe_stream.reset();
         throw std::runtime_error("Failed to resume Oboe input stream: " +

@@ -11,7 +11,7 @@ internal enum class CustomRecordingFormats {
     val mimeType: String
         get() = when (this) {
             WAV -> mimeTypesMap.getExtensionFromMimeType("wav") ?: "audio/x-wav"
-            FLAC -> mimeTypesMap.getExtensionFromMimeType("flac") ?: "audio/x-flac"
+            FLAC -> mimeTypesMap.getExtensionFromMimeType("flac") ?: "audio/flac"
         }
 
     val extension: String?

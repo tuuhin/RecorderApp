@@ -2,7 +2,8 @@
 
 Native audio recording for RecorderApp. The module exposes one Kotlin class per container format,
 `WavAudioRecorder` and `FlacAudioRecorder`, behind an identical
-`CustomRecorder` API. Everything below that line is C++ reached over JNI: audio capture with oboe (AAudio), a lock-free
+`CustomRecorder` API. Everything below that line is C++ reached over JNI: audio capture with Oboe's default backend, a
+lock-free
 SPSC ring buffer, a worker thread, and a per-format file writer. `oboe` and
 `libFLAC` are built from source at CMake configure time, so the module ships no prebuilt binaries.
 
@@ -76,13 +77,18 @@ oboe callback thread          worker thread
    (2 seconds of capacity)         (1 ms poll when idle)
 ```
 
-- **prepare ()** builds the oboe `AudioStreamBuilder`: `Direction::Input`,
-  `AudioFormat::I16`, the configured sample rate and channel count,
-  `PerformanceMode::LowLatency`, `SharingMode::Shared`, and both the data and error callbacks. After
-  opening, it reads back the *actual* stream rate and channel count and rewrites the config with
-  them, so the file header always describes the audio that was really captured. When the device mic
-  runs at a different native rate (commonly 48 kHz over MMAP), oboe transparently inserts its own
-  `FilterAudioStream` resampler to the requested rate; the recorder does not need to care.
+- **prepare ()** builds the oboe `AudioStreamBuilder`: `Direction::Input`, Oboe's default
+  backend, `AudioFormat::I16`, the configured sample rate and channel count,
+  `PerformanceMode::None`, `SharingMode::Shared`, `InputPreset::Generic`, and both the data and
+  error callbacks. After opening, the recorder reads the *actual* stream rate, channel count, and
+  format and uses those values for the writer, so the file metadata describes captured PCM. The
+  default request is 48 kHz; devices may negotiate another valid rate, which is logged explicitly.
+  The recorder first opens with Oboe's default backend. If that open fails, it retries the same
+  configuration with `OpenSLES`, which is generally more tolerant of the app's parallel Java
+  `AudioRecord` amplitude visualizer. Logs identify the selected backend, and when both attempts
+  fail the error includes the fallback failure instead of silently continuing with an unusable
+  stream. The focused module tests do not start the app's parallel visualizer, so paired app
+  recording remains the decisive validation.
 - **start ()** launches the worker thread, arms the accepting flag, and calls
   `requestStart()`.
 - **onAudioReady ()** is the single producer: it copies the callback's frames into the ring buffer
@@ -96,8 +102,9 @@ oboe callback thread          worker thread
   `onError` before rethrowing. The handler itself cannot suppress or replace the original failure.
 - `droppedFrames` reports the cumulative number of input frames the callback could not enqueue.
 - **pause () / resume ()** stop and close the input stream on pause, then reopen it using the same
-  actual format on resume. The worker and writer remain alive, so resumed audio appends to the same
-  output; samples during the pause are not captured.
+  actual format on resume. If the device negotiates a different rate, channel count, or sample
+  format, resume fails instead of appending incompatible PCM. The worker and writer remain alive,
+  so compatible resumed audio appends to the same output; samples during the pause are not captured.
 
 ## How the files are written
 
@@ -108,10 +115,10 @@ the data-chunk size (offset 40). The result is a standard PCM WAV that any playe
 
 **FLAC (`custom_flac`)** drives libFLAC's stream encoder: configured from the same `recorder_config`
 (channels, 16-bit depth, sample rate, compression level 5), fed
-`FLAC__stream_encoder_process_interleaved` with 16-bit samples widened to right-justified 32-bit,
-and finished with `FLAC__stream_encoder_finish()`, which rewrites the STREAMINFO block with the
-final statistics (total samples, MD5). A zero-frame FLAC produced by an immediate stop is still a
-valid, finalized container.
+`FLAC__stream_encoder_process_interleaved` with interleaved signed 16-bit samples, and finished
+with `FLAC__stream_encoder_finish()`, which rewrites the STREAMINFO block with the final statistics (total samples,
+MD5). A zero-frame FLAC produced by an immediate stop is still a valid, finalized
+container.
 
 ## Build and dependencies
 

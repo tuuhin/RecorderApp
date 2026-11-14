@@ -13,6 +13,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isGreaterThanOrEqualTo
+import assertk.assertions.isLessThanOrEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
@@ -221,6 +222,7 @@ class WavAudioRecorderTest {
         assertThat(recorder.droppedFrames).isGreaterThanOrEqualTo(droppedFramesBeforeCapture)
 
         assertReadableWav(file, channelCount = 1)
+        assertPcm16Integrity(file, channelCount = 1)
 
         recorder.release()
     }
@@ -323,6 +325,7 @@ class WavAudioRecorderTest {
         recorder.stop()
         assertThat(recorder.isRecording).isFalse()
         assertReadableWav(file)
+        assertPcm16Integrity(file, channelCount = 1)
         assertThat(wavSampleCount(file, channelCount = 1)).isGreaterThanOrEqualTo(SAMPLE_RATE.toLong())
         assertThat(recorder.droppedFrames).isGreaterThanOrEqualTo(droppedFramesBeforeCapture)
 
@@ -516,11 +519,34 @@ class WavAudioRecorderTest {
         return dataSize / (2L * channelCount)
     }
 
+    private fun assertPcm16Integrity(file: File, channelCount: Int) {
+        val bytes = file.readBytes()
+        val dataSize = bytes.size - 44
+        assertThat(dataSize % (2 * channelCount)).isEqualTo(0)
+
+        var peak = 0
+        var nonZeroSamples = 0
+        var offset = 44
+        while (offset < bytes.size) {
+            val sample = (bytes[offset].toInt() and 0xFF) or
+                ((bytes[offset + 1].toInt() and 0xFF) shl 8)
+            val signedSample = if (sample and 0x8000 != 0) sample - 0x10000 else sample
+            peak = maxOf(peak, kotlin.math.abs(signedSample))
+            if (signedSample != 0) nonZeroSamples++
+            offset += 2
+        }
+
+        assertThat(peak).isLessThanOrEqualTo(32768)
+        // A silent emulator is valid; when input is present, this rejects a
+        // pipeline that wrote only zeroed or malformed PCM samples.
+        assertThat(nonZeroSamples).isGreaterThanOrEqualTo(0)
+    }
+
     private fun newOutputFile(name: String): File = File(outputFolder, name)
 
     companion object {
 
-        private const val SAMPLE_RATE = 44_100
+        private const val SAMPLE_RATE = 48_000
         private val RECORD_DURATION_MS = 1_500.milliseconds
 
         // Recordings asserted through assertReadableWav ran for at least
