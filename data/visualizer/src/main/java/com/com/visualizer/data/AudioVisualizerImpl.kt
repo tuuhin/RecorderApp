@@ -27,11 +27,14 @@ import com.com.visualizer.domain.VisualizationData
 import com.com.visualizer.domain.VisualizerCache
 import com.com.visualizer.domain.VisualizerSession
 import com.com.visualizer.domain.VisualizerState
+import com.com.visualizer.domain.exception.VisualizationOwnershipException
 import com.com.visualizer.domain.model.VisualizerCacheEntry
 import com.eva.recordings.domain.models.AudioFileModel
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
+import kotlin.concurrent.withLock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +45,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -67,7 +71,7 @@ internal class AudioVisualizerImpl(
 
     private val hashGenerator by lazy { FileHashGenerator(context) }
     private val _lock = Mutex()
-    private val _reqLock = Any()
+    private val _reqLock = ReentrantLock()
     private val _scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val snapshot = MutableStateFlow(VisualizationSnapshot())
@@ -106,12 +110,12 @@ internal class AudioVisualizerImpl(
         // read in the cacheKey
         val cacheKey = buildCacheKey(fileUri)
 
-        // check if we have an have an active request if yes we re-hash the file
-        val previousRequest = synchronized(_reqLock) { activeRequest }
+        // check if we have and have an active request if yes we re-hash the file
+        val previousRequest = _reqLock.withLock { activeRequest }
         val sameIdentity = previousRequest?.let { isSameRequestIdentity(it, fileUri) } == true
         val existingHash = if (sameIdentity) hashGenerator.generateHash(fileUri) else null
 
-        // now if we have an previous request resue the request
+        // now if we have a previous request resue the request
         if (previousRequest != null && canReuseRequest(previousRequest, fileUri, existingHash)) {
             if (reuseRequest(previousRequest, lifecycleOwner, session, timePerPointInMs)) {
                 return@withLock Result.success(Unit)
@@ -121,7 +125,7 @@ internal class AudioVisualizerImpl(
         if (previousRequest != null) releaseRequest(previousRequest)
 
         // create a new request
-        val request = synchronized(_reqLock) {
+        val request = _reqLock.withLock {
             ActiveRequest(
                 generation = nextGeneration.incrementAndFetch(),
                 playerId = session.audioId,
@@ -140,13 +144,16 @@ internal class AudioVisualizerImpl(
 
         try {
             request.hash = if (sameIdentity) existingHash else hashGenerator.generateHash(fileUri)
-            if (!isCurrentOwner(request)) return@withLock cancelledRequestResult()
+            if (!isCurrentOwner(request))
+                return@withLock Result.failure(VisualizationOwnershipException())
 
             if (loadCachedVisuals(request)) return@withLock Result.success(Unit)
 
             startDecoding(request, lifecycleOwner, fileUri)
-            if (!isCurrentOwner(request)) cancelledRequestResult()
+
+            if (!isCurrentOwner(request)) Result.failure(VisualizationOwnershipException())
             else Result.success(Unit)
+
         } catch (e: CancellationException) {
             withContext(NonCancellable) {
                 if (isCurrentRequest(request)) releaseRequest(request)
@@ -157,7 +164,7 @@ internal class AudioVisualizerImpl(
             withContext(NonCancellable) {
                 if (isCurrentRequest(request)) {
                     releaseResources(request)
-                    synchronized(_reqLock) {
+                    _reqLock.withLock {
                         if (activeRequest === request && request.session != null) {
                             publishSnapshot(snapshot.value.copy(state = VisualizerState.FAILED))
                         }
@@ -193,7 +200,7 @@ internal class AudioVisualizerImpl(
         }.getOrDefault(false)
         if (!handlerIsCurrent) return false
 
-        synchronized(_reqLock) {
+        _reqLock.withLock {
             if (activeRequest === request && request.session != null) {
                 request.session = session
                 request.requestedPointMs = timePerPointInMs
@@ -223,7 +230,7 @@ internal class AudioVisualizerImpl(
         val decoder = MediaCodecPCMDataDecoder(handler = handler, seekDurationMillis = request.timePerPointInMs)
             .also { request.decoder = it }
         decoder.setOnBufferDecode { array -> updateVisuals(request, array) }
-        decoder.setOnComplete { _scope.launch { completeRequest(request) } }
+        decoder.setOnComplete { completeRequest(request) }
         decoder.setOnFailure { failure -> failRequest(request, failure) }
 
         val extractionResult = decoder.initiateExtraction(extractor, dataSource, uri.toUri())
@@ -236,14 +243,14 @@ internal class AudioVisualizerImpl(
 
     override fun cleanUp(owner: VisualizerSession) {
         val request = invalidateOwner(owner) ?: return
-        _scope.launch { releaseOwnedRequest(request) }
+        runBlocking { releaseOwnedRequest(request) }
     }
 
     override suspend fun cleanUpAndAwait(owner: VisualizerSession) {
         invalidateOwner(owner)?.let { releaseOwnedRequest(it) }
     }
 
-    private fun invalidateOwner(owner: VisualizerSession): ActiveRequest? = synchronized(_reqLock) {
+    private fun invalidateOwner(owner: VisualizerSession): ActiveRequest? = _reqLock.withLock {
         if (snapshot.value.owner != owner) return null
         activeRequest?.takeIf { it.session == owner }?.also { it.session = null }
             .also { publishSnapshot(VisualizationSnapshot()) }
@@ -251,7 +258,7 @@ internal class AudioVisualizerImpl(
 
     private suspend fun releaseOwnedRequest(request: ActiveRequest) {
         _lock.withLock {
-            val shouldRelease = synchronized(_reqLock) {
+            val shouldRelease = _reqLock.withLock {
                 activeRequest === request && request.session == null
             }
             if (shouldRelease) releaseRequest(request)
@@ -259,7 +266,7 @@ internal class AudioVisualizerImpl(
     }
 
     private fun updateVisuals(request: ActiveRequest, array: FloatArray) {
-        synchronized(_reqLock) {
+        _reqLock.withLock {
             val owner = request.session ?: return
             if (activeRequest !== request) return
 
@@ -277,14 +284,14 @@ internal class AudioVisualizerImpl(
 
     private suspend fun completeRequest(request: ActiveRequest) {
         _lock.withLock {
-            val owner = synchronized(_reqLock) {
+            val owner = _reqLock.withLock {
                 request.session?.takeIf { activeRequest === request }
             } ?: return
 
-            val hasPoints = synchronized(_reqLock) { activeRequest === request && points > 0 }
+            val hasPoints = _reqLock.withLock { activeRequest === request && points > 0 }
             if (!hasPoints) {
                 releaseResources(request)
-                synchronized(_reqLock) {
+                _reqLock.withLock {
                     if (activeRequest === request && request.session == owner) {
                         publishSnapshot(snapshot.value.copy(state = VisualizerState.FAILED))
                     }
@@ -303,9 +310,8 @@ internal class AudioVisualizerImpl(
             } catch (e: Exception) {
                 Log.e(TAG, "UNABLE TO CACHE VISUALIZATION", e)
             }
-
             releaseResources(request)
-            synchronized(_reqLock) {
+            _reqLock.withLock {
                 if (activeRequest === request && request.session == owner) {
                     publishSnapshot(snapshot.value.copy(state = VisualizerState.FINISHED))
                 }
@@ -314,7 +320,7 @@ internal class AudioVisualizerImpl(
     }
 
     private fun failRequest(request: ActiveRequest, failure: Throwable) {
-        synchronized(_reqLock) {
+        _reqLock.withLock {
             if (activeRequest !== request || request.session == null) return
             Log.e(TAG, "ASYNCHRONOUS VISUALIZATION FAILURE", failure)
             publishSnapshot(snapshot.value.copy(state = VisualizerState.FAILED))
@@ -322,7 +328,7 @@ internal class AudioVisualizerImpl(
 
         _scope.launch {
             _lock.withLock {
-                val shouldRelease = synchronized(_reqLock) {
+                val shouldRelease = _reqLock.withLock {
                     activeRequest === request && request.session != null &&
                         snapshot.value.state == VisualizerState.FAILED
                 }
@@ -332,14 +338,14 @@ internal class AudioVisualizerImpl(
     }
 
     private suspend fun releaseRequest(request: ActiveRequest) {
-        synchronized(_reqLock) {
+        _reqLock.withLock {
             if (activeRequest === request) {
                 request.session = null
                 publishSnapshot(VisualizationSnapshot())
             }
         }
         releaseResources(request)
-        synchronized(_reqLock) {
+        _reqLock.withLock {
             if (activeRequest === request) activeRequest = null
         }
     }
@@ -360,7 +366,7 @@ internal class AudioVisualizerImpl(
     }
 
     private fun applyVisualsFromCache(request: ActiveRequest, entry: VisualizerCacheEntry) {
-        synchronized(_reqLock) {
+        _reqLock.withLock {
             if (activeRequest !== request || request.session == null) return
             require(entry.timePerPointMs > 0) { "Cached point duration must be positive" }
             require(entry.entryFloats.isNotEmpty()) { "Cached waveform contains no points" }
@@ -378,7 +384,7 @@ internal class AudioVisualizerImpl(
         .smoothen(.4f)
 
     private suspend fun persistCacheEntry(key: String, hash: String, timePerPointMs: Int) {
-        val values = synchronized(_reqLock) {
+        val values = _reqLock.withLock {
             if (points <= 0) return
             amplitudes.copyOf(points)
         }
@@ -386,17 +392,14 @@ internal class AudioVisualizerImpl(
         cache.setCacheEntry(key, VisualizerCacheEntry(hash, values, timePerPointMs))
     }
 
-    private fun isCurrentOwner(request: ActiveRequest): Boolean = synchronized(_reqLock) {
+    private fun isCurrentOwner(request: ActiveRequest): Boolean = _reqLock.withLock {
         activeRequest === request && request.session != null
     }
 
-    private fun isCurrentRequest(request: ActiveRequest): Boolean = synchronized(_reqLock) {
+    private fun isCurrentRequest(request: ActiveRequest): Boolean = _reqLock.withLock {
         activeRequest === request
     }
 
-    private fun cancelledRequestResult() = Result.failure<Unit>(
-        CancellationException("Visualization ownership changed before preparation completed"),
-    )
 
     /**
      * If it's a content uri then use the content id otherwise use the whole
