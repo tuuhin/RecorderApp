@@ -87,7 +87,9 @@
   <string name="recording_settings_quality_text">বর্তমান অডিও গুণমানকে উচ্চ গুণমানে পরিবর্তন করার অর্থ হল উচ্চ নমুনা হার এবং বিট রেট</string>
   <string name="recording_settings_encoder_title">অডিও এনকোডার</string>
   <string name="recording_settings_encoder_text">অডিও এনকোডার নির্বাচন করুন, এনকোডিং পরিবর্তন করলে রেকর্ডিংয়ের গুণমান এবং আকার পরিবর্তিত হবে</string>
-  <string name="recording_settings_encoder_amr_nb_text">ছোট ফাইলের আকার অফার করে এবং কম-বিটরেট পরিস্থিতির জন্য উপযুক্ত</string>
+    <string name="recording_settings_encoder_wav_text">আনকম্প্রেসড PCM অডিও যা বড় ফাইল সাইজের বিনিময়ে সর্বোচ্চ মানের স্পষ্টতা প্রদান করে</string>
+    <string name="recording_settings_encoder_flac_text">লসলেস কম্প্রেশন যা ফাইল সাইজ উল্লেখযোগ্যভাবে কমিয়েও মূল অডিওর গুণমান অক্ষুণ্ণ রাখে</string>
+    <string name="recording_settings_encoder_amr_nb_text">ছোট ফাইলের আকার অফার করে এবং কম-বিটরেট পরিস্থিতির জন্য উপযুক্ত</string>
   <string name="recording_settings_encoder_amr_wb_text">বিস্তৃত ফ্রিকোয়েন্সি সহ দীর্ঘ রেকর্ডিংয়ের জন্য উপযুক্ত</string>
   <string name="recording_settings_encoder_optus_text">উচ্চ মানের কম্প্রেশন এবং বিভিন্ন বিটরেটে অভিযোজনযোগ্যতা</string>
   <string name="recording_settings_encoder_mpeg_text">বড় ফাইল সাইজের সাথে একই বিটরেটে ভালো মানের</string>

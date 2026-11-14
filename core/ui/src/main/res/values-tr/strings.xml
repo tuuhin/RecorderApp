@@ -85,7 +85,9 @@
   <string name="recording_settings_quality_text">Mevcut ses kalitesini değiştirin. Daha yüksek kalite, daha yüksek örnekleme hızı ve bit hızı anlamına gelir</string>
   <string name="recording_settings_encoder_title">Ses Kodlayıcı</string>
   <string name="recording_settings_encoder_text">Bir ses kodlayıcı seçin. Kodlamanın değiştirilmesi kaydın kalitesini ve boyutunu değiştirir</string>
-  <string name="recording_settings_encoder_amr_nb_text">Daha küçük dosya boyutları sunar ve düşük bit hızlı durumlar için uygundur</string>
+    <string name="recording_settings_encoder_wav_text">Büyük dosya boyutları pahasına maksimum ses doğruluğu sunan sıkıştırılmamış PCM ses</string>
+    <string name="recording_settings_encoder_flac_text">Dosya boyutlarını önemli ölçüde azaltırken orijinal ses kalitesini koruyan kayıpsız sıkıştırma</string>
+    <string name="recording_settings_encoder_amr_nb_text">Daha küçük dosya boyutları sunar ve düşük bit hızlı durumlar için uygundur</string>
   <string name="recording_settings_encoder_amr_wb_text">Daha geniş bir frekans aralığı ile daha uzun kayıtlar için uygundur</string>
   <string name="recording_settings_encoder_optus_text">Farklı bit hızlarına uyum sağlayan yüksek kaliteli sıkıştırma</string>
   <string name="recording_settings_encoder_mpeg_text">Aynı bit hızında iyi kalite, ancak daha büyük dosya boyutları</string>

@@ -86,6 +86,8 @@
     <string name="recording_settings_quality_text">Ändere die aktuelle Audioqualität. Eine höhere Qualität bedeutet eine höhere Abtastrate und Bitrate</string>
     <string name="recording_settings_encoder_title">Audio-Encoder</string>
     <string name="recording_settings_encoder_text">Wähle einen Audio-Encoder. Eine Änderung der Kodierung verändert Qualität und Größe der Aufnahme</string>
+    <string name="recording_settings_encoder_wav_text">Unkomprimiertes PCM-Audio mit maximaler Klangtreue auf Kosten großer Dateigrößen</string>
+    <string name="recording_settings_encoder_flac_text">Verlustfreie Komprimierung, die die ursprüngliche Audioqualität bei deutlich geringerer Dateigröße bewahrt</string>
     <string name="recording_settings_encoder_amr_nb_text">Bietet kleinere Dateien und eignet sich für Szenarien mit niedriger Bitrate</string>
     <string name="recording_settings_encoder_amr_wb_text">Geeignet für längere Aufnahmen mit einem größeren Frequenzbereich</string>
     <string name="recording_settings_encoder_optus_text">Hochwertige Komprimierung mit Anpassung an verschiedene Bitraten</string>

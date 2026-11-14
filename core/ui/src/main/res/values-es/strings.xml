@@ -86,6 +86,8 @@
     <string name="recording_settings_quality_text">Cambia la calidad de audio actual. Una calidad mayor significa una frecuencia de muestreo y una tasa de bits mayores</string>
     <string name="recording_settings_encoder_title">Codificador de audio</string>
     <string name="recording_settings_encoder_text">Selecciona un codificador de audio. Cambiar la codificación variará la calidad y el tamaño de la grabación</string>
+    <string name="recording_settings_encoder_wav_text">Audio PCM sin comprimir que ofrece máxima fidelidad a costa de archivos de gran tamaño</string>
+    <string name="recording_settings_encoder_flac_text">Compresión sin pérdida que conserva la calidad de audio original con tamaños de archivo significativamente reducidos</string>
     <string name="recording_settings_encoder_amr_nb_text">Ofrece archivos más pequeños y es adecuado para situaciones con baja tasa de bits</string>
     <string name="recording_settings_encoder_amr_wb_text">Adecuado para grabaciones largas con un rango de frecuencias más amplio</string>
     <string name="recording_settings_encoder_optus_text">Compresión de alta calidad adaptable a distintas tasas de bits</string>
