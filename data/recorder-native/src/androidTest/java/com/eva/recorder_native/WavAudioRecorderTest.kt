@@ -74,6 +74,41 @@ class WavAudioRecorderTest {
     }
 
     @Test
+    fun release_while_recording_finalizes_output() = runBlocking {
+        val file = newOutputFile("released-while-recording.wav")
+        recorder.create()
+        recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+        recorder.setOutputFile(file)
+        recorder.prepare()
+        recorder.start()
+        delay(RECORD_DURATION_MS)
+
+        recorder.release()
+
+        assertThat(file.exists()).isTrue()
+        assertFailsWith<RecorderHandleException> { recorder.isRecording }
+        assertReadableWav(file)
+    }
+
+    @Test
+    fun release_while_paused_finalizes_output() = runBlocking {
+        val file = newOutputFile("released-while-paused.wav")
+        recorder.create()
+        recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+        recorder.setOutputFile(file)
+        recorder.prepare()
+        recorder.start()
+        delay(RECORD_DURATION_MS)
+        recorder.pause()
+
+        recorder.release()
+
+        assertThat(file.exists()).isTrue()
+        assertFailsWith<RecorderHandleException> { recorder.isRecording }
+        assertReadableWav(file)
+    }
+
+    @Test
     fun recorder_config_reads_active_oboe_values_and_is_cleared_by_reset_and_release() {
         val requestedConfig = RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1)
         assertThat(recorder.getReadRecorderConfig()).isEqualTo(null)
@@ -519,7 +554,7 @@ class WavAudioRecorderTest {
         return dataSize / (2L * channelCount)
     }
 
-    private fun assertPcm16Integrity(file: File, channelCount: Int) {
+    private fun assertPcm16Integrity(file: File, channelCount: Int = 1) {
         val bytes = file.readBytes()
         val dataSize = bytes.size - 44
         assertThat(dataSize % (2 * channelCount)).isEqualTo(0)

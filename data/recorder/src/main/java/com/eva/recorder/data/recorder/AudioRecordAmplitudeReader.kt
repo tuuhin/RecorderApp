@@ -10,6 +10,7 @@ import com.eva.recorder.data.hasAudioRecordPermission
 import com.eva.recorder.domain.models.RecorderState
 import com.eva.recorder.domain.recorder.AudioDataReader
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.currentCoroutineContext
@@ -20,11 +21,10 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
-private const val TAG = "AmplitudeVisualizer"
-
 @SuppressLint("MissingPermission")
 internal class AudioRecordAmplitudeReader(
     private val context: Context,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : AudioDataReader {
 
     @Volatile
@@ -96,7 +96,7 @@ internal class AudioRecordAmplitudeReader(
             Log.d(TAG, "RECORDER WAS NOT INITIATED ")
             throw Exception("Audio Record instance not initiated")
         }
-        withContext(Dispatchers.IO) {
+        withContext(dispatcher) {
             try {
                 _recorder?.startRecording()
             } catch (e: CancellationException) {
@@ -112,7 +112,7 @@ internal class AudioRecordAmplitudeReader(
             Log.d(TAG, "RECORDER STATE IS ALREADY STOPPED")
             return
         }
-        withContext(Dispatchers.IO) {
+        withContext(dispatcher) {
             try {
                 _recorder?.stop()
             } catch (e: CancellationException) {
@@ -175,4 +175,8 @@ internal class AudioRecordAmplitudeReader(
         // will stop the flow from closing
         awaitClose()
     }.flowOn(Dispatchers.IO)
+
+    companion object {
+        private const val TAG = "AmplitudeVisualizer"
+    }
 }

@@ -73,6 +73,41 @@ class FlacAudioRecorderTest {
     }
 
     @Test
+    fun release_while_recording_finalizes_output() = runBlocking {
+        val file = newOutputFile("released-while-recording.flac")
+        recorder.create()
+        recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+        recorder.setOutputFile(file)
+        recorder.prepare()
+        recorder.start()
+        delay(RECORD_DURATION_MS)
+
+        recorder.release()
+
+        assertThat(file.exists()).isTrue()
+        assertFailsWith<RecorderHandleException> { recorder.isRecording }
+        assertReadableFlac(file)
+    }
+
+    @Test
+    fun release_while_paused_finalizes_output() = runBlocking {
+        val file = newOutputFile("released-while-paused.flac")
+        recorder.create()
+        recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
+        recorder.setOutputFile(file)
+        recorder.prepare()
+        recorder.start()
+        delay(RECORD_DURATION_MS)
+        recorder.pause()
+
+        recorder.release()
+
+        assertThat(file.exists()).isTrue()
+        assertFailsWith<RecorderHandleException> { recorder.isRecording }
+        assertReadableFlac(file)
+    }
+
+    @Test
     fun recorder_config_reads_active_oboe_values_and_is_cleared_by_reset_and_release() {
         val requestedConfig = RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1)
         assertThat(recorder.getReadRecorderConfig()).isEqualTo(null)
@@ -258,7 +293,7 @@ class FlacAudioRecorderTest {
         recorder.setRecorderConfig(RecorderConfig(sampleRate = SAMPLE_RATE, channel = 1))
         recorder.setOutputFile(file)
         recorder.prepare()
-        val activeSampleRate = recorder.getReadRecorderConfig()!!.sampleRate
+        recorder.getReadRecorderConfig()!!.sampleRate
         recorder.start()
         delay(RECORD_DURATION_MS)
         recorder.pause()
