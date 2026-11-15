@@ -18,6 +18,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
@@ -27,9 +28,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
 
-private const val TAG = "VOICE_RECORDER"
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VoiceRecorderImpl(
@@ -84,17 +85,23 @@ internal class VoiceRecorderImpl(
             try {
                 // sets the recorder
                 val recorder = setupRecorder()
-
+                // prepare the stop watch
                 stopWatch.prepare()
+                // prepare the reorder and initiate the formals
                 recorder.prepareAndStart {
                     pcmReader.initiateRecorder()
                     pcmReader.startRecorder()
                 }.getOrThrow()
+
+                Log.d(TAG, "STARTING STOPWATCH")
                 stopWatch.startOrResume()
             } catch (e: Exception) {
+                withContext(NonCancellable) {
+                    stopWatch.cancel()
+                    pcmReader.releaseRecorder()
+                }
                 if (e is CancellationException) throw e
-                stopWatch.cancel()
-                pcmReader.releaseRecorder()
+                Log.e(TAG, "FAILED TO START RECORDING", e)
             }
             Log.d(TAG, "RECORDER STARTED")
         }
@@ -106,18 +113,15 @@ internal class VoiceRecorderImpl(
         return _lock.withLock(this) {
             val recorder = _recorder ?: throw IllegalStateException("MediaRecorder could not be created")
             //stop the ongoing recording
-            recorder.stopRecording().fold(
-                onSuccess = { recordingFile ->
-                    Log.d(TAG, "STOPWATCH STOPPED")
-                    stopWatch.stop()
-                    updateRecordingToExternalStorage(recordingFile).also { transferResult ->
-                        if (transferResult.isFailure) {
-                            recorder.discardRecordingFile(recordingFile)
-                        }
-                    }
-                },
-                onFailure = { Result.failure(it) },
-            )
+            recorder.stopRecording()
+                .fold(
+                    onSuccess = { recordingFile ->
+                        Log.d(TAG, "STOPWATCH STOPPED")
+                        stopWatch.stop()
+                        updateRecordingToExternalStorage(recordingFile)
+                    },
+                    onFailure = { Result.failure(it) },
+                )
         }
     }
 
@@ -125,10 +129,12 @@ internal class VoiceRecorderImpl(
         _lock.tryWithLock(this) {
             try {
                 val recorder = _recorder ?: throw IllegalStateException("MediaRecorder could not be created")
-                Log.d(TAG, "STOPWATCH PAUSED")
-                recorder.pauseRecording().getOrThrow()
                 stopWatch.pause()
-                Log.d(TAG, "RECORDER PAUSED")
+                Log.d(TAG, "STOPWATCH PAUSED")
+                // pause the recorder and stop the pcm recorder
+                recorder.pauseRecording()
+                pcmReader.stopRecorder()
+                Log.d(TAG, "RECORDER PAUSED AND PCM READER STOPPED")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(TAG, "FAILED TO PAUSE RECORDING", e)
@@ -140,11 +146,13 @@ internal class VoiceRecorderImpl(
         _lock.tryWithLock(this) {
             try {
                 val recorder = _recorder ?: throw IllegalStateException("MediaRecorder could not be created")
-                //resume recorder
+                // resume the recorder and pcm reader
                 recorder.resumeRecording()
-                Log.d(TAG, "STOPWATCH RESUMED")
+                pcmReader.startRecorder()
+                Log.d(TAG, "RECORDER RESUMED AND PCM READER STARTED")
+                // start the stopwatch
                 stopWatch.startOrResume()
-                Log.d(TAG, "RECORDER RESUMED")
+                Log.d(TAG, "STOPWATCH RESUMED")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(TAG, "FAILED TO RESUME RECORDING", e)
@@ -197,6 +205,13 @@ internal class VoiceRecorderImpl(
         return when (encoder) {
             RecordingEncoders.ACC, RecordingEncoders.OPTUS, RecordingEncoders.AMR_NB, RecordingEncoders.AMR_WB -> androidRecorder
             RecordingEncoders.WAV, RecordingEncoders.FLAC -> customRecorder
-        }.apply { _recorder = this }
+        }.apply {
+            Log.i(TAG, "RECORDER SETUP COMPLETED")
+            _recorder = this
+        }
+    }
+
+    companion object {
+        private const val TAG = "VOICE_RECORDER"
     }
 }

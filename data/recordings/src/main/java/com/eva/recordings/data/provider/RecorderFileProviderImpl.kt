@@ -23,6 +23,7 @@ import java.io.File
 import java.io.IOException
 import java.time.LocalDateTime
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -39,6 +40,7 @@ internal class RecorderFileProviderImpl(
     private val recordingDao: RecordingsMetadataDao,
     private val settings: RecorderFileSettingsRepo,
     private val tagWriter: AudioTagWriter,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : RecorderFileProvider {
 
     private val _tempRecordingDir by lazy {
@@ -47,7 +49,7 @@ internal class RecorderFileProviderImpl(
     }
 
     override suspend fun createFileForRecording(extension: String?): File {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             val ext = extension.takeIf { it?.startsWith(".") ?: false } ?: ".tmp"
             val file = File.createTempFile("some_recordings", ext, _tempRecordingDir)
             Log.d(LOGGER_TAG, "FILE CREATED FOR RECORDING NAME: ${file.name}")
@@ -56,7 +58,7 @@ internal class RecorderFileProviderImpl(
     }
 
     override suspend fun transferFileDataToStorage(file: File, mimeType: String): Result<Long> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             try {
                 // file don't exist
                 if (!file.exists()) {
@@ -80,6 +82,10 @@ internal class RecorderFileProviderImpl(
                 }
                 return@withContext Result.success(uriId)
             } catch (e: CancellationException) {
+                Log.d(LOGGER_TAG, "COPY OPERATION CANCELLED DELETING THE FILE")
+                withContext(NonCancellable) {
+                    if (file.exists()) deleteCreatedFile(file)
+                }
                 throw e
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -89,7 +95,7 @@ internal class RecorderFileProviderImpl(
     }
 
     override suspend fun deleteCreatedFile(file: File): Boolean {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             try {
                 // ensure the file exits  and starts with the tempPrefix
                 if (!file.exists()) return@withContext false
@@ -114,7 +120,7 @@ internal class RecorderFileProviderImpl(
             tagWriter.writeAuthorTag(file, authorName)
         }
 
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             try {
                 context.contentResolver.openOutputStream(contentUri, "w")?.use { outStream ->
                     file.inputStream().use { inStream -> inStream.copyTo(outStream) }
@@ -127,13 +133,14 @@ internal class RecorderFileProviderImpl(
                 val result = context.contentResolver.update(contentUri, newMetaData, null, null)
                 Log.d(LOGGER_TAG, "UPDATED URI AFTER COPY :${result == 1}")
                 contentUri
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 withContext(NonCancellable) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
                         context.contentResolver.delete(contentUri, null)
                     else context.contentResolver.delete(contentUri, null, null)
                     Log.d(LOGGER_TAG, "CONTENT URI DELETED")
                 }
+                if (e is CancellationException) throw e
                 null
             }
         }
@@ -171,7 +178,7 @@ internal class RecorderFileProviderImpl(
         }
 
         // insert the metadata on IO thread
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             Log.d(LOGGER_TAG, "CREATING FILE WITH METADATA :$metaData")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 context.contentResolver.insert(RecordingsConstants.AUDIO_VOLUME_URI, metaData, null)
@@ -192,7 +199,7 @@ internal class RecorderFileProviderImpl(
             putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
         }
 
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             context.contentResolver.query(RecordingsConstants.AUDIO_VOLUME_URI, projection, bundle, null)
                 ?.use { cursor -> cursor.count }
                 ?: 0
