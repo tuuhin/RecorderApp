@@ -29,9 +29,9 @@ internal fun AudioFileModel.toComposition(
 	val ranges = mutableListOf<ClosedRange<Duration>>()
 
 	val editableItems = buildList {
-		for (config in composedConfigs) {
-			val startMs = (config.start.inWholeMilliseconds / 10) * 10
-			val endMs = (config.end.inWholeMilliseconds / 10) * 10
+        for ((start, end) in composedConfigs) {
+            val startMs = (start.inWholeMilliseconds / 10) * 10
+            val endMs = (end.inWholeMilliseconds / 10) * 10
 
 			val duration = abs(endMs - startMs)
 
@@ -43,7 +43,7 @@ internal fun AudioFileModel.toComposition(
 				.setEndPositionMs(endMs)
 				.build()
 
-			ranges.add(config.start..config.end)
+            ranges.add(start..end)
 
 			val mediaItem = MediaItem.Builder()
 				.setUri(fileUri)
