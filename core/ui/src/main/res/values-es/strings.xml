@@ -56,6 +56,7 @@
     <string name="player_action_edit">Editar</string>
     <string name="music_file_not_found_title">Archivo de audio no encontrado</string>
     <string name="music_file_not_found_desc">Asegúrate de que este archivo existe en tu almacenamiento</string>
+    <string name="audio_content_preparing">Preparando el audio</string>
     <string name="recorder_state_preparing">Inicializando</string>
     <string name="menu_option_details">Detalles</string>
     <string name="menu_option_share">Compartir</string>

@@ -57,6 +57,7 @@
   <string name="player_action_edit">সম্পাদনা করুন</string>
   <string name="music_file_not_found_title">অডিও ফাইল খুঁজে পাওয়া যায়নি</string>
   <string name="music_file_not_found_desc">এই ফাইলটি আপনার সঞ্চয়স্থানে বিদ্যমান রয়েছে তা নিশ্চিত করুন</string>
+    <string name="audio_content_preparing">অডিও প্রস্তুত করা হচ্ছে</string>
   <string name="recorder_state_preparing">শুরু করা হচ্ছে</string>
   <string name="menu_option_details">বিবরণ</string>
   <string name="menu_option_share">শেয়ার করুন</string>

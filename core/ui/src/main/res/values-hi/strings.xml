@@ -57,6 +57,7 @@
   <string name="player_action_edit">संपादित करें</string>
   <string name="music_file_not_found_title">ऑडियो फ़ाइल नहीं मिली</string>
   <string name="music_file_not_found_desc">सुनिश्चित करें कि यह फ़ाइल आपके स्टोरेज में मौजूद है</string>
+    <string name="audio_content_preparing">ऑडियो तैयार किया जा रहा है</string>
   <string name="recorder_state_preparing">प्रारंभ हो रहा है</string>
   <string name="menu_option_details">विवरण</string>
   <string name="menu_option_share">साझा करें</string>

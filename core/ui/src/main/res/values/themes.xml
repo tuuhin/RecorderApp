@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-  <style name="Theme.RecorderApp" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.RecorderApp" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+    </style>
 
-  <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-    <item name="windowSplashScreenBackground">@color/surface</item>
-    <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
-    <item name="windowSplashScreenAnimationDuration">800</item>
-    <item name="windowSplashScreenIconBackgroundColor">@color/primary_container</item>
-    <item name="postSplashScreenTheme">@style/Theme.RecorderApp</item>
-  </style>
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/surface</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/primary_container</item>
+        <item name="postSplashScreenTheme">@style/Theme.RecorderApp</item>
+    </style>
 
 </resources>

@@ -7,8 +7,10 @@ import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import com.eva.recorderapp.navigation.AppNavHost
@@ -40,12 +42,15 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             RecorderAppTheme {
-                Surface(color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
                     AppNavHost(
                         onSetController = { controller ->
                             // set nav controller
                             if (navController == null) navController = controller
-                            // handle the incoming intent if available via deeplinks
+                            // handle the incoming intent if available via deep links
                             if (intent != null && intent.data != null) {
                                 navController?.handleDeepLink(intent)
                             }

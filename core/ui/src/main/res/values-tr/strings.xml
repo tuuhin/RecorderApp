@@ -57,6 +57,7 @@
   <string name="player_action_edit">Düzenle</string>
   <string name="music_file_not_found_title">Ses Dosyası Bulunamadı</string>
   <string name="music_file_not_found_desc">Bu dosyanın depolama alanınızda bulunduğundan emin olun</string>
+  <string name="audio_content_preparing">Ses hazırlanıyor</string>
   <string name="recorder_state_preparing">Başlatılıyor</string>
   <string name="menu_option_details">Ayrıntılar</string>
   <string name="menu_option_share">Paylaş</string>
