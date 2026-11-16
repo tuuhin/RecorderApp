@@ -95,7 +95,7 @@
     <string name="audio_quality_sample_rate_bit_rate" translatable="false">%.2f kbps - %.2f khz</string>
     <string name="recording_settings_encoder_title">Audio Encoder</string>
     <string name="recording_settings_encoder_text">Select an audio encoder. Changing the encoding will vary the quality and size of the recording</string>
-    <string name="recording_settings_encoder_acc" translatable="false">ACC (*.m4a, *.mp3)</string>
+    <string name="recording_settings_encoder_acc" translatable="false">AAC (*.m4a, *.mp3)</string>
     <string name="recording_settings_encoder_three_gpp" translatable="false">AMR NB (*.amr, .*.3gpp)</string>
     <string name="recording_settings_encoder_amr_wb" translatable="false">AMR WB (*.awb)</string>
     <string name="recording_settings_encoder_optus" translatable="false">OPUS (*.ogg)</string>
