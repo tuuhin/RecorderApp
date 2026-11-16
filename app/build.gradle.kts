@@ -50,13 +50,14 @@ android {
         }
         debug {
             applicationIdSuffix = ".debug"
-            resValue("string", "app_name", "RecorderApp (DEBUG)")
         }
 
         create("benchmark") {
+            applicationIdSuffix = ".benckmark"
             initWith(buildTypes.getByName("release"))
             matchingFallbacks += listOf("release")
             isDebuggable = false
+            isProfileable = true
         }
     }
     compileOptions {
@@ -115,6 +116,8 @@ dependencies {
     androidTestImplementation(libs.androidx.runner)
     // baseline profile producer module
     baselineProfile(project(":baselineprofile"))
+    // leakcanary
+    debugImplementation(libs.leakcanary)
 }
 
 

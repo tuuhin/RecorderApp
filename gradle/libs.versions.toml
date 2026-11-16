@@ -50,6 +50,7 @@ uiautomator = "2.4.1"
 benchmarkJunit4 = "1.5.0"
 baselineprofile = "1.5.0"
 profileinstaller = "1.4.1"
+leakcanary = "1.0.0"
 
 [libraries]
 #core
@@ -157,6 +158,7 @@ compose-compiler-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compos
 ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 room-gradlePlugin = { group = "androidx.room3", name = "room3-gradle-plugin", version.ref = "room3" }
 protobuf-gradlePlugin = { group = "com.google.protobuf", name = "protobuf-gradle-plugin", version.ref = "protobuf_version" }
+leakcanary = { group = "com.android.tools.studio.leakcanary", name = "leakcanary", version.ref = "leakcanary" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
