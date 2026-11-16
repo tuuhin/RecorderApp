@@ -9,6 +9,7 @@ import com.eva.transcribe.domain.models.TranscriptionResult
 import com.eva.transcribe.domain.repository.STTModelsRepository
 import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -22,9 +23,8 @@ private const val TAG = "AUDIO_TRANSCRIPTOR"
 internal class AudioTranscriptorImpl(
     private val repository: STTModelsRepository,
     private val json: Json,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(2),
 ) : AudioTranscriptor {
-
-    private val ioDispatcher = Dispatchers.IO.limitedParallelism(1)
 
     private var _model: Model? = null
     private var _recognizer: Recognizer? = null
@@ -35,7 +35,7 @@ internal class AudioTranscriptorImpl(
     }
 
     override suspend fun setUp(modelId: String, sampleRate: Float): Result<Unit> {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             try {
                 if (_model != null && _recognizer != null) {
                     // if this is already present only reset the recognizer

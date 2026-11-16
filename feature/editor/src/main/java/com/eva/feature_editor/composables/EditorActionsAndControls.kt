@@ -74,9 +74,9 @@ private fun EditorActionsAndControls(
 				containerColor = actionButtonColor,
 			) {
 				Icon(
-					painter = painterResource(R.drawable.ic_cut),
-					contentDescription = "Action Cut"
-				)
+                    painter = painterResource(R.drawable.ic_cut),
+                    contentDescription = stringResource(R.string.editor_action_cut_description),
+                )
 			}
 			AnimatedPlayPauseButton(
 				isPlaying = isItemPlaying,
@@ -92,9 +92,9 @@ private fun EditorActionsAndControls(
 				containerColor = actionButtonColor,
 			) {
 				Icon(
-					painter = painterResource(R.drawable.ic_crop),
-					contentDescription = "Action Crop"
-				)
+                    painter = painterResource(R.drawable.ic_crop),
+                    contentDescription = stringResource(R.string.editor_action_crop_description),
+                )
 			}
 		}
 	}

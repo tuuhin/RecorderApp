@@ -73,8 +73,8 @@ internal fun TransformsSheetContent(
 
 	Column(
 		modifier = modifier
-			.padding(contentPadding)
-			.fillMaxWidth(),
+            .padding(contentPadding)
+            .fillMaxWidth(),
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.Bottom,
 	) {
@@ -85,18 +85,18 @@ internal fun TransformsSheetContent(
 		) { type ->
 			when (type) {
 				TransformType.IDLE -> Image(
-					painter = painterResource(R.drawable.ic_transformation),
-					contentDescription = "Transformation",
-					colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
-					modifier = Modifier.size(128.dp)
-				)
+                    painter = painterResource(R.drawable.ic_transformation),
+                    contentDescription = stringResource(R.string.editor_transformation_description),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
+                    modifier = Modifier.size(128.dp),
+                )
 
 				TransformType.READY_FOR_EXPORT -> Image(
-					painter = painterResource(R.drawable.ic_success),
-					contentDescription = "success icon",
-					colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
-					modifier = Modifier.size(128.dp)
-				)
+                    painter = painterResource(R.drawable.ic_success),
+                    contentDescription = stringResource(R.string.editor_success_description),
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
+                    modifier = Modifier.size(128.dp),
+                )
 
 				TransformType.TRANSFORMING -> TransformationProgressIndicator(progress = state.progress)
 			}
@@ -167,32 +167,32 @@ private fun TransformationProgressIndicator(
 
 	Spacer(
 		modifier = modifier
-			.size(120.dp)
-			.drawBehind {
+            .size(120.dp)
+            .drawBehind {
 
-				val progressAmount = (progress() as? TransformationProgress.Progress)?.amount ?: 0
-				val rotateAmount = (progressAmount * 360f / 100).coerceIn(0f, 360f)
+                val progressAmount = (progress() as? TransformationProgress.Progress)?.amount ?: 0
+                val rotateAmount = (progressAmount * 360f / 100).coerceIn(0f, 360f)
 
-				drawArc(
-					color = arcColor,
-					startAngle = 90f,
-					size = Size(width = size.width * .9f, height = size.height * .9f),
-					sweepAngle = rotateAmount,
-					useCenter = false,
-					style = Stroke(cap = StrokeCap.Round, width = 10.dp.toPx())
-				)
+                drawArc(
+                    color = arcColor,
+                    startAngle = 90f,
+                    size = Size(width = size.width * .9f, height = size.height * .9f),
+                    sweepAngle = rotateAmount,
+                    useCenter = false,
+                    style = Stroke(cap = StrokeCap.Round, width = 10.dp.toPx())
+                )
 
-				val textResults = textMeasurer.measure("$progressAmount %", style = textStyle)
+                val textResults = textMeasurer.measure("$progressAmount %", style = textStyle)
 
-				val centerPos =
-					center - with(textResults.size) { Offset(width / 2f, height / 2f) }
+                val centerPos =
+                    center - with(textResults.size) { Offset(width / 2f, height / 2f) }
 
-				drawText(
-					textLayoutResult = textResults,
-					topLeft = centerPos,
-					color = textColor
-				)
-			},
+                drawText(
+                    textLayoutResult = textResults,
+                    topLeft = centerPos,
+                    color = textColor
+                )
+            },
 	)
 }
 

@@ -31,6 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
@@ -60,7 +61,7 @@ internal class MediaCodecPCMDataDecoder(
 
     // callbacks
     private var _onBufferDecoded: ((FloatArray) -> Unit)? = null
-    private var _onDecodeComplete: (() -> Unit)? = null
+    private var _onDecodeComplete: (suspend () -> Unit)? = null
     private var _onDecodeFailure: ((Throwable) -> Unit)? = null
 
     // number of points buffered before a batch is emitted, sized per run
@@ -70,6 +71,7 @@ internal class MediaCodecPCMDataDecoder(
     // accumulates the RMS of each decoded window before emitting a batch
     private var _batch = FloatArray(1)
     private var _batchedPoints = 0
+    private var _lastSampleSignature: Long? = null
 
     private val _accumulator = PcmWindowAccumulator(seekDurationMillis, ::emitWindowPoint)
 
@@ -120,11 +122,25 @@ internal class MediaCodecPCMDataDecoder(
                 return
             }
 
-            // advance the extractor for the next callback, the sample time
-            // was read before advancing so it belongs to the fed sample
-            extractor.advance()
+            val sampleSignature = sampleSignature(inputBuffer, sampleSize, sampleTimeUs)
+            if (_lastSampleSignature == sampleSignature) {
+                codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                Log.w(
+                    PROCESSING_TAG,
+                    "EXTRACTOR DID NOT ADVANCE; ending input after repeated sample " +
+                        "sampleTimeUs=$sampleTimeUs size=$sampleSize",
+                )
+                return
+            }
 
+            _lastSampleSignature = sampleSignature
             codec.queueInputBuffer(index, 0, sampleSize, sampleTimeUs, 0)
+
+            // Advance only after queueing the sample. Some extractors report that
+            // they advanced while still exposing the same sample; the signature
+            // guard above converts that non-progress into a clean EOS callback.
+            val hasNextSample = extractor.advance()
+            Log.d(PROCESSING_TAG, "INPUT BUFFER hasNextSample=$hasNextSample")
         } catch (e: MediaCodec.CodecException) {
             Log.e(PROCESSING_TAG, "MEDIA CODEC EXCEPTION ${e.diagnosticInfo} ${e.errorCode} ", e)
             reportFailure(e)
@@ -194,17 +210,26 @@ internal class MediaCodecPCMDataDecoder(
         _batchedPoints = 0
     }
 
+    private fun sampleSignature(buffer: ByteBuffer, size: Int, sampleTimeUs: Long): Long {
+        var signature = sampleTimeUs xor size.toLong()
+        val prefixSize = minOf(size, 32)
+        for (index in 0 until prefixSize) {
+            signature = (signature * 31) xor (buffer.get(index).toLong() and 0xff)
+        }
+        return signature
+    }
+
     private fun handleEndOfStream() {
         Log.d(PROCESSING_TAG, "END OF BUFFER REACHED, FLUSHING LEFT OUT POINTS")
         flushBatch()
-        _onDecodeComplete?.invoke()
+        runBlocking { _onDecodeComplete?.invoke() }
     }
 
     fun setOnBufferDecode(listener: (FloatArray) -> Unit) {
         _onBufferDecoded = listener
     }
 
-    fun setOnComplete(listener: () -> Unit) {
+    fun setOnComplete(listener: suspend () -> Unit) {
         _onDecodeComplete = listener
     }
 
@@ -271,7 +296,9 @@ internal class MediaCodecPCMDataDecoder(
         val callbackHandler = handler
 
         // codec is configured
-        _mediaCodec = _codecList.findDecoderForFormat(format)?.let { codecName ->
+        val decoderName = _codecList.findDecoderForFormat(format)
+        Log.i(CODEC_TAG, "DECODER LOOKUP mime=${format.mimeType} result=$decoderName")
+        _mediaCodec = decoderName?.let { codecName ->
             Log.i(CODEC_TAG, "CONFIGURING CODEC BY NAME :$codecName")
             MediaCodec.createByCodecName(codecName)
         } ?: run {
@@ -284,7 +311,7 @@ internal class MediaCodecPCMDataDecoder(
         _mediaCodec?.configure(format, null, null, 0)
 
         Log.i(CODEC_TAG, "MEDIA CODEC CONFIGURED THREAD:${callbackHandler.looper.thread}")
-        Log.d(CODEC_TAG, "MEDIA CODEC NAME :${_mediaCodec?.name}")
+        Log.d(CODEC_TAG, "MEDIA CODEC NAME :${_mediaCodec?.name} inputFormat=$format")
 
         val caller = Runnable {
             try {

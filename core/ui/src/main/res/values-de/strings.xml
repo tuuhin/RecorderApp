@@ -56,6 +56,7 @@
     <string name="player_action_edit">Bearbeiten</string>
     <string name="music_file_not_found_title">Audiodatei nicht gefunden</string>
     <string name="music_file_not_found_desc">Stelle sicher, dass diese Datei im Speicher vorhanden ist</string>
+    <string name="audio_content_preparing">Audio wird vorbereitet</string>
     <string name="recorder_state_preparing">Initialisierung</string>
     <string name="menu_option_details">Details</string>
     <string name="menu_option_share">Teilen</string>
@@ -84,8 +85,11 @@
     <string name="recording_settings_quality_normal">Mittel</string>
     <string name="recording_settings_quality_title">Qualität</string>
     <string name="recording_settings_quality_text">Ändere die aktuelle Audioqualität. Eine höhere Qualität bedeutet eine höhere Abtastrate und Bitrate</string>
+    <string name="recording_settings_lossless_quality_message">Bei verlustfreien Formaten werden keine Qualitätseinstellungen verwendet</string>
     <string name="recording_settings_encoder_title">Audio-Encoder</string>
     <string name="recording_settings_encoder_text">Wähle einen Audio-Encoder. Eine Änderung der Kodierung verändert Qualität und Größe der Aufnahme</string>
+    <string name="recording_settings_encoder_wav_text">Unkomprimiertes PCM-Audio mit maximaler Klangtreue auf Kosten großer Dateigrößen</string>
+    <string name="recording_settings_encoder_flac_text">Verlustfreie Komprimierung, die die ursprüngliche Audioqualität bei deutlich geringerer Dateigröße bewahrt</string>
     <string name="recording_settings_encoder_amr_nb_text">Bietet kleinere Dateien und eignet sich für Szenarien mit niedriger Bitrate</string>
     <string name="recording_settings_encoder_amr_wb_text">Geeignet für längere Aufnahmen mit einem größeren Frequenzbereich</string>
     <string name="recording_settings_encoder_optus_text">Hochwertige Komprimierung mit Anpassung an verschiedene Bitraten</string>
@@ -257,4 +261,12 @@
     <string name="recorder_transcriptions_about_dialog_text_not_enabled">Live-Transkriptionen sind nicht aktiviert. Schalte sie in den Einstellungen ein, um während der Aufnahme Transkriptionen zu erhalten</string>
     <string name="recorder_transcriptions_about_dialog_text_enabled">Live-Transkriptionen laufen mit dem Modell </string>
     <string name="stt_models_list_title">Transkriptionsmodelle</string>
+    <string name="editor_action_cut_description">Ausschneideaktion</string>
+    <string name="editor_action_crop_description">Zuschneideaktion</string>
+    <string name="editor_subtract_second_description">Eine Sekunde abziehen</string>
+    <string name="editor_add_second_description">Eine Sekunde hinzufügen</string>
+    <string name="editor_undo_description">Aktion rückgängig machen</string>
+    <string name="editor_redo_description">Aktion wiederholen</string>
+    <string name="editor_transformation_description">Umwandlung</string>
+    <string name="editor_success_description">Erfolgreich</string>
 </resources>

@@ -2,7 +2,6 @@ plugins {
 	alias(libs.plugins.recorderapp.android.library)
 	alias(libs.plugins.recorderapp.hilt)
 	alias(libs.plugins.recorderapp.compose.compiler)
-
 	alias(libs.plugins.kotlinx.serialization)
 }
 

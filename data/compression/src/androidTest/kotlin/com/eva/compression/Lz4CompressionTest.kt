@@ -44,6 +44,44 @@ class LZ4NativeCompressionTest {
     }
 
     @Test
+    fun byteArray_allZeroData_roundTrip() {
+        val original = ByteArray(4096)
+
+        val compressed = LZ4NativeCompression.compress(original)
+        val decompressed = LZ4NativeCompression.decompress(compressed, original.size)
+
+        assertThat(original).isEqualTo(decompressed)
+    }
+
+    @Test
+    fun byteArray_boundarySizes_roundTrip() {
+        listOf(1, 3, 4, 7, 8, 15, 16, 63, 64, 255, 256, 1023, 1024).forEach { size ->
+            val original = ByteArray(size) { index -> (index * 31).toByte() }
+            val compressed = LZ4NativeCompression.compress(original)
+
+            assertThat(LZ4NativeCompression.decompress(compressed, size)).isEqualTo(original)
+        }
+    }
+
+    @Test
+    fun byteArray_truncatedFrame_throws() {
+        val compressed = LZ4NativeCompression.compress(ByteArray(1024) { it.toByte() })
+
+        assertThrows(RuntimeException::class.java) {
+            LZ4NativeCompression.decompress(compressed.copyOf(compressed.size - 1), 1024)
+        }
+    }
+
+    @Test
+    fun byteArray_trailingData_throws() {
+        val compressed = LZ4NativeCompression.compress(byteArrayOf(1, 2, 3))
+
+        assertThrows(RuntimeException::class.java) {
+            LZ4NativeCompression.decompress(compressed + byteArrayOf(0), 3)
+        }
+    }
+
+    @Test
     fun byteArray_randomData_roundTrip() {
         val original = ByteArray(128 * 1024)
         Random(42).nextBytes(original)
@@ -83,7 +121,7 @@ class LZ4NativeCompressionTest {
 
     @Test
     fun byteArray_invalidCompressedData_throws() {
-        assertThrows(IllegalStateException::class.java) {
+        assertThrows(RuntimeException::class.java) {
             LZ4NativeCompression.decompress(byteArrayOf(1, 2, 3, 4, 5), 100)
         }
     }
@@ -167,6 +205,19 @@ class LZ4NativeCompressionTest {
     }
 
     @Test
+    fun floatArray_deterministicIncompressibleData_roundTrip() {
+        val random = Random(5678)
+        val original = FloatArray(8192) { random.nextInt().toFloat() }
+        val compressed = LZ4NativeCompression.compress(original)
+        val decompressed = LZ4NativeCompression.decompressFloats(compressed, original.size)
+
+        original.indices.forEach { index ->
+            assertThat(decompressed[index].toRawBits(), "Mismatch at index $index")
+                .isEqualTo(original[index].toRawBits())
+        }
+    }
+
+    @Test
     fun floatArray_wrongExpectedCount_throws() {
         val original = floatArrayOf(1.0f, 2.0f, 3.0f)
         val compressed = LZ4NativeCompression.compress(original)
@@ -180,6 +231,13 @@ class LZ4NativeCompressionTest {
     fun floatArray_negativeExpectedCount_throws() {
         assertThrows(IllegalArgumentException::class.java) {
             LZ4NativeCompression.decompressFloats(byteArrayOf(1, 2, 3), -1)
+        }
+    }
+
+    @Test
+    fun floatArray_expectedCountByteSizeOverflow_throwsBeforeAllocation() {
+        assertThrows(ArithmeticException::class.java) {
+            LZ4NativeCompression.decompressFloats(byteArrayOf(), Int.MAX_VALUE)
         }
     }
 }

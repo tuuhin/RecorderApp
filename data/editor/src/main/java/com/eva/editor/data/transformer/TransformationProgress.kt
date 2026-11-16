@@ -5,14 +5,15 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
 import com.eva.editor.domain.TransformationProgress
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(UnstableApi::class)
 internal fun Transformer.transformerProgress(
@@ -39,4 +40,4 @@ internal fun Transformer.transformerProgress(
 		}
 		emit(progressState)
 	}
-}
+}.distinctUntilChanged()

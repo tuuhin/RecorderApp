@@ -61,9 +61,17 @@ internal fun List<RecordedPoint>.padListWithExtra(
 
 internal fun List<RecordedPoint>.toProperSequence(eachBlockSize: Int): List<RecordedPoint> {
     val source = this
-    if (source.isEmpty()) return emptyList()
 
-    return buildList(source.size * 2) {
+    if (eachBlockSize <= 0) throw IllegalStateException("Block size must be greater than zero")
+    if (isEmpty()) return emptyList()
+
+    // sequential order list check
+    for (i in 1..<source.size) {
+        if (source[i - 1].timeInMillis >= source[i].timeInMillis)
+            throw IllegalStateException("Recorded points must have strictly increasing timestamps")
+    }
+
+    return buildList(size * 2) {
         // Output is time-ascending, so comparing with the last element is equivalent to distinctBy
         fun addDistinct(point: RecordedPoint) {
             if (isEmpty() || last().timeInMillis != point.timeInMillis) add(point)

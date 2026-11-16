@@ -37,7 +37,33 @@ internal data class WaveformRenderState(
     val bookmarks: List<Int> = emptyList(),
     val style: WaveformStyle = WaveformStyle(),
     val padding: WaveformPadding = WaveformPadding(),
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as WaveformRenderState
+
+        if (durationMs != other.durationMs) return false
+        if (playRatio != other.playRatio) return false
+        if (!data.contentEquals(other.data)) return false
+        if (bookmarks != other.bookmarks) return false
+        if (style != other.style) return false
+        if (padding != other.padding) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = durationMs.hashCode()
+        result = 31 * result + playRatio.hashCode()
+        result = 31 * result + data.contentHashCode()
+        result = 31 * result + bookmarks.hashCode()
+        result = 31 * result + style.hashCode()
+        result = 31 * result + padding.hashCode()
+        return result
+    }
+}
 
 internal class PlayerWaveformRenderer(private val context: Context) {
     private var timelineBitmap: Bitmap? = null
@@ -113,8 +139,15 @@ internal class PlayerWaveformRenderer(private val context: Context) {
             canvas.drawBitmap(timeline, 0f, 0f, null)
         }
 
-        val newGraphKey =
-            GraphKey(width, canvas.height, state.data, state.durationMs, state.playRatio, state.style, state.padding)
+        val newGraphKey = GraphKey(
+            width = width,
+            height = canvas.height,
+            data = state.data,
+            duration = state.durationMs,
+            ratio = state.playRatio,
+            style = state.style,
+            padding = state.padding,
+        )
         val graph = graphBitmap
         if (graph == null) {
             drawWaveform(canvas, state, translation, spikesWidth, gap, startIndex, endIndex)
@@ -219,7 +252,7 @@ internal class PlayerWaveformRenderer(private val context: Context) {
         val bookmarks: List<Int>, val style: WaveformStyle, val padding: WaveformPadding,
     )
 
-    private data class GraphKey(
+    private class GraphKey(
         val width: Int, val height: Int, val data: FloatArray, val duration: Long, val ratio: Float,
         val style: WaveformStyle, val padding: WaveformPadding,
     )

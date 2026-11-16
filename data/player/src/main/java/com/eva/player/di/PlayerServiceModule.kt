@@ -1,7 +1,7 @@
 package com.eva.player.di
 
 import android.content.Context
-import androidx.core.os.bundleOf
+import android.os.Bundle
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -21,63 +21,63 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
-import kotlinx.coroutines.runBlocking
 import javax.inject.Named
+import kotlinx.coroutines.runBlocking
 
 @Module
 @UnstableApi
 @InstallIn(ServiceComponent::class)
 object PlayerServiceModule {
 
-	@Provides
-	@ServiceScoped
-	@Named("SERVICE_PLAYER")
-	fun providesExoPlayer(
-		@ApplicationContext context: Context,
-		settings: RecorderAudioSettingsRepo,
-		mediaSource: MediaSource.Factory,
-		attributes: AudioAttributes,
-	): Player {
+    @Provides
+    @ServiceScoped
+    @Named("SERVICE_PLAYER")
+    fun providesExoPlayer(
+        @ApplicationContext context: Context,
+        settings: RecorderAudioSettingsRepo,
+        mediaSource: MediaSource.Factory,
+        attributes: AudioAttributes,
+    ): Player {
 
-		val audioSettings = runBlocking { settings.audioSettings() }
+        val audioSettings = runBlocking { settings.audioSettings() }
 
-		return ExoPlayer.Builder(context)
-			.setMediaSourceFactory(mediaSource)
-			.setSkipSilenceEnabled(audioSettings.skipSilences)
-			.setAudioAttributes(attributes, true)
-			.setTrackSelector(DefaultTrackSelector(context))
-			.setName("SERVICE_PLAYER")
-			.build()
-	}
+        return ExoPlayer.Builder(context)
+            .setMediaSourceFactory(mediaSource)
+            .setSkipSilenceEnabled(audioSettings.skipSilences)
+            .setAudioAttributes(attributes, true)
+            .setTrackSelector(DefaultTrackSelector(context))
+            .setName("SERVICE_PLAYER")
+            .build()
+    }
 
-	@Provides
-	@ServiceScoped
-	@UnstableApi
-	fun providesPlayerNotification(
-		@ApplicationContext context: Context,
-	): MediaNotification.Provider {
-		return AudioPlayerNotification(context).apply {
-			setSmallIcon(R.drawable.ic_record_player)
-		}
-	}
+    @Provides
+    @ServiceScoped
+    @UnstableApi
+    fun providesPlayerNotification(
+        @ApplicationContext context: Context,
+    ): MediaNotification.Provider {
+        return AudioPlayerNotification(context).apply {
+            setSmallIcon(R.drawable.ic_record_player)
+        }
+    }
 
-	@Provides
-	@ServiceScoped
-	fun providesServiceSessions(
-		@ApplicationContext context: Context,
-		@Named("SERVICE_PLAYER") player: Player,
-	): MediaSession {
+    @Provides
+    @ServiceScoped
+    fun providesServiceSessions(
+        @ApplicationContext context: Context,
+        @Named("SERVICE_PLAYER") player: Player,
+    ): MediaSession {
 
-		val callback = AudioPlayerMediaCallBacks(context)
+        val callback = AudioPlayerMediaCallBacks(context)
 
-		val extras = bundleOf(
-			MediaConstants.EXTRAS_KEY_SLOT_RESERVATION_SEEK_TO_NEXT to true,
-			MediaConstants.EXTRAS_KEY_SLOT_RESERVATION_SEEK_TO_PREV to true
-		)
+        val extras = Bundle().apply {
+            putBoolean(MediaConstants.EXTRAS_KEY_SLOT_RESERVATION_SEEK_TO_NEXT, true)
+            putBoolean(MediaConstants.EXTRAS_KEY_SLOT_RESERVATION_SEEK_TO_PREV, true)
+        }
 
-		return MediaSession.Builder(context, player)
-			.setExtras(extras)
-			.setCallback(callback)
-			.build()
-	}
+        return MediaSession.Builder(context, player)
+            .setExtras(extras)
+            .setCallback(callback)
+            .build()
+    }
 }

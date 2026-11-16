@@ -37,6 +37,7 @@ class OnBoardingActivity : ComponentActivity() {
 
 		// set enable edge to edge normally
 		enableEdgeToEdge()
+        window.isNavigationBarContrastEnforced = false
 		// set activity transitions
 		setTransitions()
 

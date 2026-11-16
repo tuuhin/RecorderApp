@@ -28,62 +28,64 @@ import com.eva.ui.theme.RecorderAppTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AudioQualitySelector(
-	quality: RecordQuality,
-	onQualityChanged: (RecordQuality) -> Unit,
-	modifier: Modifier = Modifier,
-	contentPadding: PaddingValues = PaddingValues.Zero,
-	selectedContainerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-	selectedContentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    quality: RecordQuality,
+    onQualityChanged: (RecordQuality) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues.Zero,
+    selectedContainerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    selectedContentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
 ) {
-	SingleChoiceSegmentedButtonRow(
-		modifier = modifier.padding(contentPadding),
-	) {
-		RecordQuality.entries.forEachIndexed { idx, entry ->
-			SegmentedButton(
-				selected = quality == entry,
-				onClick = { onQualityChanged(entry) },
-				shape = SegmentedButtonDefaults.itemShape(idx, RecordQuality.entries.size),
-				colors = SegmentedButtonDefaults.colors(
-					activeContainerColor = selectedContainerColor,
-					activeContentColor = selectedContentColor,
-				),
-				label = {
-					TooltipBox(
-						positionProvider = TooltipDefaults
-							.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-						tooltip = {
-							PlainTooltip(
-								shape = MaterialTheme.shapes.small,
-								tonalElevation = 2.dp,
-								shadowElevation = 4.dp
-							) {
-								Text(
-									text = stringResource(
-										id = R.string.audio_quality_sample_rate_bit_rate,
-										entry.sampleRateInKhz,
-										entry.bitRateInKbps
-									),
-									style = MaterialTheme.typography.labelSmall
-								)
-							}
-						},
-						state = rememberTooltipState()
-					) {
-						Text(text = entry.strRes, fontWeight = FontWeight.SemiBold)
-					}
-				}
-			)
-		}
-	}
+    SingleChoiceSegmentedButtonRow(
+        modifier = modifier.padding(contentPadding),
+    ) {
+        RecordQuality.entries.forEachIndexed { idx, entry ->
+            SegmentedButton(
+                selected = quality == entry,
+                onClick = { onQualityChanged(entry) },
+                shape = SegmentedButtonDefaults.itemShape(idx, RecordQuality.entries.size),
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = selectedContainerColor,
+                    activeContentColor = selectedContentColor,
+                ),
+                enabled = enabled,
+                label = {
+                    TooltipBox(
+                        positionProvider = TooltipDefaults
+                            .rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                        tooltip = {
+                            PlainTooltip(
+                                shape = MaterialTheme.shapes.small,
+                                tonalElevation = 2.dp,
+                                shadowElevation = 4.dp,
+                            ) {
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.audio_quality_sample_rate_bit_rate,
+                                        entry.sampleRateInKhz,
+                                        entry.bitRateInKbps,
+                                    ),
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                        },
+                        state = rememberTooltipState(),
+                    ) {
+                        Text(text = entry.strRes, fontWeight = FontWeight.SemiBold)
+                    }
+                },
+            )
+        }
+    }
 }
 
 @PreviewLightDark
 @Composable
 private fun AudioQualitySelectorPreview() = RecorderAppTheme {
-	Surface {
-		AudioQualitySelector(
-			quality = RecordQuality.NORMAL,
-			onQualityChanged = {},
-		)
-	}
+    Surface {
+        AudioQualitySelector(
+            quality = RecordQuality.NORMAL,
+            onQualityChanged = {},
+        )
+    }
 }

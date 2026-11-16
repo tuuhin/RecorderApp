@@ -8,22 +8,22 @@ import com.eva.datastore.proto.RecordingListSettingsProto
 import com.eva.datastore.proto.TranscriptionSettingsProto
 import org.jetbrains.annotations.VisibleForTesting
 
-internal interface DataStoreProvider {
+interface DataStoreProvider {
 
-	val preferencesDataStore: DataStore<Preferences>
+    val preferencesDataStore: DataStore<Preferences>
 
-	val audioSettingsDataStore: DataStore<RecorderSettingsProto>
+    val audioSettingsDataStore: DataStore<RecorderSettingsProto>
 
-	val fileSettingsDataStore: DataStore<FileSettingsProto>
+    val fileSettingsDataStore: DataStore<FileSettingsProto>
 
-	val transcriptionsDataStore: DataStore<TranscriptionSettingsProto>
+    val transcriptionsDataStore: DataStore<TranscriptionSettingsProto>
 
-	val recordingsListSettingsDataStore: DataStore<RecordingListSettingsProto>
+    val recordingsListSettingsDataStore: DataStore<RecordingListSettingsProto>
 
-	/**
-	 * Cleans up the generated file in testing phase no need to consider this function for
-	 * non-test scope
-	 */
-	@VisibleForTesting
-	suspend fun cleanUp()
+    /**
+     * Cleans up the generated file in testing phase no need to consider this function for
+     * non-test scope
+     */
+    @VisibleForTesting
+    suspend fun cleanUp()
 }

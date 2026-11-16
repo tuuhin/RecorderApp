@@ -9,8 +9,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.eva.editor.data.EditableAudioPlayerImpl
-import com.eva.editor.data.transformer.AudioTransformerImpl
-import com.eva.editor.domain.AudioTransformer
 import com.eva.editor.domain.SimpleAudioPlayer
 import dagger.Module
 import dagger.Provides
@@ -41,11 +39,6 @@ object EditorViewmodelModule {
 			.build()
 	}
 
-	@Provides
-	@ViewModelScoped
-	fun providesAudioTrimmer(
-		@ApplicationContext context: Context,
-	): AudioTransformer = AudioTransformerImpl(context)
 
 	@Provides
 	@ViewModelScoped

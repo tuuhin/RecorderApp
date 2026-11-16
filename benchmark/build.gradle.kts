@@ -4,7 +4,11 @@ plugins {
 
 android {
     namespace = "com.eva.recorderapp.benchmark"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk {
+        version = release(libs.versions.android.compileSdk.major.get().toInt()) {
+            minorApiLevel = libs.versions.android.compileSdk.revision.get().toInt()
+        }
+    }
 
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

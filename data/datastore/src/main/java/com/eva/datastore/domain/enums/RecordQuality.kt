@@ -2,7 +2,7 @@ package com.eva.datastore.domain.enums
 
 /**
  * Recording record quality
- * @param bitRate The number of bits per second that can be recived
+ * @param bitRate The number of bits per second that can be received
  * @param sampleRate The number of samples taken per second
  */
 enum class RecordQuality(val bitRate: Int, val sampleRate: Int) {

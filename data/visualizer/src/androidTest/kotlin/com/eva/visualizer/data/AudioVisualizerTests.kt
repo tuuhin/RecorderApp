@@ -47,10 +47,13 @@ import kotlin.time.measureTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
@@ -61,6 +64,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 
+@kotlin.OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class AudioVisualizerTests {
 
@@ -89,12 +93,12 @@ class AudioVisualizerTests {
     }
 
     @After
-    fun tearDown() = runBlocking {
+    fun tearDown() = runTest {
         if (::currentOwner.isInitialized) visualizer.cleanUpAndAwait(currentOwner)
     }
 
     @Test
-    fun parsing_synthetic_audio_produces_correct_envelope() {
+    fun parsing_synthetic_audio_produces_correct_envelope() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         val audioDuration = SyntheticAACTestAudioProvider.synthetic_duration
 
@@ -135,7 +139,7 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun parsing_synthetic_aac_matches_duration_and_parses_faster_than_realtime() {
+    fun parsing_synthetic_aac_matches_duration_and_parses_faster_than_realtime() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         val audioDuration = audioFile.readInFileDuration()
 
@@ -154,7 +158,102 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun givenLongAudioWhenDecodedThenSnapshotsGrowProgressively() = runBlocking {
+    fun finalized_mono_flac_produces_non_empty_normalized_visualization() = runTest {
+        val audioFile = testContext.copyAssetToCache("visualizer_mono.flac")
+        val (points, _) = visualizationParser(audioFile, timeout = 60.seconds)
+        val expectedPoints = (audioFile.readInFileDuration() / visualPoint).toInt()
+
+        advanceUntilIdle()
+
+        assertThat(points.size).isGreaterThan(0)
+        assertThat(points.size).isGreaterThanOrEqualTo(expectedPoints - 2)
+        assertThat(points.size).isLessThanOrEqualTo(expectedPoints + 2)
+        points.forEachIndexed { index, value ->
+            assertThat(value, "mono FLAC point $index").isGreaterThanOrEqualTo(0f)
+            assertThat(value, "mono FLAC point $index").isLessThanOrEqualTo(1f)
+        }
+    }
+
+    @Test
+    fun finalized_stereo_flac_produces_non_empty_visualization() = runTest {
+        val audioFile = testContext.copyAssetToCache("visualizer_stereo.flac")
+        val (points, _) = visualizationParser(audioFile, timeout = 60.seconds)
+
+        advanceUntilIdle()
+
+        assertThat(points.isNotEmpty()).isTrue()
+        points.forEachIndexed { index, value ->
+            assertThat(value, "stereo FLAC point $index").isGreaterThanOrEqualTo(0f)
+            assertThat(value, "stereo FLAC point $index").isLessThanOrEqualTo(1f)
+        }
+    }
+
+    @Test
+    fun finalized_flac_cache_hit_reuses_points_without_starting_decoder() = runTest {
+        val audioFile = testContext.copyAssetToCache("visualizer_mono.flac")
+        val uri = Uri.fromFile(audioFile).toString()
+        currentOwner = newOwner()
+        advanceUntilIdle()
+
+        assertThat(
+            visualizer.prepareVisualization(uri, lifecycleOwner, currentOwner, visualPoint.inWholeMilliseconds.toInt())
+                .isSuccess,
+        ).isTrue()
+        withTimeout(60.seconds) {
+            visualizer.visualizerState(currentOwner).first { it == VisualizerState.FINISHED }
+        }
+        val expectedPoints = (audioFile.readInFileDuration() / visualPoint).toInt()
+        val decoded = withTimeout(60.seconds) {
+            visualizer.normalizedVisualization(currentOwner).first { it.size >= expectedPoints - 2 }
+        }
+
+        val noDecoder = object : ThreadController {
+            override fun bindToLifecycle(lifecycleOwner: LifecycleOwner): Handler =
+                error("A FLAC cache hit must not start a decoder")
+
+            override fun stopThread(handler: Handler?, maxWaitTime: Long) = Unit
+        }
+        visualizer = AudioVisualizerImpl(
+            context = testContext,
+            cache = VisualCacheImpl(tempDir),
+            extractor = DefaultExtractorsFactory(),
+            dataSource = DefaultDataSource.Factory(testContext),
+            threadHandler = noDecoder,
+        )
+        currentOwner = newOwner()
+
+        advanceUntilIdle()
+        assertThat(
+            visualizer.prepareVisualization(
+                uri,
+                lifecycleOwner,
+                currentOwner,
+                visualPoint.inWholeMilliseconds.toInt(),
+            ).isSuccess,
+        ).isTrue()
+        assertThat(visualizer.normalizedVisualization(currentOwner).first()).isEqualTo(decoded)
+    }
+
+    @Test
+    fun zero_frame_flac_fails_without_creating_a_cache_entry() = runTest {
+        val audioFile = testContext.copyAssetToCache("visualizer_zero_frame.flac")
+        val uri = Uri.fromFile(audioFile).toString()
+        currentOwner = newOwner()
+
+        val result = visualizer.prepareVisualization(
+            uri,
+            lifecycleOwner,
+            currentOwner,
+            visualPoint.inWholeMilliseconds.toInt(),
+        )
+        advanceUntilIdle()
+        assertThat(result.isFailure).isTrue()
+        assertThat(visualizer.visualizerState(currentOwner).first()).isEqualTo(VisualizerState.FAILED)
+        assertThat(VisualCacheImpl(tempDir).getCacheEntry(uri)).isNull()
+    }
+
+    @Test
+    fun givenLongAudioWhenDecodedThenSnapshotsGrowProgressively() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         currentOwner = newOwner()
         val sizes = mutableListOf<Int>()
@@ -171,6 +270,7 @@ class AudioVisualizerTests {
                 currentOwner,
                 visualPoint.inWholeMilliseconds.toInt(),
             )
+            advanceUntilIdle()
             assertThat(result.isSuccess).isTrue()
             withTimeout(60.seconds) {
                 visualizer.visualizerState(currentOwner).first { it == VisualizerState.FINISHED }
@@ -185,7 +285,7 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun parsing_audio_assets_matches_duration_and_parses_faster_than_realtime() {
+    fun parsing_audio_assets_matches_duration_and_parses_faster_than_realtime() = runTest {
         val assetNames = testContext.assets.list("").orEmpty()
             .filter { it.startsWith("sample_") && it.endsWith(".mp3") && it != "sample_30m.mp3" }
             .sorted()
@@ -211,7 +311,7 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun cache_hit_serves_the_same_points_without_running_a_decoder() = runBlocking {
+    fun cache_hit_serves_the_same_points_without_running_a_decoder() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
 
         val (firstOpen, decodeTime) = visualizationParser(audioFile, timeout = 60.seconds)
@@ -225,6 +325,7 @@ class AudioVisualizerTests {
             timePerPointInMs = visualPoint.inWholeMilliseconds.toInt(),
         )
 
+        advanceUntilIdle()
         assertThat(result.isSuccess, "cache hit prepare").isTrue()
         currentOwner = secondOwner
         assertThat(visualizer.visualizerState(secondOwner).first()).isEqualTo(VisualizerState.FINISHED)
@@ -239,7 +340,7 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun givenMatchingHashWhenPointDurationChangesThenCachedWindowsAreReused() = runBlocking {
+    fun givenMatchingHashWhenPointDurationChangesThenCachedWindowsAreReused() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         val uri = Uri.fromFile(audioFile)
         val hash = checkNotNull(FileHashGenerator(testContext).generateHash(uri.toString()))
@@ -261,27 +362,37 @@ class AudioVisualizerTests {
         currentOwner = newOwner()
 
         val coarse = visualizer.prepareVisualization(uri.toString(), lifecycleOwner, currentOwner, 200)
+
+        advanceUntilIdle()
         assertThat(coarse.isSuccess).isTrue()
         val coarsePoints = visualizer.normalizedVisualization(currentOwner).first()
+
+        advanceUntilIdle()
         assertThat(coarsePoints.size).isEqualTo(2)
         coarsePoints.forEach { assertThat(it).isCloseTo(kotlin.math.sqrt(0.5f), 0.001f) }
 
         val fine = visualizer.prepareVisualization(uri.toString(), lifecycleOwner, currentOwner, 50)
+
+        advanceUntilIdle()
         assertThat(fine.isSuccess).isTrue()
         val finePoints = visualizer.normalizedVisualization(currentOwner).first()
+
+        advanceUntilIdle()
         assertThat(finePoints.size).isEqualTo(8)
         assertThat(finePoints.first()).isCloseTo(1f, 0.001f)
         assertThat(finePoints[3]).isCloseTo(0f, 0.001f)
         assertThat(finePoints.last()).isCloseTo(1f, 0.001f)
 
         val invalid = visualizer.prepareVisualization(uri.toString(), lifecycleOwner, currentOwner, 0)
+
+        advanceUntilIdle()
         assertThat(invalid.isFailure).isTrue()
         assertThat(visualizer.visualizerState(currentOwner).first()).isEqualTo(VisualizerState.FINISHED)
         assertThat(cache.getCacheEntry(uri.toString())?.timePerPointMs).isEqualTo(100)
     }
 
     @Test
-    fun givenChangedAudioHashWhenSameOwnerReopensThenAudioIsDecodedAgain() = runBlocking {
+    fun givenChangedAudioHashWhenSameOwnerReopensThenAudioIsDecodedAgain() = runTest {
         val original = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         val changedFile = tempFolder.newFile("changed-audio.m4a")
         original.copyTo(changedFile, overwrite = true)
@@ -307,6 +418,8 @@ class AudioVisualizerTests {
         )
         currentOwner = newOwner()
         val duration = visualPoint.inWholeMilliseconds.toInt()
+        advanceUntilIdle()
+
         assertThat(
             visualizer.prepareVisualization(
                 uri.toString(),
@@ -335,7 +448,7 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun extraction_failure_is_returned_to_the_caller() = runBlocking {
+    fun extraction_failure_is_returned_to_the_caller() = runTest {
         val emptyAudioFile = tempFolder.newFile("empty-audio.m4a")
         currentOwner = newOwner()
 
@@ -363,7 +476,7 @@ class AudioVisualizerTests {
 
     @OptIn(UnstableApi::class)
     @Test
-    fun givenDeadHandlerWhenExtractionStartsThenFailureIsReported() = runBlocking {
+    fun givenDeadHandlerWhenExtractionStartsThenFailureIsReported() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         val thread = HandlerThread("dead-codec-handler").apply { start() }
         val handler = Handler(thread.looper)
@@ -470,7 +583,7 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun givenRealLifecycleWhenDecodingCompletesThenVisualizerFinishesAndDetaches() = runBlocking {
+    fun givenRealLifecycleWhenDecodingCompletesThenVisualizerFinishesAndDetaches() = runTest {
         val lifecycle = MutableTestLifecycleOwner()
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             lifecycle.registry.currentState = Lifecycle.State.RESUMED
@@ -495,7 +608,7 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun givenActiveFileWhenPlayerSwitchesThenTeardownPrecedesDecodingAndCacheHit() = runBlocking {
+    fun givenActiveFileWhenPlayerSwitchesThenTeardownPrecedesDecodingAndCacheHit() = runTest {
         val firstFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         val secondFile = tempFolder.newFile("second-audio.m4a")
         firstFile.copyTo(secondFile, overwrite = true)
@@ -573,7 +686,7 @@ class AudioVisualizerTests {
     }
 
     @Test
-    fun givenCancelledPreparationWhenReopenedThenNewOwnerCanDecode() = runBlocking {
+    fun givenCancelledPreparationWhenReopenedThenNewOwnerCanDecode() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         val uri = Uri.fromFile(audioFile).toString()
         val cacheReadStarted = CompletableDeferred<Unit>()
@@ -610,6 +723,7 @@ class AudioVisualizerTests {
         }
         withTimeout(10.seconds) { cacheReadStarted.await() }
         preparation.cancelAndJoin()
+        advanceUntilIdle()
         assertThat(visualizer.visualizerState(cancelledOwner).first()).isEqualTo(VisualizerState.NOT_STARTED)
         assertThat(backingCache.getCacheEntry(uri)).isNull()
 
@@ -621,11 +735,11 @@ class AudioVisualizerTests {
         withTimeout(60.seconds) {
             visualizer.visualizerState(currentOwner).first { it == VisualizerState.FINISHED }
         }
-        Unit
+        advanceUntilIdle()
     }
 
     @Test
-    fun stale_cache_entry_re_decodes_the_audio() = runBlocking {
+    fun stale_cache_entry_re_decodes_the_audio() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
 
         val cache = VisualCacheImpl(tempDir)
@@ -653,7 +767,10 @@ class AudioVisualizerTests {
             .isLessThanOrEqualTo(points.size)
     }
 
-    private fun visualizationParser(audioFile: File, timeout: Duration): Pair<FloatArray, Duration> = runBlocking {
+    private suspend fun TestScope.visualizationParser(
+        audioFile: File,
+        timeout: Duration,
+    ): Pair<FloatArray, Duration> {
         currentOwner = newOwner()
         val timed = measureTime {
             val result = visualizer.prepareVisualization(
@@ -668,11 +785,12 @@ class AudioVisualizerTests {
                 visualizer.visualizerState(currentOwner).first { it == VisualizerState.FINISHED }
             }
         }
-        visualizer.normalizedVisualization(currentOwner).first() to timed
+        advanceUntilIdle()
+        return visualizer.normalizedVisualization(currentOwner).first() to timed
     }
 
     @Test
-    fun givenSameFileWhenLeaseTransfersThenOnlyCurrentOwnerSeesVisuals() = runBlocking {
+    fun givenSameFileWhenLeaseTransfersThenOnlyCurrentOwnerSeesVisuals() = runTest {
         val audioFile = SyntheticAACTestAudioProvider.encodeAlternatingLoudSilence(testContext)
         val firstOwner = newOwner()
         val secondOwner = VisualizerSession(firstOwner.audioId, UUID.randomUUID().toString())

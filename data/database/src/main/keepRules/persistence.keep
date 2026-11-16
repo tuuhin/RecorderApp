@@ -1,3 +1,0 @@
-# Room Database reflection and table mapping
--keep class * extends androidx.room.RoomDatabase
--keep @androidx.room.Entity class *

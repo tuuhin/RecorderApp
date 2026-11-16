@@ -8,6 +8,7 @@ recordings. With a clean and intuitive interface, this app offers a seamless use
 A fully functioned recorder app with an ability to record over multiple media codec like **acc**,*
 *amr**,**opus** over different quality. The app can continue its recording in the background, so you
 never miss a moment. Once the recording, you can easily manage your files within the app.
+Lossless recording with `FLAC` and `WAV` formats are available is also available.
 There `built-in player`, you can listen to your recordings directly within the app or use the
 convenient media notification for playback control.
 Want to remove certain section of your recordings, use the audio editor that allows you to easily
@@ -88,14 +89,6 @@ visualization, recording, and editing:
 - Updated build tooling and dependencies, expanded automated tests, and added benchmarking and
   baseline-profile groundwork.
 
-## :next_track_button: What's next
-
-Add support for lossless recording formats, giving users the option to record without lossy
-compression.
-
-If you have any new ideas or suggestions for enhancements, we encourage you to create a
-new [Issue](https://github.com/tuuhin/RecorderApp/issues) on GitHub.
-
 ## :hammer_and_wrench: Getting Started
 
 Here are the steps to get started with this app:
@@ -129,6 +122,8 @@ AN app is never perfect there may issue here and there which are not caught.If y
 issues, have suggestions for new features, or just want to share your thoughts, please don't
 hesitate to reach out by creating a new [Issue](https://github.com/tuuhin/RecorderApp/issues) on
 GitHub. Your feedback is invaluable!
+Lossless recording with `FLAC` and `WAV` is currently in beta—please try it out and report any
+performance issues or crashes by [opening an issue](https://github.com/tuuhin/RecorderApp/issues).
 
 ### :end: Conclusion
 

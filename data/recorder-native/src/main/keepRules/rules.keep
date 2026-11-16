@@ -1,0 +1,3 @@
+-keepclasseswithmembernames class com.eva.recorder_native.** {
+	native <methods>;
+}

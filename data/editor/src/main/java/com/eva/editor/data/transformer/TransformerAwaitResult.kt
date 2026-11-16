@@ -11,79 +11,81 @@ import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.TransformationRequest
 import androidx.media3.transformer.Transformer
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 private const val TAG = "TRANSFORMATION_RESULTS"
 
 @UnstableApi
 @MainThread
 internal suspend fun Transformer.awaitResults(
-	composition: Composition,
-	outputUri: String
+    composition: Composition,
+    outputUri: String,
 ): String = suspendCancellableCoroutine { continuation ->
-	val listener = object : Transformer.Listener {
-		override fun onCompleted(composition: Composition, exportResult: ExportResult) {
-			Log.d(TAG, "COMPOSITION SUCCESSES")
-			// work is done so remove the listener
-			if (continuation.isActive) continuation.resume(outputUri)
+    val listener = object : Transformer.Listener {
+        override fun onCompleted(composition: Composition, exportResult: ExportResult) {
+            Log.d(TAG, "COMPOSITION SUCCESSES")
+            // work is done so remove the listener
+            if (continuation.isActive) continuation.resume(outputUri)
 
-			removeListener(this)
-			Log.d(TAG, "REMOVING LISTENER")
-		}
+            removeListener(this)
+            Log.d(TAG, "REMOVING LISTENER")
+        }
 
-		override fun onError(
-			composition: Composition,
-			exportResult: ExportResult,
-			exportException: ExportException,
-		) {
-			Log.e(TAG, "COMPOSITION FAILED", exportException)
-			// it's a cancellation
-			if (continuation.isActive) continuation.cancel(exportException)
-			removeListener(this)
-			Log.d(TAG, "REMOVING LISTENER")
-		}
+        override fun onError(
+            composition: Composition,
+            exportResult: ExportResult,
+            exportException: ExportException,
+        ) {
+            Log.e(TAG, "COMPOSITION FAILED", exportException)
+            // it's a cancellation
+            if (continuation.isActive) continuation.cancel(exportException)
+            removeListener(this)
+            Log.d(TAG, "REMOVING LISTENER")
+        }
 
-		override fun onFallbackApplied(
-			composition: Composition,
-			originalTransformationRequest: TransformationRequest,
-			fallbackTransformationRequest: TransformationRequest
-		) {
-			Log.d(TAG, "CANNOT APPLY TRANSFORMATION")
-			Log.i(
-				TAG,
-				"ORIGINAL :${originalTransformationRequest.audioMimeType} FALLBACK :${fallbackTransformationRequest.audioMimeType}"
-			)
-		}
-	}
-	// add the listener
-	addListener(listener)
-	// start the composition
-	try {
-		start(composition, outputUri)
-		Log.d(TAG, "STARTING TRANSFORMATION")
-	} catch (_: IllegalStateException) {
-		Log.d(TAG, "EXPORT RUNNING NEED TO WAIT")
-		removeListener(listener)
-		cancel()
-		return@suspendCancellableCoroutine
-	}
+        override fun onFallbackApplied(
+            composition: Composition,
+            originalTransformationRequest: TransformationRequest,
+            fallbackTransformationRequest: TransformationRequest,
+        ) {
+            Log.d(TAG, "CANNOT APPLY TRANSFORMATION")
+            Log.i(
+                TAG,
+                "ORIGINAL :${originalTransformationRequest.audioMimeType} FALLBACK :${fallbackTransformationRequest.audioMimeType}",
+            )
+        }
+    }
+    // add the listener
+    addListener(listener)
+    // start the composition
+    try {
+        start(composition, outputUri)
+        Log.d(TAG, "STARTING TRANSFORMATION")
+    } catch (_: IllegalStateException) {
+        Log.d(TAG, "EXPORT RUNNING NEED TO WAIT")
+        removeListener(listener)
+        cancel()
+        return@suspendCancellableCoroutine
+    }
 
-	continuation.invokeOnCancellation {
-		Log.d(TAG, "COROUTINE WAS CANCELLED")
-		try {
-			removeListener(listener)
-			cancel()
-		} catch (_: Exception) {
-		}
-	}
+    continuation.invokeOnCancellation {
+        Log.d(TAG, "COROUTINE WAS CANCELLED")
+        try {
+            removeListener(listener)
+            cancel()
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+        }
+    }
 }
 
 
 @UnstableApi
 suspend fun Transformer.awaitResults(mediaItem: MediaItem, outputUri: String): String {
-	val editMediaItem = EditedMediaItem.Builder(mediaItem).build()
-	val sequence = EditedMediaItemSequence.withAudioFrom(listOf(editMediaItem))
-	val composition = Composition.Builder(sequence).build()
-	return awaitResults(composition, outputUri)
+    val editMediaItem = EditedMediaItem.Builder(mediaItem).build()
+    val sequence = EditedMediaItemSequence.withAudioFrom(listOf(editMediaItem))
+    val composition = Composition.Builder(sequence).build()
+    return awaitResults(composition, outputUri)
 }

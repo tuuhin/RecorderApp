@@ -1,35 +1,38 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-	alias(libs.plugins.android.library)
-	alias(libs.plugins.hilt)
-	alias(libs.plugins.ksp)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
-	namespace = "com.eva.testing.runtime"
+    namespace = "com.eva.testing.runtime"
+    compileSdk {
+        version = release(libs.versions.android.compileSdk.major.get().toInt()) {
+            minorApiLevel = libs.versions.android.compileSdk.revision.get().toInt()
+        }
+    }
+    defaultConfig {
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        testInstrumentationRunner = "com.eva.testing.runtime.HiltTestRunner"
+    }
 
-	compileSdk = libs.versions.android.compileSdk.get().toInt()
-	defaultConfig {
-		minSdk = libs.versions.android.minSdk.get().toInt()
-		testInstrumentationRunner = "com.eva.testing.runtime.HiltTestRunner"
-	}
-
-	compileOptions {
-		sourceCompatibility = JavaVersion.VERSION_17
-		targetCompatibility = JavaVersion.VERSION_17
-	}
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }
 
 kotlin {
-	compilerOptions {
-		jvmTarget = JvmTarget.JVM_17
-	}
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+    }
 }
 
 dependencies {
-	implementation(libs.hilt.android)
-	implementation(libs.hilt.test)
-	implementation(libs.androidx.runner)
-	ksp(libs.hilt.android.compiler)
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.test)
+    implementation(libs.androidx.runner)
+    ksp(libs.hilt.android.compiler)
 }
