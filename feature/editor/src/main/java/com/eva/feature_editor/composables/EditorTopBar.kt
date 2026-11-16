@@ -73,7 +73,7 @@ internal fun EditorTopBar(
                         leadingIcon = {
                             Icon(
                                 Icons.AutoMirrored.Filled.Undo,
-                                contentDescription = "Undo Action"
+                                contentDescription = stringResource(R.string.editor_undo_description),
                             )
                         },
                         onClick = onUndoAction,
@@ -84,7 +84,7 @@ internal fun EditorTopBar(
                         leadingIcon = {
                             Icon(
                                 Icons.AutoMirrored.Filled.Redo,
-                                contentDescription = "Redo Action"
+                                contentDescription = stringResource(R.string.editor_redo_description),
                             )
                         },
                         onClick = onRedoAction,

@@ -91,6 +91,7 @@
     <string name="recording_settings_quality_normal">Medium</string>
     <string name="recording_settings_quality_title">Quality</string>
     <string name="recording_settings_quality_text">Change the current audio quality. Higher quality means a higher sample rate and bitrate</string>
+    <string name="recording_settings_lossless_quality_message">Lossless formats do not use quality settings</string>
     <string name="audio_quality_sample_rate_bit_rate" translatable="false">%.2f kbps - %.2f khz</string>
     <string name="recording_settings_encoder_title">Audio Encoder</string>
     <string name="recording_settings_encoder_text">Select an audio encoder. Changing the encoding will vary the quality and size of the recording</string>
@@ -200,21 +201,8 @@
     <string name="write_request_accepted">Write request accepted</string>
     <string name="write_request_rejected">Rejected</string>
     <string name="other_app_subtitle">Other App</string>
-
-    <string name="widget_refresh" translatable="false">Refresh</string>
-    <string name="widget_error_text" translatable="false">Cannot load the widget due to something</string>
-    <string name="widget_error_title" translatable="false">Failed to load widget</string>
-    <string name="recordings_not_found" translatable="false">Cannot find any recordings to show</string>
-    <string name="widget_recordings_description" translatable="false">Sneak peek at your recording at a glance</string>
-    <string name="widget_recordings_no_recordings" translatable="false">No recordings</string>
     <string name="widget_recordings_preview_name" translatable="false">Recording_001</string>
     <string name="widget_recordings_preview_duration" translatable="false">00:00</string>
-    <string name="recordings_load_failed" translatable="false">Cannot load recordings</string>
-    <string name="widget_recorder_description" translatable="false">Start recording with a button click</string>
-    <string name="recorder_state_recording" translatable="false">Recording</string>
-    <string name="recorder_state_paused" translatable="false">Paused</string>
-    <string name="widget_recorder_widget" translatable="false">Recorder Widget</string>
-
     <string name="category_type_label">Label</string>
     <string name="category_type_important">Important</string>
     <string name="category_type_work">Work</string>
@@ -297,4 +285,12 @@
     <string name="recorder_transcriptions_about_dialog_text_not_enabled">Live Transcriptions are not enabled, Turn on from settings to receive live transcription while recording</string>
     <string name="recorder_transcriptions_about_dialog_text_enabled">Live Transcriptions are running with model </string>
     <string name="stt_models_list_title">Transcription Models</string>
+    <string name="editor_action_cut_description">Cut action</string>
+    <string name="editor_action_crop_description">Crop action</string>
+    <string name="editor_subtract_second_description">Subtract one second</string>
+    <string name="editor_add_second_description">Add one second</string>
+    <string name="editor_undo_description">Undo action</string>
+    <string name="editor_redo_description">Redo action</string>
+    <string name="editor_transformation_description">Transformation</string>
+    <string name="editor_success_description">Success</string>
 </resources>

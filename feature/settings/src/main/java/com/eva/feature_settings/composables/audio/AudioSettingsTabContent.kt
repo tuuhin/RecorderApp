@@ -3,21 +3,29 @@ package com.eva.feature_settings.composables.audio
 import android.os.PowerManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
+import com.eva.datastore.domain.enums.RecordingEncoders
 import com.eva.datastore.domain.models.RecorderAudioSettings
 import com.eva.feature_settings.composables.SettingsItemTitle
 import com.eva.feature_settings.composables.SettingsItemWithSwitch
@@ -27,131 +35,153 @@ import com.eva.ui.theme.RecorderAppTheme
 
 @Composable
 internal fun AudioSettingsTabContent(
-	settings: RecorderAudioSettings,
-	onEvent: (AudioSettingsEvent) -> Unit,
-	modifier: Modifier = Modifier,
-	contentPadding: PaddingValues = PaddingValues(12.dp),
+    settings: RecorderAudioSettings,
+    onEvent: (AudioSettingsEvent) -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(12.dp),
 ) {
 
-	val isInspectionMode = LocalInspectionMode.current
-	val context = LocalContext.current
+    val isInspectionMode = LocalInspectionMode.current
+    val context = LocalContext.current
 
-	val isIgnoreOptimization = remember(context) {
-		if (isInspectionMode) return@remember false
-		val powerManager = context.getSystemService<PowerManager>()
-		powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
-	}
+    val isIgnoreOptimization = remember(context) {
+        if (isInspectionMode) return@remember false
+        val powerManager = context.getSystemService<PowerManager>()
+        powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+    }
 
-	LazyColumn(
-		modifier = modifier.fillMaxSize(),
-		contentPadding = contentPadding,
-		verticalArrangement = Arrangement.spacedBy(8.dp)
-	) {
-		if (!isIgnoreOptimization) {
-			item {
-				IgnoreBatteryOptimizationCard(
-					modifier = Modifier.animateItem()
-				)
-			}
-		}
-		item {
-			SettingsItemTitle(
-				title = stringResource(id = R.string.recording_settings_encoder_title),
-				text = stringResource(id = R.string.recording_settings_encoder_text),
-			)
-		}
-		item {
-			AudioEncoderSelector(
-				encoder = settings.encoders,
-				onEncoderChange = { onEvent(AudioSettingsEvent.OnEncoderChange(it)) },
-			)
-		}
-		item {
-			SettingsItemTitle(
-				title = stringResource(id = R.string.recording_settings_quality_title),
-				text = stringResource(id = R.string.recording_settings_quality_text)
-			)
-		}
-		item {
-			AudioQualitySelector(
-				quality = settings.quality,
-				onQualityChanged = { onEvent(AudioSettingsEvent.OnQualityChange(it)) },
-				modifier = Modifier.fillMaxWidth(),
-				contentPadding = PaddingValues(horizontal = 12.dp),
-			)
-		}
-		item {
-			SettingsItemTitle(
-				title = stringResource(id = R.string.recording_settings_features_title),
-				text = stringResource(id = R.string.recording_settings_features_text)
-			)
-		}
-		item {
-			SettingsItemWithSwitch(
-				isSelected = settings.enableStereo,
-				title = stringResource(id = R.string.recording_settings_enable_stereo),
-				text = stringResource(id = R.string.recording_settings_enable_stereo_text),
-				leading = {
-					Icon(
-						painter = painterResource(id = R.drawable.ic_stereo),
-						contentDescription = stringResource(id = R.string.recording_settings_skip_silences_title),
-					)
-				},
-				onSelect = { onEvent(AudioSettingsEvent.OnStereoModeChange(it)) },
-			)
-		}
-		item {
-			SettingsItemWithSwitch(
-				isSelected = settings.skipSilences,
-				title = stringResource(id = R.string.recording_settings_skip_silences_title),
-				text = stringResource(id = R.string.recording_settings_skip_silences_text),
-				leading = {
-					Icon(
-						painter = painterResource(id = R.drawable.ic_silence),
-						contentDescription = stringResource(id = R.string.recording_settings_skip_silences_title),
-					)
-				},
-				onSelect = {
-					onEvent(AudioSettingsEvent.OnSkipSilencesChange(it))
-				},
-			)
-		}
-		item {
-			PauseRecorderOnCallTile(
-				isPauseRecordingOnIncommingCall = settings.pauseRecordingOnCall,
-				onActionEnabledChanged = { onEvent(AudioSettingsEvent.OnPauseRecorderOnCalls(it)) })
-		}
-		item {
-			LocationInfoCollectionCard(
-				isAddLocationInfoAllowed = settings.addLocationInfoInRecording,
-				onActionEnabledChanged = { onEvent(AudioSettingsEvent.OnAddLocationEnabled(it)) })
-		}
-		item {
-			SettingsItemWithSwitch(
-				isSelected = settings.useBluetoothMic,
-				title = stringResource(id = R.string.recording_settings_use_bt_mic),
-				text = stringResource(id = R.string.recording_settings_use_bt_mic_text),
-				leading = {
-					Icon(
-						painter = painterResource(id = R.drawable.ic_bluetooth),
-						contentDescription = stringResource(id = R.string.recording_settings_use_bt_mic),
-					)
-				},
-				onSelect = {
-					onEvent(AudioSettingsEvent.OnUseBluetoothMicChanged(it))
-				},
-			)
-		}
-	}
+    val qualityOptionsEnabled by remember(settings) {
+        derivedStateOf { settings.encoders !in RecordingEncoders.entries.filter { it.isCustom } }
+    }
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (!isIgnoreOptimization) {
+            item {
+                IgnoreBatteryOptimizationCard(
+                    modifier = Modifier
+                        .animateItem()
+                        .fillMaxWidth(),
+                )
+            }
+        }
+        item {
+            SettingsItemTitle(
+                title = stringResource(id = R.string.recording_settings_encoder_title),
+                text = stringResource(id = R.string.recording_settings_encoder_text),
+            )
+        }
+        item {
+            AudioEncoderSelector(
+                encoder = settings.encoders,
+                onEncoderChange = { onEvent(AudioSettingsEvent.OnEncoderChange(it)) },
+            )
+        }
+        item {
+            Spacer(modifier = Modifier.height(4.dp))
+            SettingsItemTitle(
+                title = stringResource(id = R.string.recording_settings_quality_title),
+                text = stringResource(id = R.string.recording_settings_quality_text),
+            )
+        }
+        item {
+            AudioQualitySelector(
+                quality = settings.quality,
+                enabled = qualityOptionsEnabled,
+                onQualityChanged = { onEvent(AudioSettingsEvent.OnQualityChange(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 12.dp),
+            )
+        }
+        if (!qualityOptionsEnabled) item {
+            Text(
+                text = stringResource(id = R.string.recording_settings_lossless_quality_message),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.tertiary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillParentMaxWidth()
+                    .animateItem(),
+            )
+        }
+        item {
+            Spacer(modifier = Modifier.height(4.dp))
+            SettingsItemTitle(
+                title = stringResource(id = R.string.recording_settings_features_title),
+                text = stringResource(id = R.string.recording_settings_features_text),
+            )
+        }
+        item {
+            SettingsItemWithSwitch(
+                isSelected = settings.enableStereo,
+                title = stringResource(id = R.string.recording_settings_enable_stereo),
+                text = stringResource(id = R.string.recording_settings_enable_stereo_text),
+                leading = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_stereo),
+                        contentDescription = stringResource(id = R.string.recording_settings_skip_silences_title),
+                    )
+                },
+                onSelect = { onEvent(AudioSettingsEvent.OnStereoModeChange(it)) },
+            )
+        }
+        item {
+            SettingsItemWithSwitch(
+                isSelected = settings.skipSilences,
+                title = stringResource(id = R.string.recording_settings_skip_silences_title),
+                text = stringResource(id = R.string.recording_settings_skip_silences_text),
+                leading = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_silence),
+                        contentDescription = stringResource(id = R.string.recording_settings_skip_silences_title),
+                    )
+                },
+                onSelect = {
+                    onEvent(AudioSettingsEvent.OnSkipSilencesChange(it))
+                },
+            )
+        }
+        item {
+            PauseRecorderOnCallTile(
+                isPauseRecordingOnIncommingCall = settings.pauseRecordingOnCall,
+                onActionEnabledChanged = { onEvent(AudioSettingsEvent.OnPauseRecorderOnCalls(it)) },
+            )
+        }
+        item {
+            LocationInfoCollectionCard(
+                isAddLocationInfoAllowed = settings.addLocationInfoInRecording,
+                onActionEnabledChanged = { onEvent(AudioSettingsEvent.OnAddLocationEnabled(it)) },
+            )
+        }
+        item {
+            SettingsItemWithSwitch(
+                isSelected = settings.useBluetoothMic,
+                title = stringResource(id = R.string.recording_settings_use_bt_mic),
+                text = stringResource(id = R.string.recording_settings_use_bt_mic_text),
+                leading = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_bluetooth),
+                        contentDescription = stringResource(id = R.string.recording_settings_use_bt_mic),
+                    )
+                },
+                onSelect = {
+                    onEvent(AudioSettingsEvent.OnUseBluetoothMicChanged(it))
+                },
+            )
+        }
+    }
 }
 
 @PreviewLightDark
 @Composable
 private fun AudioSettingsTabContentPreview() = RecorderAppTheme {
-	Surface {
-		AudioSettingsTabContent(
-			settings = RecorderAudioSettings(),
-			onEvent = {},
-		)
-	}
+    Surface {
+        AudioSettingsTabContent(
+            settings = RecorderAudioSettings(),
+            onEvent = {},
+        )
+    }
 }

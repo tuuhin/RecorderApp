@@ -25,11 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.eva.editor.domain.model.AudioClipConfig
 import com.eva.feature_editor.event.EditorScreenEvent
+import com.eva.ui.R
 import com.eva.ui.composables.DurationText
 import com.eva.ui.theme.DownloadableFonts
 import com.eva.ui.theme.RecorderAppTheme
@@ -75,11 +77,11 @@ private fun AudioClipChip(
                 .sizeIn(minWidth = 32.dp, minHeight = 32.dp),
         ) {
 			Icon(
-				imageVector = Icons.Default.Remove,
-				contentDescription = "Subtract  Action",
-				tint = contentColor,
-				modifier = Modifier.size(24.dp)
-			)
+                imageVector = Icons.Default.Remove,
+                contentDescription = stringResource(R.string.editor_subtract_second_description),
+                tint = contentColor,
+                modifier = Modifier.size(24.dp),
+            )
 		}
 
 		Box(
@@ -118,11 +120,11 @@ private fun AudioClipChip(
                 .sizeIn(minWidth = 32.dp, minHeight = 32.dp),
         ) {
 			Icon(
-				imageVector = Icons.Default.Add,
-				contentDescription = "Add Action",
-				tint = contentColor,
-				modifier = Modifier.size(24.dp)
-			)
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(R.string.editor_add_second_description),
+                tint = contentColor,
+                modifier = Modifier.size(24.dp),
+            )
 		}
 	}
 }
