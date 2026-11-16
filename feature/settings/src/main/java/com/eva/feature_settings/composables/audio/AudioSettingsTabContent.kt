@@ -15,7 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -44,10 +46,10 @@ internal fun AudioSettingsTabContent(
     val isInspectionMode = LocalInspectionMode.current
     val context = LocalContext.current
 
-    val isIgnoreOptimization = remember(context) {
-        if (isInspectionMode) return@remember false
+    var isIgnoreOptimization by remember {
+        if (isInspectionMode) return@remember mutableStateOf(false)
         val powerManager = context.getSystemService<PowerManager>()
-        powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+        mutableStateOf(powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true)
     }
 
     val qualityOptionsEnabled by remember(settings) {
@@ -60,11 +62,12 @@ internal fun AudioSettingsTabContent(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (!isIgnoreOptimization) {
-            item {
+            item(key = "battery_optimization") {
                 IgnoreBatteryOptimizationCard(
+                    onGranted = { isIgnoreOptimization = it },
                     modifier = Modifier
-                        .animateItem()
-                        .fillMaxWidth(),
+                        .fillParentMaxWidth()
+                        .animateItem(),
                 )
             }
         }
@@ -96,7 +99,7 @@ internal fun AudioSettingsTabContent(
                 contentPadding = PaddingValues(horizontal = 12.dp),
             )
         }
-        if (!qualityOptionsEnabled) item {
+        if (!qualityOptionsEnabled) item(key = "lossless_audio_warning") {
             Text(
                 text = stringResource(id = R.string.recording_settings_lossless_quality_message),
                 style = MaterialTheme.typography.labelLarge,
