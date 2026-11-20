@@ -8,6 +8,7 @@ android {
     ndkVersion = libs.versions.android.ndk.get()
 
     defaultConfig {
+        consumerProguardFiles("consumer-rules.keep")
         externalNativeBuild {
             cmake {
                 cppFlags += listOf("-std=c++20")
