@@ -28,6 +28,7 @@ dependencies {
 	//compose
 	implementation(platform(libs.androidx.compose.bom))
 	implementation(libs.androidx.material3)
+    implementation(libs.materialKolor.material3)
 
 	//glance
 	implementation(libs.androidx.glance)

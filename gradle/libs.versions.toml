@@ -25,7 +25,7 @@ kotlinxDatetime = "0.8.0"
 kotlinxSerializationJson = "1.13.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
-composeBom = "2026.09.00"
+composeBom = "2026.11.01"
 ksp = "2.3.14"
 hilt = "2.60.1"
 media3Common = "1.11.1"
@@ -33,7 +33,7 @@ navigationCompose = "2.10.2"
 playServicesLocationVersion = "21.4.0"
 room3 = "3.0.3"
 jaudiotagger = "1.0.1"
-uiTextGoogleFonts = "1.12.1"
+uiTextGoogleFonts = "1.13.0"
 workRuntimeKtxVersion = "2.12.0"
 hiltWork = "1.4.0"
 protoc = "4.36.2"
@@ -50,7 +50,8 @@ uiautomator = "2.4.1"
 benchmarkJunit4 = "1.5.0"
 baselineprofile = "1.5.0"
 profileinstaller = "1.4.1"
-leakcanary = "1.0.0"
+leakcanary = "1.1.0"
+materialKolor = "6.0.0"
 
 [libraries]
 #core
@@ -159,6 +160,8 @@ ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devto
 room-gradlePlugin = { group = "androidx.room3", name = "room3-gradle-plugin", version.ref = "room3" }
 protobuf-gradlePlugin = { group = "com.google.protobuf", name = "protobuf-gradle-plugin", version.ref = "protobuf_version" }
 leakcanary = { group = "com.android.tools.studio.leakcanary", name = "leakcanary", version.ref = "leakcanary" }
+#color
+materialKolor-material3 = { module = "com.materialkolor:material-kolor-material3", version.ref = "materialKolor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

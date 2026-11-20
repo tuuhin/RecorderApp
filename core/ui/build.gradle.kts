@@ -17,6 +17,7 @@ dependencies {
 	implementation(libs.androidx.navigation.compose)
 	implementation(libs.kotlinx.serialization.json)
 	implementation(libs.androidx.core.splashscreen)
+    implementation(libs.materialKolor.material3)
 
 	// hilt viewmodel
 	implementation(libs.androidx.hilt.navigation.compose)
