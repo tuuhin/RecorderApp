@@ -9,7 +9,6 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.materialkolor.PaletteStyle
 import com.materialkolor.material3.DynamicMaterialExpressiveTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -39,17 +38,17 @@ fun RecorderAppTheme(
             error = colorScheme.error,
             isDark = darkTheme,
             motionScheme = MotionScheme.expressive(),
-            style = PaletteStyle.Cmf(tertiarySeedColor = TertiarySeedColor),
+            style = AppPalette.paletteStyle,
             animate = true,
             animationSpec = tween(durationMillis = 300),
             content = content,
         )
     } else {
         DynamicMaterialExpressiveTheme(
-            seedColor = SeedColor,
+            seedColor = AppPalette.SeedColor,
             isDark = darkTheme,
             motionScheme = MotionScheme.expressive(),
-            style = PaletteStyle.Cmf(tertiarySeedColor = TertiarySeedColor),
+            style = AppPalette.paletteStyle,
             animate = true,
             animationSpec = tween(durationMillis = 300),
             content = content,
