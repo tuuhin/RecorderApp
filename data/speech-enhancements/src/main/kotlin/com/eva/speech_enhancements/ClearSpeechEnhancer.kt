@@ -5,6 +5,7 @@ import com.eva.speech_enhancements.exception.SpeechEnhancementHandleException
 import com.eva.speech_enhancements.exception.SpeechNativeException
 import com.eva.speech_enhancements.models.EnhanceAudioResult
 import com.eva.speech_enhancements.models.EnhanceOptions
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -31,15 +32,22 @@ class ClearSpeechEnhancer(
     override val latencySamples: Int
         get() = withNativeHandle(::nativeLatencySamples)
 
-    override fun create(modelDir: String) = synchronized(_lock) {
-        if (_isInitialized.load()) {
-            throw SpeechNativeException("Speech enhancer instance is already present, release it first")
-        }
+    override fun create(modelDir: File) = synchronized(_lock) {
 
-        val handle = createNative(modelDir)
-        if (handle == 0L) {
+        if (_isInitialized.load())
+            throw SpeechNativeException("Speech enhancer instance is already present, release it first")
+
+        if (!modelDir.exists()) throw SpeechNativeException("Model directory not found")
+
+        val files = modelDir.listFiles()?.filterNotNull() ?: emptyList()
+        val hasOnnxFile = files.any { it.extension == "onnx" }
+        val hasIniFile = files.any { it.extension == "ini" }
+
+        if (!hasOnnxFile || !hasIniFile) throw IllegalArgumentException("Invalid files dir")
+
+        val handle = createNative(modelDir.absolutePath)
+        if (handle == 0L)
             throw SpeechNativeException("Failed to create the speech enhancement native instance")
-        }
 
         if (!_isInitialized.compareAndSet(expectedValue = false, newValue = true)) {
             destroyNative(handle)
@@ -51,11 +59,8 @@ class ClearSpeechEnhancer(
 
     override suspend fun prepare(): Unit = withContext(dispatcher) {
         withNativeHandle { handle ->
-            if (!prepareNative(handle)) {
-                throw SpeechNativeException(
-                    "Model files are missing or unreadable; prepare a streaming model directory first",
-                )
-            }
+            if (prepareNative(handle)) return@withNativeHandle
+            throw SpeechNativeException("Model files are missing or unreadable; prepare a streaming model directory first")
         }
     }
 
