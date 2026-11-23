@@ -1,0 +1,10 @@
+# Numerical reference vectors used by the DSP tests.
+#
+# These are generated locally with:
+#     python test/support/generate_reference.py
+#     python test/support/generate_enhancer_reference.py ...
+#
+# They are model/signal-derived artifacts, so they are not checked in. Tests that need them
+# are skipped automatically when the files are missing.
+*.f32
+*.shape
