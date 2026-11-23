@@ -1,0 +1,13 @@
+<resources>
+    <string name="categories_create_success">Categoria criada com sucesso</string>
+    <string name="categories_deleted">Categorias excluídas</string>
+    <string name="recordings_add_to_favourite_success">Adicionado aos favoritos</string>
+    <string name="recordings_remove_favourite_failed">Favoritos removidos</string>
+    <string name="recording_delete_request_success">Gravações excluídas com sucesso</string>
+    <string name="recording_delete_request_failed">Falha na solicitação de exclusão</string>
+    <string name="rename_recording_success">Gravação renomeada com sucesso</string>
+    <string name="restore_recordings_success">Gravações selecionadas restauradas</string>
+    <string name="recording_restore_request_failed">Falha ao restaurar</string>
+    <string name="recording_trash_request_success">Gravações movidas para a lixeira</string>
+    <string name="recording_trash_request_failed">Não foi possível mover as gravações para a lixeira</string>
+</resources>

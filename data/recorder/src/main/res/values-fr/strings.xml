@@ -1,0 +1,11 @@
+<resources>
+    <string name="recorder_notification_text_running">L’enregistreur fonctionne</string>
+    <string name="recorder_notification_text_paused">Enregistrement en pause</string>
+    <string name="recorder_recording_completed">Enregistrement terminé</string>
+    <string name="recorder_recording_completed_text">Enregistré dans le stockage externe</string>
+    <string name="recorder_recording_completed_text_2">Appuyez pour lire</string>
+    <string name="toast_recording_bluetooth">Micro Bluetooth utilisé</string>
+    <string name="toast_incoming_call">Appel entrant</string>
+    <string name="bookmarks_saved">Signets ajoutés</string>
+    <string name="bookmarks_too_fast_warning">Les signets doivent être espacés d’une seconde</string>
+</resources>

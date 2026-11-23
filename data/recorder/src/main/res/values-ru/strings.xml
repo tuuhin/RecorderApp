@@ -1,0 +1,11 @@
+<resources>
+    <string name="recorder_notification_text_running">Диктофон работает</string>
+    <string name="recorder_notification_text_paused">Запись приостановлена</string>
+    <string name="recorder_recording_completed">Запись завершена</string>
+    <string name="recorder_recording_completed_text">Сохранено во внешнем хранилище</string>
+    <string name="recorder_recording_completed_text_2">Нажмите, чтобы воспроизвести</string>
+    <string name="toast_recording_bluetooth">Используется микрофон Bluetooth</string>
+    <string name="toast_incoming_call">Входящий вызов</string>
+    <string name="bookmarks_saved">Закладки добавлены</string>
+    <string name="bookmarks_too_fast_warning">Между закладками должна быть минимум 1 секунда</string>
+</resources>

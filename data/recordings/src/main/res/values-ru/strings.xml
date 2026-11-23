@@ -1,0 +1,13 @@
+<resources>
+    <string name="categories_create_success">Категория успешно создана</string>
+    <string name="categories_deleted">Удалённые категории</string>
+    <string name="recordings_add_to_favourite_success">Добавлено в избранное</string>
+    <string name="recordings_remove_favourite_failed">Избранное удалено</string>
+    <string name="recording_delete_request_success">Записи успешно удалены</string>
+    <string name="recording_delete_request_failed">Не удалось выполнить запрос на удаление</string>
+    <string name="rename_recording_success">Запись успешно переименована</string>
+    <string name="restore_recordings_success">Выбранные записи восстановлены</string>
+    <string name="recording_restore_request_failed">Не удалось восстановить</string>
+    <string name="recording_trash_request_success">Записи перемещены в корзину</string>
+    <string name="recording_trash_request_failed">Не удалось переместить записи в корзину</string>
+</resources>

@@ -1,0 +1,13 @@
+<resources>
+    <string name="categories_create_success">类别创建成功</string>
+    <string name="categories_deleted">已删除的类别</string>
+    <string name="recordings_add_to_favourite_success">已标记为收藏</string>
+    <string name="recordings_remove_favourite_failed">已移除收藏</string>
+    <string name="recording_delete_request_success">录音已成功删除</string>
+    <string name="recording_delete_request_failed">删除请求失败</string>
+    <string name="rename_recording_success">录音已成功重命名</string>
+    <string name="restore_recordings_success">所选录音已恢复</string>
+    <string name="recording_restore_request_failed">恢复失败</string>
+    <string name="recording_trash_request_success">录音已移至回收站</string>
+    <string name="recording_trash_request_failed">无法将录音移至回收站</string>
+</resources>

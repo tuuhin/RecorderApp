@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="select_category_screen">選擇類別</string>
+    <string name="categories_create_success">類別已成功建立</string>
+    <string name="categories_deleted">類別已刪除</string>
+</resources>

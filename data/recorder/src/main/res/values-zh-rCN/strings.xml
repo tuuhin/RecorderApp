@@ -1,0 +1,11 @@
+<resources>
+    <string name="recorder_notification_text_running">录音机正在运行</string>
+    <string name="recorder_notification_text_paused">录音已暂停</string>
+    <string name="recorder_recording_completed">录音已完成</string>
+    <string name="recorder_recording_completed_text">已保存到外部存储空间</string>
+    <string name="recorder_recording_completed_text_2">点按以播放</string>
+    <string name="toast_recording_bluetooth">正在使用蓝牙麦克风</string>
+    <string name="toast_incoming_call">来电</string>
+    <string name="bookmarks_saved">已添加书签</string>
+    <string name="bookmarks_too_fast_warning">书签间隔必须为 1 秒</string>
+</resources>

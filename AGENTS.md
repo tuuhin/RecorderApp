@@ -36,13 +36,13 @@ RecorderApp (`com.eva.recorderapp`) is an Android audio recorder with:
 
 Five layer groups, defined in `settings.gradle.kts`:
 
-| Group              | Modules                                                                                                                                                                        | Package convention            |
-|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
-| `:app`             | The application module                                                                                                                                                         | `com.eva.recorderapp`         |
-| `:core:*`          | `core/ui` (shared composables, theme, nav utils), `core/utils` (Kotlin JVM helpers)                                                                                            | `com.eva.ui`, `com.eva.utils` |
-| `:data:*`          | `recordings`, `recorder`, `player`, `editor`, `bookmarks`, `categories`, `database`, `datastore`, `location`, `transcribe`, `interactions`, `use_case`, `visualizer`, `worker` | `com.eva.<module>`            |
-| `:feature:*`       | `recorder`, `recordings`, `player`, `player-shared`, `editor`, `categories`, `settings`, `widget`, `onboarding`                                                                | `com.eva.feature_<name>`      |
-| `:testing:runtime` | `HiltTestRunner` used as the instrumentation runner by all `androidTest` setups                                                                                                | `com.eva.testing.runtime`     |
+| Group              | Modules                                                                                                                                                                                                                                 | Package convention            |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
+| `:app`             | The application module                                                                                                                                                                                                                  | `com.eva.recorderapp`         |
+| `:core:*`          | `core/ui` (shared composables, theme, nav utils), `core/utils` (Kotlin JVM helpers)                                                                                                                                                     | `com.eva.ui`, `com.eva.utils` |
+| `:data:*`          | `recordings`, `recorder`, `recorder-native`, `player`, `editor`, `bookmarks`, `categories`, `database`, `datastore`, `location`, `transcribe`, `interactions`, `use_case`, `visualizer`, `worker`, `compression`, `speech-enhancements` | `com.eva.<module>`            |
+| `:feature:*`       | `recorder`, `recordings`, `player`, `player-shared`, `editor`, `categories`, `settings`, `widget`, `onboarding`                                                                                                                         | `com.eva.feature_<name>`      |
+| `:testing:runtime` | `HiltTestRunner` used as the instrumentation runner by all `androidTest` setups                                                                                                                                                         | `com.eva.testing.runtime`     |
 
 Rules:
 

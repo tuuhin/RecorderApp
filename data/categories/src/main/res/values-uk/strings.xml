@@ -1,0 +1,5 @@
+<resources>
+    <string name="select_category_screen">Вибрати категорію</string>
+    <string name="categories_create_success">Категорію успішно створено</string>
+    <string name="categories_deleted">Видалені категорії</string>
+</resources>
