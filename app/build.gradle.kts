@@ -39,6 +39,7 @@ android {
                 "ru", "fr", "uk",
                 "pt-rBR", "pt-rPT",
                 "zh-rCN", "zh-rTW",
+                "ko", "ja", "id",
             ),
         )
     }

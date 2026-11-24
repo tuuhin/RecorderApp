@@ -116,6 +116,16 @@ Contributions are always welcomed from the community
 - Push to the branch (git push origin feature/YourFeature).
 - Submit a request to merge your changes onto `dev` branch of main project.
 
+### :speech_balloon: Translations
+
+English is the source language. The app is also available in Bengali, German, Spanish, French,
+Hindi, Indonesian, Japanese, Korean, Portuguese (Brazil and Portugal), Russian, Turkish,
+Ukrainian, and Chinese (Simplified and Traditional).
+
+Several translations are **AI-generated** and may contain inaccuracies. Native speakers are
+encouraged to review them and submit corrections through GitHub Pull Requests. See
+[TRANSLATIONS.md](TRANSLATIONS.md) for the language table with verification status.
+
 ### :curly_loop: Feedback and Support
 
 AN app is never perfect there may issue here and there which are not caught.If you encounter any
