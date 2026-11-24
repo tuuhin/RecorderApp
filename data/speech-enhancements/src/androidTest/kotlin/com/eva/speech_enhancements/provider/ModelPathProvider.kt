@@ -22,7 +22,7 @@ class ModelPathProvider(private val context: Context) {
 
 
     private fun copyToFile(name: String, parentDir: File) {
-        val file = File(parentDir, name)
+        val file = File(parentDir, name.substringAfterLast('/'))
         if (!file.exists()) file.createNewFile()
         // create the file then copy content
         context.assets.open(name).use { inp ->
@@ -31,9 +31,9 @@ class ModelPathProvider(private val context: Context) {
     }
 
     companion object {
-        private const val CONFIG_FILE_NAME = "config.ini"
-        private const val DECODER_FILE_NAME = "df_dec.onnx"
-        private const val ENCODER_FILE_NAME = "enc.onnx"
-        private const val ERB_DECODER_FILE_NAME = "erb_dec.onnx"
+        private const val CONFIG_FILE_NAME = "model/config.ini"
+        private const val DECODER_FILE_NAME = "model/df_dec.onnx"
+        private const val ENCODER_FILE_NAME = "model/enc.onnx"
+        private const val ERB_DECODER_FILE_NAME = "model/erb_dec.onnx"
     }
 }
