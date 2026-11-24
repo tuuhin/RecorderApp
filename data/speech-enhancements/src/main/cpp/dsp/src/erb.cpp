@@ -2,8 +2,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <numeric>
+#include <ranges>
+#include <span>
 #include <stdexcept>
-#include <string>
 
 namespace dfn::dsp {
 
@@ -16,13 +19,12 @@ float hz_from_erb(float erb) {
 }
 
 std::vector<int> erb_band_widths(int sample_rate, int fft_size, int nb_bands, int min_nb_freqs) {
-    if (sample_rate <= 0 || fft_size <= 0 || nb_bands <= 0) {
+    if (sample_rate <= 0 || fft_size <= 0 || nb_bands <= 0)
         throw std::invalid_argument(
             "erb_band_widths requires positive sample rate, fft size, bands");
-    }
-    if (min_nb_freqs <= 0) {
-        throw std::invalid_argument("erb_band_widths requires min_nb_freqs > 0");
-    }
+
+    if (min_nb_freqs <= 0) throw std::invalid_argument("erb_band_widths requires min_nb_freqs > 0");
+
     const int nyq_freq = sample_rate / 2;
     const auto freq_width = static_cast<float>(sample_rate) / static_cast<float>(fft_size);
     const float erb_low = erb_from_hz(0.0f);
@@ -32,7 +34,8 @@ std::vector<int> erb_band_widths(int sample_rate, int fft_size, int nb_bands, in
     std::vector<int> widths(static_cast<std::size_t>(nb_bands), 0);
     int prev_freq = 0;  // last frequency bin of the previous band
     int freq_over = 0;  // bins already forced into previous bands
-    for (int i = 1; i <= nb_bands; ++i) {
+
+    for (const int i : std::views::iota(1, nb_bands + 1)) {
         const float f = hz_from_erb(erb_low + static_cast<float>(i) * step);
         const auto fb = static_cast<int>(std::round(f / freq_width));
         int nb_freqs = fb - prev_freq - freq_over;
@@ -45,85 +48,93 @@ std::vector<int> erb_band_widths(int sample_rate, int fft_size, int nb_bands, in
         widths[static_cast<std::size_t>(i - 1)] = nb_freqs;
         prev_freq = fb;
     }
-    // There are fft_size / 2 + 1 frequency bins, one more than the ERB bands cover.
-    widths[static_cast<std::size_t>(nb_bands - 1)] += 1;
 
-    int total = 0;
-    for (const int width : widths) {
-        total += width;
-    }
+    // There are fft_size / 2 + 1 frequency bins, one more than the ERB bands cover.
+    widths.back() += 1;
+
+    const int total = erb_total_width(widths);
     const int too_large = total - (fft_size / 2 + 1);
-    if (too_large > 0) {
-        widths[static_cast<std::size_t>(nb_bands - 1)] -= too_large;
-    }
+    if (too_large > 0) widths.back() -= too_large;
     return widths;
 }
 
-int erb_total_width(const std::vector<int>& widths) {
-    int total = 0;
-    for (const int width : widths) {
-        total += width;
-    }
-    return total;
+int erb_total_width(std::span<const int> widths) {
+    return std::accumulate(widths.begin(), widths.end(), 0);
 }
 
-void erb_band_correlation(const std::complex<float>* x, const std::complex<float>* p,
-                          const std::vector<int>& widths, float* out) {
-    int offset = 0;
-    for (std::size_t b = 0; b < widths.size(); ++b) {
+void erb_band_correlation(std::span<const std::complex<float>> x,
+                          std::span<const std::complex<float>> p, std::span<const int> widths,
+                          std::span<float> out) {
+    std::size_t offset = 0;
+    for (const auto b : std::views::iota(std::size_t{0}, widths.size())) {
         const int width = widths[b];
         if (width <= 0) {
             out[b] = 0.0f;
         } else {
-            const float k = 1.0f / static_cast<float>(width);
+            const auto band_width = static_cast<std::size_t>(width);
+            const float scale = 1.0f / static_cast<float>(width);
+            const auto x_band = x.subspan(offset, band_width);
+            const auto p_band = p.subspan(offset, band_width);
+
             float acc = 0.0f;
-            for (int j = 0; j < width; ++j) {
-                const int idx = offset + j;
-                acc += (x[idx].real() * p[idx].real() + x[idx].imag() * p[idx].imag()) * k;
+            for (const auto j : std::views::iota(std::size_t{0}, band_width)) {
+                acc += (x_band[j].real() * p_band[j].real() + x_band[j].imag() * p_band[j].imag()) *
+                       scale;
             }
             out[b] = acc;
         }
-        offset += width;
+        offset += static_cast<std::size_t>(width);
     }
 }
 
-void erb_band_compress(const float* x, const std::vector<int>& widths, float* out) {
-    int offset = 0;
-    for (std::size_t b = 0; b < widths.size(); ++b) {
+void erb_band_compress(std::span<const float> x, std::span<const int> widths,
+                       std::span<float> out) {
+    std::size_t offset = 0;
+    for (const auto b : std::views::iota(std::size_t{0}, widths.size())) {
         const int width = widths[b];
         if (width <= 0) {
             out[b] = 0.0f;
         } else {
-            const float k = 1.0f / static_cast<float>(width);
+            const auto band_width = static_cast<std::size_t>(width);
+            const float scale = 1.0f / static_cast<float>(width);
+            const auto x_band = x.subspan(offset, band_width);
+
             float acc = 0.0f;
-            for (int j = 0; j < width; ++j) {
-                acc += x[offset + j] * k;
+            for (const float val : x_band) {
+                acc += val * scale;
             }
             out[b] = acc;
         }
-        offset += width;
+        offset += static_cast<std::size_t>(width);
     }
 }
 
-void erb_interp_band_gain(float* out, const std::vector<int>& widths, const float* gains) {
-    int offset = 0;
-    for (std::size_t b = 0; b < widths.size(); ++b) {
-        for (int j = 0; j < widths[b]; ++j) {
-            out[offset + j] = gains[b];
+void erb_interp_band_gain(std::span<float> out, std::span<const int> widths,
+                          std::span<const float> gains) {
+    std::size_t offset = 0;
+    for (const auto b : std::views::iota(std::size_t{0}, widths.size())) {
+        const int width = widths[b];
+        if (width > 0) {
+            const auto band_width = static_cast<std::size_t>(width);
+            std::ranges::fill(out.subspan(offset, band_width), gains[b]);
+            offset += band_width;
         }
-        offset += widths[b];
     }
 }
 
-void erb_apply_interp_band_gain(std::complex<float>* spectrum, const std::vector<int>& widths,
-                                const float* gains) {
-    int offset = 0;
-    for (std::size_t b = 0; b < widths.size(); ++b) {
-        const float gain = gains[b];
-        for (int j = 0; j < widths[b]; ++j) {
-            spectrum[offset + j] *= gain;
+void erb_apply_interp_band_gain(std::span<std::complex<float>> spectrum,
+                                std::span<const int> widths, std::span<const float> gains) {
+    std::size_t offset = 0;
+    for (const auto b : std::views::iota(std::size_t{0}, widths.size())) {
+        const int width = widths[b];
+        if (width > 0) {
+            const auto band_width = static_cast<std::size_t>(width);
+            const float gain = gains[b];
+            for (auto& bin : spectrum.subspan(offset, band_width)) {
+                bin *= gain;
+            }
+            offset += band_width;
         }
-        offset += widths[b];
     }
 }
 

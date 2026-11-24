@@ -3,34 +3,39 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <format>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 #include "stft.h"
 
 namespace dfn::enhancer {
 namespace {
 
-std::string trim(const std::string& value) {
-    const auto first = value.find_first_not_of(" \t\r\n");
-    if (first == std::string::npos) {
+constexpr std::string_view kWhitespace = " \t\r\n";
+
+[[nodiscard]] constexpr std::string_view trim(std::string_view value) noexcept {
+    const auto first = value.find_first_not_of(kWhitespace);
+    if (first == std::string_view::npos) {
         return {};
     }
-    const auto last = value.find_last_not_of(" \t\r\n");
+    const auto last = value.find_last_not_of(kWhitespace);
     return value.substr(first, last - first + 1);
 }
 
-std::string lowercase(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
-    return value;
+[[nodiscard]] std::string lowercase(std::string_view value) {
+    std::string result(value);
+    std::ranges::transform(
+        result, result.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return result;
 }
 
-float parse_float(const std::map<std::string, std::string>& values, const std::string& key,
-                  float fallback) {
+[[nodiscard]] float parse_float(const std::map<std::string, std::string>& values,
+                                const std::string& key, float fallback) {
     const auto it = values.find(key);
     if (it == values.end()) {
         return fallback;
@@ -42,8 +47,8 @@ float parse_float(const std::map<std::string, std::string>& values, const std::s
     }
 }
 
-int parse_int(const std::map<std::string, std::string>& values, const std::string& key,
-              int fallback) {
+[[nodiscard]] int parse_int(const std::map<std::string, std::string>& values,
+                            const std::string& key, int fallback) {
     const auto it = values.find(key);
     if (it == values.end()) {
         return fallback;
@@ -55,15 +60,15 @@ int parse_int(const std::map<std::string, std::string>& values, const std::strin
     }
 }
 
-std::string parse_string(const std::map<std::string, std::string>& values, const std::string& key,
-                         const std::string& fallback) {
+[[nodiscard]] std::string parse_string(const std::map<std::string, std::string>& values,
+                                       const std::string& key, const std::string& fallback) {
     const auto it = values.find(key);
     return it == values.end() ? fallback : it->second;
 }
 
 }  // namespace
 
-float ModelConfig::compute_norm_alpha(int sample_rate, int hop_size, float tau) {
+float model_config::compute_norm_alpha(int sample_rate, int hop_size, float tau) {
     if (sample_rate <= 0 || hop_size <= 0 || tau <= 0.0f) {
         return 0.99f;
     }
@@ -83,7 +88,7 @@ float ModelConfig::compute_norm_alpha(int sample_rate, int hop_size, float tau) 
     return a;
 }
 
-void ModelConfig::_apply_section(const std::string& section,
+void model_config::apply_section(std::string_view section,
                                  const std::map<std::string, std::string>& values) {
     if (section == "df") {
         sample_rate = parse_int(values, "sr", sample_rate);
@@ -106,9 +111,8 @@ void ModelConfig::_apply_section(const std::string& section,
     }
 }
 
-ModelConfig ModelConfig::from_ini_string(const std::string& text) {
-    ModelConfig config = deepfilternet3_default();
-    std::istringstream stream(text);
+model_config model_config::from_ini_string(std::string_view text) {
+    model_config config = deepfilternet3_default();
     std::string line;
     std::string section;
     std::map<std::string, std::string> values;
@@ -117,7 +121,7 @@ ModelConfig ModelConfig::from_ini_string(const std::string& text) {
 
     auto flush = [&]() {
         if (!section.empty()) {
-            config._apply_section(section, values);
+            config.apply_section(section, values);
             if (section == "df") {
                 const auto alpha = values.find("norm_alpha");
                 if (alpha != values.end()) {
@@ -133,9 +137,15 @@ ModelConfig ModelConfig::from_ini_string(const std::string& text) {
         values.clear();
     };
 
-    while (std::getline(stream, line)) {
-        const std::string stripped = trim(line);
-        if (stripped.empty() || stripped[0] == '#' || stripped[0] == ';') {
+    std::size_t pos = 0;
+    while (pos < text.size()) {
+        const auto newline = text.find('\n', pos);
+        const std::string_view raw_line =
+            newline == std::string_view::npos ? text.substr(pos) : text.substr(pos, newline - pos);
+        pos = newline == std::string_view::npos ? text.size() : newline + 1;
+
+        const std::string_view stripped = trim(raw_line);
+        if (stripped.empty() || stripped.front() == '#' || stripped.front() == ';') {
             continue;
         }
         if (stripped.front() == '[' && stripped.back() == ']') {
@@ -144,11 +154,11 @@ ModelConfig ModelConfig::from_ini_string(const std::string& text) {
             continue;
         }
         const auto equals = stripped.find('=');
-        if (equals == std::string::npos || section.empty()) {
+        if (equals == std::string_view::npos || section.empty()) {
             continue;
         }
         const std::string key = lowercase(trim(stripped.substr(0, equals)));
-        const std::string value = trim(stripped.substr(equals + 1));
+        const std::string value{trim(stripped.substr(equals + 1))};
         values[key] = value;
     }
     flush();
@@ -160,24 +170,26 @@ ModelConfig ModelConfig::from_ini_string(const std::string& text) {
     return config;
 }
 
-ModelConfig ModelConfig::from_ini_file(const std::string& path, std::string* error) {
-    std::ifstream file(path);
+model_config model_config::from_ini_file(std::string_view path, std::string* error) {
+    std::ifstream file{std::string{path}};
     if (!file.good()) {
         if (error != nullptr) {
-            *error = "could not open model config: " + path;
+            *error = std::format("could not open model config: {}", path);
         }
         return deepfilternet3_default();
     }
     std::ostringstream buffer;
     buffer << file.rdbuf();
+
     if (error != nullptr) {
         error->clear();
     }
+
     return from_ini_string(buffer.str());
 }
 
-ModelConfig ModelConfig::deepfilternet3_default() {
-    ModelConfig config;
+model_config model_config::deepfilternet3_default() {
+    model_config config;
     config.sample_rate = 48000;
     config.fft_size = 960;
     config.hop_size = 480;
@@ -194,41 +206,44 @@ ModelConfig ModelConfig::deepfilternet3_default() {
     return config;
 }
 
-void ModelConfig::validate() const {
-    if (sample_rate != 48000)
+void model_config::validate() const {
+    if (sample_rate != 48000) {
         throw std::invalid_argument("DeepFilterNet 3 processes audio at 48 kHz");
-
-    if (fft_size <= 0 || hop_size <= 0)
+    }
+    if (fft_size <= 0 || hop_size <= 0) {
         throw std::invalid_argument("fft_size and hop_size must be positive");
-
-    if (2 * hop_size > fft_size)
+    }
+    if (2 * hop_size > fft_size) {
         throw std::invalid_argument("hop_size must not exceed fft_size / 2");
-
-    if (fft_size % 32 != 0)
+    }
+    if (fft_size % 32 != 0) {
         throw std::invalid_argument("fft_size must be a multiple of 32 (PFFFT requirement)");
-
-    if (nb_erb <= 0 || nb_erb % 4 != 0)
+    }
+    if (nb_erb <= 0 || nb_erb % 4 != 0) {
         throw std::invalid_argument("nb_erb must be a positive multiple of 4");
-
-    if (nb_df <= 0 || nb_df >= freq_size())
+    }
+    if (nb_df <= 0 || nb_df >= freq_size()) {
         throw std::invalid_argument("nb_df must be in (0, freq_size)");
-
-    if (df_order <= 0) throw std::invalid_argument("df_order must be positive");
-
-    if (df_lookahead < 0 || conv_lookahead < 0)
+    }
+    if (df_order <= 0) {
+        throw std::invalid_argument("df_order must be positive");
+    }
+    if (df_lookahead < 0 || conv_lookahead < 0) {
         throw std::invalid_argument("lookahead values must be non-negative");
-
-    if (df_lookahead > df_order)
+    }
+    if (df_lookahead > df_order) {
         throw std::invalid_argument("df_lookahead must not exceed df_order");
-
-    if (conv_ch <= 0) throw std::invalid_argument("conv_ch must be positive");
-
-    if (model_type != "deepfilternet3")
-        throw std::invalid_argument("unsupported model type: " + model_type +
-                                    " (only deepfilternet3 is supported)");
-
-    if (norm_alpha <= 0.0f || norm_alpha >= 1.0f)
+    }
+    if (conv_ch <= 0) {
+        throw std::invalid_argument("conv_ch must be positive");
+    }
+    if (model_type != "deepfilternet3") {
+        throw std::invalid_argument(std::format(
+            "unsupported model type: {} (only deepfilternet3 is supported)", model_type));
+    }
+    if (norm_alpha <= 0.0f || norm_alpha >= 1.0f) {
         throw std::invalid_argument("norm_alpha must be in (0, 1)");
+    }
 }
 
 }  // namespace dfn::enhancer

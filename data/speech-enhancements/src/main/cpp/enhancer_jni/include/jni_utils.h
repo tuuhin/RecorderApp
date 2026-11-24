@@ -2,24 +2,29 @@
 
 #include <android/log.h>
 #include <jni.h>
+
+#include <concepts>
 #include <cstdint>
 #include <exception>
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
-#define LOG_TAG_I "SPEECH_JNI_COMMON"
-#define LOG_DEBUG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG_I, __VA_ARGS__)
+inline constexpr std::string_view kLogTag = "SPEECH_JNI_COMMON";
+
+#define LOG_DEBUG(...) __android_log_print(ANDROID_LOG_DEBUG, kLogTag.data(), __VA_ARGS__)
 
 namespace speech_jni {
 
-inline void throwJavaException(JNIEnv* env, const char* className, const char* message) noexcept {
-    if (env->ExceptionCheck()) return;
+inline void throwJavaException(JNIEnv* env, const char* class_name, const char* message) noexcept {
+    if (env == nullptr || env->ExceptionCheck()) return;
 
-    jclass exceptionClass = env->FindClass(className);
-    if (exceptionClass == nullptr) return;
-    env->ThrowNew(exceptionClass, message);
-    env->DeleteLocalRef(exceptionClass);
+    jclass exception_class = env->FindClass(class_name);
+    if (exception_class == nullptr) return;
+
+    env->ThrowNew(exception_class, message);
+    env->DeleteLocalRef(exception_class);
 }
 
 inline void translateCurrentException(JNIEnv* env) noexcept {
@@ -41,14 +46,14 @@ inline void translateCurrentException(JNIEnv* env) noexcept {
 }
 
 template <typename SM>
-std::shared_ptr<SM>& get_manager(jlong handle) {
+[[nodiscard]] std::shared_ptr<SM>& get_manager(jlong handle) {
     if (handle == 0) throw std::invalid_argument("Native speech enhancer handle is null");
     return *reinterpret_cast<std::shared_ptr<SM>*>(static_cast<std::uintptr_t>(handle));
 }
 
-template <typename Manager>
-jlong make_handle(std::shared_ptr<Manager> manager) {
-    auto* owned = new std::shared_ptr<Manager>(std::move(manager));
+template <typename SM>
+[[nodiscard]] jlong make_handle(std::shared_ptr<SM> manager) {
+    auto* owned = new std::shared_ptr<SM>(std::move(manager));
     return static_cast<jlong>(reinterpret_cast<std::uintptr_t>(owned));
 }
 
@@ -59,6 +64,7 @@ void destroy_handle(jlong handle) noexcept {
 }
 
 template <typename SM, typename Fn>
+    requires std::invocable<Fn&&, SM&>
 void withManager(JNIEnv* env, jlong handle, Fn&& function) noexcept {
     try {
         auto& manager = get_manager<SM>(handle);
@@ -71,23 +77,30 @@ void withManager(JNIEnv* env, jlong handle, Fn&& function) noexcept {
 
 class UtfChars final {
    public:
-    UtfChars(JNIEnv* env, jstring value) : _jEnv(env), _jValue(value) {
+    UtfChars(JNIEnv* env, jstring value) : _env(env), _jValue(value) {
+        if (_env == nullptr) throw std::invalid_argument("JNIEnv must not be null");
         if (_jValue == nullptr) throw std::invalid_argument("Model directory must not be null");
-        _cChars = _jEnv->GetStringUTFChars(_jValue, nullptr);
-        if (_cChars == nullptr) throw std::runtime_error("Failed to access Java string");
+
+        _chars = _env->GetStringUTFChars(_jValue, nullptr);
+        if (_chars == nullptr) throw std::runtime_error("Failed to access Java string");
     }
 
     ~UtfChars() {
-        if (_cChars != nullptr) _jEnv->ReleaseStringUTFChars(_jValue, _cChars);
+        if (_chars != nullptr && _env != nullptr) _env->ReleaseStringUTFChars(_jValue, _chars);
     }
 
     UtfChars(const UtfChars&) = delete;
     UtfChars& operator=(const UtfChars&) = delete;
+    UtfChars(UtfChars&&) = delete;
+    UtfChars& operator=(UtfChars&&) = delete;
 
-    [[nodiscard]] const char* get() const noexcept { return _cChars; }
+    [[nodiscard]] const char* get() const noexcept { return _chars; }
+    [[nodiscard]] std::string_view view() const noexcept {
+        return _chars != nullptr ? std::string_view{_chars} : std::string_view{};
+    }
 
    private:
-    JNIEnv* _jEnv;
-    jstring _jValue;
-    const char* _cChars = nullptr;
+    JNIEnv* _env = nullptr;
+    jstring _jValue = nullptr;
+    const char* _chars = nullptr;
 };

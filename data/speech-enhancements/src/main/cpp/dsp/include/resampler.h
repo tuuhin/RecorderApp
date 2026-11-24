@@ -14,6 +14,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 namespace dfn::dsp {
@@ -22,38 +23,38 @@ class Resampler {
    public:
     Resampler(int input_rate, int output_rate);
 
-    int input_rate() const { return input_rate_; }
-    int output_rate() const { return output_rate_; }
-    bool is_identity() const { return input_rate_ == output_rate_; }
+    [[nodiscard]] constexpr int input_rate() const noexcept { return input_rate_; }
+    [[nodiscard]] constexpr int output_rate() const noexcept { return output_rate_; }
+    [[nodiscard]] constexpr bool is_identity() const noexcept {
+        return input_rate_ == output_rate_;
+    }
 
-    void reset();
+    void reset() noexcept;
 
     // Upper bound on the number of samples `process` can write for `input_count` inputs.
-    std::size_t max_output_samples(std::size_t input_count) const;
+    [[nodiscard]] std::size_t max_output_samples(std::size_t input_count) const;
 
     // Number of output samples produced for `input_count` inputs (rounded to nearest).
-    std::size_t output_length(std::size_t input_count) const;
+    [[nodiscard]] std::size_t output_length(std::size_t input_count) const;
 
-    // Streams `count` input samples, writing as many complete output samples as possible.
-    // Returns the number of output samples written (never exceeds `out_capacity`).
-    std::size_t process(const float* input, std::size_t count, float* out,
-                        std::size_t out_capacity);
+    // Streams `input` samples, writing as many complete output samples as possible into `out`.
+    // Returns the number of output samples written (never exceeds `out.size()`).
+    std::size_t process(std::span<const float> input, std::span<float> out);
 
     // Emits the remaining output samples, treating input beyond the end as silence.
-    // `total_output` is the sample count returned by output_length() for all pushed input.
-    std::size_t flush(float* out, std::size_t out_capacity);
+    std::size_t flush(std::span<float> out);
 
-    // Number of samples flushed so far (for bookkeeping in callers).
-    std::size_t total_input() const { return total_input_; }
+    // Number of samples pushed so far (for bookkeeping in callers).
+    [[nodiscard]] constexpr std::size_t total_input() const noexcept { return total_input_; }
 
    private:
-    float _sample_at(std::int64_t index) const;
-    float _interpolate(double position) const;
-    void _trim_history(std::int64_t next_position);
+    [[nodiscard]] float sample_at(std::int64_t index) const noexcept;
+    [[nodiscard]] float interpolate(double position) const;
+    void trim_history(std::int64_t next_position);
 
-    int input_rate_;
-    int output_rate_;
-    double ratio_;  // input_rate / output_rate
+    int input_rate_ = 0;
+    int output_rate_ = 0;
+    double ratio_ = 1.0;  // input_rate / output_rate
 
     std::vector<float> history_;
     std::size_t history_head_ = 0;

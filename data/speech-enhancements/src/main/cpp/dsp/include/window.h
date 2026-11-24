@@ -19,12 +19,12 @@ std::vector<float> make_vorbis_window(int fft_size);
 // Analysis normalization factor 2 * hop_size / fft_size^2.
 float analysis_window_norm(int fft_size, int hop_size);
 
-struct AnalysisWindow {
+struct analysis_window {
     std::vector<float> coefficients;
     float norm = 1.0f;
 };
 
-AnalysisWindow make_analysis_window(int fft_size, int hop_size);
+analysis_window make_analysis_window(int fft_size, int hop_size);
 
 }  // namespace dfn::dsp
 

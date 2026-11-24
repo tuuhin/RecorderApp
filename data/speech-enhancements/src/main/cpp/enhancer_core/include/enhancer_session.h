@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <deque>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "audio_frame.h"
@@ -35,31 +36,41 @@ class EnhancerSession {
         EnhancementStage last_stage = EnhancementStage::kBypass;
     };
 
-    EnhancerSession(std::shared_ptr<ModelRunner> runner, ModelConfig config,
+    EnhancerSession(std::shared_ptr<model_runner> runner, model_config config,
                     EnhancerOptions options = {});
 
-    // Processes `count` float samples; appends the produced samples to `output`.
+    // Processes float samples; appends the produced samples to `output`.
     // Returns the number of samples appended.
-    std::size_t process(const float* input, std::size_t count, std::vector<float>& output);
+    std::size_t process(std::span<const float> input, std::vector<float>& output);
+    std::size_t process(const float* input, std::size_t count, std::vector<float>& output) {
+        return process(std::span{input, count}, output);
+    }
 
-    // PCM16 variant of `process`.
-    std::size_t process_pcm16(const int16_t* input, std::size_t count,
-                              std::vector<int16_t>& output);
+    // PCM16 variants of `process`.
+    std::size_t process_pcm16(std::span<const std::int16_t> input,
+                              std::vector<std::int16_t>& output);
+    std::size_t process_pcm16(const std::int16_t* input, std::size_t count,
+                              std::vector<std::int16_t>& output) {
+        return process_pcm16(std::span{input, count}, output);
+    }
 
     // Completes the stream: pads a partial hop and pushes the model/delay tail through the
     // pipeline. Appends the remaining samples to `output` and returns their count.
     std::size_t flush(std::vector<float>& output);
-    std::size_t flush_pcm16(std::vector<int16_t>& output);
+    std::size_t flush_pcm16(std::vector<std::int16_t>& output);
 
     void reset();
 
-    int latency_samples() const { return engine_.config().latency_samples(); }
-    const Stats& stats() const { return stats_; }
-    const ModelConfig& config() const { return engine_.config(); }
-    DeepFilterEngine& engine() { return engine_; }
+    [[nodiscard]] int latency_samples() const noexcept {
+        return engine_.config().latency_samples();
+    }
+    [[nodiscard]] constexpr const Stats& stats() const noexcept { return stats_; }
+    [[nodiscard]] const model_config& config() const noexcept { return engine_.config(); }
+    [[nodiscard]] DeepFilterEngine& engine() noexcept { return engine_; }
+    [[nodiscard]] const DeepFilterEngine& engine() const noexcept { return engine_; }
 
    private:
-    void _append_frame(const float* frame, std::vector<float>& output);
+    void append_frame(std::span<const float> frame, std::vector<float>& output);
 
     DeepFilterEngine engine_;
     dsp::frame_splitter splitter_;

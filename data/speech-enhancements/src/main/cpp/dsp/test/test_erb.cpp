@@ -63,7 +63,7 @@ TEST(ErbFilterbank, ZeroInputProducesZeroBands) {
     const std::vector<int> widths = erb_band_widths(kSampleRate, kFftSize, kErbBands, 2);
     std::vector<std::complex<float>> spectrum(static_cast<std::size_t>(kFreqBins), {0.0f, 0.0f});
     std::vector<float> bands(static_cast<std::size_t>(kErbBands), -1.0f);
-    erb_band_correlation(spectrum.data(), spectrum.data(), widths, bands.data());
+    erb_band_correlation(spectrum, spectrum, widths, bands);
     for (const float value : bands) {
         EXPECT_FLOAT_EQ(value, 0.0f);
     }
@@ -75,7 +75,7 @@ TEST(ErbFilterbank, KnownFrequencyBinInput) {
     const std::vector<int> widths = erb_band_widths(kSampleRate, kFftSize, kErbBands, 2);
     std::vector<std::complex<float>> spectrum(static_cast<std::size_t>(kFreqBins), {1.0f, 0.0f});
     std::vector<float> bands(static_cast<std::size_t>(kErbBands), 0.0f);
-    erb_band_correlation(spectrum.data(), spectrum.data(), widths, bands.data());
+    erb_band_correlation(spectrum, spectrum, widths, bands);
     for (std::size_t b = 0; b < bands.size(); ++b) {
         EXPECT_NEAR(bands[b], 1.0f, 1e-6f) << "band " << b;
     }
@@ -93,7 +93,7 @@ TEST(ErbFilterbank, SingleBinInputOnlyAffectsItsBand) {
     }
     spectrum[100] = std::complex<float>(2.0f, 0.0f);
     std::vector<float> bands(static_cast<std::size_t>(kErbBands), 0.0f);
-    erb_band_correlation(spectrum.data(), spectrum.data(), widths, bands.data());
+    erb_band_correlation(spectrum, spectrum, widths, bands);
     for (int b = 0; b < kErbBands; ++b) {
         if (b == band_index) {
             EXPECT_NEAR(bands[static_cast<std::size_t>(b)],
@@ -111,7 +111,7 @@ TEST(ErbFilterbank, BandGainApplicationAndInterpolation) {
     std::vector<float> gains(static_cast<std::size_t>(kErbBands), 1.0f);
     gains[3] = 0.25f;
     gains[static_cast<std::size_t>(kErbBands - 1)] = 0.5f;
-    erb_apply_interp_band_gain(spectrum.data(), widths, gains.data());
+    erb_apply_interp_band_gain(spectrum, widths, gains);
 
     int offset = 0;
     for (int b = 0; b < kErbBands; ++b) {
@@ -125,7 +125,7 @@ TEST(ErbFilterbank, BandGainApplicationAndInterpolation) {
     }
 
     std::vector<float> interpolated(static_cast<std::size_t>(kFreqBins), 0.0f);
-    erb_interp_band_gain(interpolated.data(), widths, gains.data());
+    erb_interp_band_gain(interpolated, widths, gains);
     int band = 0;
     int bin = 0;
     for (int b = 0; b < kErbBands; ++b) {
@@ -146,7 +146,7 @@ TEST(ErbFilterbank, CompressionIsTheBandMean) {
         values[static_cast<std::size_t>(k)] = static_cast<float>(k);
     }
     std::vector<float> bands(static_cast<std::size_t>(kErbBands), 0.0f);
-    erb_band_compress(values.data(), widths, bands.data());
+    erb_band_compress(values, widths, bands);
     int offset = 0;
     for (int b = 0; b < kErbBands; ++b) {
         const int width = widths[static_cast<std::size_t>(b)];

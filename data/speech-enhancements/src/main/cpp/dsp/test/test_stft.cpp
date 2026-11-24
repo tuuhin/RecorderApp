@@ -15,8 +15,8 @@ namespace {
 constexpr int kSampleRate = 48000;
 constexpr double kPi = 3.14159265358979323846;
 
-StftConfig default_config() {
-    return StftConfig{960, 480};
+stft_config default_config() {
+    return stft_config{960, 480};
 }
 
 // Sine signal of the given frequency, one frame of hop_size samples.
@@ -47,9 +47,9 @@ TEST(StftConfig, FrequencyBinCount) {
 }
 
 TEST(StftConfig, RejectsInvalidConfigurations) {
-    EXPECT_THROW(Stft(StftConfig{960, 600}), std::invalid_argument);  // hop > N/2
-    EXPECT_THROW(Stft(StftConfig{960, 0}), std::invalid_argument);    // hop must be positive
-    EXPECT_THROW(Stft(StftConfig{100, 50}), std::invalid_argument);   // N not PFFFT-compatible
+    EXPECT_THROW(Stft(stft_config{960, 600}), std::invalid_argument);  // hop > N/2
+    EXPECT_THROW(Stft(stft_config{960, 0}), std::invalid_argument);    // hop must be positive
+    EXPECT_THROW(Stft(stft_config{100, 50}), std::invalid_argument);   // N not PFFFT-compatible
 }
 
 TEST(Stft, SilenceProducesExactZeroSpectrum) {

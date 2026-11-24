@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -55,13 +56,13 @@ std::vector<float> resample_all(Resampler& resampler, const std::vector<float>& 
         const std::size_t count = std::min(chunk, input.size() - offset);
         buffer.resize(resampler.max_output_samples(count));
         const std::size_t produced =
-            resampler.process(input.data() + offset, count, buffer.data(), buffer.size());
+            resampler.process(std::span{input}.subspan(offset, count), buffer);
         output.insert(
             output.end(), buffer.begin(), buffer.begin() + static_cast<std::ptrdiff_t>(produced));
         offset += count;
     }
     buffer.resize(4096);
-    const std::size_t produced = resampler.flush(buffer.data(), buffer.size());
+    const std::size_t produced = resampler.flush(buffer);
     output.insert(
         output.end(), buffer.begin(), buffer.begin() + static_cast<std::ptrdiff_t>(produced));
     if (chunk_lengths != nullptr) {

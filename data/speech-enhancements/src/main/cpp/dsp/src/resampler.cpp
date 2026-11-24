@@ -2,9 +2,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <numbers>
+#include <ranges>
+#include <span>
 #include <stdexcept>
-#include <string>
 
 namespace dfn::dsp {
 namespace {
@@ -12,15 +16,14 @@ namespace {
 constexpr int kTaps = 16;            // kernel half-width in input samples
 constexpr double kRolloff = 0.95;    // cutoff as a fraction of the smaller Nyquist frequency
 constexpr double kKaiserBeta = 8.6;  // kaiser_fast-like window shape
-constexpr double kPi = 3.14159265358979323846264338327950288;
 
 // Modified Bessel function of the first kind, order 0 (series expansion; converges quickly
 // for the beta values used here).
-double bessel_i0(double x) {
+[[nodiscard]] double bessel_i0(double x) noexcept {
     double sum = 1.0;
     double term = 1.0;
     const double half_x_sq = (x * x) / 4.0;
-    for (int k = 1; k < 64; ++k) {
+    for (const int k : std::views::iota(1, 64)) {
         term *= half_x_sq / static_cast<double>(k * k);
         sum += term;
         if (term < sum * 1e-17) {
@@ -30,11 +33,11 @@ double bessel_i0(double x) {
     return sum;
 }
 
-double sinc(double x) {
+[[nodiscard]] double sinc(double x) noexcept {
     if (std::abs(x) < 1e-12) {
         return 1.0;
     }
-    const double arg = kPi * x;
+    const double arg = std::numbers::pi * x;
     return std::sin(arg) / arg;
 }
 
@@ -49,7 +52,7 @@ Resampler::Resampler(int input_rate, int output_rate)
     history_.reserve(4096);
 }
 
-void Resampler::reset() {
+void Resampler::reset() noexcept {
     history_.clear();
     history_head_ = 0;
     history_start_ = 0;
@@ -72,17 +75,16 @@ std::size_t Resampler::output_length(std::size_t input_count) const {
     return static_cast<std::size_t>(std::llround(produced));
 }
 
-std::size_t Resampler::process(const float* input, std::size_t count, float* out,
-                               std::size_t out_capacity) {
+std::size_t Resampler::process(std::span<const float> input, std::span<float> out) {
     if (is_identity()) {
-        const std::size_t n = std::min(count, out_capacity);
-        std::copy(input, input + n, out);
-        total_input_ += count;
+        const std::size_t n = std::min(input.size(), out.size());
+        std::ranges::copy(input.first(n), out.begin());
+        total_input_ += input.size();
         next_output_ += n;
         return n;
     }
 
-    if (count > 0) {
+    if (!input.empty()) {
         const std::size_t available = history_.size() - history_head_;
         // Reuse the prefix of the vector when it has been consumed.
         if (history_head_ > 4096 && history_head_ > available) {
@@ -91,39 +93,39 @@ std::size_t Resampler::process(const float* input, std::size_t count, float* out
             history_.resize(available);
             history_head_ = 0;
         }
-        history_.insert(history_.end(), input, input + count);
-        total_input_ += count;
+        history_.insert(history_.end(), input.begin(), input.end());
+        total_input_ += input.size();
     }
 
     std::size_t written = 0;
     const std::int64_t last_available = static_cast<std::int64_t>(total_input_) - 1;
-    while (written < out_capacity) {
+    while (written < out.size()) {
         const double position = static_cast<double>(next_output_) * ratio_;
         const auto center = static_cast<std::int64_t>(std::floor(position));
         // Need samples up to center + kTaps to compute this output.
         if (center + kTaps > last_available) {
             break;
         }
-        out[written++] = _interpolate(position);
+        out[written++] = interpolate(position);
         ++next_output_;
-        _trim_history(
+        trim_history(
             static_cast<std::int64_t>(std::floor(static_cast<double>(next_output_) * ratio_)));
     }
     return written;
 }
 
-std::size_t Resampler::flush(float* out, std::size_t out_capacity) {
+std::size_t Resampler::flush(std::span<float> out) {
     const std::size_t target = output_length(total_input_);
     std::size_t written = 0;
-    while (written < out_capacity && next_output_ < target) {
+    while (written < out.size() && next_output_ < target) {
         const double position = static_cast<double>(next_output_) * ratio_;
-        out[written++] = _interpolate(position);
+        out[written++] = interpolate(position);
         ++next_output_;
     }
     return written;
 }
 
-float Resampler::_sample_at(std::int64_t index) const {
+float Resampler::sample_at(std::int64_t index) const noexcept {
     if (index < 0 || index < history_start_) {
         return 0.0f;
     }
@@ -135,7 +137,7 @@ float Resampler::_sample_at(std::int64_t index) const {
     return history_[history_head_ + static_cast<std::size_t>(offset)];
 }
 
-float Resampler::_interpolate(double position) const {
+float Resampler::interpolate(double position) const {
     const auto center = static_cast<std::int64_t>(std::floor(position));
     const double cutoff =
         0.5 * std::min(1.0, static_cast<double>(output_rate_) / static_cast<double>(input_rate_)) *
@@ -143,7 +145,8 @@ float Resampler::_interpolate(double position) const {
     const double i0_beta = bessel_i0(kKaiserBeta);
     double acc = 0.0;
     double weight_sum = 0.0;
-    for (int j = -kTaps; j <= kTaps; ++j) {
+
+    for (const int j : std::views::iota(-kTaps, kTaps + 1)) {
         const auto index = center + j;
         const double x = position - static_cast<double>(index);  // in input samples
         const double u = x / static_cast<double>(kTaps);
@@ -152,16 +155,17 @@ float Resampler::_interpolate(double position) const {
         }
         const double window = bessel_i0(kKaiserBeta * std::sqrt(1.0 - u * u)) / i0_beta;
         const double weight = 2.0 * cutoff * sinc(2.0 * cutoff * x) * window;
-        acc += weight * static_cast<double>(_sample_at(index));
+        acc += weight * static_cast<double>(sample_at(index));
         weight_sum += weight;
     }
+
     if (std::abs(weight_sum) < 1e-12) {
         return 0.0f;
     }
     return static_cast<float>(acc / weight_sum);
 }
 
-void Resampler::_trim_history(std::int64_t next_position) {
+void Resampler::trim_history(std::int64_t next_position) {
     const std::int64_t keep_from = std::max<std::int64_t>(0, next_position - kTaps);
     if (keep_from <= history_start_) {
         return;

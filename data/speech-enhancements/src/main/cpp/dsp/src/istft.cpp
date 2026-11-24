@@ -5,7 +5,7 @@
 
 namespace dfn::dsp {
 
-Istft::Istft(StftConfig config) : stft_config_(config) {
+Istft::Istft(stft_config config) : stft_config_(config) {
     validate_stft_config(stft_config_);
     window_ = make_analysis_window(stft_config_.fft_size, stft_config_.hop_size);
     synthesis_mem_.assign(static_cast<std::size_t>(stft_config_.fft_size - stft_config_.hop_size),
@@ -23,7 +23,7 @@ void Istft::process(const std::complex<float>* spectrum, float* frame) {
     const int hop = stft_config_.hop_size;
     const int history = n - hop;
 
-    fft_->backward(spectrum, fft_output_.data());
+    fft_->backward(std::span{spectrum, static_cast<std::size_t>(n_freqs())}, fft_output_);
 
     // Synthesis window (the analysis normalization is already part of the spectrum).
     const auto* window = window_.coefficients.data();

@@ -48,7 +48,7 @@ lsnr_dropout = False
 )ini";
 
 TEST(ModelConfig, ParsesOfficialDeepFilterNet3Config) {
-    const ModelConfig config = ModelConfig::from_ini_string(kOfficialConfig);
+    const model_config config = model_config::from_ini_string(kOfficialConfig);
     EXPECT_EQ(config.sample_rate, 48000);
     EXPECT_EQ(config.fft_size, 960);
     EXPECT_EQ(config.hop_size, 480);
@@ -68,7 +68,7 @@ TEST(ModelConfig, ParsesOfficialDeepFilterNet3Config) {
 }
 
 TEST(ModelConfig, DerivesWindowsFromLookahead) {
-    const ModelConfig config = ModelConfig::deepfilternet3_default();
+    const model_config config = model_config::deepfilternet3_default();
     EXPECT_EQ(config.encoder_window_frames(), 3);
     EXPECT_EQ(config.erb_decoder_window_frames(), 1);
     EXPECT_EQ(config.df_decoder_window_frames(), 5);
@@ -76,9 +76,9 @@ TEST(ModelConfig, DerivesWindowsFromLookahead) {
 
 TEST(ModelConfig, ComputesNormAlphaLikeLibdf) {
     // exp(-480/48000) = 0.9900498..., rounded to 0.99 at three decimals.
-    EXPECT_NEAR(ModelConfig::compute_norm_alpha(48000, 480, 1.0f), 0.99f, 1e-7f);
+    EXPECT_NEAR(model_config::compute_norm_alpha(48000, 480, 1.0f), 0.99f, 1e-7f);
     // A ten times longer decay keeps four decimals.
-    const float slow = ModelConfig::compute_norm_alpha(48000, 480, 10.0f);
+    const float slow = model_config::compute_norm_alpha(48000, 480, 10.0f);
     EXPECT_GT(slow, 0.99f);
     EXPECT_LT(slow, 1.0f);
 }
@@ -88,7 +88,7 @@ TEST(ModelConfig, ExplicitNormAlphaOverridesTau) {
     // `norm_alpha` belongs to the [df] section.
     const std::string anchor = "norm_tau = 1";
     text.replace(text.find(anchor), anchor.size(), anchor + "\nnorm_alpha = 0.95");
-    const ModelConfig config = ModelConfig::from_ini_string(text);
+    const model_config config = model_config::from_ini_string(text);
     EXPECT_NEAR(config.norm_alpha, 0.95f, 1e-7f);
 }
 
@@ -109,14 +109,14 @@ model = deepfilternet3
 [train]
 model = deepfilternet3
 )ini";
-    const ModelConfig config = ModelConfig::from_ini_string(text);
+    const model_config config = model_config::from_ini_string(text);
     EXPECT_EQ(config.df_order, 4);
     EXPECT_EQ(config.df_lookahead, 1);
     EXPECT_EQ(config.conv_lookahead, 1);
 }
 
 TEST(ModelConfig, DefaultsMatchOfficialBaseline) {
-    const ModelConfig config = ModelConfig::deepfilternet3_default();
+    const model_config config = model_config::deepfilternet3_default();
     EXPECT_EQ(config.sample_rate, 48000);
     EXPECT_EQ(config.fft_size, 960);
     EXPECT_EQ(config.hop_size, 480);
@@ -129,32 +129,32 @@ TEST(ModelConfig, DefaultsMatchOfficialBaseline) {
 }
 
 TEST(ModelConfig, RejectsUnsupportedOrInvalidConfigurations) {
-    ModelConfig config = ModelConfig::deepfilternet3_default();
+    model_config config = model_config::deepfilternet3_default();
     config.model_type = "deepfilternet2";
     EXPECT_THROW(config.validate(), std::invalid_argument);
 
-    config = ModelConfig::deepfilternet3_default();
+    config = model_config::deepfilternet3_default();
     config.sample_rate = 16000;
     EXPECT_THROW(config.validate(), std::invalid_argument);
 
-    config = ModelConfig::deepfilternet3_default();
+    config = model_config::deepfilternet3_default();
     config.hop_size = 960;
     EXPECT_THROW(config.validate(), std::invalid_argument);
 
-    config = ModelConfig::deepfilternet3_default();
+    config = model_config::deepfilternet3_default();
     config.nb_df = 481;
     EXPECT_THROW(config.validate(), std::invalid_argument);
 
-    config = ModelConfig::deepfilternet3_default();
+    config = model_config::deepfilternet3_default();
     config.norm_alpha = 1.0f;
     EXPECT_THROW(config.validate(), std::invalid_argument);
 
-    EXPECT_NO_THROW(ModelConfig::deepfilternet3_default().validate());
+    EXPECT_NO_THROW(model_config::deepfilternet3_default().validate());
 }
 
 TEST(ModelConfig, MissingFileFallsBackToDefaultsWithError) {
     std::string error;
-    const ModelConfig config = ModelConfig::from_ini_file("/nonexistent/config.ini", &error);
+    const model_config config = model_config::from_ini_file("/nonexistent/config.ini", &error);
     EXPECT_FALSE(error.empty());
     EXPECT_EQ(config.fft_size, 960);
 }

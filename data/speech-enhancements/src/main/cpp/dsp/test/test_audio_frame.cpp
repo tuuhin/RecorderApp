@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <span>
 #include <vector>
 
 namespace dfn::dsp {
@@ -71,7 +72,7 @@ TEST(frame_splitter, ExactFrameBoundary) {
         input[static_cast<std::size_t>(i)] = static_cast<float>(i);
     }
     std::vector<float> frames;
-    EXPECT_EQ(splitter.push(input.data(), input.size(), frames), 1u);
+    EXPECT_EQ(splitter.push(input, frames), 1u);
     EXPECT_EQ(frames, input);
     EXPECT_EQ(splitter.pending(), 0u);
 }
@@ -84,7 +85,7 @@ TEST(frame_splitter, OverlappingFramesDoNotOverlapOrDuplicateSamples) {
         signal[i] = static_cast<float>(i);
     }
     std::vector<float> frames;
-    const std::size_t produced = splitter.push(signal.data(), signal.size(), frames);
+    const std::size_t produced = splitter.push(signal, frames);
     EXPECT_EQ(produced, 5u);
     ASSERT_EQ(frames.size(), 480u * 5);
 
@@ -99,11 +100,11 @@ TEST(frame_splitter, PartialInputFramesAreBuffered) {
     frame_splitter splitter(100);
     std::vector<float> first(70, 1.0f);
     std::vector<float> frames;
-    EXPECT_EQ(splitter.push(first.data(), first.size(), frames), 0u);
+    EXPECT_EQ(splitter.push(first, frames), 0u);
     EXPECT_EQ(splitter.pending(), 70u);
 
     std::vector<float> second(50, 2.0f);
-    EXPECT_EQ(splitter.push(second.data(), second.size(), frames), 1u);
+    EXPECT_EQ(splitter.push(second, frames), 1u);
     ASSERT_EQ(frames.size(), 100u);
     for (int i = 0; i < 70; ++i) {
         EXPECT_FLOAT_EQ(frames[static_cast<std::size_t>(i)], 1.0f);
@@ -118,7 +119,7 @@ TEST(frame_splitter, IncompleteFinalFrameIsZeroPaddedOnFlush) {
     frame_splitter splitter(100);
     std::vector<float> input(130, 0.25f);
     std::vector<float> frames;
-    EXPECT_EQ(splitter.push(input.data(), input.size(), frames), 1u);
+    EXPECT_EQ(splitter.push(input, frames), 1u);
     EXPECT_TRUE(splitter.flush(frames));
     ASSERT_EQ(frames.size(), 200u);
     for (int i = 100; i < 130; ++i) {
@@ -137,7 +138,7 @@ TEST(frame_splitter, ArbitraryChunkSizesProduceIdenticalFrames) {
     }
     frame_splitter whole(480);
     std::vector<float> whole_frames;
-    whole.push(signal.data(), signal.size(), whole_frames);
+    whole.push(signal, whole_frames);
 
     const std::size_t chunk_sizes[] = {1, 7, 64, 480, 513};
     for (const std::size_t chunk : chunk_sizes) {
@@ -145,7 +146,7 @@ TEST(frame_splitter, ArbitraryChunkSizesProduceIdenticalFrames) {
         std::vector<float> frames;
         for (std::size_t offset = 0; offset < signal.size(); offset += chunk) {
             const std::size_t count = std::min(chunk, signal.size() - offset);
-            splitter.push(signal.data() + offset, count, frames);
+            splitter.push(std::span{signal}.subspan(offset, count), frames);
         }
         EXPECT_EQ(frames, whole_frames) << "chunk size " << chunk;
         EXPECT_EQ(splitter.pending(), whole.pending()) << "chunk size " << chunk;
@@ -158,7 +159,7 @@ TEST(frame_splitter, NoSamplesSkippedOrDuplicatedAtBoundaries) {
     std::vector<float> collected;
     for (std::size_t i = 0; i < 1000; ++i) {
         const float sample = static_cast<float>(i);
-        splitter.push(&sample, 1, frames);
+        splitter.push(std::span{&sample, 1}, frames);
         collected.insert(collected.end(), frames.begin(), frames.end());
         frames.clear();
     }

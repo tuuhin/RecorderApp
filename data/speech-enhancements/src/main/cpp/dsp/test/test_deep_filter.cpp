@@ -36,7 +36,7 @@ TEST(DeepFilter, IdentityCoefficientsSelectTheFirstHistoryFrame) {
         coefs[static_cast<std::size_t>(f)] = std::complex<float>(1.0f, 0.0f);  // k = 0
     }
     std::vector<std::complex<float>> spectrum(static_cast<std::size_t>(kFreqBins), {9.0f, 9.0f});
-    apply_deep_filter(history.data(), kDfOrder, coefs.data(), kNbDf, kFreqBins, spectrum.data());
+    apply_deep_filter(history, kDfOrder, coefs, kNbDf, kFreqBins, spectrum);
 
     for (int f = 0; f < kNbDf; ++f) {
         ASSERT_FLOAT_EQ(spectrum[static_cast<std::size_t>(f)].real(),
@@ -58,7 +58,7 @@ TEST(DeepFilter, ZeroCoefficientsZeroTheFilteredBins) {
     std::vector<std::complex<float>> coefs(static_cast<std::size_t>(kDfOrder * kNbDf),
                                            {0.0f, 0.0f});
     std::vector<std::complex<float>> spectrum(static_cast<std::size_t>(kFreqBins), {9.0f, 9.0f});
-    apply_deep_filter(history.data(), kDfOrder, coefs.data(), kNbDf, kFreqBins, spectrum.data());
+    apply_deep_filter(history, kDfOrder, coefs, kNbDf, kFreqBins, spectrum);
     for (int f = 0; f < kNbDf; ++f) {
         EXPECT_EQ(spectrum[static_cast<std::size_t>(f)], std::complex<float>(0.0f, 0.0f))
             << "bin " << f;
@@ -78,7 +78,7 @@ TEST(DeepFilter, KnownComplexCoefficientCalculation) {
     const std::vector<std::complex<float>> history = {s0, s1};
     const std::vector<std::complex<float>> coefs = {c0, c1};
     std::vector<std::complex<float>> spectrum = {std::complex<float>(7.0f, 7.0f)};
-    apply_deep_filter(history.data(), 2, coefs.data(), 1, 1, spectrum.data());
+    apply_deep_filter(history, 2, coefs, 1, 1, spectrum);
 
     const std::complex<float> expected = s0 * c0 + s1 * c1;
     EXPECT_NEAR(spectrum[0].real(), expected.real(), 1e-6f);
@@ -99,7 +99,7 @@ TEST(DeepFilter, SpectralHistoryIsPreservedAndOrdered) {
             std::complex<float>(1.0f, 0.0f);
     }
     std::vector<std::complex<float>> spectrum(static_cast<std::size_t>(kFreqBins), {0.0f, 0.0f});
-    apply_deep_filter(history.data(), kDfOrder, coefs.data(), kNbDf, kFreqBins, spectrum.data());
+    apply_deep_filter(history, kDfOrder, coefs, kNbDf, kFreqBins, spectrum);
     for (int f = 0; f < kNbDf; ++f) {
         const auto expected = history[static_cast<std::size_t>((kDfOrder - 1) * kFreqBins + f)];
         EXPECT_FLOAT_EQ(spectrum[static_cast<std::size_t>(f)].real(), expected.real());
@@ -113,7 +113,7 @@ TEST(DeepFilter, InitialHistoryOfZerosYieldsZeros) {
     std::vector<std::complex<float>> coefs(static_cast<std::size_t>(kDfOrder * kNbDf),
                                            {1.0f, 0.0f});
     std::vector<std::complex<float>> spectrum(static_cast<std::size_t>(kFreqBins), {3.0f, 3.0f});
-    apply_deep_filter(history.data(), kDfOrder, coefs.data(), kNbDf, kFreqBins, spectrum.data());
+    apply_deep_filter(history, kDfOrder, coefs, kNbDf, kFreqBins, spectrum);
     for (int f = 0; f < kNbDf; ++f) {
         EXPECT_EQ(spectrum[static_cast<std::size_t>(f)], std::complex<float>(0.0f, 0.0f));
     }
@@ -123,7 +123,7 @@ TEST(PostFilter, BetaZeroIsIdentity) {
     std::vector<std::complex<float>> noisy = {{0.5f, 0.1f}, {0.2f, -0.3f}};
     std::vector<std::complex<float>> enhanced = {{0.4f, 0.05f}, {0.1f, -0.2f}};
     const std::vector<std::complex<float>> before = enhanced;
-    apply_post_filter(noisy.data(), enhanced.data(), 2, 0.0f);
+    apply_post_filter(noisy, enhanced, 2, 0.0f);
     for (std::size_t i = 0; i < enhanced.size(); ++i) {
         EXPECT_FLOAT_EQ(enhanced[i].real(), before[i].real());
         EXPECT_FLOAT_EQ(enhanced[i].imag(), before[i].imag());
@@ -133,7 +133,7 @@ TEST(PostFilter, BetaZeroIsIdentity) {
 TEST(PostFilter, ReducesMagnitudeMonotonicallyWithBeta) {
     std::vector<std::complex<float>> noisy = {{1.0f, 0.0f}};
     std::vector<std::complex<float>> enhanced = {{0.5f, 0.0f}};
-    apply_post_filter(noisy.data(), enhanced.data(), 1, 0.02f);
+    apply_post_filter(noisy, enhanced, 1, 0.02f);
     const float magnitude = std::abs(enhanced[0]);
     EXPECT_LT(magnitude, 0.5f);
     EXPECT_GT(magnitude, 0.4f);
@@ -141,20 +141,20 @@ TEST(PostFilter, ReducesMagnitudeMonotonicallyWithBeta) {
     // Unity gain is a fixed point: when the enhanced and noisy magnitudes match, the
     // post-filter leaves the spectrum unchanged.
     enhanced[0] = std::complex<float>(1.0f, 0.0f);
-    apply_post_filter(noisy.data(), enhanced.data(), 1, 0.02f);
+    apply_post_filter(noisy, enhanced, 1, 0.02f);
     EXPECT_NEAR(std::abs(enhanced[0]), 1.0f, 1e-6f);
 }
 
 TEST(AttenuationLimit, BlendsNoisyAndEnhanced) {
     std::vector<std::complex<float>> noisy = {{1.0f, 0.0f}};
     std::vector<std::complex<float>> enhanced = {{0.0f, 0.0f}};
-    apply_attenuation_limit(noisy.data(), enhanced.data(), 1, 1.0f);
+    apply_attenuation_limit(noisy, enhanced, 1, 1.0f);
     EXPECT_FLOAT_EQ(enhanced[0].real(), 1.0f);
     enhanced[0] = std::complex<float>(0.0f, 0.0f);
-    apply_attenuation_limit(noisy.data(), enhanced.data(), 1, 0.0f);
+    apply_attenuation_limit(noisy, enhanced, 1, 0.0f);
     EXPECT_FLOAT_EQ(enhanced[0].real(), 0.0f);
     enhanced[0] = std::complex<float>(0.0f, 0.0f);
-    apply_attenuation_limit(noisy.data(), enhanced.data(), 1, 0.25f);
+    apply_attenuation_limit(noisy, enhanced, 1, 0.25f);
     EXPECT_FLOAT_EQ(enhanced[0].real(), 0.25f);
 }
 

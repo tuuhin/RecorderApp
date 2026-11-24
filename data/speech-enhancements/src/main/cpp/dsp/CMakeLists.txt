@@ -6,7 +6,7 @@ add_library(dsp STATIC
         src/stft.cpp
         src/istft.cpp
         src/erb.cpp
-        src/features.cpp
+        src/dsp_features.cpp
         src/deep_filter.cpp
         src/resampler.cpp
 )

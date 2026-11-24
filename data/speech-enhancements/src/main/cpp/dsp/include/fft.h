@@ -12,7 +12,8 @@
 
 #include <complex>
 #include <cstddef>
-#include <vector>
+#include <memory>
+#include <span>
 
 struct PFFFT_Setup;
 
@@ -27,28 +28,36 @@ namespace dfn::dsp {
 class RealFft {
    public:
     explicit RealFft(int fft_size);
-    ~RealFft();
+    ~RealFft() = default;
 
     RealFft(const RealFft&) = delete;
     RealFft& operator=(const RealFft&) = delete;
-    RealFft(RealFft&&) = delete;
-    RealFft& operator=(RealFft&&) = delete;
+    RealFft(RealFft&&) noexcept = default;
+    RealFft& operator=(RealFft&&) noexcept = default;
 
-    [[nodiscard]] int fft_size() const { return fft_size_; }
-    [[nodiscard]] int freq_size() const { return fft_size_ / 2 + 1; }
+    [[nodiscard]] constexpr int fft_size() const noexcept { return fft_size_; }
+    [[nodiscard]] constexpr int freq_size() const noexcept { return fft_size_ / 2 + 1; }
 
     // `input` holds fft_size() real samples. `output` holds freq_size() complex bins.
-    void forward(const float* input, std::complex<float>* output);
+    void forward(std::span<const float> input, std::span<std::complex<float>> output);
 
     // `input` holds freq_size() complex bins (imaginary part of DC and Nyquist is ignored).
     // `output` holds fft_size() real samples, scaled by fft_size().
-    void backward(const std::complex<float>* input, float* output);
+    void backward(std::span<const std::complex<float>> input, std::span<float> output);
 
    private:
-    int fft_size_;
-    PFFFT_Setup* setup_ = nullptr;
-    float* packed_ = nullptr;  // N floats in PFFFT's ordered real layout
-    float* work_ = nullptr;    // N floats of scratch space
+    struct SetupDeleter {
+        void operator()(PFFFT_Setup* setup) const noexcept;
+    };
+    struct AlignedBufferDeleter {
+        void operator()(float* ptr) const noexcept;
+    };
+
+    int fft_size_ = 0;
+    std::unique_ptr<PFFFT_Setup, SetupDeleter> _setup;
+    std::unique_ptr<float, AlignedBufferDeleter>
+        _packed;                                         // N floats in PFFFT's ordered real layout
+    std::unique_ptr<float, AlignedBufferDeleter> _work;  // N floats of scratch space
 };
 
 }  // namespace dfn::dsp

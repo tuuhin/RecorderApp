@@ -45,20 +45,20 @@ bool reference_available() {
     return probe.good();
 }
 
-std::shared_ptr<OnnxBackend> load_backend(const ModelConfig& config, std::string* error) {
-    return OnnxBackend::from_files(model_path("enc_stream.onnx"),
-                                   model_path("erb_dec_stream.onnx"),
+std::shared_ptr<onnx_backend_runner> load_backend(const model_config& config, std::string* error) {
+    return onnx_backend_runner::from_files(model_path("enc_stream.onnx"),
+                                           model_path("erb_dec_stream.onnx"),
                                    model_path("df_dec_stream.onnx"),
                                    config,
-                                   OnnxBackend::Options{},
-                                   error);
+                                           onnx_backend_runner::Options{},
+                                           error);
 }
 
 TEST(OnnxBackend, LoadsAllThreeGraphsAndInspectsTheirSignatures) {
     if (!models_available()) {
         GTEST_SKIP() << "set DFN_TEST_MODEL_DIR to a directory with *_stream.onnx";
     }
-    const ModelConfig config = ModelConfig::deepfilternet3_default();
+    const model_config config = model_config::deepfilternet3_default();
     std::string error;
     auto backend = load_backend(config, &error);
     ASSERT_NE(backend, nullptr) << error;
@@ -89,11 +89,11 @@ TEST(OnnxBackend, LoadsAllThreeGraphsAndInspectsTheirSignatures) {
     EXPECT_EQ(backend->df_decoder_inputs().size(), 4u);
 }
 
-TEST(OnnxBackend, RejectsGraphsThatDoNotMatchTheModelConfig) {
+TEST(OnnxBackend, RejectsGraphsThatDoNotMatchThemodel_config) {
     if (!models_available()) {
         GTEST_SKIP() << "set DFN_TEST_MODEL_DIR to a directory with *_stream.onnx";
     }
-    ModelConfig config = ModelConfig::deepfilternet3_default();
+    model_config config = model_config::deepfilternet3_default();
     config.nb_erb = 64;  // the graphs were exported with 32 ERB bands
     std::string error;
     auto backend = load_backend(config, &error);
@@ -106,12 +106,12 @@ TEST(OnnxBackend, EncoderProducesConfiguredShapesAndAdvancesState) {
     if (!models_available()) {
         GTEST_SKIP() << "set DFN_TEST_MODEL_DIR to a directory with *_stream.onnx";
     }
-    const ModelConfig config = ModelConfig::deepfilternet3_default();
+    const model_config config = model_config::deepfilternet3_default();
     std::string error;
     auto backend = load_backend(config, &error);
     ASSERT_NE(backend, nullptr) << error;
 
-    RecurrentState state;
+    recurrent_state state;
     backend->init_state(state);
     ASSERT_EQ(state.encoder.size(), 1u);
     ASSERT_EQ(state.erb_decoder.size(), 2u);
@@ -128,7 +128,7 @@ TEST(OnnxBackend, EncoderProducesConfiguredShapesAndAdvancesState) {
         spec[i] = 0.1f * static_cast<float>(i % 13) - 0.5f;
     }
 
-    const EncoderResult first = backend->run_encoder(erb.data(), window, spec.data(), state);
+    const encoder_result first = backend->run_encoder(erb, window, spec, state);
     EXPECT_EQ(first.e0.size(), static_cast<std::size_t>(config.conv_ch * config.nb_erb));
     EXPECT_EQ(first.e1.size(), static_cast<std::size_t>(config.conv_ch * config.nb_erb / 2));
     EXPECT_EQ(first.e2.size(), static_cast<std::size_t>(config.conv_ch * config.nb_erb / 4));
@@ -155,8 +155,7 @@ TEST(OnnxBackend, EncoderProducesConfiguredShapesAndAdvancesState) {
     std::vector<float> c0_window(
         static_cast<std::size_t>(config.df_decoder_window_frames() * config.conv_ch * config.nb_df),
         0.0f);
-    const std::vector<float>& coefs =
-        backend->run_df_decoder(emb_window.data(), c0_window.data(), state);
+    const std::vector<float>& coefs = backend->run_df_decoder(emb_window, c0_window, state);
     EXPECT_EQ(coefs.size(), static_cast<std::size_t>(config.df_order * config.nb_df * 2));
 }
 
@@ -168,7 +167,7 @@ TEST(OnnxBackend, EndToEndSessionMatchesThePythonStreamingReference) {
         GTEST_SKIP() << "set DFN_TEST_ENHANCER_DATA to the generated reference directory";
     }
     const std::string data = DFN_TEST_ENHANCER_DATA;
-    const ModelConfig config = ModelConfig::deepfilternet3_default();
+    const model_config config = model_config::deepfilternet3_default();
 
     const std::vector<float> signal = test::load_f32_in(data, "signal");
     const std::vector<float> expected_audio = test::load_f32_in(data, "audio");
@@ -207,7 +206,7 @@ TEST(OnnxBackend, PerFrameLsnrMatchesTheReference) {
         GTEST_SKIP() << "models or reference data unavailable";
     }
     const std::string data = DFN_TEST_ENHANCER_DATA;
-    const ModelConfig config = ModelConfig::deepfilternet3_default();
+    const model_config config = model_config::deepfilternet3_default();
     const std::vector<float> expected_lsnr = test::load_f32_in(data, "lsnr");
     ASSERT_FALSE(expected_lsnr.empty());
 

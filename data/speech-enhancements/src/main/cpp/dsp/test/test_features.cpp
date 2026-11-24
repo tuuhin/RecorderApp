@@ -47,7 +47,7 @@ TEST(ErbFeatures, TensorDimensions) {
     state.reset(kErbBands, kNbDf);
     std::vector<std::complex<float>> spectrum(static_cast<std::size_t>(kFreqBins), {1.0f, 0.0f});
     std::vector<float> features(static_cast<std::size_t>(kErbBands));
-    feat_erb(spectrum.data(), bands, kAlpha, state.erb_state.data(), features.data());
+    feat_erb(spectrum, bands, kAlpha, state.erb_state, features);
     ASSERT_EQ(features.size(), static_cast<std::size_t>(kErbBands));
 }
 
@@ -57,7 +57,7 @@ TEST(ErbFeatures, SilenceStaysFiniteAndNormalized) {
     state.reset(kErbBands, kNbDf);
     std::vector<std::complex<float>> spectrum(static_cast<std::size_t>(kFreqBins), {0.0f, 0.0f});
     std::vector<float> features(static_cast<std::size_t>(kErbBands));
-    feat_erb(spectrum.data(), bands, kAlpha, state.erb_state.data(), features.data());
+    feat_erb(spectrum, bands, kAlpha, state.erb_state, features);
     for (const float value : features) {
         EXPECT_TRUE(std::isfinite(value));
     }
@@ -83,8 +83,7 @@ TEST(ErbFeatures, MatchesUpstreamReference) {
     FeatureNormState state;
     state.reset(kErbBands, kNbDf);
     std::vector<float> actual(static_cast<std::size_t>(frames * kErbBands));
-    feat_erb_sequence(
-        spectrogram.data(), frames, bands, kAlpha, state.erb_state.data(), actual.data());
+    feat_erb_sequence(spectrogram, frames, bands, kAlpha, state.erb_state, actual);
 
     const test::Metrics metrics =
         test::compute_metrics(expected.data(), actual.data(), expected.size());
@@ -106,11 +105,12 @@ TEST(ComplexFeatures, MatchesUpstreamReference) {
     state.reset(kErbBands, kNbDf);
     std::vector<std::complex<float>> actual(static_cast<std::size_t>(frames * kNbDf));
     for (int f = 0; f < frames; ++f) {
-        feat_cplx(spectrogram.data() + static_cast<std::size_t>(f) * kFreqBins,
-                  kNbDf,
+        feat_cplx(
+            std::span{spectrogram}.subspan(static_cast<std::size_t>(f) * kFreqBins, kFreqBins),
+            kNbDf,
                   kAlpha,
-                  state.unit_state.data(),
-                  actual.data() + static_cast<std::size_t>(f) * kNbDf);
+            state.unit_state,
+            std::span{actual}.subspan(static_cast<std::size_t>(f) * kNbDf, kNbDf));
     }
 
     const test::Metrics metrics =
@@ -131,11 +131,10 @@ TEST(ComplexFeatures, TransposedLayoutMatchesInterleavedLayout) {
             std::sin(0.37f * static_cast<float>(k)), std::cos(0.11f * static_cast<float>(k)));
     }
     std::vector<std::complex<float>> interleaved(static_cast<std::size_t>(kNbDf));
-    feat_cplx(spectrum.data(), kNbDf, kAlpha, state_a.unit_state.data(), interleaved.data());
+    feat_cplx(spectrum, kNbDf, kAlpha, state_a.unit_state, interleaved);
 
     std::vector<float> transposed(static_cast<std::size_t>(2 * kNbDf));
-    feat_cplx_transposed(
-        spectrum.data(), kNbDf, kAlpha, state_b.unit_state.data(), transposed.data());
+    feat_cplx_transposed(spectrum, kNbDf, kAlpha, state_b.unit_state, transposed);
     for (int k = 0; k < kNbDf; ++k) {
         EXPECT_FLOAT_EQ(transposed[static_cast<std::size_t>(k)],
                         interleaved[static_cast<std::size_t>(k)].real());
@@ -160,7 +159,7 @@ TEST(ComplexFeatures, NormalizationHasUnitScale) {
     }
     std::vector<std::complex<float>> out(static_cast<std::size_t>(kNbDf));
     for (int iteration = 0; iteration < 2000; ++iteration) {
-        feat_cplx(spectrum.data(), kNbDf, kAlpha, state.unit_state.data(), out.data());
+        feat_cplx(spectrum, kNbDf, kAlpha, state.unit_state, out);
     }
     // For a stationary input the state converges to |x| = sqrt(0.05^2 + 0.02^2), so the
     // normalized magnitude converges to |x| / sqrt(|x|) = sqrt(|x|) ~= 0.232.

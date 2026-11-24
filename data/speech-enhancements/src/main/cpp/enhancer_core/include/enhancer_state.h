@@ -46,15 +46,15 @@ class FrameRing {
 };
 
 struct EnhancerState {
-    explicit EnhancerState(ModelConfig config);
+    explicit EnhancerState(model_config config);
 
     void reset();
 
-    ModelConfig config;
+    model_config config;
     dsp::Stft stft;
     dsp::Istft istft;
     dsp::FeatureNormState normalization;
-    RecurrentState recurrent;
+    recurrent_state recurrent;
 
     // Rolling model input windows (feature history for the causal convolutions).
     std::vector<float> erb_window;   // [encoder_window][nb_erb]

@@ -20,9 +20,9 @@ namespace dfn::dsp {
 
 class Istft {
    public:
-    explicit Istft(StftConfig config);
+    explicit Istft(stft_config config);
 
-    const StftConfig& config() const { return stft_config_; }
+    const stft_config& config() const { return stft_config_; }
     int fft_size() const { return stft_config_.fft_size; }
     int hop_size() const { return stft_config_.hop_size; }
     int n_freqs() const { return freq_size(stft_config_.fft_size); }
@@ -40,8 +40,8 @@ class Istft {
     std::vector<float> synthesize(const std::complex<float>* spectrogram, int frame_count);
 
    private:
-    StftConfig stft_config_;
-    AnalysisWindow window_;
+    stft_config stft_config_;
+    analysis_window window_;
     std::vector<float> synthesis_mem_;
     std::vector<float> fft_output_;
     std::unique_ptr<RealFft> fft_;

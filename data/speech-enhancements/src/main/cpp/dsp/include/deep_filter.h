@@ -12,28 +12,30 @@
 // `nb_df` frequency bins are touched.
 
 #include <complex>
-#include <vector>
+#include <cstddef>
+#include <span>
 
 namespace dfn::dsp {
 
 // Applies deep filtering in place to `spectrum`.
 //
-// history: `df_order * n_freqs` interleaved complex values, frame-major, oldest first.
-// coefs:   `df_order * nb_df` interleaved complex values, `coefs[k * nb_df + f]`.
+// history:  `df_order * n_freqs` interleaved complex values, frame-major, oldest first.
+// coefs:    `df_order * nb_df` interleaved complex values, `coefs[k * nb_df + f]`.
 // spectrum: `n_freqs` bins, modified in place (bins [0, nb_df) are replaced, the rest is
 //           preserved).
-void apply_deep_filter(const std::complex<float>* history, int df_order,
-                       const std::complex<float>* coefs, int nb_df, int n_freqs,
-                       std::complex<float>* spectrum);
+void apply_deep_filter(std::span<const std::complex<float>> history, std::size_t df_order,
+                       std::span<const std::complex<float>> coefs, std::size_t nb_df,
+                       std::size_t n_freqs, std::span<std::complex<float>> spectrum);
 
 // Valin et al. post-filter, as used by DeepFilterNet. `enhanced` is modified in place.
-void apply_post_filter(const std::complex<float>* noisy, std::complex<float>* enhanced, int count,
-                       float beta);
+void apply_post_filter(std::span<const std::complex<float>> noisy,
+                       std::span<std::complex<float>> enhanced, std::size_t count, float beta);
 
 // Multiplies `enhanced` by the attenuation limit mask for a per-frame `alpha` in [0, 1]:
 //     out = (1 - alpha) * enhanced + alpha * noisy
-void apply_attenuation_limit(const std::complex<float>* noisy, std::complex<float>* enhanced,
-                             int count, float alpha);
+void apply_attenuation_limit(std::span<const std::complex<float>> noisy,
+                             std::span<std::complex<float>> enhanced, std::size_t count,
+                             float alpha);
 
 }  // namespace dfn::dsp
 

@@ -559,7 +559,6 @@ void audio_recorder<Writer>::start_worker_th() {
 
 template <audio_file_writer Writer>
 void audio_recorder<Writer>::open_input_stream() {
-    oboe::Result oboeResults = oboe::Result::OK;
 
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Input);

@@ -48,7 +48,7 @@ system `<features.h>` that libc++ includes, which broke the Android build.
 Two library targets keep the ONNX dependency isolated:
 
 * `dfn_enhancer_core` — pipeline, streaming state, session. No ONNX Runtime.
-* `dfn_enhancer_onnx` — `OnnxBackend` (only built when ONNX Runtime is available).
+* `dfn_enhancer_onnx` — `onnx_backend_runner` (only built when ONNX Runtime is available).
 
 `speech_enhancement` (JNI) links both, plus `dsp`.
 
@@ -127,7 +127,18 @@ the `Java_…` entry points, and each one unwraps a handle, calls a single
 `speech_enhancer_manager` method and translates a thrown error into a Java exception. A
 handle owns a heap `std::shared_ptr<SM>` (all state per instance, nothing static), so
 managers can be shared with other native owners and die when the last reference goes. The
-Kotlin wrapper is `ClearSpeechEnhancer` over `IClearSpeechEnhancer`. The prepared
+Kotlin wrapper is `ClearSpeechEnhancer` over `IClearSpeechEnhancer`.
+
+Each `enhance()` call is an offline pass (`process` → `flush` → drop the algorithmic
+latency → strength blend) that consumes the session's recurrent state, so a second call
+without an intervening `reset()` keeps streaming from where the previous call ended. The
+Kotlin wrapper enforces one `enhance()` per `reset()`: `enhance()` throws
+`SpeechEnhancerStateException` until `reset()` restores the session (engine, splitter,
+pending frames and stats) to a clean state. `reset()` is idempotent, works at any point in
+the instance's life after `create()`, and returns whether an actual reset happened —
+`true` when a consumed session was restored, `false` when there was nothing to reset.
+
+The prepared
 streaming graphs are loaded lazily on the first enhance; without them every call fails
 closed with an exception instead of crashing. Resampling in and out of the 48 kHz
 pipeline is a later phase, so the bridge rejects other sample rates.

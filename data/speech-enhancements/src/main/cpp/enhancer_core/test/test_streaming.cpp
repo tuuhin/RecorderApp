@@ -11,8 +11,8 @@
 namespace dfn::enhancer {
 namespace {
 
-ModelConfig test_config() {
-    return ModelConfig::deepfilternet3_default();
+model_config test_config() {
+    return model_config::deepfilternet3_default();
 }
 
 std::vector<float> make_ramp(std::size_t count) {
@@ -30,14 +30,14 @@ std::vector<float> run_frames(DeepFilterEngine& engine, int frames, float value 
     std::vector<float> collected;
     collected.reserve(hop * static_cast<std::size_t>(frames));
     for (int i = 0; i < frames; ++i) {
-        engine.process_frame(input.data(), output.data());
+        engine.process_frame(input, output);
         collected.insert(collected.end(), output.begin(), output.end());
     }
     return collected;
 }
 
 TEST(StreamingEngine, RecurrentStatePersistsAcrossFrames) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     auto runner = std::make_shared<test::StubRunner>(config);
     DeepFilterEngine engine(config, runner);
 
@@ -51,7 +51,7 @@ TEST(StreamingEngine, RecurrentStatePersistsAcrossFrames) {
 }
 
 TEST(StreamingEngine, ResetClearsSpectralHistory) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     auto runner = std::make_shared<test::StubRunner>(config);
     DeepFilterEngine engine(config, runner);
 
@@ -67,7 +67,7 @@ TEST(StreamingEngine, ResetClearsSpectralHistory) {
 TEST(StreamingEngine, SpectralHistoryAffectsDeepFiltering) {
     // Deep filtering reads a rolling window of past spectra; a stream with different history
     // must produce a different output for the same current frame.
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     auto runner = std::make_shared<test::StubRunner>(config);
     DeepFilterEngine a(config, runner);
     DeepFilterEngine b(config, runner);
@@ -79,13 +79,13 @@ TEST(StreamingEngine, SpectralHistoryAffectsDeepFiltering) {
     std::vector<float> out_b(hop);
 
     for (int i = 0; i < 8; ++i) {
-        a.process_frame(ramp.data(), out_a.data());
-        b.process_frame(other.data(), out_b.data());
+        a.process_frame(ramp, out_a);
+        b.process_frame(other, out_b);
     }
     // Feed the same final frame to both engines; the deep filter still sees different
     // histories, so the outputs must differ.
-    a.process_frame(ramp.data(), out_a.data());
-    b.process_frame(ramp.data(), out_b.data());
+    a.process_frame(ramp, out_a);
+    b.process_frame(ramp, out_b);
 
     float max_diff = 0.0f;
     for (std::size_t i = 0; i < hop; ++i) {
@@ -95,7 +95,7 @@ TEST(StreamingEngine, SpectralHistoryAffectsDeepFiltering) {
 }
 
 TEST(StreamingEngine, StageSelectionFollowsThresholds) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     auto runner = std::make_shared<test::StubRunner>(config);
     EnhancerOptions options;
     options.min_db_thresh = -10.0f;
@@ -116,7 +116,7 @@ TEST(StreamingEngine, StageSelectionFollowsThresholds) {
 }
 
 TEST(StreamingEngine, BypassStagesPreserveTheNoisySpectrum) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     auto runner = std::make_shared<test::StubRunner>(config);
     EnhancerOptions options;
     options.min_db_thresh = -1e9f;      // never silence
@@ -130,16 +130,16 @@ TEST(StreamingEngine, BypassStagesPreserveTheNoisySpectrum) {
     }
     std::vector<float> out_a(hop);
     std::vector<float> out_b(hop);
-    engine.process_frame(input.data(), out_a.data());
+    engine.process_frame(input, out_a);
     engine.reset();
-    engine.process_frame(input.data(), out_b.data());
+    engine.process_frame(input, out_b);
     for (std::size_t i = 0; i < hop; ++i) {
         ASSERT_FLOAT_EQ(out_a[i], out_b[i]) << "index " << i;
     }
 }
 
 TEST(StreamingEngine, SessionOutputCoversEveryInputSample) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     const auto hop = static_cast<std::size_t>(config.hop_size);
     const std::size_t frames = 12;
     auto runner = std::make_shared<test::StubRunner>(config);
@@ -158,7 +158,7 @@ TEST(StreamingEngine, SessionOutputCoversEveryInputSample) {
 }
 
 TEST(StreamingEngine, NoDuplicatedOrMissingSamplesAcrossChunks) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     auto runner = std::make_shared<test::StubRunner>(config);
     EnhancerSession session(runner, config);
 

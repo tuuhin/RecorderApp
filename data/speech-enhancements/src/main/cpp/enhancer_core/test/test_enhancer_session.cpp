@@ -12,12 +12,12 @@
 namespace dfn::enhancer {
 namespace {
 
-ModelConfig test_config() {
-    ModelConfig config = ModelConfig::deepfilternet3_default();
+model_config test_config() {
+    model_config config = model_config::deepfilternet3_default();
     return config;
 }
 
-std::shared_ptr<test::StubRunner> make_runner(const ModelConfig& config) {
+std::shared_ptr<test::StubRunner> make_runner(const model_config& config) {
     return std::make_shared<test::StubRunner>(config);
 }
 
@@ -30,7 +30,7 @@ std::vector<float> make_signal(std::size_t count, float amplitude = 0.3f) {
 }
 
 std::vector<float> run_stream(const std::vector<float>& input, std::size_t chunk) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     EnhancerSession session(make_runner(config), config, EnhancerOptions{});
     std::vector<float> output;
     output.reserve(input.size() + 4096);
@@ -43,7 +43,7 @@ std::vector<float> run_stream(const std::vector<float>& input, std::size_t chunk
 }
 
 TEST(EnhancerSession, ReportsAlgorithmicLatency) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     EnhancerSession session(make_runner(config), config);
     EXPECT_EQ(session.latency_samples(), 1440);
     EXPECT_EQ(session.latency_samples(), 2 * config.hop_size + (config.fft_size - config.hop_size));
@@ -64,7 +64,7 @@ TEST(EnhancerSession, OutputIsIndependentOfChunking) {
 }
 
 TEST(EnhancerSession, FlushDrainsTheLatencyTail) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     const std::size_t hop = static_cast<std::size_t>(config.hop_size);
     const std::size_t samples = 10 * hop;
 
@@ -77,7 +77,7 @@ TEST(EnhancerSession, FlushDrainsTheLatencyTail) {
 }
 
 TEST(EnhancerSession, PartialFinalHopIsPaddedOnFlush) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     const std::size_t hop = static_cast<std::size_t>(config.hop_size);
     EnhancerSession session(make_runner(config), config);
     const std::vector<float> input = make_signal(hop + 100);
@@ -91,7 +91,7 @@ TEST(EnhancerSession, PartialFinalHopIsPaddedOnFlush) {
 
 TEST(EnhancerSession, ResetRestoresInitialState) {
     const std::vector<float> input = make_signal(9600);
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     EnhancerSession session(make_runner(config), config);
 
     std::vector<float> first;
@@ -110,7 +110,7 @@ TEST(EnhancerSession, ResetRestoresInitialState) {
 }
 
 TEST(EnhancerSession, Pcm16MatchesFloatPipelineQuantized) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     const std::size_t hop = static_cast<std::size_t>(config.hop_size);
 
     std::vector<float> signal = make_signal(4 * hop, 0.5f);
@@ -140,7 +140,7 @@ TEST(EnhancerSession, Pcm16MatchesFloatPipelineQuantized) {
 }
 
 TEST(EnhancerSession, StatsTrackProcessedFrames) {
-    const ModelConfig config = test_config();
+    const model_config config = test_config();
     const std::size_t hop = static_cast<std::size_t>(config.hop_size);
     EnhancerSession session(make_runner(config), config);
     const std::vector<float> input = make_signal(8 * hop);

@@ -1,30 +1,32 @@
 #ifndef DFN_TEST_SUPPORT_STUB_RUNNER_H_
 #define DFN_TEST_SUPPORT_STUB_RUNNER_H_
 
-// Deterministic ModelRunner used to test the orchestration and streaming behaviour without
+// Deterministic model_runner used to test the orchestration and streaming behaviour without
 // ONNX Runtime or model files. Its outputs depend on the inputs and on the recurrent state,
 // so state persistence, chunking invariance and reset semantics are all observable.
 
 #include <cmath>
+#include <cstddef>
+#include <span>
 #include <vector>
 
 #include "onnx_backend.h"
 
 namespace dfn::test {
 
-class StubRunner : public enhancer::ModelRunner {
+class StubRunner : public enhancer::model_runner {
    public:
-    explicit StubRunner(const enhancer::ModelConfig& config) : config_(config) {}
+    explicit StubRunner(const enhancer::model_config& config) : config_(config) {}
 
-    void init_state(enhancer::RecurrentState& state) const override {
+    void init_state(enhancer::recurrent_state& state) const override {
         state.encoder.assign(1, std::vector<float>(256, 0.0f));
         state.erb_decoder.assign(2, std::vector<float>(256, 0.0f));
         state.df_decoder.assign(2, std::vector<float>(256, 0.0f));
     }
 
-    enhancer::EncoderResult run_encoder(const float* feat_erb, int window_frames,
-                                        const float* feat_spec,
-                                        enhancer::RecurrentState& state) override {
+    enhancer::encoder_result run_encoder(std::span<const float> feat_erb, int window_frames,
+                                         std::span<const float> feat_spec,
+                                         enhancer::recurrent_state& state) override {
         (void)feat_spec;
         if (state.encoder.empty()) {
             init_state(state);
@@ -40,7 +42,7 @@ class StubRunner : public enhancer::ModelRunner {
         float& counter = state.encoder[0][0];
         counter += 1.0f;
 
-        enhancer::EncoderResult result;
+        enhancer::encoder_result result;
         result.lsnr = mean * 10.0f;
         result.e0.assign(static_cast<std::size_t>(config_.conv_ch * config_.nb_erb), 0.0f);
         result.e1.assign(static_cast<std::size_t>(config_.conv_ch * config_.nb_erb / 2), 0.0f);
@@ -59,8 +61,8 @@ class StubRunner : public enhancer::ModelRunner {
         return result;
     }
 
-    const std::vector<float>& run_erb_decoder(const enhancer::EncoderResult& encoder,
-                                              enhancer::RecurrentState& state) override {
+    const std::vector<float>& run_erb_decoder(const enhancer::encoder_result& encoder,
+                                              enhancer::recurrent_state& state) override {
         (void)encoder;
         if (state.erb_decoder.empty()) {
             init_state(state);
@@ -73,8 +75,9 @@ class StubRunner : public enhancer::ModelRunner {
         return mask_;
     }
 
-    const std::vector<float>& run_df_decoder(const float* emb_window, const float* c0_window,
-                                             enhancer::RecurrentState& state) override {
+    const std::vector<float>& run_df_decoder(std::span<const float> emb_window,
+                                             std::span<const float> c0_window,
+                                             enhancer::recurrent_state& state) override {
         if (state.df_decoder.empty()) {
             init_state(state);
         }
@@ -95,12 +98,12 @@ class StubRunner : public enhancer::ModelRunner {
         return coefs_;
     }
 
-    float encoder_frame_count(const enhancer::RecurrentState& state) const {
+    float encoder_frame_count(const enhancer::recurrent_state& state) const {
         return state.encoder.empty() ? 0.0f : state.encoder[0][0];
     }
 
    private:
-    enhancer::ModelConfig config_;
+    enhancer::model_config config_;
     std::vector<float> mask_;
     std::vector<float> coefs_;
 };

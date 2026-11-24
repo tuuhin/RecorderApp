@@ -11,34 +11,38 @@
 // Rust implementation and the Python `df.modules.erb_fb` matrix with `normalized=True`.
 
 #include <complex>
+#include <span>
 #include <vector>
 
 namespace dfn::dsp {
 
 // ERB scale used by DeepFilterNet: 9.265 * ln(1 + f / (24.7 * 9.265)).
-float erb_from_hz(float freq_hz);
-float hz_from_erb(float erb);
+[[nodiscard]] float erb_from_hz(float freq_hz);
+[[nodiscard]] float hz_from_erb(float erb);
 
 // Returns the number of frequency bins per ERB band. The widths always sum to
 // fft_size / 2 + 1. `min_nb_freqs` enforces a lower bound per band, exactly like upstream.
-std::vector<int> erb_band_widths(int sample_rate, int fft_size, int nb_bands, int min_nb_freqs = 2);
+[[nodiscard]] std::vector<int> erb_band_widths(int sample_rate, int fft_size, int nb_bands,
+                                               int min_nb_freqs = 2);
 
 // Sum of all band widths (should equal fft_size / 2 + 1).
-int erb_total_width(const std::vector<int>& widths);
+[[nodiscard]] int erb_total_width(std::span<const int> widths);
 
 // out[b] = (1 / |band_b|) * sum_{k in band_b} Re(x[k] * conj(p[k]))
-void erb_band_correlation(const std::complex<float>* x, const std::complex<float>* p,
-                          const std::vector<int>& widths, float* out);
+void erb_band_correlation(std::span<const std::complex<float>> x,
+                          std::span<const std::complex<float>> p, std::span<const int> widths,
+                          std::span<float> out);
 
 // out[b] = (1 / |band_b|) * sum_{k in band_b} x[k]
-void erb_band_compress(const float* x, const std::vector<int>& widths, float* out);
+void erb_band_compress(std::span<const float> x, std::span<const int> widths, std::span<float> out);
 
 // Expands one gain per band onto every frequency bin.
-void erb_interp_band_gain(float* out, const std::vector<int>& widths, const float* gains);
+void erb_interp_band_gain(std::span<float> out, std::span<const int> widths,
+                          std::span<const float> gains);
 
 // Multiplies every frequency bin of the spectrum by the gain of its band.
-void erb_apply_interp_band_gain(std::complex<float>* spectrum, const std::vector<int>& widths,
-                                const float* gains);
+void erb_apply_interp_band_gain(std::span<std::complex<float>> spectrum,
+                                std::span<const int> widths, std::span<const float> gains);
 
 }  // namespace dfn::dsp
 

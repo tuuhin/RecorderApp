@@ -15,7 +15,9 @@
 //   5. Optional post filter and attenuation limit.
 //   6. Inverse STFT with overlap-add.
 
+#include <cstddef>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "enhancer_config.h"
@@ -27,36 +29,40 @@ namespace dfn::enhancer {
 
 class DeepFilterEngine {
    public:
-    DeepFilterEngine(ModelConfig config, std::shared_ptr<ModelRunner> runner,
+    DeepFilterEngine(model_config config, std::shared_ptr<model_runner> runner,
                      EnhancerOptions options = {});
 
-    [[nodiscard]] const ModelConfig& config() const { return state_.config; }
-    [[nodiscard]] const EnhancerState& state() const { return state_; }
+    [[nodiscard]] const model_config& config() const noexcept { return state_.config; }
+    [[nodiscard]] const EnhancerState& state() const noexcept { return state_; }
 
     void reset();
 
     // Consumes `hop_size` noisy samples and writes `hop_size` enhanced samples.
-    void process_frame(const float* noisy, float* enhanced);
+    void process_frame(std::span<const float> noisy, std::span<float> enhanced);
 
-    [[nodiscard]] float last_lsnr() const { return last_lsnr_; }
-    [[nodiscard]] EnhancementStage last_stage() const { return last_stage_; }
+    [[nodiscard]] constexpr float last_lsnr() const noexcept { return last_lsnr_; }
+    [[nodiscard]] constexpr EnhancementStage last_stage() const noexcept { return last_stage_; }
 
-    void set_post_filter_beta(float beta);
-    void set_attenuation_limit_db(float db);
-    [[nodiscard]] float post_filter_beta() const { return options_.post_filter_beta; }
+    void set_post_filter_beta(float beta) noexcept;
+    void set_attenuation_limit_db(float db) noexcept;
+    [[nodiscard]] constexpr float post_filter_beta() const noexcept {
+        return options_.post_filter_beta;
+    }
 
     // Selects the processing stage for a local SNR estimate (exposed for tests).
-    [[nodiscard]] EnhancementStage select_stage(float lsnr) const;
+    [[nodiscard]] EnhancementStage select_stage(float lsnr) const noexcept;
 
    private:
-    void _push_feature_windows(const float* erb_feature, const float* complex_feature);
-    void _push_decoder_windows(const EncoderResult& result);
-    void _gather_df_history();
+    void push_feature_windows(std::span<const float> erb_feature,
+                              std::span<const float> complex_feature);
+    void push_decoder_windows(const encoder_result& result);
+    void gather_df_history();
 
     EnhancerState state_;
-    std::shared_ptr<ModelRunner> runner_;
+    std::shared_ptr<model_runner> runner_;
     EnhancerOptions options_;
     std::vector<int> erb_widths_;
+    std::vector<float> complex_feature_scratch_;
     float last_lsnr_ = 0.0f;
     EnhancementStage last_stage_ = EnhancementStage::kBypass;
 };

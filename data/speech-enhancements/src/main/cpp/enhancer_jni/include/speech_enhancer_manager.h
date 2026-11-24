@@ -19,29 +19,35 @@ inline constexpr int kModelSampleRate = 48000;
 
 class speech_enhancer_manager {
    public:
-    explicit speech_enhancer_manager(std::string modelDir);
+    explicit speech_enhancer_manager(std::string model_dir);
 
     speech_enhancer_manager(const speech_enhancer_manager&) = delete;
     speech_enhancer_manager& operator=(const speech_enhancer_manager&) = delete;
 
     bool prepare();
-    int latency_samples();
 
-    std::span<const float> enhance(std::span<const float> samples, int sample_rate, float strength);
+    // Restores the streaming session to a clean state. Returns true when a session
+    // existed and was actually reset, false when there was nothing to reset.
+    bool reset();
+
+    [[nodiscard]] int latency_samples();
+
+    [[nodiscard]] std::span<const float> enhance(std::span<const float> samples, int sample_rate,
+                                                 float strength);
 
    private:
     [[nodiscard]] bool validate_model_path() const;
 
-    const dfn::enhancer::ModelConfig& _config();
-    void _ensure_engine();
+    [[nodiscard]] const dfn::enhancer::model_config& config();
+    void ensure_engine();
 
     std::recursive_mutex mutex_;
 
-    std::string model_dir_;
-    std::shared_ptr<const dfn::enhancer::ModelConfig> _model_config;
-    std::shared_ptr<dfn::enhancer::ModelRunner> _model_runner;
+    std::string _model_dir;
+    std::shared_ptr<const dfn::enhancer::model_config> _model_config;
+    std::shared_ptr<dfn::enhancer::model_runner> _model_runner;
     std::shared_ptr<dfn::enhancer::EnhancerSession> _model_session;
-    std::vector<float> output_;
+    std::vector<float> _results;
 };
 
 }  // namespace dfn::jni

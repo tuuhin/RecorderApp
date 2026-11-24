@@ -32,10 +32,10 @@ void FrameRing::push(const std::complex<float>* frame) {
                                   static_cast<std::size_t>(capacity_frames_ - 1) * size));
 }
 
-EnhancerState::EnhancerState(ModelConfig model_config)
+EnhancerState::EnhancerState(model_config model_config)
     : config(std::move(model_config)),
-      stft(dsp::StftConfig{config.fft_size, config.hop_size}),
-      istft(dsp::StftConfig{config.fft_size, config.hop_size}),
+      stft(dsp::stft_config{config.fft_size, config.hop_size}),
+      istft(dsp::stft_config{config.fft_size, config.hop_size}),
       rolling_y(config.df_order + config.conv_lookahead, config.freq_size()),
       rolling_x(std::max(config.df_order, config.lookahead()), config.freq_size()) {
     const auto window = static_cast<std::size_t>(config.encoder_window_frames());

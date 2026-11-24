@@ -20,7 +20,7 @@
 
 namespace dfn::dsp {
 
-struct StftConfig {
+struct stft_config {
     int fft_size = 960;
     int hop_size = 480;
 };
@@ -30,19 +30,19 @@ int freq_size(int fft_size);
 
 // Throws std::invalid_argument for configurations the DSP layer cannot represent
 // (non-positive sizes, hop > N/2, or sizes unsupported by the FFT backend).
-void validate_stft_config(const StftConfig& config);
+void validate_stft_config(const stft_config& config);
 
 class Stft {
    public:
-    explicit Stft(StftConfig config);
+    explicit Stft(stft_config config);
 
-    [[nodiscard]] const StftConfig& config() const { return config_; }
-    [[nodiscard]] int fft_size() const { return config_.fft_size; }
-    [[nodiscard]] int hop_size() const { return config_.hop_size; }
-    [[nodiscard]] int n_freqs() const { return freq_size(config_.fft_size); }
+    [[nodiscard]] const stft_config& config() const { return _stft_config; }
+    [[nodiscard]] int fft_size() const { return _stft_config.fft_size; }
+    [[nodiscard]] int hop_size() const { return _stft_config.hop_size; }
+    [[nodiscard]] int n_freqs() const { return freq_size(_stft_config.fft_size); }
 
-    [[nodiscard]] const std::vector<float>& window() const { return window_.coefficients; }
-    [[nodiscard]] float window_norm() const { return window_.norm; }
+    [[nodiscard]] const std::vector<float>& window() const { return _analysis_window.coefficients; }
+    [[nodiscard]] float window_norm() const { return _analysis_window.norm; }
 
     void reset();
 
@@ -56,11 +56,11 @@ class Stft {
                                              int* frame_count = nullptr);
 
    private:
-    StftConfig config_;
-    AnalysisWindow window_;
-    std::vector<float> fft_input_;
-    std::vector<float> analysis_mem_;
-    std::unique_ptr<RealFft> fft_;
+    stft_config _stft_config;
+    analysis_window _analysis_window;
+    std::vector<float> _input;
+    std::vector<float> _analysis_memory;
+    std::unique_ptr<RealFft> _fft;
 };
 
 }  // namespace dfn::dsp

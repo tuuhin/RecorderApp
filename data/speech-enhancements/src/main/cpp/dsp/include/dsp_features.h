@@ -12,6 +12,8 @@
 // Complex features: exponential unit normalization of the first `nb_df` bins.
 
 #include <complex>
+#include <cstddef>
+#include <span>
 #include <vector>
 
 namespace dfn::dsp {
@@ -33,26 +35,27 @@ struct FeatureNormState {
 };
 
 // Fills `state` with a linear interpolation from `min` to `max` (inclusive).
-void init_linear_state(std::vector<float>& state, float min, float max);
+void init_linear_state(std::span<float> state, float min, float max);
 
 // Computes `nb_erb` normalized ERB features for one spectrum.
-// `state` must have `widths.size()` entries.
-void feat_erb(const std::complex<float>* spectrum, const std::vector<int>& widths, float alpha,
-              float* state, float* out);
+// `state` and `out` must have `widths.size()` entries.
+void feat_erb(std::span<const std::complex<float>> spectrum, std::span<const int> widths,
+              float alpha, std::span<float> state, std::span<float> out);
 
 // Computes `nb_df` normalized complex features (interleaved complex layout).
-void feat_cplx(const std::complex<float>* spectrum, int nb_df, float alpha, float* state,
-               std::complex<float>* out);
+void feat_cplx(std::span<const std::complex<float>> spectrum, std::size_t nb_df, float alpha,
+               std::span<float> state, std::span<std::complex<float>> out);
 
 // Same as feat_cplx, but writes the layout used by the ONNX encoder input:
 // out[0 .. nb_df) holds the real parts, out[nb_df .. 2*nb_df) the imaginary parts.
-void feat_cplx_transposed(const std::complex<float>* spectrum, int nb_df, float alpha, float* state,
-                          float* out);
+void feat_cplx_transposed(std::span<const std::complex<float>> spectrum, std::size_t nb_df,
+                          float alpha, std::span<float> state, std::span<float> out);
 
 // Runs feat_erb over every frame of a spectrogram. `spectrogram` holds
 // `frame_count * widths_sum` interleaved complex values.
-void feat_erb_sequence(const std::complex<float>* spectrogram, int frame_count,
-                       const std::vector<int>& widths, float alpha, float* state, float* out);
+void feat_erb_sequence(std::span<const std::complex<float>> spectrogram, std::size_t frame_count,
+                       std::span<const int> widths, float alpha, std::span<float> state,
+                       std::span<float> out);
 
 }  // namespace dfn::dsp
 

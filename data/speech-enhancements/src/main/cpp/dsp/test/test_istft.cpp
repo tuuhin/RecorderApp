@@ -16,8 +16,8 @@ namespace {
 constexpr int kSampleRate = 48000;
 constexpr double kPi = 3.14159265358979323846;
 
-StftConfig default_config() {
-    return StftConfig{960, 480};
+stft_config default_config() {
+    return stft_config{960, 480};
 }
 
 std::vector<float> make_sine(int sample_count, double frequency, float amplitude = 0.5f) {
@@ -43,7 +43,7 @@ TEST(Istft, ZeroSpectrumProducesZeroSignal) {
 }
 
 TEST(Istft, ReconstructsOriginalSignalWithStftRoundTrip) {
-    StftConfig config = default_config();
+    stft_config config = default_config();
     Stft stft(config);
     Istft istft(config);
 
@@ -84,7 +84,7 @@ TEST(Istft, MatchesUpstreamReferenceReconstruction) {
 }
 
 TEST(Istft, OverlapAddIsContinuousForASine) {
-    StftConfig config = default_config();
+    stft_config config = default_config();
     Stft stft(config);
     Istft istft(config);
     const std::vector<float> signal = make_sine(480 * 6, 1000.0, 0.5f);
@@ -118,7 +118,7 @@ TEST(Istft, BoundaryHandlingLeavesStartOfStreamFreeOfSignals) {
 }
 
 TEST(Istft, ResetClearsOverlapState) {
-    StftConfig config = default_config();
+    stft_config config = default_config();
     Stft stft(config);
     Istft istft(config);
     const std::vector<float> signal = make_sine(480 * 4, 440.0, 0.5f);
