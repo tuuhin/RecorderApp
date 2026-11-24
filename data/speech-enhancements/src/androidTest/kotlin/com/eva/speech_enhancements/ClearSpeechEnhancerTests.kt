@@ -7,9 +7,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
+import com.eva.speech_enhancements.exception.SpeechEnhancementHandleException
+import com.eva.speech_enhancements.exception.SpeechEnhancerStateException
 import com.eva.speech_enhancements.models.EnhanceOptions
 import com.eva.speech_enhancements.provider.ModelPathProvider
 import java.io.File
+import kotlin.math.PI
+import kotlin.math.sin
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -84,7 +90,7 @@ class ClearSpeechEnhancerTests {
 
         advanceUntilIdle()
 
-        val deleteOp = File(folder, CONFIG_FILE_NAME).delete()
+        val deleteOp = File(folder, CONFIG_FILE_NAME.substringAfterLast('/')).delete()
         assertThat(deleteOp).isEqualTo(true)
 
         instance = ClearSpeechEnhancer()
@@ -140,6 +146,178 @@ class ClearSpeechEnhancerTests {
     }
 
     @Test
+    fun enhance_produces_a_delay_compensated_finite_result() = runTest {
+        instance = ClearSpeechEnhancer()
+        instance.create(modelDir())
+        instance.prepare()
+
+        advanceUntilIdle()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+        val result = instance.enhance(input)
+
+        advanceUntilIdle()
+
+        // delay compensation: the offline pass drops the algorithmic latency,
+        // so every input sample comes back usable
+        assertThat(result.samples.size).isEqualTo(input.size)
+        assertThat(result.sampleRate).isEqualTo(48_000)
+        assertThat(result.isEmpty).isFalse()
+        assertThat(result.samples.all { it.isFinite() }).isTrue()
+        assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
+        assertThat(result.realtimeFactor > 0.0).isTrue()
+    }
+
+    @Test
+    fun enhance_works_without_an_explicit_prepare() = runTest {
+        instance = ClearSpeechEnhancer()
+        instance.create(modelDir())
+
+        advanceUntilIdle()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+        val result = instance.enhance(input)
+
+        advanceUntilIdle()
+
+        assertThat(result.samples.size).isEqualTo(input.size)
+    }
+
+    @Test
+    fun enhance_with_zero_strength_returns_the_input() = runTest {
+        instance = ClearSpeechEnhancer()
+        instance.create(modelDir())
+        instance.prepare()
+
+        advanceUntilIdle()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+        val result = instance.enhance(input, options = EnhanceOptions(strength = 0.0f))
+
+        advanceUntilIdle()
+
+        input.indices.forEach { index ->
+            assertEquals(input[index], result.samples[index], TOLERANCE)
+        }
+    }
+
+    @Test
+    fun enhance_with_full_strength_changes_the_input() = runTest {
+        instance = ClearSpeechEnhancer()
+        instance.create(modelDir())
+        instance.prepare()
+
+        advanceUntilIdle()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+        val result = instance.enhance(input, options = EnhanceOptions(strength = 1.0f))
+
+        advanceUntilIdle()
+
+        val maxDifference = input
+            .zip(result.samples) { noisy, enhanced -> kotlin.math.abs(noisy - enhanced) }
+            .max()
+
+        // a full model pass on a noisy signal must move the output
+        assertThat(maxDifference > 0.0f).isTrue()
+    }
+
+    @Test
+    fun enhance_twice_without_reset_fails_fast() = runTest {
+        instance = ClearSpeechEnhancer()
+        instance.create(modelDir())
+        instance.prepare()
+
+        advanceUntilIdle()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+        instance.enhance(input)
+
+        advanceUntilIdle()
+
+        assertFailsWith<SpeechEnhancerStateException> { instance.enhance(input) }
+    }
+
+    @Test
+    fun enhance_after_reset_matches_a_fresh_instance() = runTest {
+        instance = ClearSpeechEnhancer()
+        instance.create(modelDir())
+        instance.prepare()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+
+        advanceUntilIdle()
+
+        instance.enhance(input)
+        assertThat(instance.reset()).isTrue()
+        val afterReset = instance.enhance(input)
+
+        val fresh = ClearSpeechEnhancer()
+        fresh.create(modelDir())
+        fresh.prepare()
+        val fromFresh = fresh.enhance(input)
+        fresh.close()
+
+        advanceUntilIdle()
+
+        assertEquals(afterReset.samples.size, fromFresh.samples.size)
+        // ONNX Runtime is not bit-exact across runs; compare within a tolerance
+        afterReset.samples.indices.forEach { index ->
+            assertEquals(
+                fromFresh.samples[index],
+                afterReset.samples[index],
+                RESET_COMPARISON_TOLERANCE,
+            )
+        }
+    }
+
+    @Test
+    fun reset_can_be_called_repeatedly() = runTest {
+        instance = ClearSpeechEnhancer()
+        instance.create(modelDir())
+        instance.prepare()
+
+        advanceUntilIdle()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+        instance.enhance(input)
+
+        advanceUntilIdle()
+
+        // the first reset clears the consumed stream state
+        assertThat(instance.reset()).isTrue()
+        // the second is a no-op: nothing left to reset
+        assertThat(instance.reset()).isFalse()
+
+        // still usable after the no-op second reset
+        val result = instance.enhance(input)
+
+        advanceUntilIdle()
+
+        assertThat(result.samples.size).isEqualTo(input.size)
+    }
+
+    @Test
+    fun reset_without_a_previous_enhance_reports_nothing_to_reset() = runTest {
+        instance = ClearSpeechEnhancer()
+        instance.create(modelDir())
+        instance.prepare()
+
+        advanceUntilIdle()
+
+        assertThat(instance.reset()).isFalse()
+    }
+
+    @Test
+    fun reset_before_create_fails_fast() = runTest {
+        instance = ClearSpeechEnhancer()
+
+        advanceUntilIdle()
+
+        assertFailsWith<SpeechEnhancementHandleException> { instance.reset() }
+    }
+
+    @Test
     fun close_is_idempotent_and_releases_the_handle() = runTest {
         instance = ClearSpeechEnhancer()
         instance.create(modelDir())
@@ -169,9 +347,49 @@ class ClearSpeechEnhancerTests {
     private suspend fun modelDir(): File = tempDirRule.newFolder()
         .also { modelPathProvider.copyAssetsToModelDir(it) }
 
+    /**
+     * A 48 kHz mono signal shaped roughly like speech: a few voiced formant tones with
+     * an amplitude envelope, plus stationary white noise for the model to suppress.
+     */
+    private fun noisySpeechLikeSignal(seconds: Int = 0): FloatArray {
+        val sampleCount = SAMPLE_RATE * seconds
+        val samples = FloatArray(sampleCount)
+
+        for (index in 0 until sampleCount) {
+            val t = index.toDouble()
+            // three formant-ish tones with a slow amplitude envelope
+            val speech = 0.30 * sin(2.0 * PI * 220.0 * t / SAMPLE_RATE) +
+                0.20 * sin(2.0 * PI * 880.0 * t / SAMPLE_RATE) +
+                0.10 * sin(2.0 * PI * 2400.0 * t / SAMPLE_RATE)
+            val envelope = 0.5 * (1.0 + sin(2.0 * PI * 0.5 * t / SAMPLE_RATE))
+            // deterministic white-ish noise in [-0.05, 0.05]
+            val noise = NOISE_AMPLITUDE * (2.0 * deterministicNoise(index) - 1.0)
+
+            samples[index] = (speech * envelope + noise).toFloat().coerceIn(-1.0f, 1.0f)
+        }
+        return samples
+    }
+
+    /** A small deterministic hash used instead of Random for reproducible noise. */
+    private fun deterministicNoise(index: Int): Double {
+        var value = (index + 1) * 2654435761L
+        value = value xor (value ushr 13)
+        value *= 1_547_858_496_639_878_619L
+        value = value xor (value ushr 16)
+        return ((value % 10_007L) / 10_007.0).coerceIn(0.0, 1.0)
+    }
+
     private companion object {
+        const val SAMPLE_RATE = 48_000
         const val HOP_SIZE = 480
         const val KNOWN_LATENCY_SAMPLES = 1440
-        const val CONFIG_FILE_NAME = "config.ini"
+        const val CONFIG_FILE_NAME = "model/config.ini"
+        const val NOISE_AMPLITUDE = 0.05
+
+        // float rounding through the native layer
+        const val TOLERANCE = 1e-4f
+
+        // ONNX Runtime thread scheduling is not bit-exact across runs
+        const val RESET_COMPARISON_TOLERANCE = 1e-2f
     }
 }

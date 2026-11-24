@@ -2,6 +2,7 @@ package com.eva.speech_enhancements
 
 import android.util.Log
 import com.eva.speech_enhancements.exception.SpeechEnhancementHandleException
+import com.eva.speech_enhancements.exception.SpeechEnhancerStateException
 import com.eva.speech_enhancements.exception.SpeechNativeException
 import com.eva.speech_enhancements.models.EnhanceAudioResult
 import com.eva.speech_enhancements.models.EnhanceOptions
@@ -26,6 +27,7 @@ class ClearSpeechEnhancer(
     private val _nativeHandle = AtomicLong(0L)
 
     private val _isInitialized = AtomicBoolean(false)
+    private val _isSamplesConsumed = AtomicBoolean(false)
 
     private val _lock = Any()
 
@@ -53,6 +55,7 @@ class ClearSpeechEnhancer(
             destroyNative(handle)
             throw SpeechNativeException("Speech enhancer was initialized on another thread")
         }
+        _isSamplesConsumed.store(false)
         Log.i(TAG, "SPEECH ENHANCER INSTANCE CREATED")
         _nativeHandle.store(handle)
     }
@@ -61,6 +64,16 @@ class ClearSpeechEnhancer(
         withNativeHandle { handle ->
             if (prepareNative(handle)) return@withNativeHandle
             throw SpeechNativeException("Model files are missing or unreadable; prepare a streaming model directory first")
+        }
+    }
+
+    override suspend fun reset(): Boolean = withContext(dispatcher) {
+        withNativeHandle { handle ->
+            val didReset = resetNative(handle)
+            // the stream is clean again either way; the flag must not survive a reset
+            _isSamplesConsumed.store(false)
+            Log.i(TAG, "SPEECH ENHANCER INSTANCE RESET: $didReset")
+            didReset
         }
     }
 
@@ -74,9 +87,26 @@ class ClearSpeechEnhancer(
         if (sampleRate != 48_000) throw IllegalArgumentException("the native engine processes 48 kHz input only")
 
         val startedAt = System.nanoTime()
+
         val enhanced = withNativeHandle { handle ->
-            enhanceNative(handle, pcmSamples.toNativeByteBuffer(), sampleRate, options.strength)
-        } ?: throw SpeechNativeException("Enhancement failed, the model could not be loaded")
+            try {
+                if (!_isSamplesConsumed.compareAndSet(expectedValue = false, newValue = true))
+                    throw SpeechEnhancerStateException()
+
+                // call enhancements if samples consumed was false
+                enhanceNative(handle, pcmSamples.toNativeByteBuffer(), sampleRate, options.strength)
+            } catch (e: Throwable) {
+                // a failed run did not consume the stream; the call stays retryable
+                _isSamplesConsumed.store(false)
+                throw e
+            }
+        }
+
+        if (enhanced == null) {
+            _isSamplesConsumed.store(false)
+            throw SpeechNativeException("Enhancement failed, results are null")
+        }
+
 
         val floatResults = enhanced.toFloatArray()
 
@@ -132,6 +162,7 @@ class ClearSpeechEnhancer(
     private external fun createNative(modelDir: String): Long
     private external fun destroyNative(handle: Long)
     private external fun prepareNative(handle: Long): Boolean
+    private external fun resetNative(handle: Long): Boolean
 
     private external fun enhanceNative(
         handle: Long,

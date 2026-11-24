@@ -12,6 +12,8 @@ interface IClearSpeechEnhancer : AutoCloseable {
 
     suspend fun prepare()
 
+    suspend fun reset(): Boolean
+
     suspend fun enhance(
         pcmSamples: FloatArray,
         sampleRate: Int = 48_000,
