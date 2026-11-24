@@ -10,4 +10,6 @@
     <string name="recording_restore_request_failed">Échec de la restauration</string>
     <string name="recording_trash_request_success">Enregistrements mis à la corbeille</string>
     <string name="recording_trash_request_failed">Impossible de déplacer les enregistrements vers la corbeille</string>
+    <string name="categories_updated">Enregistrements déplacés vers la catégorie %s.</string>
+    <string name="metadata_modify_permission_denied">Aucune autorisation pour modifier les métadonnées du fichier</string>
 </resources>

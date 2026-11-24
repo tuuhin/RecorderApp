@@ -8,4 +8,8 @@
     <string name="toast_incoming_call">Appel entrant</string>
     <string name="bookmarks_saved">Signets ajoutés</string>
     <string name="bookmarks_too_fast_warning">Les signets doivent être espacés d’une seconde</string>
+    <string name="recorder_action_pause">Pause</string>
+    <string name="recorder_action_resume">Reprendre</string>
+    <string name="recorder_action_stop">Arrêter</string>
+    <string name="recorder_action_cancel">Annuler</string>
 </resources>

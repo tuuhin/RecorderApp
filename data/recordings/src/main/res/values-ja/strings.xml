@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="categories_create_success">カテゴリを作成しました</string>
+    <string name="categories_updated">録音を%sカテゴリに移動しました。</string>
+    <string name="categories_deleted">カテゴリを削除しました</string>
+    <string name="recordings_add_to_favourite_success">お気に入りに追加しました</string>
+    <string name="recordings_remove_favourite_failed">お気に入りから削除しました</string>
+    <string name="recording_delete_request_success">録音を削除しました</string>
+    <string name="recording_delete_request_failed">削除リクエストが失敗しました</string>
+    <string name="rename_recording_success">録音の名前を変更しました</string>
+    <string name="restore_recordings_success">選択した録音を復元しました</string>
+    <string name="recording_restore_request_failed">復元に失敗しました</string>
+    <string name="recording_trash_request_success">録音をゴミ箱に移動しました</string>
+    <string name="recording_trash_request_failed">録音をゴミ箱に移動できません</string>
+    <string name="metadata_modify_permission_denied">ファイルのメタデータを変更する権限がありません</string>
+</resources>

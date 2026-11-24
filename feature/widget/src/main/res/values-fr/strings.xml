@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">Actualiser</string>
+    <string name="widget_error_text">Impossible de charger le widget pour une raison inconnue</string>
+    <string name="widget_error_title">Impossible de charger le widget</string>
+    <string name="recordings_not_found">Aucun enregistrement à afficher</string>
+    <string name="widget_recordings_description">Un aperçu de vos enregistrements</string>
+    <string name="widget_recordings_no_recordings">Aucun enregistrement</string>
+    <string name="recordings_load_failed">Impossible de charger les enregistrements</string>
+    <string name="widget_recorder_description">Lancez l’enregistrement d’un simple appui</string>
+    <string name="recorder_state_recording">Enregistrement en cours</string>
+    <string name="recorder_state_paused">En pause</string>
+    <string name="widget_recorder_widget">Widget du magnétophone</string>
+    <string name="widget_recordings_title">Enregistrements</string>
+    <string name="widget_no_recordings">Aucun enregistrement</string>
+</resources>

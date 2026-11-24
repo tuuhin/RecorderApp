@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">録音したオーディオファイルを共有中</string>
+    <string name="share_intent_choose_title">ファイルを共有するアプリを選択</string>
+    <string name="sharing_bookmarks">ブックマークを共有中</string>
+    <string name="app_shortcuts_recordings">録音</string>
+    <string name="app_shortcuts_recordings_text">アプリ内のすべての録音を表示します</string>
+    <string name="app_shortcuts_open_last_played">最後に再生した項目</string>
+    <string name="app_shortcuts_open_last_played_text">最後に再生したオーディオファイルを開きます</string>
+</resources>

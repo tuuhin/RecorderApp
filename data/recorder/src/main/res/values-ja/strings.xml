@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recorder_action_pause">一時停止</string>
+    <string name="recorder_action_resume">再開</string>
+    <string name="recorder_action_stop">停止</string>
+    <string name="recorder_action_cancel">キャンセル</string>
+    <string name="recorder_notification_text_running">レコーダーが動作中です</string>
+    <string name="recorder_notification_text_paused">レコーダーを一時停止しました</string>
+    <string name="recorder_recording_completed">録音が完了しました</string>
+    <string name="recorder_recording_completed_text">外部ストレージに保存しました</string>
+    <string name="recorder_recording_completed_text_2">タップして再生</string>
+    <string name="toast_recording_bluetooth">Bluetoothマイクを使用中です</string>
+    <string name="toast_incoming_call">着信</string>
+    <string name="bookmarks_saved">ブックマークを追加しました</string>
+    <string name="bookmarks_too_fast_warning">ブックマークは1秒以上離して追加してください</string>
+</resources>

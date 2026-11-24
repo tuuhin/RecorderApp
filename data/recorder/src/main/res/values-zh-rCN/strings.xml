@@ -8,4 +8,8 @@
     <string name="toast_incoming_call">来电</string>
     <string name="bookmarks_saved">已添加书签</string>
     <string name="bookmarks_too_fast_warning">书签间隔必须为 1 秒</string>
+    <string name="recorder_action_pause">暂停</string>
+    <string name="recorder_action_resume">继续</string>
+    <string name="recorder_action_stop">停止</string>
+    <string name="recorder_action_cancel">取消</string>
 </resources>

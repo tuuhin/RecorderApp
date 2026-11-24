@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">녹음한 오디오 파일 공유 중</string>
+    <string name="share_intent_choose_title">파일을 공유할 앱을 선택하세요</string>
+    <string name="sharing_bookmarks">북마크 공유 중</string>
+    <string name="app_shortcuts_recordings">녹음</string>
+    <string name="app_shortcuts_recordings_text">앱의 모든 녹음을 표시합니다</string>
+    <string name="app_shortcuts_open_last_played">마지막으로 재생한 항목</string>
+    <string name="app_shortcuts_open_last_played_text">마지막으로 재생한 오디오 파일을 엽니다</string>
+</resources>

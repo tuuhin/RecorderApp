@@ -8,4 +8,8 @@
     <string name="toast_incoming_call">Входящий вызов</string>
     <string name="bookmarks_saved">Закладки добавлены</string>
     <string name="bookmarks_too_fast_warning">Между закладками должна быть минимум 1 секунда</string>
+    <string name="recorder_action_pause">Пауза</string>
+    <string name="recorder_action_resume">Продолжить</string>
+    <string name="recorder_action_stop">Остановить</string>
+    <string name="recorder_action_cancel">Отмена</string>
 </resources>

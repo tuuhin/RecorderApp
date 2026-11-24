@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">更新</string>
+    <string name="widget_error_text">問題が発生したためウィジェットを読み込めません</string>
+    <string name="widget_error_title">ウィジェットを読み込めませんでした</string>
+    <string name="recordings_not_found">表示する録音が見つかりません</string>
+    <string name="widget_recordings_description">録音をひと目で確認できます</string>
+    <string name="widget_recordings_no_recordings">録音がありません</string>
+    <string name="recordings_load_failed">録音を読み込めません</string>
+    <string name="widget_recorder_description">ボタンを押して録音を開始</string>
+    <string name="recorder_state_recording">録音中</string>
+    <string name="recorder_state_paused">一時停止中</string>
+    <string name="widget_recorder_widget">レコーダーウィジェット</string>
+    <string name="widget_recordings_title">録音</string>
+    <string name="widget_no_recordings">録音なし</string>
+</resources>

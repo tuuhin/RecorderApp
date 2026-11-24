@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">रीफ़्रेश</string>
+    <string name="widget_error_text">किसी कारण से विजेट लोड नहीं हो सका</string>
+    <string name="widget_error_title">विजेट लोड नहीं हो सका</string>
+    <string name="recordings_not_found">दिखाने के लिए कोई रिकॉर्डिंग नहीं मिली</string>
+    <string name="widget_recordings_description">आपकी रिकॉर्डिंग की एक झलक</string>
+    <string name="widget_recordings_no_recordings">कोई रिकॉर्डिंग नहीं</string>
+    <string name="recordings_load_failed">रिकॉर्डिंग लोड नहीं की जा सकती</string>
+    <string name="widget_recorder_description">एक बटन दबाकर रिकॉर्डिंग शुरू करें</string>
+    <string name="recorder_state_recording">रिकॉर्डिंग हो रही है</string>
+    <string name="recorder_state_paused">रुकी हुई</string>
+    <string name="widget_recorder_widget">रिकॉर्डर विजेट</string>
+    <string name="widget_recordings_title">रिकॉर्डिंग</string>
+    <string name="widget_no_recordings">कोई रिकॉर्डिंग नहीं</string>
+</resources>

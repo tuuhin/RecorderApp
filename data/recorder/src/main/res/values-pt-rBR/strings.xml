@@ -8,4 +8,8 @@
     <string name="toast_incoming_call">Chamada recebida</string>
     <string name="bookmarks_saved">Favoritos adicionados</string>
     <string name="bookmarks_too_fast_warning">Os favoritos precisam ter pelo menos 1 segundo de intervalo</string>
+    <string name="recorder_action_pause">Pausar</string>
+    <string name="recorder_action_resume">Retomar</string>
+    <string name="recorder_action_stop">Parar</string>
+    <string name="recorder_action_cancel">Cancelar</string>
 </resources>

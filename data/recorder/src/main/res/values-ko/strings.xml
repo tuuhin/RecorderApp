@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recorder_action_pause">일시정지</string>
+    <string name="recorder_action_resume">다시 시작</string>
+    <string name="recorder_action_stop">중지</string>
+    <string name="recorder_action_cancel">취소</string>
+    <string name="recorder_notification_text_running">녹음기가 실행 중입니다</string>
+    <string name="recorder_notification_text_paused">녹음이 일시정지되었습니다</string>
+    <string name="recorder_recording_completed">녹음 완료</string>
+    <string name="recorder_recording_completed_text">외부 저장소에 저장됨</string>
+    <string name="recorder_recording_completed_text_2">눌러서 재생</string>
+    <string name="toast_recording_bluetooth">블루투스 마이크를 사용하는 중입니다</string>
+    <string name="toast_incoming_call">전화 걸려옴</string>
+    <string name="bookmarks_saved">북마크가 추가되었습니다</string>
+    <string name="bookmarks_too_fast_warning">북마크는 1초 이상 간격으로 추가해야 합니다</string>
+</resources>

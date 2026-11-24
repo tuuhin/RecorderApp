@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">Berbagi file audio hasil rekaman</string>
+    <string name="share_intent_choose_title">Pilih aplikasi untuk berbagi file</string>
+    <string name="sharing_bookmarks">Berbagi bookmark</string>
+    <string name="app_shortcuts_recordings">Rekaman</string>
+    <string name="app_shortcuts_recordings_text">Menampilkan semua rekaman di aplikasi</string>
+    <string name="app_shortcuts_open_last_played">Item Terakhir Diputar</string>
+    <string name="app_shortcuts_open_last_played_text">Membuka file audio yang terakhir diputar</string>
+</resources>

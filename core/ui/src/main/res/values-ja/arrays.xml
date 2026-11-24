@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>ワンタップで高音質のオーディオを録音</item>
+        <item>操作ボタンで録音を手軽に再生</item>
+        <item>録音を正確にトリミング・カット</item>
+        <item>オーディオを整理してすぐに探せる状態に</item>
+    </string-array>
+</resources>

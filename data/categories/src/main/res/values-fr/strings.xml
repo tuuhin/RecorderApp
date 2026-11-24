@@ -2,4 +2,5 @@
     <string name="select_category_screen">Sélectionner une catégorie</string>
     <string name="categories_create_success">Catégorie créée avec succès</string>
     <string name="categories_deleted">Catégories supprimées</string>
+    <string name="categories_updated">Enregistrements déplacés vers la catégorie %s.</string>
 </resources>

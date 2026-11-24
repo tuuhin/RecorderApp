@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">A partilhar ficheiros de áudio gravados</string>
+    <string name="share_intent_choose_title">Selecione uma aplicação para partilhar ficheiros</string>
+    <string name="sharing_bookmarks">A partilhar marcadores</string>
+    <string name="app_shortcuts_recordings">Gravações</string>
+    <string name="app_shortcuts_recordings_text">Mostra todas as gravações da aplicação</string>
+    <string name="app_shortcuts_open_last_played">Último item reproduzido</string>
+    <string name="app_shortcuts_open_last_played_text">Abre o último ficheiro de áudio reproduzido</string>
+</resources>

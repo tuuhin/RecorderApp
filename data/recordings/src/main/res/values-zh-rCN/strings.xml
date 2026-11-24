@@ -10,4 +10,6 @@
     <string name="recording_restore_request_failed">恢复失败</string>
     <string name="recording_trash_request_success">录音已移至回收站</string>
     <string name="recording_trash_request_failed">无法将录音移至回收站</string>
+    <string name="categories_updated">录音已移至“%s”分类。</string>
+    <string name="metadata_modify_permission_denied">无权修改文件元数据</string>
 </resources>

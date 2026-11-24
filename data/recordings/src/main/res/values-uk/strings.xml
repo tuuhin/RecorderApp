@@ -10,4 +10,6 @@
     <string name="recording_restore_request_failed">Не вдалося відновити</string>
     <string name="recording_trash_request_success">Записи переміщено до кошика</string>
     <string name="recording_trash_request_failed">Не вдалося перемістити записи до кошика</string>
+    <string name="categories_updated">Записи переміщено до категорії «%s».</string>
+    <string name="metadata_modify_permission_denied">Немає прав на зміну метаданих файлу</string>
 </resources>

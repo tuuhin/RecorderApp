@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">刷新</string>
+    <string name="widget_error_text">出现问题，无法加载小组件</string>
+    <string name="widget_error_title">加载小组件失败</string>
+    <string name="recordings_not_found">没有可显示的录音</string>
+    <string name="widget_recordings_description">一眼查看您的录音</string>
+    <string name="widget_recordings_no_recordings">没有录音</string>
+    <string name="recordings_load_failed">无法加载录音</string>
+    <string name="widget_recorder_description">点按按钮开始录音</string>
+    <string name="recorder_state_recording">正在录音</string>
+    <string name="recorder_state_paused">已暂停</string>
+    <string name="widget_recorder_widget">录音机小组件</string>
+    <string name="widget_recordings_title">录音</string>
+    <string name="widget_no_recordings">没有录音</string>
+</resources>

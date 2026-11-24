@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">রেকর্ড করা অডিও ফাইল শেয়ার করা হচ্ছে</string>
+    <string name="share_intent_choose_title">ফাইল শেয়ার করার জন্য একটি অ্যাপ নির্বাচন করুন</string>
+    <string name="sharing_bookmarks">বুকমার্ক শেয়ার করা হচ্ছে</string>
+    <string name="app_shortcuts_recordings">রেকর্ডিং</string>
+    <string name="app_shortcuts_recordings_text">অ্যাপের সব রেকর্ডিং দেখায়</string>
+    <string name="app_shortcuts_open_last_played">সর্বশেষ চালানো আইটেম</string>
+    <string name="app_shortcuts_open_last_played_text">সর্বশেষ চালানো অডিও ফাইল খুলুন</string>
+</resources>

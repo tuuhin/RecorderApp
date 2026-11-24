@@ -8,4 +8,8 @@
     <string name="toast_incoming_call">Вхідний дзвінок</string>
     <string name="bookmarks_saved">Закладки додано</string>
     <string name="bookmarks_too_fast_warning">Інтервал між закладками має становити щонайменше 1 секунду</string>
+    <string name="recorder_action_pause">Пауза</string>
+    <string name="recorder_action_resume">Продовжити</string>
+    <string name="recorder_action_stop">Зупинити</string>
+    <string name="recorder_action_cancel">Скасувати</string>
 </resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="stt_model_download_notification_text">Préparation des fonctions vocales hors ligne</string>
+    <string name="stt_model_download_requested_text">Téléchargement demandé</string>
+    <string name="stt_model_downloading_text">Téléchargement</string>
+    <string name="stt_model_unzip_text">Décompression</string>
+    <string name="stt_model_ready_text">Prêt à enregistrer</string>
+    <string name="stt_model_saved_text">Enregistré</string>
+    <string name="stt_model_cleanup_text">Nettoyage</string>
+    <string name="trash_cleanup_notification_title">Vidage de la corbeille</string>
+    <string name="trash_cleanup_notification_text">Suppression des enregistrements expirés</string>
+</resources>

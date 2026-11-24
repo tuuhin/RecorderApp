@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">Aktualisieren</string>
+    <string name="widget_error_text">Widget kann aufgrund eines Problems nicht geladen werden</string>
+    <string name="widget_error_title">Widget konnte nicht geladen werden</string>
+    <string name="recordings_not_found">Keine Aufnahmen zum Anzeigen gefunden</string>
+    <string name="widget_recordings_description">Ein Blick auf deine Aufnahmen</string>
+    <string name="widget_recordings_no_recordings">Keine Aufnahmen</string>
+    <string name="recordings_load_failed">Aufnahmen können nicht geladen werden</string>
+    <string name="widget_recorder_description">Mit einem Tipp auf den Knopf aufnehmen</string>
+    <string name="recorder_state_recording">Aufnahme läuft</string>
+    <string name="recorder_state_paused">Pausiert</string>
+    <string name="widget_recorder_widget">Rekorder-Widget</string>
+    <string name="widget_recordings_title">Aufnahmen</string>
+    <string name="widget_no_recordings">Keine Aufnahmen</string>
+</resources>

@@ -9,4 +9,8 @@
     <string name="toast_incoming_call">有來電</string>
     <string name="bookmarks_saved">已新增書籤</string>
     <string name="bookmarks_too_fast_warning">書籤之間必須至少間隔 1 秒</string>
+    <string name="recorder_action_pause">暫停</string>
+    <string name="recorder_action_resume">繼續</string>
+    <string name="recorder_action_stop">停止</string>
+    <string name="recorder_action_cancel">取消</string>
 </resources>

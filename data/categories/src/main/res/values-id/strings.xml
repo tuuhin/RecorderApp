@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="categories_create_success">Kategori Berhasil Dibuat</string>
+    <string name="categories_updated">Rekaman dipindahkan ke kategori %s.</string>
+    <string name="categories_deleted">Kategori Dihapus</string>
+    <string name="select_category_screen">Pilih Kategori</string>
+</resources>

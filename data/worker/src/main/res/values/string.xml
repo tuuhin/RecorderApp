@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="stt_model_download_notification_text" translatable="false">Preparing offline voice features</string>
-  <string name="stt_model_download_requested_text" translatable="false">Download requested</string>
-  <string name="stt_model_downloading_text" translatable="false">Downloading</string>
-  <string name="stt_model_unzip_text" translatable="false">Unzipping</string>
-  <string name="stt_model_ready_text" translatable="false">Ready to Save</string>
-  <string name="stt_model_saved_text" translatable="false">Saved</string>
-  <string name="stt_model_cleanup_text" translatable="false">Cleaning up</string>
+    <string name="stt_model_download_notification_text">Preparing offline voice features</string>
+    <string name="stt_model_download_requested_text">Download requested</string>
+    <string name="stt_model_downloading_text">Downloading</string>
+    <string name="stt_model_unzip_text">Unzipping</string>
+    <string name="stt_model_ready_text">Ready to Save</string>
+    <string name="stt_model_saved_text">Saved</string>
+    <string name="stt_model_cleanup_text">Cleaning up</string>
+    <string name="trash_cleanup_notification_title">Clearing Trash</string>
+    <string name="trash_cleanup_notification_text">Removing expired recordings</string>
 </resources>

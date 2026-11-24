@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">Обмен записанными аудиофайлами</string>
+    <string name="share_intent_choose_title">Выберите приложение для обмена файлами</string>
+    <string name="sharing_bookmarks">Обмен закладками</string>
+    <string name="app_shortcuts_recordings">Записи</string>
+    <string name="app_shortcuts_recordings_text">Показывает все записи приложения</string>
+    <string name="app_shortcuts_open_last_played">Последний воспроизведённый элемент</string>
+    <string name="app_shortcuts_open_last_played_text">Открывает последний воспроизведённый аудиофайл</string>
+</resources>

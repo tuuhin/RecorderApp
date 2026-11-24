@@ -2,4 +2,5 @@
     <string name="select_category_screen">Selecionar categoria</string>
     <string name="categories_create_success">Categoria criada com sucesso</string>
     <string name="categories_deleted">Categorias excluídas</string>
+    <string name="categories_updated">Gravações movidas para a categoria %s.</string>
 </resources>

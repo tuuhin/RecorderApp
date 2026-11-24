@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">Offline-Sprachfunktionen werden vorbereitet</string>
+    <string name="stt_model_download_requested_text">Download angefordert</string>
+    <string name="stt_model_downloading_text">Wird heruntergeladen</string>
+    <string name="stt_model_unzip_text">Wird entpackt</string>
+    <string name="stt_model_ready_text">Bereit zum Speichern</string>
+    <string name="stt_model_saved_text">Gespeichert</string>
+    <string name="stt_model_cleanup_text">Wird aufgeräumt</string>
+    <string name="trash_cleanup_notification_title">Papierkorb wird geleert</string>
+    <string name="trash_cleanup_notification_text">Abgelaufene Aufnahmen werden entfernt</string>
+</resources>

@@ -8,4 +8,8 @@
     <string name="toast_incoming_call">Eingehender Anruf</string>
     <string name="bookmarks_saved">Lesezeichen hinzugefügt</string>
     <string name="bookmarks_too_fast_warning">Lesezeichen müssen eine Sekunde Abstand haben</string>
+    <string name="recorder_action_pause">Pausieren</string>
+    <string name="recorder_action_resume">Fortsetzen</string>
+    <string name="recorder_action_stop">Stoppen</string>
+    <string name="recorder_action_cancel">Abbrechen</string>
 </resources>

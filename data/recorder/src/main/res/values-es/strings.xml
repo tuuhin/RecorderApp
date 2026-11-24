@@ -8,4 +8,8 @@
     <string name="toast_incoming_call">Llamada entrante</string>
     <string name="bookmarks_saved">Marcadores añadidos</string>
     <string name="bookmarks_too_fast_warning">Los marcadores deben estar separados por un segundo</string>
+    <string name="recorder_action_pause">Pausar</string>
+    <string name="recorder_action_resume">Reanudar</string>
+    <string name="recorder_action_stop">Detener</string>
+    <string name="recorder_action_cancel">Cancelar</string>
 </resources>

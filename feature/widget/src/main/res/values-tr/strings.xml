@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">Yenile</string>
+    <string name="widget_error_text">Bir sorun nedeniyle widget yüklenemiyor</string>
+    <string name="widget_error_title">Widget yüklenemedi</string>
+    <string name="recordings_not_found">Gösterilecek kayıt bulunamadı</string>
+    <string name="widget_recordings_description">Kayıtlarınıza bir bakış</string>
+    <string name="widget_recordings_no_recordings">Kayıt yok</string>
+    <string name="recordings_load_failed">Kayıtlar yüklenemiyor</string>
+    <string name="widget_recorder_description">Bir düğmeye dokunarak kaydı başlatın</string>
+    <string name="recorder_state_recording">Kayıt yapılıyor</string>
+    <string name="recorder_state_paused">Duraklatıldı</string>
+    <string name="widget_recorder_widget">Kayıtçı widget’ı</string>
+    <string name="widget_recordings_title">Kayıtlar</string>
+    <string name="widget_no_recordings">Kayıt yok</string>
+</resources>

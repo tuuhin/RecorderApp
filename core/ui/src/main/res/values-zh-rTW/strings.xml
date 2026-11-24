@@ -269,4 +269,12 @@
     <string name="editor_redo_description">重做操作</string>
     <string name="editor_transformation_description">轉換</string>
     <string name="editor_success_description">成功</string>
+    <string name="categories_updated">錄音已移至「%s」分類。</string>
+    <string name="category_icon_category">%s 的分類圖示</string>
+    <string name="voice_recognizer">麥克風輸入</string>
+    <string name="voice_search_prompt">請說出搜尋內容</string>
+    <string name="action_cut">剪下</string>
+    <string name="action_crop">裁剪</string>
+    <string name="app_settings_extra_option_about">關於</string>
+    <string name="action_open_settings">開啟設定</string>
 </resources>

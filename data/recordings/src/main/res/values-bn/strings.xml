@@ -6,7 +6,7 @@
   <string name="recordings_remove_favourite_failed">পছন্দের তালিকা থেকে সরানো হয়েছে</string>
   <string name="recording_delete_request_success">রেকর্ডিংগুলো সফলভাবে মুছে ফেলা হয়েছে</string>
   <string name="recording_delete_request_failed">মুছে ফেলার অনুরোধ ব্যর্থ হয়েছে</string>
-  <string name="rename_recording_success">রেকর্ডিংয়ের নাম সফলভাবে পরিবর্তন করা হয়��ছে</string>
+    <string name="rename_recording_success">রেকর্ডিংয়ের নাম সফলভাবে পরিবর্তন করা হয়েছে</string>
   <string name="restore_recordings_success">নির্বাচিত রেকর্ডিংগুলো পুনরুদ্ধার করা হয়েছে</string>
   <string name="recording_restore_request_failed">পুনরুদ্ধার ব্যর্থ হয়েছে</string>
   <string name="recording_trash_request_success">রেকর্ডিংগুলো রিসাইকেল বিনে পাঠানো হয়েছে</string>
@@ -14,4 +14,6 @@
   <string name="recording_action_delete">মুছে ফেলুন</string>
   <string name="recordings_restore_action">পুনরুদ্ধার করুন</string>
   <string name="categories_updated">রেকর্ডিংগুলো %s ক্যাটাগরিতে সরানো হয়েছে।</string>
+
+    <string name="metadata_modify_permission_denied">ফাইলের মেটাডেটা পরিবর্তন করার অনুমতি নেই</string>
 </resources>

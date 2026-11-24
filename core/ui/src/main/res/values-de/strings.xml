@@ -269,4 +269,12 @@
     <string name="editor_redo_description">Aktion wiederholen</string>
     <string name="editor_transformation_description">Umwandlung</string>
     <string name="editor_success_description">Erfolgreich</string>
+    <string name="categories_updated">Aufnahmen in die Kategorie %s verschoben.</string>
+    <string name="category_icon_category">Kategorie-Symbol für %s</string>
+    <string name="voice_recognizer">Mikrofoneingabe</string>
+    <string name="voice_search_prompt">Sprich deine Suchanfrage</string>
+    <string name="action_cut">Ausschneiden</string>
+    <string name="action_crop">Zuschneiden</string>
+    <string name="app_settings_extra_option_about">Über</string>
+    <string name="action_open_settings">Einstellungen öffnen</string>
 </resources>

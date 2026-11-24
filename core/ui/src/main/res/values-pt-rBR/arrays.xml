@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>Grave áudio de alta qualidade com um único toque</item>
+        <item>Reproduza suas gravações facilmente com os controles</item>
+        <item>Recorte e corte gravações com precisão</item>
+        <item>Mantenha seu áudio organizado e acessível</item>
+    </string-array>
+</resources>

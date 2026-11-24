@@ -10,4 +10,6 @@
     <string name="recording_restore_request_failed">La restauración falló</string>
     <string name="recording_trash_request_success">Grabaciones enviadas a la papelera</string>
     <string name="recording_trash_request_failed">No se pueden mover las grabaciones a la papelera</string>
+    <string name="categories_updated">Grabaciones movidas a la categoría %s.</string>
+    <string name="metadata_modify_permission_denied">No tienes permiso para modificar los metadatos del archivo</string>
 </resources>

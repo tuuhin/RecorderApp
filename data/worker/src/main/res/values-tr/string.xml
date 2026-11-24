@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">Çevrimdışı ses özellikleri hazırlanıyor</string>
+    <string name="stt_model_download_requested_text">İndirme istendi</string>
+    <string name="stt_model_downloading_text">İndiriliyor</string>
+    <string name="stt_model_unzip_text">Paket açılıyor</string>
+    <string name="stt_model_ready_text">Kaydedilmeye hazır</string>
+    <string name="stt_model_saved_text">Kaydedildi</string>
+    <string name="stt_model_cleanup_text">Temizleniyor</string>
+    <string name="trash_cleanup_notification_title">Çöp kutusu temizleniyor</string>
+    <string name="trash_cleanup_notification_text">Süresi dolan kayıtlar siliniyor</string>
+</resources>

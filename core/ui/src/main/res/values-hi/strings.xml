@@ -7,7 +7,7 @@
     <string name="action_paused">रोका गया</string>
     <string name="allow_permissions">अनुमति दें</string>
     <string name="recorder_permission_not_found">रिकॉर्डर की अनुमति नहीं मिली</string>
-    <string name="recorder_permission_not_found_desc">ऐप के काम करने के लिए रिकॉर्डिंग की अनुमति आवश्यक है, यह महत्वपूर��ण और अनिवार्य है।</string>
+    <string name="recorder_permission_not_found_desc">ऐप के काम करने के लिए रिकॉर्डिंग की अनुमति आवश्यक है, यह महत्वपूर्ण और अनिवार्य है।</string>
     <string name="menu_option_settings">सेटिंग्स</string>
     <string name="menu_option_recycle_bin">बिन</string>
     <string name="menu_more_option">विकल्प</string>
@@ -270,4 +270,12 @@
     <string name="editor_redo_description">फिर से करें</string>
     <string name="editor_transformation_description">रूपांतरण</string>
     <string name="editor_success_description">सफल</string>
+    <string name="categories_updated">रिकॉर्डिंग को %s श्रेणी में ले जाया गया।</string>
+    <string name="category_icon_category">%s के लिए श्रेणी आइकन</string>
+    <string name="voice_recognizer">माइक्रोफ़ोन इनपुट</string>
+    <string name="voice_search_prompt">अपना खोजी प्रश्न बोलें</string>
+    <string name="action_cut">कट करें</string>
+    <string name="action_crop">क्रॉप करें</string>
+    <string name="app_settings_extra_option_about">परिचय</string>
+    <string name="action_open_settings">सेटिंग्स खोलें</string>
 </resources>

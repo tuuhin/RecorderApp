@@ -10,4 +10,6 @@
     <string name="recording_restore_request_failed">Falha ao restaurar</string>
     <string name="recording_trash_request_success">Gravações movidas para a lixeira</string>
     <string name="recording_trash_request_failed">Não foi possível mover as gravações para a lixeira</string>
+    <string name="categories_updated">Gravações movidas para a categoria %s.</string>
+    <string name="metadata_modify_permission_denied">Sem permissão para modificar os metadados do arquivo</string>
 </resources>

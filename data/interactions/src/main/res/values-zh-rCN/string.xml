@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">正在分享录制的音频文件</string>
+    <string name="share_intent_choose_title">选择要分享文件的应用程序</string>
+    <string name="sharing_bookmarks">正在分享书签</string>
+    <string name="app_shortcuts_recordings">录音</string>
+    <string name="app_shortcuts_recordings_text">显示应用中的所有录音</string>
+    <string name="app_shortcuts_open_last_played">上次播放的项目</string>
+    <string name="app_shortcuts_open_last_played_text">打开上次播放的音频文件</string>
+</resources>

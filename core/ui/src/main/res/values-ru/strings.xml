@@ -269,4 +269,12 @@
     <string name="editor_redo_description">Повторить действие</string>
     <string name="editor_transformation_description">Преобразование</string>
     <string name="editor_success_description">Успешно</string>
+    <string name="categories_updated">Записи перемещены в категорию «%s».</string>
+    <string name="category_icon_category">Значок категории для %s</string>
+    <string name="voice_recognizer">Вход с микрофона</string>
+    <string name="voice_search_prompt">Произнесите запрос</string>
+    <string name="action_cut">Вырезать</string>
+    <string name="action_crop">Обрезать</string>
+    <string name="app_settings_extra_option_about">О приложении</string>
+    <string name="action_open_settings">Открыть настройки</string>
 </resources>

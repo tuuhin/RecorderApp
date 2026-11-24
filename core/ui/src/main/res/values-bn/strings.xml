@@ -270,4 +270,12 @@
     <string name="editor_redo_description">আবার করুন</string>
     <string name="editor_transformation_description">রূপান্তর</string>
     <string name="editor_success_description">সফল</string>
+    <string name="categories_updated">রেকর্ডিংগুলো %s ক্যাটাগরিতে সরানো হয়েছে।</string>
+    <string name="category_icon_category">%s এর ক্যাটাগরি আইকন</string>
+    <string name="voice_recognizer">মাইক্রোফোন ইনপুট</string>
+    <string name="voice_search_prompt">আপনার অনুসন্ধানের কথা বলুন</string>
+    <string name="action_cut">কাট</string>
+    <string name="action_crop">ক্রপ</string>
+    <string name="app_settings_extra_option_about">সম্পর্কে</string>
+    <string name="action_open_settings">সেটিংস খুলুন</string>
 </resources>

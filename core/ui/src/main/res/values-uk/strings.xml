@@ -269,4 +269,12 @@
     <string name="editor_redo_description">Повторити дію</string>
     <string name="editor_transformation_description">Перетворення</string>
     <string name="editor_success_description">Успішно</string>
+    <string name="categories_updated">Записи переміщено до категорії «%s».</string>
+    <string name="category_icon_category">Значок категорії для %s</string>
+    <string name="voice_recognizer">Вхід із мікрофона</string>
+    <string name="voice_search_prompt">Вимовте пошуковий запит</string>
+    <string name="action_cut">Вирізати</string>
+    <string name="action_crop">Обрізати</string>
+    <string name="app_settings_extra_option_about">Про застосунок</string>
+    <string name="action_open_settings">Відкрити налаштування</string>
 </resources>

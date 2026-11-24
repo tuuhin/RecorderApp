@@ -161,7 +161,7 @@
     <string name="delete_category_dialog_text">Removing a category will not remove a audio item, just the references are erased.</string>
     <string name="menu_option_categories">Category</string>
     <string name="menu_option_favourite">Favourite</string>
-    <string name="categories_updated" translatable="false">Recordings moved to %s category.</string>
+    <string name="categories_updated">Recordings moved to %s category.</string>
     <string name="recordings_add_to_favourite_success">Favourites marked</string>
     <string name="recordings_remove_favourite_failed">Favourites removed</string>
     <string name="edit_category_title">Edit Category</string>
@@ -174,7 +174,7 @@
     <string name="add_new_category">New Category</string>
     <string name="category_icon_picker_title">Select an icon</string>
     <string name="category_color_title">Pick a Color</string>
-    <string name="category_icon_category" translatable="false">Category Icon for %s</string>
+    <string name="category_icon_category">Category Icon for %s</string>
     <string name="app_version_title">Version name:</string>
     <string name="add_recording_bookmark">Bookmark</string>
     <string name="bookmark_tooltip_text">Add a bookmark to your recording at a interval of a second</string>
@@ -224,14 +224,14 @@
     <string name="search_filter_title">Filters</string>
     <string name="menu_option_search">Search</string>
     <string name="no_search_results">No search results</string>
-    <string name="voice_recognizer" translatable="false">Mic Input</string>
-    <string name="voice_search_prompt" translatable="false">Speak your search query</string>
+    <string name="voice_recognizer">Mic Input</string>
+    <string name="voice_search_prompt">Speak your search query</string>
     <string name="media_editor_title">Edit</string>
     <string name="action_save">Save</string>
     <string name="action_export">Export</string>
-    <string name="action_cut" translatable="false">Cut</string>
+    <string name="action_cut">Cut</string>
     <string name="tooltip_text_editor_cut">Remove the selected region</string>
-    <string name="action_crop" translatable="false">Crop</string>
+    <string name="action_crop">Crop</string>
     <string name="tooltip_text_editor_crop">"Remove the un selected region "</string>
     <string name="save_edit_item_work_title">Saving Media</string>
     <string name="save_edit_item_work_text">Saving edited media to storage</string>
@@ -280,7 +280,7 @@
     <string name="recording_settings_features_title">Features</string>
     <string name="recording_settings_features_text">List of additional features for your recordings</string>
     <string name="app_settings_transcriptions">Transcription</string>
-    <string name="app_settings_extra_option_about" translatable="false">About</string>
+    <string name="app_settings_extra_option_about">About</string>
     <string name="recorder_transcriptions_about_dialog_title">Live Transcriptions</string>
     <string name="recorder_transcriptions_about_dialog_text_not_enabled">Live Transcriptions are not enabled, Turn on from settings to receive live transcription while recording</string>
     <string name="recorder_transcriptions_about_dialog_text_enabled">Live Transcriptions are running with model </string>
@@ -293,4 +293,5 @@
     <string name="editor_redo_description">Redo action</string>
     <string name="editor_transformation_description">Transformation</string>
     <string name="editor_success_description">Success</string>
+    <string name="action_open_settings">Open Settings</string>
 </resources>

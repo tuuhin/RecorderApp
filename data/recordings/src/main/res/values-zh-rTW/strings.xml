@@ -11,4 +11,6 @@
     <string name="recording_restore_request_failed">還原失敗</string>
     <string name="recording_trash_request_success">錄音已移至垃圾桶</string>
     <string name="recording_trash_request_failed">無法將錄音移至垃圾桶</string>
+    <string name="categories_updated">錄音已移至「%s」分類。</string>
+    <string name="metadata_modify_permission_denied">無權修改檔案中繼資料</string>
 </resources>

@@ -270,4 +270,12 @@
     <string name="editor_redo_description">İşlemi yinele</string>
     <string name="editor_transformation_description">Dönüştürme</string>
     <string name="editor_success_description">Başarılı</string>
+    <string name="categories_updated">Kayıtlar %s kategorisine taşındı.</string>
+    <string name="category_icon_category">%s kategori simgesi</string>
+    <string name="voice_recognizer">Mikrofon girişi</string>
+    <string name="voice_search_prompt">Arama sorgunuzu söyleyin</string>
+    <string name="action_cut">Kes</string>
+    <string name="action_crop">Kırp</string>
+    <string name="app_settings_extra_option_about">Hakkında</string>
+    <string name="action_open_settings">Ayarları aç</string>
 </resources>
