@@ -1,0 +1,5 @@
+<resources>
+    <string name="recording_permanent_delete_dialog_text">Записи буде видалено назавжди. Ви впевнена, що хочете їх видалити? Відновити їх пізніше буде неможливо.</string>
+    <string name="cancel_recording_dialog_text">Ви впевнена, що хочете скасувати цей запис? Після скасування його неможливо буде відновити.</string>
+    <string name="delete_stt_model_dialog_text">Ви впевнена, що хочете видалити файл транскрипції? Після цього транскрипція в реальному часі стане недоступною.</string>
+</resources>

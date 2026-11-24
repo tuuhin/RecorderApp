@@ -1,0 +1,6 @@
+<resources>
+    <string name="recording_permanent_delete_dialog_text">Les enregistrements seront définitivement supprimés. Êtes-vous sûre de vouloir les supprimer ? Ils ne pourront pas être restaurés ultérieurement</string>
+    <string name="cancel_recording_dialog_text">Êtes-vous sûre de vouloir annuler cet enregistrement ? Une fois annulé, il ne pourra pas être récupéré</string>
+    <string name="save_recording_dialog_text">Êtes-vous sûre d’avoir terminé votre enregistrement ?</string>
+    <string name="delete_stt_model_dialog_text">Êtes-vous sûre de vouloir supprimer le fichier de transcription ? Sa suppression empêchera les transcriptions en temps réel</string>
+</resources>

@@ -1,0 +1,5 @@
+<resources>
+    <string name="recording_permanent_delete_dialog_text">Las grabaciones se eliminarán permanentemente. ¿Segura que quieres quitarlas? No se podrán restaurar después.</string>
+    <string name="cancel_recording_dialog_text">¿Segura que quieres cancelar esta grabación? Una vez cancelada no se podrá recuperar</string>
+    <string name="delete_stt_model_dialog_text">¿Segura que quieres eliminar el archivo de traducción? Al eliminarlo, impedirás las transcripciones en tiempo real</string>
+</resources>
