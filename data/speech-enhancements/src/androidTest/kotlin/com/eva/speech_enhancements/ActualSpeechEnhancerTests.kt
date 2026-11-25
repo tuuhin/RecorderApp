@@ -149,7 +149,18 @@ class ActualSpeechEnhancerTests(private val assetName: String) {
 
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
-        fun clips(): List<String> = listOf("p234_001.wav", "p234_017.wav", "p234_023.wav")
+        fun clips(): List<String> = listOf(
+            "p234_001.wav",
+            "p234_002.wav",
+            "p234_003.wav",
+            "p234_005.wav",
+            "p234_007.wav",
+            "p234_008.wav",
+            "p234_010.wav",
+            "p234_012.wav",
+            "p234_017.wav",
+            "p234_023.wav",
+        )
 
         const val SAMPLE_RATE = 48_000
         const val KNOWN_LATENCY_SAMPLES = 1440

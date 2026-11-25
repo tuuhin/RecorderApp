@@ -9,9 +9,14 @@ The reference values come from the *official* DeepFilterNet libraries:
     (config.ini confirms sr=48000, fft_size=960, hop_size=480, nb_erb=32, nb_df=96).
 
 Usage:
-    python test/support/generate_reference.py [--out dsp/test/data]
+    python onnx-tooling/generate_reference.py [--out <dir>]
 
-Requirements: numpy, deepfilternet==0.5.6 (installs the `libdf` extension).
+Requirements: numpy, deepfilternet==0.5.6 (installs the `libdf` extension). These are
+*not* in requirements.txt (which only covers the Android test-asset build), so install
+them into onnx-tooling/.venv when regenerating the reference vectors.
+
+By default the vectors are written next to the C++ DSP tests that consume them
+(src/main/cpp/dsp/test/data).
 
 Arrays are written as raw little-endian float32 files; complex data is stored as
 interleaved (re, im) float32. Each array has a companion `.shape` text file.
@@ -21,6 +26,10 @@ import argparse
 import os
 
 import numpy as np
+
+DEFAULT_OUT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "src", "main", "cpp", "dsp", "test", "data")
+)
 
 
 def save(path: str, name: str, array) -> None:
@@ -37,7 +46,7 @@ def save(path: str, name: str, array) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "..", "..", "dsp", "test", "data"))
+    parser.add_argument("--out", default=DEFAULT_OUT)
     args = parser.parse_args()
     out = os.path.abspath(args.out)
     os.makedirs(out, exist_ok=True)

@@ -17,7 +17,6 @@ class ModelPathProvider(private val context: Context) {
         val op4 = async { copyToFile(DECODER_FILE_NAME, parentDir) }
 
         awaitAll(op1, op2, op3, op4)
-        Unit
     }
 
 

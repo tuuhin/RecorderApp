@@ -96,7 +96,10 @@ std::span<const float> speech_enhancer_manager::enhance(std::span<const float> s
     const std::size_t drop = std::min(latency, raw.size());
     _results.assign(raw.begin() + static_cast<std::ptrdiff_t>(drop), raw.end());
 
-    if (_results.size() < samples.size()) _results.resize(samples.size(), 0.0f);
+    // The offline pass can return up to `hop_size - 1` extra samples when the input length
+    // is not a whole number of hops (the flush pads the tail to whole hops), and defensively
+    // could return fewer. Trim or pad so the result always aligns 1:1 with the input.
+    _results.resize(samples.size(), 0.0f);
 
     // Blend the model output with the input; 1.0 is the full model output. Clamped so a
     // stray value degrades into a blend instead of amplifying the input.

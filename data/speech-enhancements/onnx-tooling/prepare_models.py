@@ -25,8 +25,12 @@ The transformed graphs are verified against the originals in ONNX Runtime (see
 documented history window is supplied.
 
 Usage:
-    python tools/prepare_models.py --model-dir <dir with enc.onnx/erb_dec.onnx/df_dec.onnx> \
-                                   --out-dir <dir>
+    python onnx-tooling/prepare_models.py \
+        --model-dir <dir with enc.onnx/erb_dec.onnx/df_dec.onnx> \
+        --out-dir <dir>
+
+The recommended entry point is `build_tests_assets.sh`, which downloads the raw
+graphs from Hugging Face and runs this script inside a throwaway `uv` environment.
 """
 
 import argparse

@@ -14,8 +14,12 @@ It is used to (a) confirm the streaming pipeline is equivalent to the offline Py
 `enhance()`, and (b) produce reference vectors for the C++ unit tests.
 
 Run:
-    python tools/reference_streaming.py --model-dir <dir with *_stream.onnx> \
+    python onnx-tooling/reference_streaming.py --model-dir <dir with *_stream.onnx> \
         [--input audio.wav] [--output reference.npz]
+
+This module additionally needs `libdf` (the upstream Rust extension), so it is not
+covered by `requirements.txt`; that file only pins the dependencies needed by
+`prepare_models.py` for the test-asset build.
 """
 
 import argparse

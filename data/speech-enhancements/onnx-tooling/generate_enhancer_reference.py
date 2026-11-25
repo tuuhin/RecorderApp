@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """Generates end-to-end reference vectors for the enhancer / ONNX tests.
 
-Runs the streaming reference pipeline (tools/reference_streaming.py) on a deterministic
-speech-like signal and stores every intermediate the C++ tests compare against.
+Runs the streaming reference pipeline (onnx-tooling/reference_streaming.py) on a
+deterministic speech-like signal and stores every intermediate the C++ tests compare
+against.
 
 The model files are not committed to the repository, so this script needs the prepared
-streaming graphs (tools/prepare_models.py). Its output is therefore written outside the
-source tree by default; point the tests at it with -DDFN_TEST_ENHANCER_DATA=<dir>.
+streaming graphs (onnx-tooling/prepare_models.py, or `./build_tests_assets.sh`). Its
+output is therefore written outside the source tree by default; point the tests at it
+with -DDFN_TEST_ENHANCER_DATA=<dir>.
 
 Usage:
-    python test/support/generate_enhancer_reference.py \
+    python onnx-tooling/generate_enhancer_reference.py \
         --model-dir <dir with *_stream.onnx> --out <dir>
+
+Requirements: numpy, onnxruntime and deepfilternet==0.5.6 (installs the `libdf`
+extension). Not covered by requirements.txt (that only pins the Android test-asset build),
+so install them into onnx-tooling/.venv when regenerating the reference vectors.
 """
 
 import argparse
@@ -20,7 +26,7 @@ import sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "tools")))
+sys.path.insert(0, HERE)
 
 from reference_streaming import StreamingEnhancer  # noqa: E402
 

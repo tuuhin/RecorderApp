@@ -35,12 +35,15 @@ src/main/cpp/
 │   │                         speech_enhancer_manager
 │   ├── src/                  enhancer_jni, speech_enhancer_manager, enhancer_jni_interop
 │   └── test/                 on-device smoke tests
-├── test/support/             shared fixtures (reference loader, stub runner, generators)
-└── tools/                     model preparation and streaming reference (Python)
+└── test/support/             shared fixtures (reference loader, stub runner)
+└── (see onnx-tooling/ at the module root for the Python model-preparation tooling)
 ```
 
 Every layer owns its own `include/`, `src/` and `test/`; test cases are not collected in a
 single top-level package. Only module-independent fixtures live in `test/support/`.
+
+The Python model tooling lives outside the source tree, in
+`data/speech-enhancements/onnx-tooling/` (graph preparation and the streaming reference).
 
 `dsp_features.h` carries the module prefix on purpose: as a bare `features.h` it shadowed the
 system `<features.h>` that libc++ includes, which broke the Android build.
@@ -74,16 +77,17 @@ delay-compensated.
 
 The graphs from `models/DeepFilterNet3_onnx.tar.gz` cannot be used frame by frame as
 shipped (their GRU state resets on every `Run()` and their causal convolutions rely on
-zero padding). `tools/prepare_models.py` derives streaming graphs with explicit recurrent
-state inputs/outputs and per-frame outputs, and verifies them against the originals (bit-exact on ONNX Runtime):
+zero padding). `onnx-tooling/prepare_models.py` derives streaming graphs with explicit
+recurrent state inputs/outputs and per-frame outputs, and verifies them against the
+originals (bit-exact on ONNX Runtime):
 
 ```bash
-python tools/prepare_models.py --model-dir <enc/erb_dec/df_dec .onnx> --out-dir <out>
+python onnx-tooling/prepare_models.py --model-dir <enc/erb_dec/df_dec .onnx> --out-dir <out>
 ```
 
-`tools/reference_streaming.py` implements the same pipeline in Python and is the executable
-specification for the C++ engine; it reproduces the official offline `enhance()` output up
-to the documented algorithmic delay (RMS error −33 dB relative to the signal).
+`onnx-tooling/reference_streaming.py` implements the same pipeline in Python and is the
+executable specification for the C++ engine; it reproduces the official offline `enhance()`
+output up to the documented algorithmic delay (RMS error −33 dB relative to the signal).
 
 ## Testing
 
@@ -104,8 +108,26 @@ cmake -S src/main/cpp -B build/dfn-tests -DDFN_BUILD_TESTS=ON \
 ```
 
 Reference vectors are not checked in (see `.gitignore`); generate them with
-`test/support/generate_reference.py` (uses the official `libdf`). Tests that need them
+`onnx-tooling/generate_reference.py` (uses the official `libdf`). Tests that need them
 skip automatically when the files are absent.
+
+The Kotlin instrumentation tests read their model graphs and audio clips from
+`src/androidTest/assets/` (also gitignored). Populate that folder once with the module-level
+script — it downloads the raw graphs from Hugging Face, converts them to streaming graphs
+through an ephemeral `uv` environment, and fetches the Valentini speech clips:
+
+```bash
+./build_tests_assets.sh          # add --force to re-download / re-convert
+```
+
+To listen to the results, `EnhancedAudioDumpTests` renders the noisy / clean / enhanced WAV of
+every clip into the device's app-external storage:
+
+```bash
+./gradlew :data:speech-enhancements:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.dumpEnhancedAudio=true
+adb pull /sdcard/Android/data/com.eva.speech_enhancements.test/files/enhanced ./enhanced
+```
 
 ## Android build
 
