@@ -41,6 +41,7 @@ android {
                 "zh-rCN", "zh-rTW",
                 "ko", "ja", "id",
                 "vi", "es-rES", "bn-rBD", "bn-rIN", "fr-rCA", "de-rCH",
+                "ar", "ar-rSA", "ar-rEG",
             ),
         )
     }

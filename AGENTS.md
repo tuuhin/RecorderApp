@@ -82,8 +82,8 @@ Rules:
 - Follow the existing `domain/`-interface + `data/`-implementation + `di/`-binding pattern when
   adding repositories or providers.
 - New user-facing strings go in `src/main/res/values/`; localized copies exist for `bn`, `de`, `es`,
-  `fr`, `hi`, `id`, `ja`, `ko`, `pt-rBR`, `pt-rPT`, `ru`, `tr`, `uk`, `vi`, `zh-rCN`, `zh-rTW`,
-  plus regional overrides `es-rES`, `bn-rIN`, `fr-rCA`, `de-rCH`
+  `ar`, `fr`, `hi`, `id`, `ja`, `ko`, `pt-rBR`, `pt-rPT`, `ru`, `tr`, `uk`, `vi`, `zh-rCN`, `zh-rTW`,
+  plus regional overrides `es-rES`, `bn-rIN`, `fr-rCA`, `de-rCH`, `ar-rSA`, `ar-rEG`
   (`androidResources.localeFilters` in `app/build.gradle.kts`). English is the source language.
   See `TRANSLATIONS.md` for which languages are verified and which are AI-generated.
 - Compose compiler stability: domain models are listed in the root `stability_config.conf`. When you

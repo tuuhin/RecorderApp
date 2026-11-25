@@ -1,0 +1,8 @@
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>سجّل صوتاً عالي الجودة بلمسة واحدة</item>
+        <item>شغّل تسجيلاتك بسهولة باستخدام أدوات التحكم</item>
+        <item>اقطع واقتطع التسجيلات بدقة</item>
+        <item>حافظ على تنظيم صوتك وسهولة الوصول إليه</item>
+    </string-array>
+</resources>

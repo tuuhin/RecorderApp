@@ -1,0 +1,9 @@
+<resources>
+    <string name="share_audio_extra_subject">جاري مشاركة الملفات الصوتية المسجلة.</string>
+    <string name="share_intent_choose_title">اختر تطبيقاً لمشاركة الملفات</string>
+    <string name="sharing_bookmarks">جارٍ مشاركة الإشارات المرجعية</string>
+    <string name="app_shortcuts_recordings">التسجيلات</string>
+    <string name="app_shortcuts_recordings_text">يعرض كل تسجيلات التطبيق</string>
+    <string name="app_shortcuts_open_last_played">آخر عنصر تم تشغيله</string>
+    <string name="app_shortcuts_open_last_played_text">يفتح آخر ملف صوت تم تشغيله</string>
+</resources>

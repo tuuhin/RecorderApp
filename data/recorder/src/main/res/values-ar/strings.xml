@@ -1,0 +1,15 @@
+<resources>
+    <string name="recorder_action_pause">إيقاف مؤقت</string>
+    <string name="recorder_action_resume">متابعة</string>
+    <string name="recorder_action_stop">إيقاف</string>
+    <string name="recorder_action_cancel">إلغاء</string>
+    <string name="recorder_notification_text_running">المسجّل يعمل</string>
+    <string name="recorder_notification_text_paused">المسجّل متوقف مؤقتاً</string>
+    <string name="recorder_recording_completed">اكتمل التسجيل</string>
+    <string name="recorder_recording_completed_text">تم الحفظ في مساحة التخزين الخارجية</string>
+    <string name="recorder_recording_completed_text_2">اضغط للتشغيل</string>
+    <string name="toast_recording_bluetooth">استخدام ميكروفون بلوتوث</string>
+    <string name="toast_incoming_call">مكالمة واردة</string>
+    <string name="bookmarks_saved">تمت إضافة الإشارات المرجعية</string>
+    <string name="bookmarks_too_fast_warning">يجب أن تكون الإشارات المرجعية بفاصل ثانية واحدة</string>
+</resources>

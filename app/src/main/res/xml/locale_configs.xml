@@ -22,4 +22,7 @@
     <locale android:name="bn-IN" />
     <locale android:name="fr-CA" />
     <locale android:name="de-CH" />
+    <locale android:name="ar" />
+    <locale android:name="ar-SA" />
+    <locale android:name="ar-EG" />
 </locale-config>

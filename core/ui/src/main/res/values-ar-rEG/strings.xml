@@ -1,0 +1,4 @@
+<resources>
+    <string name="storage_statistics">مساحة التخزين</string>
+    <string name="music_file_not_found_desc">تأكد من وجود هذا الملف في مساحة التخزين على جهازك</string>
+</resources>

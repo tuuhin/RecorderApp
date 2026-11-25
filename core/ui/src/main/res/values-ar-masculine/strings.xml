@@ -1,0 +1,5 @@
+<resources>
+    <string name="recording_permanent_delete_dialog_text">وستتم حذف التسجيلات نهائياً. هل أنت متأكد من الحذف؟ لن يمكن استعادتها لاحقاً.</string>
+    <string name="cancel_recording_dialog_text">هل أنت متأكد من إلغاء هذا التسجيل؟ بعد الإلغاء لن يمكن استعادته</string>
+    <string name="delete_stt_model_dialog_text">هل أنت متأكد من حذف ملف الترجمة؟ سيمنع الحذف النسخ في الوقت الفعلي</string>
+</resources>

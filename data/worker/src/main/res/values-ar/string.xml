@@ -1,0 +1,11 @@
+<resources>
+    <string name="stt_model_download_notification_text">جارٍ تحضير ميزات الصوت دون اتصال</string>
+    <string name="stt_model_download_requested_text">تم طلب التنزيل</string>
+    <string name="stt_model_downloading_text">جارٍ التنزيل</string>
+    <string name="stt_model_unzip_text">جارٍ فك الضغط</string>
+    <string name="stt_model_ready_text">جاهز للحفظ</string>
+    <string name="stt_model_saved_text">تم الحفظ</string>
+    <string name="stt_model_cleanup_text">جارٍ التنظيف</string>
+    <string name="trash_cleanup_notification_title">جارٍ إفراغ المهملات</string>
+    <string name="trash_cleanup_notification_text">جارٍ حذف التسجيلات المنتهية</string>
+</resources>
