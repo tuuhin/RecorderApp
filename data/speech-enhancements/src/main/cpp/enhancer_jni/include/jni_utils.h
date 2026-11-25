@@ -11,6 +11,8 @@
 #include <string_view>
 #include <utility>
 
+#include "handle_registry_manager.h"
+
 inline constexpr std::string_view kLogTag = "SPEECH_JNI_COMMON";
 
 #define LOG_DEBUG(...) __android_log_print(ANDROID_LOG_DEBUG, kLogTag.data(), __VA_ARGS__)
@@ -45,29 +47,43 @@ inline void translateCurrentException(JNIEnv* env) noexcept {
     }
 }
 
-template <typename SM>
-[[nodiscard]] std::shared_ptr<SM>& get_manager(jlong handle) {
-    if (handle == 0) throw std::invalid_argument("Native speech enhancer handle is null");
-    return *reinterpret_cast<std::shared_ptr<SM>*>(static_cast<std::uintptr_t>(handle));
-}
-
+// Opaque native handles for the speech enhancer. Handles are sequential ids
+// owned by the shared handle_registry_manager, never raw pointer addresses:
+// a stale, reused or forged handle resolves to nothing instead of being
+// reinterpreted as a pointer (type confusion / use-after-free).
 template <typename SM>
 [[nodiscard]] jlong make_handle(std::shared_ptr<SM> manager) {
-    auto* owned = new std::shared_ptr<SM>(std::move(manager));
-    return static_cast<jlong>(reinterpret_cast<std::uintptr_t>(owned));
+    const auto handle = handle_registry_manager<SM>::instance().register_handle(std::move(manager));
+    if (handle == handle_registry_manager<SM>::kInvalidHandle)
+        throw std::runtime_error("Failed to register the native speech enhancer");
+    return static_cast<jlong>(handle);
+}
+
+// Owning copy so the manager stays alive for the whole call even if the handle
+// is destroyed concurrently.
+template <typename SM>
+[[nodiscard]] std::shared_ptr<SM> get_manager(jlong handle) {
+    if (handle == 0) throw std::invalid_argument("Native speech enhancer handle is null");
+
+    auto manager = handle_registry_manager<SM>::instance().from_handle(handle);
+    if (!manager) throw std::invalid_argument("Native speech enhancer handle is not valid");
+
+    return manager;
 }
 
 template <typename SM>
 void destroy_handle(jlong handle) noexcept {
     if (handle == 0) return;
-    delete reinterpret_cast<std::shared_ptr<SM>*>(static_cast<std::uintptr_t>(handle));
+    // Registry entry is erased under the lock; the returned shared_ptr keeps the
+    // destructor outside it and is dropped here.
+    (void)handle_registry_manager<SM>::instance().destroy_handle(handle);
 }
 
 template <typename SM, typename Fn>
     requires std::invocable<Fn&&, SM&>
 void withManager(JNIEnv* env, jlong handle, Fn&& function) noexcept {
     try {
-        auto& manager = get_manager<SM>(handle);
+        auto manager = get_manager<SM>(handle);
         std::forward<Fn>(function)(*manager);
     } catch (...) {
         translateCurrentException(env);

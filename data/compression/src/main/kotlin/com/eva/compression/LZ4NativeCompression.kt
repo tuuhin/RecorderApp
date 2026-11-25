@@ -1,6 +1,5 @@
 package com.eva.compression
 
-import dalvik.annotation.optimization.FastNative
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -105,10 +104,7 @@ object LZ4NativeCompression {
         return bound.toInt()
     }
 
-    @FastNative
     private external fun compressBytes(input: ByteBuffer, output: ByteBuffer): Int
-
-    @FastNative
     private external fun decompressBytes(input: ByteBuffer, output: ByteBuffer): Int
 
     init {

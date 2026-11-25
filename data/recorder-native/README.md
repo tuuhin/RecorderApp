@@ -18,6 +18,7 @@ src/main/cpp/
 │       ├── audio_recorder.h  # audio_recorder<Writer> template: the whole lifecycle
 │       ├── spsc_ring_buffer.h# single-producer / single-consumer ring buffer
 │       ├── jni_utils.h       # handle lookup, exception translation, UtfChars
+│       ├── handle_registry_manager.h # opaque sequential-id handle registry (thread-safe)
 │       └── recorder_config.h # validated capture config (rate, channels, 16-bit PCM)
 ├── custom_wav/
 │   ├── include/wav_file_writer.h
@@ -60,9 +61,36 @@ Lifecycle misuse surfaces as the standard Kotlin exceptions (`IllegalStateExcept
 `std::logic_error` are translated to those at the JNI boundary in
 `recorder_common/include/jni_utils.h`.
 
-JNI handles are raw native pointers passed as `Long`. Zero is the only sentinel used on both sides;
-on arm64 Android 11+ the heap allocator tags the top byte of heap pointers, so a tagged handle can
-read negative in Kotlin. Never validate a handle with `<= 0`; only `0` means "no recorder".
+JNI handles are opaque sequential ids minted by the header-only
+`recorder_common/include/handle_registry_manager.h` and passed as `Long`. Zero is the only sentinel used on both
+sides; it always means "no recorder". A handle is only trusted if the registry still holds it: a stale, reused, or
+forged id resolves to `nullptr` and surfaces as `IllegalArgumentException` at the boundary, so it can never be
+reinterpreted as a pointer (type confusion / use-after-free). Never validate a handle with `<= 0`; only `0` means
+"no recorder".
+
+### Why the lifecycle methods are not `@FastNative`
+
+`@FastNative` (like the older `!bang` JNI) skips the thread-state transition checks around a native call. That
+transition is exactly what keeps the VM responsive while a call runs, so ART documents two hard requirements for a
+`@FastNative` method: it must **never call back into managed code**, and it must **never block**. Violating either
+can hang the entire VM transition, deadlock GC, or leave other threads stuck waiting for the calling thread to
+re-enter managed code.
+
+Reviewing the recorder's native entry points against those rules:
+
+- `isRecordRunning` reads one atomic flag and returns. No callbacks, no I/O, no locks worth mentioning. This is the
+  one legitimate use, and it keeps `@FastNative` for the latency-sensitive polling paths.
+- `stopRecorder` drains the ring buffer through the worker thread and finalizes the output file — disk I/O that can
+  block for the duration of a flush.
+- `cancelRecorder` deletes the output file; `resetRecorder` finalizes any open recording. Both are file operations.
+- `pauseRecorder` / `resumeRecorder` close and reopen the Oboe input stream, which joins the audio callback thread
+  and can block on driver work.
+
+Annotating any of those with `@FastNative` would block the VM transition while holding none of the usual safeties,
+for no measurable gain: these calls run a handful of times per recording, not per audio callback. The annotations
+were therefore removed from every blocking lifecycle method and kept only on `isRecordRunning`. The same review
+removed `@FastNative` from the compression module's LZ4 entry points, which call back into Java to read the
+buffers' `position`/`limit`.
 
 ## How capture works (NDK + oboe)
 

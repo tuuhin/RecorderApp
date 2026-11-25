@@ -143,7 +143,9 @@ void audio_recorder<Writer>::setOutputFile(const std::filesystem::path& outputPa
 
     if (outputPath.empty()) throw std::invalid_argument("Output file path must not be empty");
 
-    _output_path = outputPath;
+    std::error_code ec;
+    const auto canonical = std::filesystem::weakly_canonical(outputPath, ec);
+    _output_path = ec ? outputPath : canonical;
 }
 
 template <audio_file_writer Writer>

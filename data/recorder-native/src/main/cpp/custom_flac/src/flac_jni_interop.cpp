@@ -23,10 +23,8 @@ using flac_recorder = audio_recorder<flac_file_writer>;
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_eva_recorder_1native_FlacAudioRecorder_createRecorder(JNIEnv* env, jobject) {
     try {
-        auto recorder = std::make_unique<flac_recorder>();
-
-        const auto address = reinterpret_cast<std::uintptr_t>(recorder.release());
-        return static_cast<jlong>(address);
+        auto recorder = std::make_shared<flac_recorder>();
+        return recorder_jni::make_recorder_handle<flac_recorder>(recorder);
     } catch (...) {
         FLAC_LOG_D("createRecorder: allocation failed, returning 0");
         recorder_jni::translateCurrentException(env);
@@ -42,8 +40,7 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_releaseNative(JNIEnv* env, jobje
     }
 
     try {
-        std::unique_ptr<flac_recorder> recorder(recorder_jni::get_recorder<flac_recorder>(handle));
-        recorder->release();
+        recorder_jni::destroy_recorder<flac_recorder>(handle);
     } catch (...) {
         recorder_jni::translateCurrentException(env);
     }

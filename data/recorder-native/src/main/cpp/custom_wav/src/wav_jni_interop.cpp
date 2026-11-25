@@ -22,17 +22,8 @@ using wav_recorder = audio_recorder<wave_file_writer>;
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_createRecorder(JNIEnv* env, jobject) {
     try {
-        auto recorder = std::make_unique<wav_recorder>();
-
-        const auto address = reinterpret_cast<std::uintptr_t>(recorder.release());
-
-        const auto printableAddress = static_cast<unsigned long long>(address);
-
-        WAV_LOG_D("createRecorder: allocated wav_recorder, pointer=0x%llx, top-byte tag=0x%02llx",
-                  printableAddress,
-                  (printableAddress >> 56U) & 0xFFULL);
-
-        return static_cast<jlong>(address);
+        auto recorder = std::make_shared<wav_recorder>();
+        return recorder_jni::make_recorder_handle<wav_recorder>(recorder);
     } catch (...) {
         WAV_LOG_D("createRecorder: allocation failed, returning 0");
         recorder_jni::translateCurrentException(env);
@@ -52,8 +43,7 @@ Java_com_eva_recorder_1native_WavAudioRecorder_releaseNative(JNIEnv* env, jobjec
               static_cast<unsigned long long>(handle));
 
     try {
-        std::unique_ptr<wav_recorder> recorder(recorder_jni::get_recorder<wav_recorder>(handle));
-        recorder->release();
+        recorder_jni::destroy_recorder<wav_recorder>(handle);
     } catch (...) {
         recorder_jni::translateCurrentException(env);
     }

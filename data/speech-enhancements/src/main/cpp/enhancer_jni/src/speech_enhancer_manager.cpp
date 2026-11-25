@@ -36,7 +36,12 @@ constexpr std::string_view kDfDecoderGraph = "df_dec.onnx";
 }  // namespace
 
 speech_enhancer_manager::speech_enhancer_manager(std::string model_dir)
-    : _model_dir(std::move(model_dir)) {}
+    : _model_dir{[&model_dir]() {
+          if (model_dir.empty()) throw std::invalid_argument("Model directory must not be empty");
+          std::error_code ec;
+          const auto canonical = std::filesystem::weakly_canonical(model_dir, ec);
+          return ec ? model_dir : canonical.string();
+      }()} {}
 
 bool speech_enhancer_manager::prepare() {
     const std::scoped_lock lock(mutex_);
