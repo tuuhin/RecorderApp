@@ -14,8 +14,14 @@
 
 namespace dfn::jni {
 
-// v1 of the engine processes 48 kHz mono only; resampling in and out is a later phase.
 inline constexpr int kModelSampleRate = 48000;
+
+struct enhance_options {
+    float strength = 1.0f;
+    bool adaptive_strength = false;
+    float post_filter_beta = 0.0f;
+    float attenuation_limit_db = 100.0f;
+};
 
 class speech_enhancer_manager {
    public:
@@ -33,7 +39,7 @@ class speech_enhancer_manager {
     [[nodiscard]] int latency_samples();
 
     [[nodiscard]] std::span<const float> enhance(std::span<const float> samples, int sample_rate,
-                                                 float strength);
+                                                 const enhance_options& options = {});
 
    private:
     [[nodiscard]] bool validate_model_path() const;

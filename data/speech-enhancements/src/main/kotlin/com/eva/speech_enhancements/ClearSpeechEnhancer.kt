@@ -94,7 +94,15 @@ class ClearSpeechEnhancer(
                     throw SpeechEnhancerStateException()
 
                 // call enhancements if samples consumed was false
-                enhanceNative(handle, pcmSamples.toNativeByteBuffer(), sampleRate, options.strength)
+                enhanceNative(
+                    handle = handle,
+                    samples = pcmSamples.toNativeByteBuffer(),
+                    sampleRate = sampleRate,
+                    strength = options.strength,
+                    adaptiveStrength = options.adaptiveStrength,
+                    postFilterBeta = options.postFilterBeta,
+                    attenuationLimitDb = options.attenuationLimitDb,
+                )
             } catch (e: Throwable) {
                 // a failed run did not consume the stream; the call stays retryable
                 _isSamplesConsumed.store(false)
@@ -169,6 +177,9 @@ class ClearSpeechEnhancer(
         samples: ByteBuffer,
         sampleRate: Int,
         strength: Float,
+        adaptiveStrength: Boolean,
+        postFilterBeta: Float,
+        attenuationLimitDb: Float,
     ): ByteBuffer?
 
     private external fun nativeLatencySamples(handle: Long): Int

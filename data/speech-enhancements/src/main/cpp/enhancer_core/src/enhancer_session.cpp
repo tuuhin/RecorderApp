@@ -30,6 +30,7 @@ void EnhancerSession::reset() {
     engine_.reset();
     splitter_.reset();
     pending_frames_.clear();
+    frame_lsnrs_.clear();
     stats_ = Stats{};
 }
 
@@ -45,6 +46,7 @@ void EnhancerSession::append_frame(std::span<const float> frame, std::vector<flo
     ++stats_.frames_processed;
     stats_.last_lsnr = engine_.last_lsnr();
     stats_.last_stage = engine_.last_stage();
+    frame_lsnrs_.push_back(engine_.last_lsnr());
 }
 
 std::size_t EnhancerSession::process(std::span<const float> input, std::vector<float>& output) {

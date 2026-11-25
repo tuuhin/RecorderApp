@@ -68,6 +68,7 @@ class EnhancerSession {
     [[nodiscard]] const model_config& config() const noexcept { return engine_.config(); }
     [[nodiscard]] DeepFilterEngine& engine() noexcept { return engine_; }
     [[nodiscard]] const DeepFilterEngine& engine() const noexcept { return engine_; }
+    [[nodiscard]] const std::vector<float>& frame_lsnrs() const noexcept { return frame_lsnrs_; }
 
    private:
     void append_frame(std::span<const float> frame, std::vector<float>& output);
@@ -75,6 +76,7 @@ class EnhancerSession {
     DeepFilterEngine engine_;
     dsp::frame_splitter splitter_;
     std::deque<float> pending_frames_;
+    std::vector<float> frame_lsnrs_;
     Stats stats_;
 };
 

@@ -69,18 +69,22 @@ Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_resetNative(JNIEnv* env, j
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_enhanceNative(JNIEnv* env, jobject,
-                                                                    jlong handle, jobject samples,
-                                                                    jint sample_rate,
-                                                                    jfloat strength) {
+Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_enhanceNative(
+    JNIEnv* env, jobject, jlong handle, jobject samples, jint sample_rate, jfloat strength,
+    jboolean adaptive_strength, jfloat post_filter_beta, jfloat attenuation_limit_db) {
     jobject result = nullptr;
 
-    withManager<SEM>(env, handle, [&](SEM& manager) {
-        LOG_DEBUG("enhanceNative: handle=%lld, sample_rate=%d, strength=%.3f",
-                  static_cast<long long>(handle),
-                  static_cast<int>(sample_rate),
-                  static_cast<float>(strength));
+    LOG_DEBUG(
+        "enhanceNative: handle=%lld, sample_rate=%d, strength=%.3f, adaptive=%d, "
+        "post_filter_beta=%.4f, attenuation_limit_db=%.1f",
+        static_cast<long long>(handle),
+        static_cast<int>(sample_rate),
+        static_cast<float>(strength),
+        adaptive_strength == JNI_TRUE ? 1 : 0,
+        static_cast<float>(post_filter_beta),
+        static_cast<float>(attenuation_limit_db));
 
+    withManager<SEM>(env, handle, [&](SEM& manager) {
         if (samples == nullptr) throw std::invalid_argument("samples must not be null");
 
         const auto* address = static_cast<const float*>(env->GetDirectBufferAddress(samples));
@@ -92,8 +96,15 @@ Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_enhanceNative(JNIEnv* env,
 
         const auto count = static_cast<std::size_t>(capacity) / sizeof(float);
         const std::span<const float> input_samples{address, count};
-        const std::span<const float> enhanced = manager.enhance(
-            input_samples, static_cast<int>(sample_rate), static_cast<float>(strength));
+
+        dfn::jni::enhance_options options;
+        options.strength = static_cast<float>(strength);
+        options.adaptive_strength = adaptive_strength == JNI_TRUE;
+        options.post_filter_beta = static_cast<float>(post_filter_beta);
+        options.attenuation_limit_db = static_cast<float>(attenuation_limit_db);
+
+        const std::span<const float> enhanced =
+            manager.enhance(input_samples, static_cast<int>(sample_rate), options);
 
         // A zero-copy view of the manager's retained output: native-endian, position 0,
         // limit = byte count. Valid until the next enhanceNative or destroyNative.

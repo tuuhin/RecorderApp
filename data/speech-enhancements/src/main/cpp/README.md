@@ -120,14 +120,18 @@ through an ephemeral `uv` environment, and fetches the Valentini speech clips:
 ./build_tests_assets.sh          # add --force to re-download / re-convert
 ```
 
-To listen to the results, `EnhancedAudioDumpTests` renders the noisy / clean / enhanced WAV of
-every clip into the device's app-external storage:
+To listen to the results, the `dumpEnhancedAudio` task renders the noisy / clean / enhanced
+WAV of every clip and pulls them off the device:
 
 ```bash
-./gradlew :data:speech-enhancements:connectedDebugAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.dumpEnhancedAudio=true
-adb pull /sdcard/Android/data/com.eva.speech_enhancements.test/files/enhanced ./enhanced
+./gradlew :data:speech-enhancements:dumpEnhancedAudio -PdumpName=baseline
+./gradlew :data:speech-enhancements:dumpEnhancedAudio -PdumpName=adaptive -PdumpAdaptive=true
+./gradlew :data:speech-enhancements:dumpEnhancedAudio \
+  -PdumpName=adaptive_al12 -PdumpAdaptive=true -PdumpAttenuationLimitDb=12
 ```
+
+Each run lands in `build/enhanced-dumps/<dumpName>/`. `dumpAdaptive` (off),
+`dumpPostFilterBeta` (0.0) and `dumpAttenuationLimitDb` (100) mirror `EnhanceOptions`.
 
 ## Android build
 
@@ -159,6 +163,19 @@ Kotlin wrapper enforces one `enhance()` per `reset()`: `enhance()` throws
 pending frames and stats) to a clean state. `reset()` is idempotent, works at any point in
 the instance's life after `create()`, and returns whether an actual reset happened —
 `true` when a consumed session was restored, `false` when there was nothing to reset.
+
+The final blend can be either a constant (`EnhanceOptions.strength`) or SNR-adaptive
+(`EnhanceOptions.adaptiveStrength`): the manager then picks the blend per hop from the
+session's per-frame local SNR estimate, keeping the full model output on noisy frames and
+fading back towards the input on already-clean ones. The ONNX model over-suppresses clean
+speech (up to ~10 dB of SNR on the Valentini clips) and this recovers most of it without
+losing the denoising on noisy input.
+
+Two model-side stages are exposed per call through `EnhanceOptions` and applied by the
+manager before the pass: `postFilterBeta` (Valin post-filter; `0.0` disables, the official
+Python CLI uses `0.02`) and `attenuationLimitDb` (mixes the output back towards the input so
+noise is never attenuated by more than that; `>= 100.0` disables). Both default to the
+engine's previous behaviour (off), so enabling them is an explicit choice.
 
 The prepared
 streaming graphs are loaded lazily on the first enhance; without them every call fails
