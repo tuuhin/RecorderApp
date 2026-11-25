@@ -38,7 +38,7 @@ TEST(ErbFilterbank, DimensionsAndCoverage) {
 
 TEST(ErbFilterbank, MatchesUpstreamBandWidths) {
     if (!test::reference_available()) {
-        GTEST_SKIP() << "reference data missing; run test/support/generate_reference.py";
+        GTEST_SKIP() << "reference data missing; run onnx-tooling/generate_reference.py";
     }
     const std::vector<float> expected_float = test::load_f32("erb_widths");
     const std::vector<int> actual = erb_band_widths(kSampleRate, kFftSize, kErbBands, 2);

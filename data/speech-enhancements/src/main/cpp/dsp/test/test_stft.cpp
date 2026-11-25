@@ -148,7 +148,7 @@ TEST(Stft, MultipleSinesProduceMultiplePeaks) {
 
 TEST(Stft, MatchesUpstreamReferenceSpectrogram) {
     if (!test::reference_available()) {
-        GTEST_SKIP() << "reference data missing; run test/support/generate_reference.py";
+        GTEST_SKIP() << "reference data missing; run onnx-tooling/generate_reference.py";
     }
     const std::vector<float> signal = test::load_f32("stft_signal");
     const std::vector<std::complex<float>> expected = test::load_complex("stft_spec");

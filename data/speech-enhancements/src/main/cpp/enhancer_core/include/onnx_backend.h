@@ -5,7 +5,7 @@
 // deep-filter decoder).
 //
 // The graphs are expected to be the streaming variants produced by
-// `tools/prepare_models.py`: one output frame per call, explicit recurrent state inputs
+// `onnx-tooling/prepare_models.py`: one output frame per call, explicit recurrent state inputs
 // (`state_in_<i>` / `state_out_<i>`) and causal-convolution context supplied by the caller
 // through a rolling input window. Both the graph layout and the tensor shapes are inspected
 // at load time and validated against the model configuration; nothing is assumed.

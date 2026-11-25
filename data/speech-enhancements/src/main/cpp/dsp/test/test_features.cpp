@@ -70,7 +70,7 @@ TEST(ErbFeatures, SilenceStaysFiniteAndNormalized) {
 
 TEST(ErbFeatures, MatchesUpstreamReference) {
     if (!test::reference_available()) {
-        GTEST_SKIP() << "reference data missing; run test/support/generate_reference.py";
+        GTEST_SKIP() << "reference data missing; run onnx-tooling/generate_reference.py";
     }
     const std::vector<std::complex<float>> spectrogram = test::load_complex("erb_feat_input");
     const std::vector<float> expected = test::load_f32("erb_feat");
@@ -92,7 +92,7 @@ TEST(ErbFeatures, MatchesUpstreamReference) {
 
 TEST(ComplexFeatures, MatchesUpstreamReference) {
     if (!test::reference_available()) {
-        GTEST_SKIP() << "reference data missing; run test/support/generate_reference.py";
+        GTEST_SKIP() << "reference data missing; run onnx-tooling/generate_reference.py";
     }
     const std::vector<std::complex<float>> spectrogram = test::load_complex("erb_feat_input");
     const std::vector<std::complex<float>> expected = test::load_complex("unit_norm");

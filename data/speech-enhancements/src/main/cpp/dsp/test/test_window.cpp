@@ -51,7 +51,7 @@ TEST(VorbisWindow, SatisfiesPrincenBradleyConditionForFiftyPercentOverlap) {
 
 TEST(VorbisWindow, MatchesUpstreamReferenceCoefficients) {
     if (!test::reference_available()) {
-        GTEST_SKIP() << "reference data missing; run test/support/generate_reference.py";
+        GTEST_SKIP() << "reference data missing; run onnx-tooling/generate_reference.py";
     }
     const std::vector<float> expected = test::load_f32("window_960");
     const std::vector<float> actual = make_vorbis_window(960);

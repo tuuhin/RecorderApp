@@ -66,7 +66,7 @@ TEST(Istft, ReconstructsOriginalSignalWithStftRoundTrip) {
 
 TEST(Istft, MatchesUpstreamReferenceReconstruction) {
     if (!test::reference_available()) {
-        GTEST_SKIP() << "reference data missing; run test/support/generate_reference.py";
+        GTEST_SKIP() << "reference data missing; run onnx-tooling/generate_reference.py";
     }
     const std::vector<std::complex<float>> spectrum = test::load_complex("stft_spec");
     const std::vector<float> expected = test::load_f32("istft_out");
