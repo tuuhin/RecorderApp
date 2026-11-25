@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_settings_files">Ficheros</string>
+    <string name="recording_settings_file_format_title">Nombres de ficheros</string>
+    <string name="music_file_not_found_desc">Asegúrate de que este fichero existe en tu almacenamiento</string>
+</resources>

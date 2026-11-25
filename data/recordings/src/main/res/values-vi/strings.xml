@@ -1,0 +1,15 @@
+<resources>
+    <string name="categories_create_success">Đã tạo danh mục thành công</string>
+    <string name="categories_updated">Đã chuyển bản ghi vào danh mục %s.</string>
+    <string name="categories_deleted">Đã xóa danh mục</string>
+    <string name="recordings_add_to_favourite_success">Đã đánh dấu yêu thích</string>
+    <string name="recordings_remove_favourite_failed">Đã bỏ khỏi yêu thích</string>
+    <string name="recording_delete_request_success">Đã xóa bản ghi thành công</string>
+    <string name="recording_delete_request_failed">Yêu cầu xóa thất bại</string>
+    <string name="rename_recording_success">Đã đổi tên bản ghi thành công</string>
+    <string name="restore_recordings_success">Đã khôi phục các bản ghi đã chọn</string>
+    <string name="recording_restore_request_failed">Khôi phục thất bại</string>
+    <string name="recording_trash_request_success">Đã chuyển bản ghi vào thùng rác</string>
+    <string name="recording_trash_request_failed">Không thể chuyển bản ghi vào thùng rác</string>
+    <string name="metadata_modify_permission_denied">Không có quyền sửa đổi siêu dữ liệu của tệp</string>
+</resources>

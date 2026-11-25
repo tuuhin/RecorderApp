@@ -16,4 +16,10 @@
     <locale android:name="ko" />
     <locale android:name="ja" />
     <locale android:name="id" />
+    <locale android:name="vi" />
+    <locale android:name="es-ES" />
+    <locale android:name="bn-BD" />
+    <locale android:name="bn-IN" />
+    <locale android:name="fr-CA" />
+    <locale android:name="de-CH" />
 </locale-config>

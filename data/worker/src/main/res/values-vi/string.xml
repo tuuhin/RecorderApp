@@ -1,0 +1,11 @@
+<resources>
+    <string name="stt_model_download_notification_text">Đang chuẩn bị tính năng giọng nói ngoại tuyến</string>
+    <string name="stt_model_download_requested_text">Đã yêu cầu tải xuống</string>
+    <string name="stt_model_downloading_text">Đang tải xuống</string>
+    <string name="stt_model_unzip_text">Đang giải nén</string>
+    <string name="stt_model_ready_text">Sẵn sàng lưu</string>
+    <string name="stt_model_saved_text">Đã lưu</string>
+    <string name="stt_model_cleanup_text">Đang dọn dẹp</string>
+    <string name="trash_cleanup_notification_title">Đang dọn thùng rác</string>
+    <string name="trash_cleanup_notification_text">Đang xóa các bản ghi hết hạn</string>
+</resources>
