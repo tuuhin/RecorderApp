@@ -50,7 +50,7 @@ assets:
 Manually:
 
 ```bash
-uv venv .venv --python 3.12 --allow-existing
+uv venv .venv --python 3.14 --allow-existing
 uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python prepare_models.py --model-dir <raw graphs> --out-dir <out>
 ```

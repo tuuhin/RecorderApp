@@ -1,6 +1,4 @@
 # Dependencies for prepare_models.py (batch -> streaming graph conversion).
-# Installed by build_tests_assets.sh into onnx-tooling/.venv via uv.
-# Pinned so the prepared graphs are reproducible.
-numpy==1.26.4
-onnx==1.17.0
-onnxruntime==1.20.1
+numpy==2.5.5
+onnx==1.23.2
+onnxruntime==1.32.0
