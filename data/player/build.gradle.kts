@@ -18,6 +18,7 @@ dependencies {
 	implementation(libs.androidx.concurrent.futures.ktx)
 
 	//local
+    implementation(project(":data:speech-enhancements"))
 	implementation(project(":core:utils"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:datastore"))
