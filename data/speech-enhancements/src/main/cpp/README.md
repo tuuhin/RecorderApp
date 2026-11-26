@@ -120,19 +120,6 @@ through an ephemeral `uv` environment, and fetches the Valentini speech clips:
 ./build_tests_assets.sh          # add --force to re-download / re-convert
 ```
 
-To listen to the results, the `dumpEnhancedAudio` task renders the noisy / clean / enhanced
-WAV of every clip and pulls them off the device:
-
-```bash
-./gradlew :data:speech-enhancements:dumpEnhancedAudio -PdumpName=baseline
-./gradlew :data:speech-enhancements:dumpEnhancedAudio -PdumpName=adaptive -PdumpAdaptive=true
-./gradlew :data:speech-enhancements:dumpEnhancedAudio \
-  -PdumpName=adaptive_al12 -PdumpAdaptive=true -PdumpAttenuationLimitDb=12
-```
-
-Each run lands in `build/enhanced-dumps/<dumpName>/`. `dumpAdaptive` (off),
-`dumpPostFilterBeta` (0.0) and `dumpAttenuationLimitDb` (100) mirror `EnhanceOptions`.
-
 ## Android build
 
 ```bash
@@ -160,16 +147,33 @@ ready, so the concatenated output across the stream is sample-aligned with the i
 `finish()` flushes the tail so the stream's total output equals its total input. `reset()`
 clears all stream state and is idempotent, so it works at any point in the instance's life.
 
-The final blend can be either a constant (`EnhanceOptions.blending.strength`) or
-SNR-adaptive (`EnhanceOptions.blending.adaptive`): the manager then picks the blend per hop from the
-session's per-frame local SNR estimate, keeping the full model output on noisy frames and
-fading back towards the input on already-clean ones. The ONNX model over-suppresses clean
-speech (up to ~10 dB of SNR on the Valentini clips) and this recovers most of it without
-losing the denoising on noisy input.
+## Tuning the output
 
-Two model-side stages are exposed per call through `EnhanceOptions.tuning` and applied by the
-manager before the pass: `postFilterBeta` (Valin post-filter; `0.0` disables, the official
-Python CLI uses `0.02`) and `attenuationLimitDb` (mixes the output back towards the input so
-noise is never attenuated by more than that; `>= 100.0` disables). Both default to the
-engine's previous behaviour (off), so enabling them is an explicit choice.
+Every knob lives in `EnhanceOptions` (Kotlin, supplied per `process`/`finish` call). The
+engine's own defaults sit in `enhancer_config.h`; the Kotlin layer overrides `postFilterBeta`
+to `0.02`. Defaults below are the Kotlin defaults.
+
+| Option                      | Default       | What it holds                                                                                                                                                                    | Effect of changing it                                                                                                                                                                     |
+|-----------------------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `blending.strength`         | `1.0`         | Linear blend of the model output (`1.0`) against the original input (`0.0`).                                                                                                     | Lower keeps more of the original: less denoising, but fewer suppression artifacts. `0.0` is a passthrough, `0.7` is a mild "half-enhanced" sound.                                         |
+| `blending.adaptive`         | `false`       | Per-frame blend driven by the engine's local-SNR estimate: noisy frames keep the full model output, already-clean frames fade back to the input. `strength` becomes the ceiling. | `true` protects clean speech from over-suppression (the model otherwise costs up to ~10 dB of SNR on clean clips) without giving up denoising on noisy ones.                              |
+| `tuning.postFilterBeta`     | `0.02`        | Valin post-filter strength applied after the mask/deep-filter stages; `0.0` disables it.                                                                                         | Larger suppresses residual "musical" noise more but can dull S/T/F consonants; `0.0` leaves the raw mask output.                                                                          |
+| `tuning.attenuationLimitDb` | `100.0` (off) | Caps how far the residual noise may be attenuated below the input; the output is mixed back toward the input so the cap is never exceeded.                                       | Lower (e.g. `15`–`20`) keeps more of the original background but removes the hard gating/pumping that can sound "distorted"; `>= 100.0` disables the cap (full suppression, most gating). |
+
+Engine-only knobs (`EnhancerOptions` in `enhancer_config.h`, not exposed to Kotlin):
+
+* `min_db_thresh` (`-10` dB) — frames below this local SNR get a zero mask (silence). Raising it silences more.
+* `max_db_erb_thresh` (`30` dB) — frames above this bypass enhancement entirely.
+* `max_db_df_thresh` (`20` dB) — frames above this apply ERB gains only; others apply ERB gains + deep filtering.
+* `enable_erb_stage` / `enable_df_stage` (`true`) — turn a stage off, for debugging.
+* `intra_op_threads` / `inter_op_threads` (`1`), `use_nnapi` (`false`) — ONNX Runtime threading and NNAPI.
+
+Adaptive-blend constants (`speech_enhancer_manager.cpp`): `kAdaptiveFullDb` (`5`),
+`kAdaptiveFloorDb` (`20`), `kAdaptiveFloorStrength` (`0.15`), `kAdaptiveSpeechGateDb` (`15`) and
+`kReferenceReleaseDbPerFrame` (`0.05`). They shape the SNR→blend curve and how fast the running
+speech-reference estimate releases.
+
+There is no setting that removes all background and also leaves the speech untouched: the
+suppression character is a property of the model. Aggressive settings (attenuation limit off,
+`strength = 1.0`) clean hard but gate/pump; gentle settings keep more noise.
 
