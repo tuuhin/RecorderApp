@@ -85,6 +85,14 @@ originals (bit-exact on ONNX Runtime):
 python onnx-tooling/prepare_models.py --model-dir <enc/erb_dec/df_dec .onnx> --out-dir <out>
 ```
 
+The converted streaming graphs are redistributed on Hugging Face at
+[`tuuhin/deepfilternet3-onnx`](https://huggingface.co/tuuhin/deepfilternet3-onnx)
+(`config.ini`, `enc.onnx`, `erb_dec.onnx`, `df_dec.onnx`; dual-licensed MIT / Apache-2.0,
+with provenance in that repository's `NOTICE`). The app downloads them at runtime: the exact
+URLs, sizes and SHA-256 checksums live in `src/main/assets/models.json`. `SpeechModelReader`
+checks the installed files against that manifest (present / valid / corrupted) and
+`SpeechModelDownloader` fetches and verifies them before installing under `filesDir`.
+
 `onnx-tooling/reference_streaming.py` implements the same pipeline in Python and is the
 executable specification for the C++ engine; it reproduces the official offline `enhance()`
 output up to the documented algorithmic delay (RMS error −33 dB relative to the signal).
@@ -113,8 +121,9 @@ skip automatically when the files are absent.
 
 The Kotlin instrumentation tests read their model graphs and audio clips from
 `src/androidTest/assets/` (also gitignored). Populate that folder once with the module-level
-script — it downloads the raw graphs from Hugging Face, converts them to streaming graphs
-through an ephemeral `uv` environment, and fetches the Valentini speech clips:
+script — it downloads the official upstream graphs (pinned commit, SHA-256 verified), converts
+them to streaming graphs through an ephemeral `uv` environment, and fetches the Valentini
+speech clips:
 
 ```bash
 ./build_tests_assets.sh          # add --force to re-download / re-convert

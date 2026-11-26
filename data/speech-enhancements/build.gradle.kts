@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.recorderapp.android.library)
     alias(libs.plugins.recorderapp.hilt)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -28,6 +29,12 @@ android {
 }
 
 dependencies {
+    // model download
+    implementation(ktorLibs.client.core)
+    implementation(ktorLibs.client.cio)
+    implementation(libs.okio)
+    implementation(libs.kotlinx.serialization.json)
+
     // core testing
     androidTestImplementation(libs.kotlin.test)
     androidTestImplementation(libs.kotlin.test.junit)

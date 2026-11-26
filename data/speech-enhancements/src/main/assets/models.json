@@ -1,0 +1,34 @@
+{
+    "models": [
+        {
+            "id": "deepfilternet3",
+            "name": "deepfilternet3-onnx",
+            "display_name": "DeepFilterNet 3",
+            "version": "1",
+            "license": "Apache-2.0",
+            "base_uri": "https://huggingface.co/tuuhin/deepfilternet3-onnx/resolve/main/",
+            "files": [
+                {
+                    "name": "config.ini",
+                    "size_bytes": 2067,
+                    "checksum_sha256": "415eb925d44990d938fb739f514aa3662c1ec0ea836cff044fa1291b82cb4290"
+                },
+                {
+                    "name": "enc.onnx",
+                    "size_bytes": 1954583,
+                    "checksum_sha256": "403e5139ffe581d02ebbffd893d55d41dcda636a33f197dbe6d2435d53570e90"
+                },
+                {
+                    "name": "erb_dec.onnx",
+                    "size_bytes": 3293339,
+                    "checksum_sha256": "911b07a1637fa3046f79d0398a44c03a48773405da75b935902e3730c30d5385"
+                },
+                {
+                    "name": "df_dec.onnx",
+                    "size_bytes": 3341525,
+                    "checksum_sha256": "bc7de8974bb3ffe0cf8e86c6c43362a52454b14497469e17be5ed893b00fe9d2"
+                }
+            ]
+        }
+    ]
+}

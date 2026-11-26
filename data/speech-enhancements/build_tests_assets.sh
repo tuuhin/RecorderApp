@@ -6,11 +6,13 @@
 #   assets/test_audio/p234_0NN.wav                                noisy Valentini clips
 #   assets/clear_audio/p234_0NN.wav                               clean Valentini clips
 #
-# The DeepFilterNet 3 graphs published on Hugging Face are batch exports and cannot be
-# driven frame by frame (their GRU state resets on every Run() and their causal
-# convolutions zero-pad the time axis). They are downloaded to a temp folder and converted
-# to streaming graphs with onnx-tooling/prepare_models.py, which runs inside a throwaway
-# `uv` environment (onnx-tooling/.venv) -- no system Python, no Kaggle account.
+# The official DeepFilterNet 3 ONNX export (github.com/Rikorose/DeepFilterNet, pinned to a
+# specific commit) is a batch export and cannot be driven frame by frame: its GRU state
+# resets on every Run() and its causal convolutions zero-pad the time axis. The archive is
+# downloaded to a temp folder, verified by SHA-256, and converted to streaming graphs with
+# onnx-tooling/prepare_models.py inside a throwaway `uv` environment (onnx-tooling/.venv)
+# -- no system Python, no Kaggle account. Code and model weights are dual-licensed
+# MIT / Apache-2.0 (see the upstream repository).
 #
 # Usage:
 #   ./build_tests_assets.sh [--force]
@@ -26,8 +28,25 @@ MODEL_DIR="$ASSETS/model"
 NOISY_DIR="$ASSETS/test_audio"
 CLEAN_DIR="$ASSETS/clear_audio"
 
-HF_BASE="https://huggingface.co/bitsydarel/deepfilternet3-onnx/resolve/main"
-HF_FILES=(enc.onnx erb_dec.onnx df_dec.onnx config.ini)
+# Official DeepFilterNet 3 ONNX export, pinned to an upstream commit of
+# github.com/Rikorose/DeepFilterNet so the download is reproducible and verifiable.
+# Code and model weights are dual-licensed MIT / Apache-2.0 (see the upstream README).
+DFN_COMMIT="d375b2d8309e0935d165700c91da9de862a99c31"
+DFN_ARCHIVE_URL="https://raw.githubusercontent.com/Rikorose/DeepFilterNet/$DFN_COMMIT/models/DeepFilterNet3_onnx.tar.gz"
+DFN_ARCHIVE_SHA256="c94d91f70911001c946e0fabb4aa9adc37045f45a03b56008cb0c8244cb63616"
+DFN_ARCHIVE_SIZE=7983136
+DFN_ARCHIVE_ROOT="tmp/export" # directory holding the graphs inside the archive
+
+# "name sha256 size" for every graph extracted from the archive, verified after extraction.
+DFN_FILES=(
+	"config.ini 415eb925d44990d938fb739f514aa3662c1ec0ea836cff044fa1291b82cb4290 2067"
+	"enc.onnx 7c5399d3da8a50ebef1c1a0ae421b33376aa5e45d0e92df16da7e83c9c131916 1954042"
+	"erb_dec.onnx ab669a1d10afe20911728b33053a452071042317a90581092b325da7b2f9d895 3292397"
+	"df_dec.onnx 23114ce3b0f6464b763ee62f7bb8aab6b2a129a21eabd5bcfe59413db05f278a 3340803"
+)
+
+# Names of the prepared streaming graphs written into the test assets.
+MODEL_FILE_NAMES=(config.ini enc.onnx erb_dec.onnx df_dec.onnx)
 
 KAGGLE_DS="https://www.kaggle.com/api/v1/datasets/download/muhmagdy/valentini-noisy"
 # p234 exists only in the 56-speaker split; every index here was confirmed present.
@@ -91,6 +110,37 @@ fetch_unless_present() {
 	log "  fetch  ${dest#"$ROOT"/}"
 }
 
+# file -- prints the lowercase SHA-256 digest
+sha256_of() {
+	if command -v shasum >/dev/null 2>&1; then
+		shasum -a 256 "$1" | awk '{print $1}'
+	elif command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$1" | awk '{print $1}'
+	else
+		die "neither shasum nor sha256sum is available to verify downloads"
+	fi
+}
+
+# file expected_sha256 [expected_size] -- dies when the file does not match
+verify_sha256() {
+	local file="$1" expected="$2" expected_size="${3:-}"
+	[ -f "$file" ] || die "missing file: $file"
+
+	if [ -n "$expected_size" ]; then
+		local actual_size
+		actual_size="$(wc -c <"$file" | tr -d ' ')"
+		[ "$actual_size" = "$expected_size" ] ||
+			die "size mismatch for $file: expected $expected_size bytes, got $actual_size"
+	fi
+
+	local actual
+	actual="$(sha256_of "$file")"
+	[ "$actual" = "$expected" ] ||
+		die "sha256 mismatch for $file:
+     expected $expected
+     got      $actual"
+}
+
 # file -- asserts a 48 kHz mono PCM16 RIFF/WAVE container
 verify_wav() {
 	local file="$1"
@@ -107,7 +157,7 @@ verify_wav() {
 needs_model() {
 	[ "$FORCE" -eq 1 ] && return 0
 	local name
-	for name in "${HF_FILES[@]}"; do
+	for name in "${MODEL_FILE_NAMES[@]}"; do
 		[ -f "$MODEL_DIR/$name" ] || return 0
 	done
 	return 1
@@ -127,13 +177,22 @@ needs_audio() {
 
 build_models() {
 	local raw="$TMP/raw" prepared="$TMP/prepared"
+	local archive="$TMP/DeepFilterNet3_onnx.tar.gz"
 	mkdir -p "$raw" "$prepared"
 
-	log "Downloading DeepFilterNet 3 graphs from Hugging Face"
-	local name
-	for name in "${HF_FILES[@]}"; do
-		log "  fetch  $name"
-		fetch "$HF_BASE/$name?download=true" "$raw/$name"
+	log "Downloading the official DeepFilterNet 3 ONNX export (Rikorose/DeepFilterNet@${DFN_COMMIT:0:12})"
+	fetch "$DFN_ARCHIVE_URL" "$archive"
+	verify_sha256 "$archive" "$DFN_ARCHIVE_SHA256" "$DFN_ARCHIVE_SIZE"
+	log "  verified  DeepFilterNet3_onnx.tar.gz  ${DFN_ARCHIVE_SIZE} bytes"
+
+	log "Extracting and verifying the batch graphs"
+	tar -xzf "$archive" -C "$TMP"
+	local record name expected size
+	for record in "${DFN_FILES[@]}"; do
+		read -r name expected size <<<"$record"
+		verify_sha256 "$TMP/$DFN_ARCHIVE_ROOT/$name" "$expected" "$size"
+		install -m 0644 "$TMP/$DFN_ARCHIVE_ROOT/$name" "$raw/$name"
+		log "  verified  $name  ${size} bytes"
 	done
 
 	log "Creating the Python environment with uv (onnx-tooling/.venv)"
@@ -202,7 +261,7 @@ done
 
 log ""
 log "Done. Assets in ${ASSETS#"$ROOT"/}:"
-log "  model/       ${#HF_FILES[@]} files"
+log "  model/       ${#MODEL_FILE_NAMES[@]} files"
 log "  test_audio/  ${#CLIPS[@]} noisy clips"
 log "  clear_audio/ ${#CLIPS[@]} clean clips"
 log ""

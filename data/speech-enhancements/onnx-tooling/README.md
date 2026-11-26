@@ -6,9 +6,9 @@ machine (or CI), never on the device.
 
 ## Why conversion is needed
 
-The graphs published upstream (`DeepFilterNet3_onnx.tar.gz`, mirrored on Hugging Face at
-[`bitsydarel/deepfilternet3-onnx`](https://huggingface.co/bitsydarel/deepfilternet3-onnx))
-are **batch** exports. They cannot be driven frame by frame:
+The graphs published upstream (`models/DeepFilterNet3_onnx.tar.gz` in
+[`Rikorose/DeepFilterNet`](https://github.com/Rikorose/DeepFilterNet)) are **batch** exports.
+They cannot be driven frame by frame:
 
 - their `GRU` nodes start from a baked-in zero hidden state on every `Run()`, so the
   recurrent state cannot be carried across hops; and
@@ -73,7 +73,16 @@ python generate_enhancer_reference.py --model-dir <streaming graphs> --out <dir>
 
 ## Producer-side only
 
-This tooling never ships to the device. When the model is downloaded at runtime instead of
-bundled, the converted graphs are published once (HF repo / bucket / release asset) with
-their SHA-256 checksums, and the app downloads the *already-converted* files — the same
-pattern `data:transcribe` uses for its Vosk models (`model_uri` + `checksum_sha256`).
+This Python project exists **only to create the model files** — it never ships to the device
+and the app never runs it. The converted graphs are uploaded once to Hugging Face at
+[`tuuhin/deepfilternet3-onnx`](https://huggingface.co/tuuhin/deepfilternet3-onnx), and the app
+downloads the *already-converted* files from there at runtime — the same pattern
+`data:transcribe` uses for its Vosk models (`model_uri` + `checksum_sha256`).
+
+The app reads the download URLs, sizes and SHA-256 checksums from
+`src/main/assets/models.json`. To publish a new version:
+
+1. run `prepare_models.py` on the raw upstream graphs;
+2. rename the outputs to `enc.onnx`, `erb_dec.onnx`, `df_dec.onnx` (keep `config.ini` as is);
+3. upload all four to the Hub repo;
+4. update `models.json` with the new sizes and checksums (`shasum -a 256 <file>`).
