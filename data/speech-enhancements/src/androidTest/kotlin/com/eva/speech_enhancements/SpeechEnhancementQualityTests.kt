@@ -58,8 +58,7 @@ class SpeechEnhancementQualityTests(private val assetName: String) {
     private suspend fun TestScope.runQualityGate(assetName: String) {
         val gate = gates.getValue(assetName)
 
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+        instance = ClearSpeechEnhancer(modelDir())
         instance.prepare()
 
         advanceUntilIdle()
@@ -70,22 +69,21 @@ class SpeechEnhancementQualityTests(private val assetName: String) {
         assertThat(clean.size).isEqualTo(noisy.size)
         assertThat(clean.isNotEmpty()).isTrue()
 
-        val result = instance.enhance(noisy)
+        val result = instance.enhanceOffline(noisy)
 
         advanceUntilIdle()
 
         // structural preconditions for scoring: delay compensated and finite
-        assertThat(result.samples.size).isEqualTo(noisy.size)
-        assertThat(result.sampleRate).isEqualTo(SAMPLE_RATE)
-        assertThat(result.samples.all { it.isFinite() }).isTrue()
+        assertThat(result.size).isEqualTo(noisy.size)
+        assertThat(result.all { it.isFinite() }).isTrue()
         assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
 
         val score = EnhancementMetrics.measure(
             clip = assetName,
             clean = clean,
             noisy = noisy,
-            enhanced = result.samples,
-            sampleRate = result.sampleRate,
+            enhanced = result,
+            sampleRate = SAMPLE_RATE,
         )
 
         Log.d(TAG, score.toMeasureLine())

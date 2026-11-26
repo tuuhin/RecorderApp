@@ -4,14 +4,17 @@
 #include <jni.h>
 
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <span>
 #include <stdexcept>
 #include <string_view>
 #include <utility>
 
 #include "handle_registry_manager.h"
+#include "speech_enhancer_manager.h"
 
 inline constexpr std::string_view kLogTag = "SPEECH_JNI_COMMON";
 
@@ -88,6 +91,39 @@ void withManager(JNIEnv* env, jlong handle, Fn&& function) noexcept {
     } catch (...) {
         translateCurrentException(env);
     }
+}
+
+// Reads the caller's direct float buffer into a span.
+[[nodiscard]] inline std::span<const float> read_sample_buffer(JNIEnv* env, jobject samples) {
+    if (samples == nullptr) throw std::invalid_argument("samples must not be null");
+
+    const auto* address = static_cast<const float*>(env->GetDirectBufferAddress(samples));
+    const jlong capacity = env->GetDirectBufferCapacity(samples);
+
+    if (address == nullptr || capacity <= 0 || capacity % static_cast<jlong>(sizeof(float)) != 0)
+        throw std::invalid_argument("samples must be a direct ByteBuffer of floats");
+
+    const auto count = static_cast<std::size_t>(capacity) / sizeof(float);
+    return std::span<const float>{address, count};
+}
+
+// Reads the per-call options from the flattened JNI arguments.
+[[nodiscard]] inline dfn::jni::enhance_options read_options(jfloat strength,
+                                                            jboolean adaptive_strength,
+                                                            jfloat post_filter_beta,
+                                                            jfloat attenuation_limit_db) {
+    dfn::jni::enhance_options options;
+    options.strength = static_cast<float>(strength);
+    options.adaptive_strength = adaptive_strength == JNI_TRUE;
+    options.post_filter_beta = static_cast<float>(post_filter_beta);
+    options.attenuation_limit_db = static_cast<float>(attenuation_limit_db);
+    return options;
+}
+
+// A zero-copy direct buffer over the manager's retained output.
+[[nodiscard]] inline jobject wrap_result(JNIEnv* env, const std::span<const float> samples) {
+    return env->NewDirectByteBuffer(const_cast<float*>(samples.data()),
+                                    static_cast<jlong>(samples.size_bytes()));
 }
 }  // namespace speech_jni
 

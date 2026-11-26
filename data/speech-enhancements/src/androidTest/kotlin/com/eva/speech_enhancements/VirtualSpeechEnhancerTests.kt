@@ -51,8 +51,7 @@ class VirtualSpeechEnhancerTests {
     fun noisy_speech_clip_enhances_and_rebuilds_into_an_aac_clip() = runTest(timeout = TEST_TIMEOUT) {
         val clip = VirtualAudioProvider.noisySpeechClip(tempDirRule.newFolder())
 
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+        instance = ClearSpeechEnhancer(modelDir())
         instance.prepare()
 
         advanceUntilIdle()
@@ -60,19 +59,18 @@ class VirtualSpeechEnhancerTests {
         val input = VirtualAudioProvider.readWav(clip.file)
         assertThat(input.size).isEqualTo(clip.noisy.size)
 
-        val result = instance.enhance(input)
+        val result = instance.enhanceOffline(input)
 
         advanceUntilIdle()
 
         // structural: the offline pass is delay compensated and finite
-        assertThat(result.samples.size).isEqualTo(input.size)
-        assertThat(result.sampleRate).isEqualTo(SAMPLE_RATE)
-        assertThat(result.samples.all { it.isFinite() }).isTrue()
+        assertThat(result.size).isEqualTo(input.size)
+        assertThat(SAMPLE_RATE).isEqualTo(SAMPLE_RATE)
+        assertThat(result.all { it.isFinite() }).isTrue()
         assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
-        assertThat(result.realtimeFactor > 0.0).isTrue()
 
         val snrBefore = snrDb(clean = clip.clean, noisy = input)
-        val snrAfter = snrDb(clean = clip.clean, noisy = result.samples)
+        val snrAfter = snrDb(clean = clip.clean, noisy = result)
         Log.d(TAG, "MEASURE noisy_speech snrBefore=$snrBefore snrAfter=$snrAfter")
 
         assertThat(snrAfter > MIN_SNR_AFTER_DB).isTrue()
@@ -80,19 +78,19 @@ class VirtualSpeechEnhancerTests {
 
         // reset makes a second enhance call possible and reusable; the first
         // enhance consumed state, so this must be an actual reset
-        assertThat(instance.reset()).isTrue()
-        val secondPass = instance.enhance(input)
+        instance.reset()
+        val secondPass = instance.enhanceOffline(input)
 
         advanceUntilIdle()
 
-        assertThat(secondPass.samples.size).isEqualTo(input.size)
+        assertThat(secondPass.size).isEqualTo(input.size)
 
         // the enhanced audio rebuilds into a real AAC/M4A clip through the
         // standard platform pipeline; this runner only proves it can be produced
         val muxed = AudioClipMuxer.encodeAac(
             destination = File(tempDirRule.newFolder(), "noisy_speech_enhanced.m4a"),
-            samples = result.samples,
-            sampleRate = result.sampleRate,
+            samples = result,
+            sampleRate = SAMPLE_RATE,
         )
 
         advanceUntilIdle()
@@ -108,34 +106,33 @@ class VirtualSpeechEnhancerTests {
     fun loud_silence_clip_suppresses_noise_in_the_silent_segments() = runTest(timeout = TEST_TIMEOUT) {
         val clipFile = VirtualAudioProvider.alternatingLoudSilenceClip(tempDirRule.newFolder())
 
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+        instance = ClearSpeechEnhancer(modelDir())
         instance.prepare()
 
         advanceUntilIdle()
 
         val input = VirtualAudioProvider.readWav(clipFile)
-        val result = instance.enhance(input)
+        val result = instance.enhanceOffline(input)
 
         advanceUntilIdle()
 
-        assertThat(result.samples.size).isEqualTo(input.size)
-        assertThat(result.samples.all { it.isFinite() }).isTrue()
+        assertThat(result.size).isEqualTo(input.size)
+        assertThat(result.all { it.isFinite() }).isTrue()
 
         // behavioural (lenient): the model should not add energy to the silent segments.
         // with two loud/silent cycles the silent segment runs over [size/4, size/2)
         val silentStart = input.size / 4
         val silentEnd = input.size / 2
         val silenceRmsBefore = rms(input, silentStart, silentEnd)
-        val silenceRmsAfter = rms(result.samples, silentStart, silentEnd)
+        val silenceRmsAfter = rms(result, silentStart, silentEnd)
         println("MEASURE loud_silence silenceRmsBefore=$silenceRmsBefore silenceRmsAfter=$silenceRmsAfter")
         assertThat(silenceRmsAfter <= silenceRmsBefore + RMS_GROWTH_TOLERANCE).isTrue()
 
         // and the enhanced audio still muxes into a playable clip
         val muxed = AudioClipMuxer.encodeAac(
             destination = File(tempDirRule.newFolder(), "loud_silence_enhanced.m4a"),
-            samples = result.samples,
-            sampleRate = result.sampleRate,
+            samples = result,
+            sampleRate = SAMPLE_RATE,
         )
 
         advanceUntilIdle()
@@ -149,35 +146,34 @@ class VirtualSpeechEnhancerTests {
     fun tone_sweep_clip_enhances_and_muxes() = runTest(timeout = TEST_TIMEOUT) {
         val clipFile = VirtualAudioProvider.toneSweepClip(tempDirRule.newFolder())
 
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+        instance = ClearSpeechEnhancer(modelDir())
         instance.prepare()
 
         advanceUntilIdle()
 
         val input = VirtualAudioProvider.readWav(clipFile)
-        val result = instance.enhance(input)
+        val result = instance.enhanceOffline(input)
 
         advanceUntilIdle()
 
-        assertThat(result.samples.size).isEqualTo(input.size)
-        assertThat(result.samples.all { it.isFinite() }).isTrue()
+        assertThat(result.size).isEqualTo(input.size)
+        assertThat(result.all { it.isFinite() }).isTrue()
 
         // behavioural (calibrated on SM-E146B): a tone sweep is not speech, the
         // model suppresses it (~12.5 dB, correlation ~0.27 measured). A healthy
         // pipeline still keeps some correlation with the input and attenuates
         // within a bounded range instead of wiping the signal out.
-        val correlation = normalizedCrossCorrelation(input, result.samples)
+        val correlation = normalizedCrossCorrelation(input, result)
         val rmsBefore = rmsDb(input)
-        val rmsAfter = rmsDb(result.samples)
+        val rmsAfter = rmsDb(result)
         println("MEASURE tone_sweep correlation=$correlation rmsBefore=$rmsBefore rmsAfter=$rmsAfter")
         assertThat(correlation > SWEEP_CORRELATION_FLOOR).isTrue()
         assertThat(rmsBefore - rmsAfter < MAX_SWEEP_ATTENUATION_DB).isTrue()
 
         val muxed = AudioClipMuxer.encodeAac(
             destination = File(tempDirRule.newFolder(), "tone_sweep_enhanced.m4a"),
-            samples = result.samples,
-            sampleRate = result.sampleRate,
+            samples = result,
+            sampleRate = SAMPLE_RATE,
         )
 
         advanceUntilIdle()

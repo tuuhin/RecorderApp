@@ -1,26 +1,21 @@
 #include <jni.h>
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <span>
-#include <stdexcept>
 #include <string>
-#include <utility>
 
 #include "jni_utils.h"
 #include "speech_enhancer_manager.h"
 
-namespace {
-
 using speech_jni::destroy_handle;
 using speech_jni::make_handle;
+using speech_jni::read_options;
+using speech_jni::read_sample_buffer;
 using speech_jni::translateCurrentException;
 using speech_jni::withManager;
+using speech_jni::wrap_result;
 
 using SEM = dfn::jni::speech_enhancer_manager;
-
-}  // namespace
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_createNative(JNIEnv* env, jobject,
@@ -69,47 +64,55 @@ Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_resetNative(JNIEnv* env, j
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_enhanceNative(
-    JNIEnv* env, jobject, jlong handle, jobject samples, jint sample_rate, jfloat strength,
+Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_processNative(
+    JNIEnv* env, jobject, jlong handle, jobject samples, jfloat strength,
     jboolean adaptive_strength, jfloat post_filter_beta, jfloat attenuation_limit_db) {
     jobject result = nullptr;
 
     LOG_DEBUG(
-        "enhanceNative: handle=%lld, sample_rate=%d, strength=%.3f, adaptive=%d, "
+        "processNative: handle=%lld, strength=%.3f, adaptive=%d, "
         "post_filter_beta=%.4f, attenuation_limit_db=%.1f",
         static_cast<long long>(handle),
-        static_cast<int>(sample_rate),
         static_cast<float>(strength),
         adaptive_strength == JNI_TRUE ? 1 : 0,
         static_cast<float>(post_filter_beta),
         static_cast<float>(attenuation_limit_db));
 
     withManager<SEM>(env, handle, [&](SEM& manager) {
-        if (samples == nullptr) throw std::invalid_argument("samples must not be null");
+        const std::span<const float> input_samples = read_sample_buffer(env, samples);
+        const dfn::jni::enhance_options options =
+            read_options(strength, adaptive_strength, post_filter_beta, attenuation_limit_db);
 
-        const auto* address = static_cast<const float*>(env->GetDirectBufferAddress(samples));
-        const jlong capacity = env->GetDirectBufferCapacity(samples);
+        const std::span<const float> emitted = manager.stream_process(input_samples, options);
+        result = wrap_result(env, emitted);
+    });
 
-        if (address == nullptr || capacity <= 0 ||
-            capacity % static_cast<jlong>(sizeof(float)) != 0)
-            throw std::invalid_argument("samples must be a direct ByteBuffer of floats");
+    return result;
+}
 
-        const auto count = static_cast<std::size_t>(capacity) / sizeof(float);
-        const std::span<const float> input_samples{address, count};
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_eva_speech_1enhancements_ClearSpeechEnhancer_finishNative(JNIEnv* env, jobject,
+                                                                   jlong handle, jfloat strength,
+                                                                   jboolean adaptive_strength,
+                                                                   jfloat post_filter_beta,
+                                                                   jfloat attenuation_limit_db) {
+    jobject result = nullptr;
 
-        dfn::jni::enhance_options options;
-        options.strength = static_cast<float>(strength);
-        options.adaptive_strength = adaptive_strength == JNI_TRUE;
-        options.post_filter_beta = static_cast<float>(post_filter_beta);
-        options.attenuation_limit_db = static_cast<float>(attenuation_limit_db);
+    LOG_DEBUG(
+        "finishNative: handle=%lld, strength=%.3f, adaptive=%d, "
+        "post_filter_beta=%.4f, attenuation_limit_db=%.1f",
+        static_cast<long long>(handle),
+        static_cast<float>(strength),
+        adaptive_strength == JNI_TRUE ? 1 : 0,
+        static_cast<float>(post_filter_beta),
+        static_cast<float>(attenuation_limit_db));
 
-        const std::span<const float> enhanced =
-            manager.enhance(input_samples, static_cast<int>(sample_rate), options);
+    withManager<SEM>(env, handle, [&](SEM& manager) {
+        const dfn::jni::enhance_options options =
+            read_options(strength, adaptive_strength, post_filter_beta, attenuation_limit_db);
 
-        // A zero-copy view of the manager's retained output: native-endian, position 0,
-        // limit = byte count. Valid until the next enhanceNative or destroyNative.
-        result = env->NewDirectByteBuffer(const_cast<float*>(enhanced.data()),
-                                          static_cast<jlong>(enhanced.size_bytes()));
+        const std::span<const float> emitted = manager.stream_finish(options);
+        result = wrap_result(env, emitted);
     });
 
     return result;

@@ -11,7 +11,10 @@ import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import com.eva.speech_enhancements.exception.SpeechEnhancementHandleException
 import com.eva.speech_enhancements.exception.SpeechEnhancerStateException
+import com.eva.speech_enhancements.exception.SpeechNativeException
 import com.eva.speech_enhancements.models.EnhanceOptions
+import com.eva.speech_enhancements.models.EnhanceOptions.Blending
+import com.eva.speech_enhancements.models.EnhanceOptions.ModelTuning
 import com.eva.speech_enhancements.provider.ModelPathProvider
 import java.io.File
 import kotlin.math.PI
@@ -22,7 +25,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -49,173 +51,178 @@ class ClearSpeechEnhancerTests {
         if (::instance.isInitialized) instance.close()
     }
 
-
     @Test
     fun plain_run_test_to_check_if_the_jni_connection_is_correct() = runTest {
-        val folder = tempDirRule.newFolder()
-        modelPathProvider.copyAssetsToModelDir(folder)
-
-        instance = ClearSpeechEnhancer()
-        instance.create(folder)
+        instance = ClearSpeechEnhancer(modelDir())
     }
 
     @Test
-    fun create_reports_the_algorithmic_latency_of_the_bundled_config() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+    fun creation_reports_the_algorithmic_latency_of_the_bundled_config() {
+        instance = ClearSpeechEnhancer(modelDir())
 
-        advanceUntilIdle()
         assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
     }
 
     @Test
-    fun create_rejects_a_missing_model_directory() {
-        instance = ClearSpeechEnhancer()
-
-        assertFailsWith<IllegalStateException> {
-            instance.create(File(tempDirRule.root, "not-copied"))
+    fun creation_rejects_a_missing_model_directory() {
+        assertFailsWith<SpeechNativeException> {
+            ClearSpeechEnhancer(File(tempDirRule.root, "not-copied"))
         }
     }
 
     @Test
-    fun create_rejects_an_empty_model_directory() {
-        instance = ClearSpeechEnhancer()
-
-        assertFailsWith<IllegalArgumentException> { instance.create(tempDirRule.newFolder()) }
+    fun creation_rejects_an_empty_model_directory() {
+        assertFailsWith<IllegalArgumentException> {
+            ClearSpeechEnhancer(tempDirRule.newFolder())
+        }
     }
 
     @Test
-    fun create_rejects_a_model_directory_without_the_config_file() = runTest {
+    fun creation_rejects_a_model_directory_without_the_config_file() {
         val folder = modelDir()
 
-        advanceUntilIdle()
+        assertThat(File(folder, CONFIG_FILE_NAME.substringAfterLast('/')).delete()).isEqualTo(true)
 
-        val deleteOp = File(folder, CONFIG_FILE_NAME.substringAfterLast('/')).delete()
-        assertThat(deleteOp).isEqualTo(true)
-
-        instance = ClearSpeechEnhancer()
-        assertFailsWith<IllegalArgumentException> { instance.create(folder) }
-    }
-
-    @Test
-    fun create_rejects_a_model_directory_without_graphs() {
-        val folder = tempDirRule.newFolder()
-
-        instance = ClearSpeechEnhancer()
-        assertFailsWith<IllegalArgumentException> { instance.create(folder) }
-    }
-
-    @Test
-    fun create_twice_is_rejected_and_keeps_the_first_instance_usable() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
-
-        advanceUntilIdle()
-        assertFailsWith<IllegalStateException> { instance.create(modelDir()) }
-
-        assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
-    }
-
-    @Test
-    fun calls_before_create_fail_fast() = runTest {
-        instance = ClearSpeechEnhancer()
-
-        advanceUntilIdle()
-
-        assertFailsWith<IllegalStateException> { instance.latencySamples }
-        assertFailsWith<IllegalStateException> { instance.prepare() }
-        assertFailsWith<IllegalStateException> { instance.enhance(FloatArray(HOP_SIZE) { 0.1f }) }
-    }
-
-    @Test
-    fun enhance_rejects_empty_samples() = runTest {
-        instance = ClearSpeechEnhancer()
-        advanceUntilIdle()
-
-        assertFailsWith<IllegalArgumentException> { instance.enhance(FloatArray(0)) }
-    }
-
-    @Test
-    fun enhance_rejects_sample_rates_other_than_48_khz() = runTest {
-        instance = ClearSpeechEnhancer()
-
-        advanceUntilIdle()
         assertFailsWith<IllegalArgumentException> {
-            instance.enhance(FloatArray(HOP_SIZE), sampleRate = 16_000)
+            ClearSpeechEnhancer(folder)
         }
     }
 
     @Test
-    fun enhance_produces_a_delay_compensated_finite_result() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+    fun creation_rejects_a_model_directory_without_graphs() {
+        assertFailsWith<IllegalArgumentException> {
+            ClearSpeechEnhancer(tempDirRule.newFolder())
+        }
+    }
+
+    @Test
+    fun streaming_before_prepare_fails_fast() = runTest {
+        instance = ClearSpeechEnhancer(modelDir())
+
+        assertThat(instance.isReady).isFalse()
+        assertFailsWith<SpeechEnhancerStateException> {
+            instance.process(FloatArray(HOP_SIZE) { 0.1f })
+        }
+        assertFailsWith<SpeechEnhancerStateException> { instance.finish() }
+    }
+
+    @Test
+    fun prepare_is_reported_by_isPrepared() = runTest {
+        instance = ClearSpeechEnhancer(modelDir())
+
         instance.prepare()
 
-        advanceUntilIdle()
+        assertThat(instance.isReady).isTrue()
+    }
+
+    @Test
+    fun process_accepts_an_empty_chunk_and_returns_empty() = runTest {
+        instance = prepared()
+
+        assertThat(instance.process(FloatArray(0))).isEqualTo(FloatArray(0))
+    }
+
+    @Test
+    fun streaming_returns_sample_aligned_output_whose_total_matches_the_input() = runTest {
+        instance = prepared()
 
         val input = noisySpeechLikeSignal(seconds = 1)
-        val result = instance.enhance(input)
+        val result = instance.enhanceOffline(input, chunkSize = 4096)
 
-        advanceUntilIdle()
-
-        // delay compensation: the offline pass drops the algorithmic latency,
-        // so every input sample comes back usable
-        assertThat(result.samples.size).isEqualTo(input.size)
-        assertThat(result.sampleRate).isEqualTo(48_000)
-        assertThat(result.isEmpty).isFalse()
-        assertThat(result.samples.all { it.isFinite() }).isTrue()
+        // delay compensation: every input sample comes back usable and aligned
+        assertThat(result.size).isEqualTo(input.size)
+        assertThat(result.all { it.isFinite() }).isTrue()
         assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
-        assertThat(result.realtimeFactor > 0.0).isTrue()
     }
 
     @Test
-    fun enhance_works_without_an_explicit_prepare() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+    fun streaming_hides_the_pipeline_latency_per_chunk() = runTest {
+        instance = prepared()
 
-        advanceUntilIdle()
+        // chunks shorter than the latency return nothing at first...
+        val small = FloatArray(HOP_SIZE) { 0.1f }
+        assertThat(instance.process(small).isEmpty()).isTrue()
+        assertThat(instance.process(small).isEmpty()).isTrue()
 
-        val input = noisySpeechLikeSignal(seconds = 1)
-        val result = instance.enhance(input)
-
-        advanceUntilIdle()
-
-        assertThat(result.samples.size).isEqualTo(input.size)
+        // ...until the pipeline has filled, then roughly the chunk size comes back
+        val filled = instance.process(FloatArray(2 * KNOWN_LATENCY_SAMPLES) { 0.1f })
+        assertThat(filled.isNotEmpty()).isTrue()
     }
 
     @Test
-    fun enhance_with_zero_strength_returns_the_input() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
-        instance.prepare()
-
-        advanceUntilIdle()
+    fun arbitrary_chunking_produces_the_same_stream_as_a_single_chunk() = runTest {
+        instance = prepared()
 
         val input = noisySpeechLikeSignal(seconds = 1)
-        val result = instance.enhance(input, options = EnhanceOptions(strength = 0.0f))
+        val singleChunk = instance.enhanceOffline(input, chunkSize = input.size)
+        instance.reset()
 
-        advanceUntilIdle()
+        val oddChunks = instance.enhanceOffline(input, chunkSize = 477)
+
+        assertThat(oddChunks.size).isEqualTo(singleChunk.size)
+        oddChunks.indices.forEach { index ->
+            assertEquals(singleChunk[index], oddChunks[index], CHUNKING_TOLERANCE)
+        }
+    }
+
+    @Test
+    fun process_after_finish_fails_until_reset() = runTest {
+        instance = prepared()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+        instance.enhanceOffline(input)
+
+        assertFailsWith<SpeechEnhancerStateException> {
+            instance.process(FloatArray(HOP_SIZE) { 0.1f })
+        }
+        assertFailsWith<SpeechEnhancerStateException> { instance.finish() }
+
+        // reset starts a fresh stream that streams normally
+        instance.reset()
+        val secondPass = instance.enhanceOffline(input)
+        assertThat(secondPass.size).isEqualTo(input.size)
+    }
+
+    @Test
+    fun reset_can_be_called_repeatedly() = runTest {
+        instance = prepared()
+
+        instance.reset()
+        instance.reset()
+
+        // still usable after the no-op resets
+        val result = instance.enhanceOffline(noisySpeechLikeSignal(seconds = 1))
+        assertThat(result.size).isEqualTo(SAMPLE_RATE)
+    }
+
+    @Test
+    fun reset_without_a_previous_stream_is_a_no_op() = runTest {
+        instance = prepared()
+
+        instance.reset()
+    }
+
+    @Test
+    fun streaming_with_zero_strength_returns_the_input() = runTest {
+        instance = prepared()
+
+        val input = noisySpeechLikeSignal(seconds = 1)
+        val result = instance.enhanceOffline(input, options = EnhanceOptions(blending = Blending(strength = 0.0f)))
 
         input.indices.forEach { index ->
-            assertEquals(input[index], result.samples[index], TOLERANCE)
+            assertEquals(input[index], result[index], TOLERANCE)
         }
     }
 
     @Test
-    fun enhance_with_full_strength_changes_the_input() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
-        instance.prepare()
-
-        advanceUntilIdle()
+    fun streaming_with_full_strength_changes_the_input() = runTest {
+        instance = prepared()
 
         val input = noisySpeechLikeSignal(seconds = 1)
-        val result = instance.enhance(input, options = EnhanceOptions(strength = 1.0f))
-
-        advanceUntilIdle()
+        val result = instance.enhanceOffline(input, options = EnhanceOptions(blending = Blending(strength = 1.0f)))
 
         val maxDifference = input
-            .zip(result.samples) { noisy, enhanced -> kotlin.math.abs(noisy - enhanced) }
+            .zip(result) { noisy, enhanced -> kotlin.math.abs(noisy - enhanced) }
             .max()
 
         // a full model pass on a noisy signal must move the output
@@ -223,129 +230,56 @@ class ClearSpeechEnhancerTests {
     }
 
     @Test
-    fun enhance_twice_without_reset_fails_fast() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
-        instance.prepare()
-
-        advanceUntilIdle()
+    fun streaming_with_adaptive_blending_returns_a_finite_aligned_stream() = runTest {
+        instance = prepared()
 
         val input = noisySpeechLikeSignal(seconds = 1)
-        instance.enhance(input)
+        val options = EnhanceOptions(blending = Blending(strength = 1.0f, adaptive = true))
+        val result = instance.enhanceOffline(input, chunkSize = 8192, options = options)
 
-        advanceUntilIdle()
-
-        assertFailsWith<SpeechEnhancerStateException> { instance.enhance(input) }
-    }
-
-    @Test
-    fun enhance_after_reset_matches_a_fresh_instance() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
-        instance.prepare()
-
-        val input = noisySpeechLikeSignal(seconds = 1)
-
-        advanceUntilIdle()
-
-        instance.enhance(input)
-        assertThat(instance.reset()).isTrue()
-        val afterReset = instance.enhance(input)
-
-        val fresh = ClearSpeechEnhancer()
-        fresh.create(modelDir())
-        fresh.prepare()
-        val fromFresh = fresh.enhance(input)
-        fresh.close()
-
-        advanceUntilIdle()
-
-        assertEquals(afterReset.samples.size, fromFresh.samples.size)
-        // ONNX Runtime is not bit-exact across runs; compare within a tolerance
-        afterReset.samples.indices.forEach { index ->
-            assertEquals(
-                fromFresh.samples[index],
-                afterReset.samples[index],
-                RESET_COMPARISON_TOLERANCE,
-            )
-        }
-    }
-
-    @Test
-    fun reset_can_be_called_repeatedly() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
-        instance.prepare()
-
-        advanceUntilIdle()
-
-        val input = noisySpeechLikeSignal(seconds = 1)
-        instance.enhance(input)
-
-        advanceUntilIdle()
-
-        // the first reset clears the consumed stream state
-        assertThat(instance.reset()).isTrue()
-        // the second is a no-op: nothing left to reset
-        assertThat(instance.reset()).isFalse()
-
-        // still usable after the no-op second reset
-        val result = instance.enhance(input)
-
-        advanceUntilIdle()
-
-        assertThat(result.samples.size).isEqualTo(input.size)
-    }
-
-    @Test
-    fun reset_without_a_previous_enhance_reports_nothing_to_reset() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
-        instance.prepare()
-
-        advanceUntilIdle()
-
-        assertThat(instance.reset()).isFalse()
-    }
-
-    @Test
-    fun reset_before_create_fails_fast() = runTest {
-        instance = ClearSpeechEnhancer()
-
-        advanceUntilIdle()
-
-        assertFailsWith<SpeechEnhancementHandleException> { instance.reset() }
+        assertThat(result.size).isEqualTo(input.size)
+        assertThat(result.all { it.isFinite() }).isTrue()
     }
 
     @Test
     fun close_is_idempotent_and_releases_the_handle() = runTest {
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+        instance = prepared()
 
         instance.close()
         instance.close() // second release is a no-op and must not throw
 
-        advanceUntilIdle()
-        assertFailsWith<IllegalStateException> { instance.latencySamples }
+        assertFailsWith<SpeechEnhancementHandleException> { instance.latencySamples }
+        assertFailsWith<SpeechEnhancementHandleException> { instance.process(FloatArray(HOP_SIZE)) }
     }
 
     @Test
     fun default_options_request_the_full_model_output() {
-        assertEquals(1.0f, EnhanceOptions().strength)
+        assertThat(Blending().strength).isEqualTo(1.0f)
+        assertThat(Blending().adaptive).isFalse()
     }
 
     @Test
-    fun options_reject_a_strength_outside_zero_to_one() {
-        assertFailsWith<IllegalArgumentException> { EnhanceOptions(strength = -0.01f) }
-        assertFailsWith<IllegalArgumentException> { EnhanceOptions(strength = 1.01f) }
+    fun blending_rejects_a_strength_outside_zero_to_one() {
+        assertFailsWith<IllegalArgumentException> { Blending(strength = -0.01f) }
+        assertFailsWith<IllegalArgumentException> { Blending(strength = 1.01f) }
 
-        assertEquals(0.0f, EnhanceOptions(strength = 0.0f).strength)
-        assertEquals(0.5f, EnhanceOptions(strength = 0.5f).strength)
-        assertEquals(1.0f, EnhanceOptions(strength = 1.0f).strength)
+        assertEquals(0.0f, Blending(strength = 0.0f).strength)
+        assertEquals(0.5f, Blending(strength = 0.5f).strength)
+        assertEquals(1.0f, Blending(strength = 1.0f).strength)
     }
 
-    private suspend fun modelDir(): File = tempDirRule.newFolder()
-        .also { modelPathProvider.copyAssetsToModelDir(it) }
+    @Test
+    fun tuning_rejects_a_negative_post_filter_beta() {
+        assertFailsWith<IllegalArgumentException> { ModelTuning(postFilterBeta = -0.01f) }
+
+        assertEquals(0.0f, ModelTuning(postFilterBeta = 0.0f).postFilterBeta)
+    }
+
+    private suspend fun prepared(): IClearSpeechEnhancer =
+        ClearSpeechEnhancer(modelDir()).also { it.prepare() }
+
+    private fun modelDir(): File = tempDirRule.newFolder()
+        .also { dir -> kotlinx.coroutines.runBlocking { modelPathProvider.copyAssetsToModelDir(dir) } }
 
     /**
      * A 48 kHz mono signal shaped roughly like speech: a few voiced formant tones with
@@ -390,6 +324,6 @@ class ClearSpeechEnhancerTests {
         const val TOLERANCE = 1e-4f
 
         // ONNX Runtime thread scheduling is not bit-exact across runs
-        const val RESET_COMPARISON_TOLERANCE = 1e-2f
+        const val CHUNKING_TOLERANCE = 1e-2f
     }
 }

@@ -155,29 +155,21 @@ handle owns a heap `std::shared_ptr<SM>` (all state per instance, nothing static
 managers can be shared with other native owners and die when the last reference goes. The
 Kotlin wrapper is `ClearSpeechEnhancer` over `IClearSpeechEnhancer`.
 
-Each `enhance()` call is an offline pass (`process` → `flush` → drop the algorithmic
-latency → strength blend) that consumes the session's recurrent state, so a second call
-without an intervening `reset()` keeps streaming from where the previous call ended. The
-Kotlin wrapper enforces one `enhance()` per `reset()`: `enhance()` throws
-`SpeechEnhancerStateException` until `reset()` restores the session (engine, splitter,
-pending frames and stats) to a clean state. `reset()` is idempotent, works at any point in
-the instance's life after `create()`, and returns whether an actual reset happened —
-`true` when a consumed session was restored, `false` when there was nothing to reset.
+Each `process()` call feeds one chunk of any size and emits the enhanced samples that are
+ready, so the concatenated output across the stream is sample-aligned with the input;
+`finish()` flushes the tail so the stream's total output equals its total input. `reset()`
+clears all stream state and is idempotent, so it works at any point in the instance's life.
 
-The final blend can be either a constant (`EnhanceOptions.strength`) or SNR-adaptive
-(`EnhanceOptions.adaptiveStrength`): the manager then picks the blend per hop from the
+The final blend can be either a constant (`EnhanceOptions.blending.strength`) or
+SNR-adaptive (`EnhanceOptions.blending.adaptive`): the manager then picks the blend per hop from the
 session's per-frame local SNR estimate, keeping the full model output on noisy frames and
 fading back towards the input on already-clean ones. The ONNX model over-suppresses clean
 speech (up to ~10 dB of SNR on the Valentini clips) and this recovers most of it without
 losing the denoising on noisy input.
 
-Two model-side stages are exposed per call through `EnhanceOptions` and applied by the
+Two model-side stages are exposed per call through `EnhanceOptions.tuning` and applied by the
 manager before the pass: `postFilterBeta` (Valin post-filter; `0.0` disables, the official
 Python CLI uses `0.02`) and `attenuationLimitDb` (mixes the output back towards the input so
 noise is never attenuated by more than that; `>= 100.0` disables). Both default to the
 engine's previous behaviour (off), so enabling them is an explicit choice.
 
-The prepared
-streaming graphs are loaded lazily on the first enhance; without them every call fails
-closed with an exception instead of crashing. Resampling in and out of the 48 kHz
-pipeline is a later phase, so the bridge rejects other sample rates.

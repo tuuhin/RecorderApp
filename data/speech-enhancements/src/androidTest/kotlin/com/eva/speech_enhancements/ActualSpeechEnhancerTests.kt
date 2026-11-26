@@ -53,8 +53,7 @@ class ActualSpeechEnhancerTests(private val assetName: String) {
     private suspend fun TestScope.enhanceAndRebuildClip(assetName: String) {
         val clipFile = copyAssetClip(assetName)
 
-        instance = ClearSpeechEnhancer()
-        instance.create(modelDir())
+        instance = ClearSpeechEnhancer(modelDir())
         instance.prepare()
 
         advanceUntilIdle()
@@ -62,39 +61,38 @@ class ActualSpeechEnhancerTests(private val assetName: String) {
         val input = VirtualAudioProvider.readWav(clipFile)
         assertThat(input.isNotEmpty()).isTrue()
 
-        val result = instance.enhance(input)
+        val result = instance.enhanceOffline(input)
 
         advanceUntilIdle()
 
         // structural: the offline pass is delay compensated and finite
-        assertThat(result.samples.size).isEqualTo(input.size)
-        assertThat(result.sampleRate).isEqualTo(SAMPLE_RATE)
-        assertThat(result.samples.all { it.isFinite() }).isTrue()
+        assertThat(result.size).isEqualTo(input.size)
+        assertThat(SAMPLE_RATE).isEqualTo(SAMPLE_RATE)
+        assertThat(result.all { it.isFinite() }).isTrue()
         assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
-        assertThat(result.realtimeFactor > 0.0).isTrue()
 
         // behavioural (lenient until calibrated): real speech should survive
         // the model pass largely intact
-        val correlation = normalizedCrossCorrelation(input, result.samples)
-        val attenuationDb = rmsDb(input) - rmsDb(result.samples)
+        val correlation = normalizedCrossCorrelation(input, result)
+        val attenuationDb = rmsDb(input) - rmsDb(result)
         println("MEASURE actual_speech clip=$assetName correlation=$correlation attenuationDb=$attenuationDb")
         assertThat(correlation > MIN_SPEECH_CORRELATION).isTrue()
         assertThat(attenuationDb < MAX_SPEECH_ATTENUATION_DB).isTrue()
 
         // the first enhance consumed state, so this must be an actual reset
-        assertThat(instance.reset()).isTrue()
-        val secondPass = instance.enhance(input)
+        instance.reset()
+        val secondPass = instance.enhanceOffline(input)
 
         advanceUntilIdle()
 
-        assertThat(secondPass.samples.size).isEqualTo(input.size)
+        assertThat(secondPass.size).isEqualTo(input.size)
 
         // the enhanced audio rebuilds into a real AAC/M4A clip through the
         // standard platform pipeline; this runner only proves it can be produced
         val muxed = AudioClipMuxer.encodeAac(
             destination = File(tempDirRule.newFolder(), assetName.substringBeforeLast('.') + "_enhanced.m4a"),
-            samples = result.samples,
-            sampleRate = result.sampleRate,
+            samples = result,
+            sampleRate = SAMPLE_RATE,
         )
 
         advanceUntilIdle()

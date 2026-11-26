@@ -24,22 +24,16 @@ constexpr std::string_view kEncoderGraph = "enc.onnx";
 constexpr std::string_view kErbDecoderGraph = "erb_dec.onnx";
 constexpr std::string_view kDfDecoderGraph = "df_dec.onnx";
 
-// SNR-dependent output blend. The model over-suppresses already-clean speech (measured: it
-// costs ~7-10 dB of SNR on clean clips, while the official PyTorch model leaves them
-// untouched), so the full model output is only trusted on noisy frames. `lsnr <= kFullDb`
-// keeps the full model output, `lsnr >= kFloorDb` fades down to `kFloorStrength`, linear in
-// between. Speech frames have a high local SNR and get protected; noise frames have a low
-// one and are still fully suppressed. The thresholds were tuned on the Valentini clips so
-// every clip gains or loses at most ~1 dB (mean +2.5 dB, dropouts roughly halved).
+// SNR-dependent blend thresholds.
 constexpr float kAdaptiveFullDb = 5.0f;
 constexpr float kAdaptiveFloorDb = 20.0f;
 constexpr float kAdaptiveFloorStrength = 0.15f;
 
-// A frame is only eligible for the clean-speech protection when it is within this many dB of
-// the clip's loudest frames. A quiet noise floor has a high local SNR (little noise relative
-// to nothing), so without this gate the adaptive blend treats a hissy background as clean
-// speech and blends it back in.
+// Gate so quiet noise is not treated as clean speech.
 constexpr float kAdaptiveSpeechGateDb = 15.0f;
+
+// Speech reference release rate (dB per frame).
+constexpr float kReferenceReleaseDbPerFrame = 0.05f;
 
 [[nodiscard]] float blend_for_lsnr(float lsnr, float max_strength) noexcept {
     const float t =
@@ -86,12 +80,12 @@ bool speech_enhancer_manager::reset() {
     const std::scoped_lock lock(mutex_);
 
     _results.clear();
+    _stream = stream_state{};
     if (!_model_session) return false;
 
     const bool has_consumed_state = _model_session->stats().input_samples > 0;
     if (has_consumed_state) _model_session->reset();
 
-    // if we had consumed state then reset was successful
     return has_consumed_state;
 }
 
@@ -100,83 +94,130 @@ int speech_enhancer_manager::latency_samples() {
     return config().latency_samples();
 }
 
-std::span<const float> speech_enhancer_manager::enhance(std::span<const float> samples,
-                                                        int sample_rate,
-                                                        const enhance_options& options) {
-    if (sample_rate != kModelSampleRate)
-        throw std::invalid_argument("the native engine processes 48 kHz input only");
-
+std::span<const float> speech_enhancer_manager::stream_process(std::span<const float> samples,
+                                                               const enhance_options& options) {
     const std::scoped_lock lock(mutex_);
+
+    if (_stream.finished)
+        throw std::logic_error("the stream is already finished; call reset() to start a new one");
+    if (samples.empty()) return {};
+
     ensure_engine();
 
-    // Model-side stages; they live on the engine and are re-applied per call.
+    // Model-side stages, applied per call.
     _model_session->engine().set_post_filter_beta(options.post_filter_beta);
     _model_session->engine().set_attenuation_limit_db(options.attenuation_limit_db);
 
+    // Keep the input that the freshly emitted output lines up with.
+    _stream.input_history.insert(_stream.input_history.end(), samples.begin(), samples.end());
+    _stream.consumed += samples.size();
+
+    const std::uint64_t emitted_before = _stream.emitted;
     std::vector<float> raw;
     raw.reserve(samples.size() + static_cast<std::size_t>(_model_session->latency_samples()) + 1);
     _model_session->process(samples, raw);
-    _model_session->flush(raw);
+    _stream.emitted += raw.size();
 
-    // Delay compensation: drop the pipeline's latency from the head so the output lines
-    // up with the input. The flush padded the input tail to whole hops, so every input
-    // sample is covered.
-    const auto latency = static_cast<std::size_t>(_model_session->latency_samples());
-    const std::size_t drop = std::min(latency, raw.size());
-    _results.assign(raw.begin() + static_cast<std::ptrdiff_t>(drop), raw.end());
-
-    // The offline pass can return up to `hop_size - 1` extra samples when the input length
-    // is not a whole number of hops (the flush pads the tail to whole hops), and defensively
-    // could return fewer. Trim or pad so the result always aligns 1:1 with the input.
-    _results.resize(samples.size(), 0.0f);
-
-    const float max_strength = std::clamp(options.strength, 0.0f, 1.0f);
-
-    if (options.adaptive_strength) {
-        const auto hop = static_cast<std::size_t>(_model_session->config().hop_size);
-        const std::vector<float>& lsnrs = _model_session->frame_lsnrs();
-        const std::size_t frame_count = (_results.size() + hop - 1) / hop;
-
-        std::vector<float> frame_db(frame_count, -200.0f);
-        for (const std::weakly_incrementable auto f :
-             std::views::iota(std::size_t{0}, frame_count)) {
-            const std::size_t begin = f * hop;
-            const std::size_t end = std::min(begin + hop, samples.size());
-            if (end <= begin) continue;
-            double energy = 0.0;
-            for (std::size_t i = begin; i < end; ++i) {
-                energy += static_cast<double>(samples[i]) * static_cast<double>(samples[i]);
-            }
-            const auto rms =
-                static_cast<float>(std::sqrt(energy / static_cast<double>(end - begin)));
-            frame_db[f] = 20.0f * std::log10(rms + 1e-12f);
-        }
-        std::vector<float> sorted_db = frame_db;
-        std::sort(sorted_db.begin(), sorted_db.end());
-        const float reference_db =
-            sorted_db.empty() ? 0.0f : sorted_db[(sorted_db.size() * 9) / 10];
-        const float speech_gate_db = reference_db - kAdaptiveSpeechGateDb;
-
-        for (const std::weakly_incrementable auto f :
-             std::views::iota(std::size_t{0}, frame_count)) {
-            const std::size_t begin = f * hop;
-            const std::size_t end = std::min(begin + hop, _results.size());
-            const float lsnr = f < lsnrs.size() ? lsnrs[f] : kAdaptiveFullDb;
-            const bool speech_like = frame_db[f] >= speech_gate_db;
-            const float alpha = speech_like ? blend_for_lsnr(lsnr, max_strength) : max_strength;
-
-            for (const std::weakly_incrementable auto i : std::views::iota(begin, end)) {
-                _results[i] = std::lerp(samples[i], _results[i], alpha);
-            }
-        }
-    } else if (max_strength < 1.0f) {
-        const std::size_t blend = std::min(_results.size(), samples.size());
-        for (const std::weakly_incrementable auto i : std::views::iota(std::size_t{0}, blend)) {
-            _results[i] = std::lerp(samples[i], _results[i], max_strength);
-        }
-    }
+    blend_emitted(raw, emitted_before, options);
+    trim_history();
 
     return _results;
+}
+
+std::span<const float> speech_enhancer_manager::stream_finish(const enhance_options& options) {
+    const std::scoped_lock lock(mutex_);
+
+    if (_stream.finished)
+        throw std::logic_error("the stream is already finished; call reset() to start a new one");
+
+    ensure_engine();
+
+    _model_session->engine().set_post_filter_beta(options.post_filter_beta);
+    _model_session->engine().set_attenuation_limit_db(options.attenuation_limit_db);
+
+    const std::uint64_t emitted_before = _stream.emitted;
+    std::vector<float> raw;
+    _model_session->flush(raw);
+    _stream.emitted += raw.size();
+
+    blend_emitted(raw, emitted_before, options);
+    trim_history();
+
+    _stream.finished = true;
+    return _results;
+}
+
+void speech_enhancer_manager::blend_emitted(std::vector<float>& batch,
+                                            const std::uint64_t emitted_before,
+                                            const enhance_options& options) {
+    const auto latency = static_cast<std::uint64_t>(_model_session->latency_samples());
+    const auto hop = static_cast<std::uint64_t>(_model_session->config().hop_size);
+    const auto lookahead_hops = latency / hop;
+    const auto consumed = _stream.consumed;
+    const std::span<const float> lsnrs{_model_session->frame_lsnrs()};
+    const float max_strength = std::clamp(options.strength, 0.0f, 1.0f);
+
+    // Emitted sample j matches input sample j - latency.
+    _results.assign(batch.begin(), batch.end());
+
+    const bool blend_strength = max_strength < 1.0f;
+    const bool blend_adaptive = options.adaptive_strength;
+    if (!blend_strength && !blend_adaptive) return;
+
+    for (const std::weakly_incrementable auto e :
+         std::views::iota(emitted_before / hop, _stream.emitted / hop)) {
+        float alpha = max_strength;
+
+        if (blend_adaptive && e >= lookahead_hops) {
+            const std::uint64_t frame = e - lookahead_hops;
+
+            // Frame energy of the matching input hop.
+            double energy = 0.0;
+            std::size_t count = 0;
+            for (const std::uint64_t i :
+                 std::views::iota(frame * hop, std::min((frame + 1) * hop, consumed))) {
+                const float sample = input_at(i);
+                energy += static_cast<double>(sample) * static_cast<double>(sample);
+                ++count;
+            }
+            const auto rms = static_cast<float>(
+                std::sqrt(energy / static_cast<double>(std::max(count, std::size_t{1}))));
+            const float frame_db = 20.0f * std::log10(rms + 1e-12f);
+
+            // Running speech reference: fast attack, slow release.
+            _stream.speech_reference_db =
+                std::max(frame_db, _stream.speech_reference_db - kReferenceReleaseDbPerFrame);
+
+            const bool speech_like =
+                frame_db >= _stream.speech_reference_db - kAdaptiveSpeechGateDb;
+            const float lsnr = frame < lsnrs.size() ? lsnrs[frame] : kAdaptiveFullDb;
+            if (speech_like) alpha = blend_for_lsnr(lsnr, max_strength);
+        }
+
+        if (!blend_adaptive && !blend_strength) continue;
+
+        for (const std::weakly_incrementable auto k : std::views::iota(std::uint64_t{0}, hop)) {
+            const std::uint64_t stream_index = e * hop + k;
+            const std::uint64_t input_index = stream_index - latency;
+            if (input_index >= consumed) continue;  // padded tail: keep the model output
+            const auto offset = static_cast<std::size_t>(stream_index - emitted_before);
+            _results[offset] = std::lerp(input_at(input_index), _results[offset], alpha);
+        }
+    }
+}
+
+void speech_enhancer_manager::trim_history() {
+    const auto latency = static_cast<std::uint64_t>(_model_session->latency_samples());
+    const std::uint64_t keep_from = _stream.emitted >= latency ? _stream.emitted - latency : 0;
+    while (_stream.history_start < keep_from && !_stream.input_history.empty()) {
+        _stream.input_history.pop_front();
+        ++_stream.history_start;
+    }
+}
+
+float speech_enhancer_manager::input_at(const std::uint64_t index) const {
+    const auto offset = static_cast<std::size_t>(index - _stream.history_start);
+    return _stream.input_history[offset];
 }
 
 bool speech_enhancer_manager::validate_model_path() const {
