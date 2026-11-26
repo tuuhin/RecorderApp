@@ -4,7 +4,8 @@ import android.util.Log
 import com.eva.speech_enhancements.exception.SpeechEnhancementHandleException
 import com.eva.speech_enhancements.exception.SpeechEnhancerStateException
 import com.eva.speech_enhancements.exception.SpeechNativeException
-import com.eva.speech_enhancements.model_manager.SpeechModelProvider
+import com.eva.speech_enhancements.model_manager.SpeechModelReader
+import com.eva.speech_enhancements.model_manager.data.ModelFileStatus
 import com.eva.speech_enhancements.models.EnhanceOptions
 import com.eva.speech_enhancements.models.SampleBuffer
 import dalvik.annotation.optimization.FastNative
@@ -20,6 +21,7 @@ import kotlin.concurrent.withLock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -28,7 +30,7 @@ import kotlinx.coroutines.withContext
 internal class ClearSpeechEnhancer private constructor(
     private val dispatcher: CoroutineDispatcher,
     private val modelDir: File?,
-    private val speechModelManager: SpeechModelProvider?,
+    private val modelReader: SpeechModelReader?,
 ) : IClearSpeechEnhancer {
 
     // sets up the model with the model files dir to be used only for testing
@@ -40,9 +42,9 @@ internal class ClearSpeechEnhancer private constructor(
     }
 
     constructor(
-        speechModelManager: SpeechModelProvider,
+        modelReader: SpeechModelReader,
         dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    ) : this(dispatcher, null, speechModelManager)
+    ) : this(dispatcher, null, modelReader)
 
     private val _nativeHandle = AtomicLong(0L)
     private val _isInitialized = AtomicBoolean(false)
@@ -107,11 +109,18 @@ internal class ClearSpeechEnhancer private constructor(
             return modelDir
         }
 
-        val manager = speechModelManager
-            ?: throw SpeechNativeException("None of the provide is being provided to continue")
+        val reader = modelReader
+            ?: throw SpeechNativeException("No model reader was provided to resolve the model")
 
-        if (!manager.isDownloaded) manager.downloadModel().getOrThrow()
-        return manager.modelPath.getOrThrow()
+        return when (reader.status()) {
+            ModelFileStatus.VALID -> reader.getModelPath().getOrThrow()
+            ModelFileStatus.MISSING -> throw IllegalStateException("Missing deep filter net3 model")
+            ModelFileStatus.CORRUPTED -> {
+                Log.w(TAG, "MODEL IS CORRUPTED, DELETING THE FILE")
+                withContext(NonCancellable) { modelReader.delete() }
+                throw IllegalStateException("Model corrupted exception")
+            }
+        }
     }
 
 
