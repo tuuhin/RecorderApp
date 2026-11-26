@@ -1,11 +1,9 @@
 #include <array>
-#include <bit>
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
 #include <string>
 #include <system_error>
-#include <vector>
 
 #include "recorder_config.h"
 #include "wav_file_writer.h"

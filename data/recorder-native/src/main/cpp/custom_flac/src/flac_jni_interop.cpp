@@ -54,10 +54,9 @@ extern "C" JNIEXPORT void JNICALL Java_com_eva_recorder_1native_FlacAudioRecorde
         if (sample_rate <= 0 || channels <= 0)
             throw std::invalid_argument("Sample rate and channel count must be positive");
 
-        recorder_config config{};
-        config.sampleRate = static_cast<std::uint32_t>(sample_rate);
-        config.channelCount = static_cast<std::uint16_t>(channels);
-        config.bitsPerSample = 16;
+        recorder_config config{.sampleRate = static_cast<std::uint32_t>(sample_rate),
+                               .channelCount = static_cast<std::uint16_t>(channels),
+                               .bitsPerSample = 16};
 
         if (channels > UINT16_MAX)
             throw std::invalid_argument("Channel count exceeds supported range");

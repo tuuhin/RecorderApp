@@ -9,9 +9,10 @@ android {
 
     defaultConfig {
         consumerProguardFiles("consumer-rules.keep")
+
         externalNativeBuild {
             cmake {
-                cppFlags += listOf("-std=c++20")
+                arguments += "-DCMAKE_SYSTEM_VERSION=${libs.versions.android.minSdk.get().toInt()}"
             }
         }
     }

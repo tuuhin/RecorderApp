@@ -16,7 +16,7 @@
 #define LOG_TAG "LZ4_JNI_INTEROP"
 #define LOG_D(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
-std::vector<std::uint8_t> lz4_compressor::compress_frame(const std::span<const std::uint8_t> source) {
+std::vector<std::uint8_t> lz4_compressor::compress_frame(std::span<const std::uint8_t> source) {
     const std::size_t capacity = LZ4F_compressFrameBound(source.size(), nullptr);
 
     std::vector<std::uint8_t> destination(capacity);
@@ -32,8 +32,7 @@ std::vector<std::uint8_t> lz4_compressor::compress_frame(const std::span<const s
     return destination;
 }
 
-std::vector<std::uint8_t> lz4_compressor::decompress_frame(const std::span<const std::uint8_t> source) {
-
+std::vector<std::uint8_t> lz4_compressor::decompress_frame(std::span<const std::uint8_t> source) {
     if (source.empty()) throw std::runtime_error("Cannot decompress an empty LZ4 frame");
 
     de_compression_context context;
