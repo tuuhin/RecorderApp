@@ -25,6 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -99,6 +100,7 @@ class ClearSpeechEnhancerTests {
     fun streaming_before_prepare_fails_fast() = runTest {
         instance = ClearSpeechEnhancer(modelDir())
 
+        advanceUntilIdle()
         assertThat(instance.isReady).isFalse()
         assertFailsWith<SpeechEnhancerStateException> {
             instance.process(FloatArray(HOP_SIZE) { 0.1f })
@@ -111,14 +113,14 @@ class ClearSpeechEnhancerTests {
         instance = ClearSpeechEnhancer(modelDir())
 
         instance.prepare()
-
+        advanceUntilIdle()
         assertThat(instance.isReady).isTrue()
     }
 
     @Test
     fun process_accepts_an_empty_chunk_and_returns_empty() = runTest {
         instance = prepared()
-
+        advanceUntilIdle()
         assertThat(instance.process(FloatArray(0))).isEqualTo(FloatArray(0))
     }
 
@@ -130,6 +132,7 @@ class ClearSpeechEnhancerTests {
         val result = instance.enhanceOffline(input, chunkSize = 4096)
 
         // delay compensation: every input sample comes back usable and aligned
+        advanceUntilIdle()
         assertThat(result.size).isEqualTo(input.size)
         assertThat(result.all { it.isFinite() }).isTrue()
         assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
@@ -141,6 +144,7 @@ class ClearSpeechEnhancerTests {
 
         // chunks shorter than the latency return nothing at first...
         val small = FloatArray(HOP_SIZE) { 0.1f }
+        advanceUntilIdle()
         assertThat(instance.process(small).isEmpty()).isTrue()
         assertThat(instance.process(small).isEmpty()).isTrue()
 
@@ -159,6 +163,7 @@ class ClearSpeechEnhancerTests {
 
         val oddChunks = instance.enhanceOffline(input, chunkSize = 477)
 
+        advanceUntilIdle()
         assertThat(oddChunks.size).isEqualTo(singleChunk.size)
         oddChunks.indices.forEach { index ->
             assertEquals(singleChunk[index], oddChunks[index], CHUNKING_TOLERANCE)
@@ -172,6 +177,7 @@ class ClearSpeechEnhancerTests {
         val input = noisySpeechLikeSignal(seconds = 1)
         instance.enhanceOffline(input)
 
+        advanceUntilIdle()
         assertFailsWith<SpeechEnhancerStateException> {
             instance.process(FloatArray(HOP_SIZE) { 0.1f })
         }
@@ -180,6 +186,7 @@ class ClearSpeechEnhancerTests {
         // reset starts a fresh stream that streams normally
         instance.reset()
         val secondPass = instance.enhanceOffline(input)
+        advanceUntilIdle()
         assertThat(secondPass.size).isEqualTo(input.size)
     }
 
@@ -192,6 +199,7 @@ class ClearSpeechEnhancerTests {
 
         // still usable after the no-op resets
         val result = instance.enhanceOffline(noisySpeechLikeSignal(seconds = 1))
+        advanceUntilIdle()
         assertThat(result.size).isEqualTo(SAMPLE_RATE)
     }
 
@@ -207,8 +215,10 @@ class ClearSpeechEnhancerTests {
         instance = prepared()
 
         val input = noisySpeechLikeSignal(seconds = 1)
-        val result = instance.enhanceOffline(input, options = EnhanceOptions(blending = Blending(strength = 0.0f)))
+        val result =
+            instance.enhanceOffline(input, options = EnhanceOptions.Custom(blending = Blending(strength = 0.0f)))
 
+        advanceUntilIdle()
         input.indices.forEach { index ->
             assertEquals(input[index], result[index], TOLERANCE)
         }
@@ -219,12 +229,14 @@ class ClearSpeechEnhancerTests {
         instance = prepared()
 
         val input = noisySpeechLikeSignal(seconds = 1)
-        val result = instance.enhanceOffline(input, options = EnhanceOptions(blending = Blending(strength = 1.0f)))
+        val result =
+            instance.enhanceOffline(input, options = EnhanceOptions.Custom(blending = Blending(strength = 1.0f)))
 
         val maxDifference = input
             .zip(result) { noisy, enhanced -> kotlin.math.abs(noisy - enhanced) }
             .max()
 
+        advanceUntilIdle()
         // a full model pass on a noisy signal must move the output
         assertThat(maxDifference > 0.0f).isTrue()
     }
@@ -234,9 +246,10 @@ class ClearSpeechEnhancerTests {
         instance = prepared()
 
         val input = noisySpeechLikeSignal(seconds = 1)
-        val options = EnhanceOptions(blending = Blending(strength = 1.0f, adaptive = true))
+        val options = EnhanceOptions.Custom(blending = Blending(strength = 1.0f, adaptive = true))
         val result = instance.enhanceOffline(input, chunkSize = 8192, options = options)
 
+        advanceUntilIdle()
         assertThat(result.size).isEqualTo(input.size)
         assertThat(result.all { it.isFinite() }).isTrue()
     }

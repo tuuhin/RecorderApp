@@ -13,7 +13,7 @@ import com.eva.speech_enhancements.models.EnhanceOptions
 suspend fun IClearSpeechEnhancer.enhanceOffline(
     samples: FloatArray,
     chunkSize: Int = 48_000,
-    options: EnhanceOptions = EnhanceOptions(),
+    options: EnhanceOptions = EnhanceOptions.Cafe,
 ): FloatArray {
     require(chunkSize > 0) { "chunkSize must be positive" }
 

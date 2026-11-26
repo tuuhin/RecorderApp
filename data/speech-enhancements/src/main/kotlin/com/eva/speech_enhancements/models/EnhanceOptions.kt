@@ -1,9 +1,9 @@
 package com.eva.speech_enhancements.models
 
 
-data class EnhanceOptions(
-    val blending: Blending = Blending(),
-    val tuning: ModelTuning = ModelTuning(),
+sealed class EnhanceOptions(
+    open val blending: Blending,
+    open val tuning: ModelTuning,
 ) {
 
     /**
@@ -32,4 +32,46 @@ data class EnhanceOptions(
             require(postFilterBeta >= 0.0f) { "postFilterBeta must not be negative" }
         }
     }
+
+    /** Light touch for already-quiet rooms, mic hiss, or subtle ambience preservation. */
+    data object QuietRoom : EnhanceOptions(
+        blending = Blending(strength = 0.85f, adaptive = true),
+        tuning = ModelTuning(postFilterBeta = 0.01f, attenuationLimitDb = 18.0f),
+    )
+
+    /** Balanced default for offices with fans, AC hum, typing, or light chatter. */
+    data object OpenOffice : EnhanceOptions(
+        blending = Blending(strength = 1.0f, adaptive = true),
+        tuning = ModelTuning(postFilterBeta = 0.025f, attenuationLimitDb = 28.0f),
+    )
+
+    /** Aggressive suppression for busy streets, traffic, wind, or heavy background noise. */
+    data object Street : EnhanceOptions(
+        blending = Blending(strength = 1.0f, adaptive = false),
+        tuning = ModelTuning(postFilterBeta = 0.05f, attenuationLimitDb = 100.0f),
+    )
+
+    /** Protects vocal clarity and natural dynamics for podcasts, interviews, and voiceovers. */
+    data object Podcast : EnhanceOptions(
+        blending = Blending(strength = 0.9f, adaptive = true),
+        tuning = ModelTuning(postFilterBeta = 0.015f, attenuationLimitDb = 20.0f),
+    )
+
+    /** Handles fluctuating background chatter and clatter without harsh silence gating. */
+    data object Cafe : EnhanceOptions(
+        blending = Blending(strength = 1.0f, adaptive = true),
+        tuning = ModelTuning(postFilterBeta = 0.035f, attenuationLimitDb = 30.0f),
+    )
+
+    /** Low-latency friendly preset for live calls where consistent noise floor matters. */
+    data object VoiceCall : EnhanceOptions(
+        blending = Blending(strength = 1.0f, adaptive = true),
+        tuning = ModelTuning(postFilterBeta = 0.02f, attenuationLimitDb = 22.0f),
+    )
+
+    /** Full manual control over blending and model tuning parameters. */
+    data class Custom(
+        override val blending: Blending = Blending(),
+        override val tuning: ModelTuning = ModelTuning(),
+    ) : EnhanceOptions(blending = blending, tuning = tuning)
 }

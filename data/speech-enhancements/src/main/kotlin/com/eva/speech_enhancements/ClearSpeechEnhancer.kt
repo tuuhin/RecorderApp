@@ -4,8 +4,10 @@ import android.util.Log
 import com.eva.speech_enhancements.exception.SpeechEnhancementHandleException
 import com.eva.speech_enhancements.exception.SpeechEnhancerStateException
 import com.eva.speech_enhancements.exception.SpeechNativeException
+import com.eva.speech_enhancements.model_manager.SpeechModelProvider
 import com.eva.speech_enhancements.models.EnhanceOptions
 import com.eva.speech_enhancements.models.SampleBuffer
+import dalvik.annotation.optimization.FastNative
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -23,16 +25,24 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalAtomicApi::class)
-class ClearSpeechEnhancer private constructor(
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+internal class ClearSpeechEnhancer private constructor(
+    private val dispatcher: CoroutineDispatcher,
+    private val modelDir: File?,
+    private val speechModelManager: SpeechModelProvider?,
 ) : IClearSpeechEnhancer {
 
-    constructor(
+    // sets up the model with the model files dir to be used only for testing
+    internal constructor(
         modelDir: File,
         dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    ) : this(dispatcher) {
+    ) : this(dispatcher, modelDir, null) {
         create(modelDir)
     }
+
+    constructor(
+        speechModelManager: SpeechModelProvider,
+        dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    ) : this(dispatcher, null, speechModelManager)
 
     private val _nativeHandle = AtomicLong(0L)
     private val _isInitialized = AtomicBoolean(false)
@@ -83,8 +93,30 @@ class ClearSpeechEnhancer private constructor(
         Log.i(TAG, "SPEECH ENHANCER INSTANCE CREATED")
     }
 
+    private suspend fun ensureCreated() {
+        if (_nativeHandle.load() != 0L) {
+            Log.w(TAG, "NATIVE HANDLE IS ALREADY SETUP")
+            return
+        }
+        create(resolveModelDir())
+    }
+
+    private suspend fun resolveModelDir(): File {
+        if (modelDir != null) {
+            Log.d(TAG, "MODEL DIR IS PASSED , SETUP DONE VIA MODEL DIR")
+            return modelDir
+        }
+
+        val manager = speechModelManager
+            ?: throw SpeechNativeException("None of the provide is being provided to continue")
+
+        if (!manager.isDownloaded) manager.downloadModel().getOrThrow()
+        return manager.modelPath.getOrThrow()
+    }
+
 
     override suspend fun prepare(): Unit = withContext(dispatcher) {
+        ensureCreated()
         withNativeHandle { handle ->
             val isSuccess = prepareNative(handle)
             if (!isSuccess) throw SpeechNativeException("Failed to prepare the model")
@@ -261,6 +293,7 @@ class ClearSpeechEnhancer private constructor(
         attenuationLimitDb: Float,
     ): ByteBuffer?
 
+    @FastNative
     private external fun nativeLatencySamples(handle: Long): Int
 
     companion object {

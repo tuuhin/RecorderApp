@@ -9,8 +9,8 @@ interface IClearSpeechEnhancer : AutoCloseable {
 
     suspend fun prepare()
 
-    suspend fun process(chunk: FloatArray, options: EnhanceOptions = EnhanceOptions()): FloatArray
-    suspend fun finish(options: EnhanceOptions = EnhanceOptions()): FloatArray
+    suspend fun process(chunk: FloatArray, options: EnhanceOptions = EnhanceOptions.QuietRoom): FloatArray
+    suspend fun finish(options: EnhanceOptions = EnhanceOptions.QuietRoom): FloatArray
 
     suspend fun reset()
 }
