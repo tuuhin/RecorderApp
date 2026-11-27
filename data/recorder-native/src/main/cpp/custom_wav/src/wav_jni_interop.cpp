@@ -170,6 +170,7 @@ Java_com_eva_recorder_1native_WavAudioRecorder_getRecorderConfig(JNIEnv* env, jo
         const jint values[] = {static_cast<jint>(config->sampleRate),
                                static_cast<jint>(config->channelCount)};
         env->SetIntArrayRegion(result, 0, 2, values);
+        if (env->ExceptionCheck()) result = nullptr;
     });
     return result;
 }

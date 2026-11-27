@@ -93,6 +93,10 @@ void withManager(JNIEnv* env, jlong handle, Fn&& function) noexcept {
     }
 }
 
+// Upper bound on a single enhancement hop (48 kHz * 10 s). This is far above any
+// real chunk and keeps a malformed caller from pinning an unbounded span.
+inline constexpr std::size_t kMaxSampleCount = 48000 * 10;
+
 // Reads the caller's direct float buffer into a span.
 [[nodiscard]] inline std::span<const float> read_sample_buffer(JNIEnv* env, jobject samples) {
     if (samples == nullptr) throw std::invalid_argument("samples must not be null");
@@ -104,6 +108,8 @@ void withManager(JNIEnv* env, jlong handle, Fn&& function) noexcept {
         throw std::invalid_argument("samples must be a direct ByteBuffer of floats");
 
     const auto count = static_cast<std::size_t>(capacity) / sizeof(float);
+    if (count > kMaxSampleCount)
+        throw std::invalid_argument("samples exceeds the maximum supported chunk size");
     return std::span<const float>{address, count};
 }
 

@@ -16,7 +16,7 @@
 namespace recorder_jni {
 
 inline void throwJavaException(JNIEnv* env, const char* className, const char* message) noexcept {
-    if (env->ExceptionCheck()) return;
+    if (env == nullptr || env->ExceptionCheck()) return;
 
     jclass exceptionClass = env->FindClass(className);
 
@@ -87,6 +87,7 @@ void withRecorder(JNIEnv* env, jlong handle, Fn&& function) noexcept {
 class UtfChars final {
    public:
     UtfChars(JNIEnv* env, jstring value) : _jEnv(env), _jValue(value) {
+        if (_jEnv == nullptr) throw std::invalid_argument("JNIEnv must not be null");
         if (_jValue == nullptr) throw std::invalid_argument("File path must not be null");
         _cChars = _jEnv->GetStringUTFChars(_jValue, nullptr);
         if (_cChars == nullptr) throw std::runtime_error("Failed to access Java string");
