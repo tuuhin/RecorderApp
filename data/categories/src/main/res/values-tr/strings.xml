@@ -3,4 +3,5 @@
   <string name="select_category_screen">Kategori Seç</string>
   <string name="categories_create_success">Kategori Başarıyla Oluşturuldu</string>
   <string name="categories_deleted">Silinen Kategoriler</string>
+    <string name="categories_updated">Kayıtlar %s kategorisine taşındı.</string>
 </resources>

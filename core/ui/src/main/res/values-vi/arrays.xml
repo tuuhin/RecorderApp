@@ -1,0 +1,8 @@
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>Ghi âm chất lượng cao chỉ với một lần chạm</item>
+        <item>Phát lại bản ghi dễ dàng với các nút điều khiển</item>
+        <item>Cắt tỉa và cắt bản ghi với độ chính xác cao</item>
+        <item>Giữ âm thanh của bạn ngăn nắp và dễ truy cập</item>
+    </string-array>
+</resources>

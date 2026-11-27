@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">Actualizar</string>
+    <string name="widget_error_text">No se puede cargar el widget debido a un problema</string>
+    <string name="widget_error_title">No se pudo cargar el widget</string>
+    <string name="recordings_not_found">No se encontraron grabaciones para mostrar</string>
+    <string name="widget_recordings_description">Un vistazo a tus grabaciones</string>
+    <string name="widget_recordings_no_recordings">Sin grabaciones</string>
+    <string name="recordings_load_failed">No se pueden cargar las grabaciones</string>
+    <string name="widget_recorder_description">Empieza a grabar con un toque</string>
+    <string name="recorder_state_recording">Grabando</string>
+    <string name="recorder_state_paused">En pausa</string>
+    <string name="widget_recorder_widget">Widget del grabador</string>
+    <string name="widget_recordings_title">Grabaciones</string>
+    <string name="widget_no_recordings">Sin grabaciones</string>
+</resources>

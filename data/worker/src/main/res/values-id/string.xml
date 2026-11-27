@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">Menyiapkan fitur suara offline</string>
+    <string name="stt_model_download_requested_text">Unduhan diminta</string>
+    <string name="stt_model_downloading_text">Mengunduh</string>
+    <string name="stt_model_unzip_text">Mengekstrak</string>
+    <string name="stt_model_ready_text">Siap Disimpan</string>
+    <string name="stt_model_saved_text">Disimpan</string>
+    <string name="stt_model_cleanup_text">Membersihkan</string>
+    <string name="trash_cleanup_notification_title">Membersihkan Tempat Sampah</string>
+    <string name="trash_cleanup_notification_text">Menghapus rekaman yang kedaluwarsa</string>
+</resources>

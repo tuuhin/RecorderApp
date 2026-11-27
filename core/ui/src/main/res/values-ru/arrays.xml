@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>Записывайте качественное аудио одним касанием</item>
+        <item>Легко воспроизводите записи с помощью кнопок</item>
+        <item>Точно обрезайте и вырезайте записи</item>
+        <item>Держите аудио упорядоченным и доступным</item>
+    </string-array>
+</resources>

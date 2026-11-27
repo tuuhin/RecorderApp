@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">অফলাইন ভয়েস ফিচার প্রস্তুত করা হচ্ছে</string>
+    <string name="stt_model_download_requested_text">ডাউনলোড অনুরোধ করা হয়েছে</string>
+    <string name="stt_model_downloading_text">ডাউনলোড হচ্ছে</string>
+    <string name="stt_model_unzip_text">আনজিপ করা হচ্ছে</string>
+    <string name="stt_model_ready_text">সংরক্ষণের জন্য প্রস্তুত</string>
+    <string name="stt_model_saved_text">সংরক্ষিত</string>
+    <string name="stt_model_cleanup_text">পরিষ্কার করা হচ্ছে</string>
+    <string name="trash_cleanup_notification_title">রিসাইকেল বিন পরিষ্কার করা হচ্ছে</string>
+    <string name="trash_cleanup_notification_text">মেয়াদ উত্তীর্ণ রেকর্ডিং মুছে ফেলা হচ্ছে</string>
+</resources>

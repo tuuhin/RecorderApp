@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">重新整理</string>
+    <string name="widget_error_text">發生問題，無法載入小工具</string>
+    <string name="widget_error_title">載入小工具失敗</string>
+    <string name="recordings_not_found">沒有可顯示的錄音</string>
+    <string name="widget_recordings_description">一眼查看您的錄音</string>
+    <string name="widget_recordings_no_recordings">沒有錄音</string>
+    <string name="recordings_load_failed">無法載入錄音</string>
+    <string name="widget_recorder_description">點按按鈕開始錄音</string>
+    <string name="recorder_state_recording">正在錄音</string>
+    <string name="recorder_state_paused">已暫停</string>
+    <string name="widget_recorder_widget">錄音機小工具</string>
+    <string name="widget_recordings_title">錄音</string>
+    <string name="widget_no_recordings">沒有錄音</string>
+</resources>

@@ -1,0 +1,6 @@
+<resources>
+    <string name="select_category_screen">选择类别</string>
+    <string name="categories_create_success">类别创建成功</string>
+    <string name="categories_deleted">已删除的类别</string>
+    <string name="categories_updated">录音已移至“%s”分类。</string>
+</resources>

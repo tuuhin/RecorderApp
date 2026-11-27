@@ -10,4 +10,6 @@
     <string name="recording_restore_request_failed">Wiederherstellung fehlgeschlagen</string>
     <string name="recording_trash_request_success">Aufnahmen in den Papierkorb verschoben</string>
     <string name="recording_trash_request_failed">Aufnahmen können nicht in den Papierkorb verschoben werden</string>
+    <string name="categories_updated">Aufnahmen in die Kategorie %s verschoben.</string>
+    <string name="metadata_modify_permission_denied">Keine Berechtigung zum Ändern der Dateimetadaten</string>
 </resources>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="recorder_action_pause">Tạm dừng</string>
+    <string name="recorder_action_resume">Tiếp tục</string>
+    <string name="recorder_action_stop">Dừng</string>
+    <string name="recorder_action_cancel">Hủy</string>
+    <string name="recorder_notification_text_running">Máy ghi âm đang chạy</string>
+    <string name="recorder_notification_text_paused">Máy ghi âm đã tạm dừng</string>
+    <string name="recorder_recording_completed">Ghi âm hoàn tất</string>
+    <string name="recorder_recording_completed_text">Đã lưu vào bộ nhớ ngoài</string>
+    <string name="recorder_recording_completed_text_2">Nhấn để phát</string>
+    <string name="toast_recording_bluetooth">Đang dùng mic Bluetooth</string>
+    <string name="toast_incoming_call">Cuộc gọi đến</string>
+    <string name="bookmarks_saved">Đã thêm dấu mốc</string>
+    <string name="bookmarks_too_fast_warning">Các dấu mốc phải cách nhau 1 giây</string>
+</resources>

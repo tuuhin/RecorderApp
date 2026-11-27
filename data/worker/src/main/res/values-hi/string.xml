@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">ऑफ़लाइन वॉइस सुविधाएँ तैयार की जा रही हैं</string>
+    <string name="stt_model_download_requested_text">डाउनलोड अनुरोधित</string>
+    <string name="stt_model_downloading_text">डाउनलोड हो रहा है</string>
+    <string name="stt_model_unzip_text">अनज़िप हो रहा है</string>
+    <string name="stt_model_ready_text">सहेजने के लिए तैयार</string>
+    <string name="stt_model_saved_text">सहेजा गया</string>
+    <string name="stt_model_cleanup_text">सफ़ाई हो रही है</string>
+    <string name="trash_cleanup_notification_title">बिन साफ़ हो रहा है</string>
+    <string name="trash_cleanup_notification_text">समाप्त रिकॉर्डिंग हटाई जा रही हैं</string>
+</resources>

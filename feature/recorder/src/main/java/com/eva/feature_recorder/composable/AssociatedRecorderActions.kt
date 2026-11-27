@@ -122,46 +122,46 @@ private fun TranscriptionsDialog(
 	if (!showDialog) return
 
 	AlertDialog(
-		onDismissRequest = onDismiss,
-		confirmButton = {
-			AnimatedVisibility(visible = !transcriptionSettings.isEnabled || transcriptionSettings.modelId == null) {
-				Button(
-					onClick = onOpenSettings,
-					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primaryContainer,
-						contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-					)
-				) {
-					Text("Open Settings")
-				}
-			}
-		},
-		title = { Text(text = stringResource(R.string.recorder_transcriptions_about_dialog_title)) },
-		text = {
-			if (transcriptionSettings.isEnabled && transcriptionSettings.modelId != null)
-				Text(
-					text = buildAnnotatedString {
-						append(stringResource(R.string.recorder_transcriptions_about_dialog_text_enabled))
-						withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
-							append(" ${transcriptionSettings.modelId}")
-						}
-					}
-				)
-			else Text(stringResource(R.string.recorder_transcriptions_about_dialog_text_not_enabled))
-		},
-		icon = {
-			Icon(
-				painter = painterResource(R.drawable.ic_stt),
-				contentDescription = null, modifier = Modifier.size(32.dp),
-			)
-		},
-		modifier = modifier,
-		shape = shape,
-		tonalElevation = tonalElevation,
-		containerColor = containerColor,
-		textContentColor = textContentColor,
-		titleContentColor = titleContentColor,
-		iconContentColor = iconContentColor,
-		properties = properties
-	)
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            AnimatedVisibility(visible = !transcriptionSettings.isEnabled || transcriptionSettings.modelId == null) {
+                Button(
+                    onClick = onOpenSettings,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text(stringResource(R.string.action_open_settings))
+                }
+            }
+        },
+        title = { Text(text = stringResource(R.string.recorder_transcriptions_about_dialog_title)) },
+        text = {
+            if (transcriptionSettings.isEnabled && transcriptionSettings.modelId != null)
+                Text(
+                    text = buildAnnotatedString {
+                        append(stringResource(R.string.recorder_transcriptions_about_dialog_text_enabled))
+                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
+                            append(" ${transcriptionSettings.modelId}")
+                        }
+                    }
+                )
+            else Text(stringResource(R.string.recorder_transcriptions_about_dialog_text_not_enabled))
+        },
+        icon = {
+            Icon(
+                painter = painterResource(R.drawable.ic_stt),
+                contentDescription = null, modifier = Modifier.size(32.dp),
+            )
+        },
+        modifier = modifier,
+        shape = shape,
+        tonalElevation = tonalElevation,
+        containerColor = containerColor,
+        textContentColor = textContentColor,
+        titleContentColor = titleContentColor,
+        iconContentColor = iconContentColor,
+        properties = properties,
+    )
 }

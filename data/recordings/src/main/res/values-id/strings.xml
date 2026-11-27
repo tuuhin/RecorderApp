@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="categories_create_success">Kategori Berhasil Dibuat</string>
+    <string name="categories_updated">Rekaman dipindahkan ke kategori %s.</string>
+    <string name="categories_deleted">Kategori Dihapus</string>
+    <string name="recordings_add_to_favourite_success">Ditandai sebagai favorit</string>
+    <string name="recordings_remove_favourite_failed">Favorit dihapus</string>
+    <string name="recording_delete_request_success">Rekaman Berhasil Dihapus</string>
+    <string name="recording_delete_request_failed">Permintaan hapus gagal</string>
+    <string name="rename_recording_success">Rekaman Berhasil Diganti Nama</string>
+    <string name="restore_recordings_success">Rekaman Terpilih Dipulihkan</string>
+    <string name="recording_restore_request_failed">Pemulihan gagal</string>
+    <string name="recording_trash_request_success">Rekaman Dipindahkan ke Tempat Sampah</string>
+    <string name="recording_trash_request_failed">Tidak dapat memindahkan rekaman ke tempat sampah</string>
+    <string name="metadata_modify_permission_denied">Tidak memiliki akses untuk mengubah metadata file</string>
+</resources>

@@ -1,0 +1,6 @@
+<resources>
+    <string name="categories_updated">Đã chuyển bản ghi vào danh mục %s.</string>
+    <string name="select_category_screen">Chọn danh mục</string>
+    <string name="categories_deleted">Đã xóa danh mục</string>
+    <string name="categories_create_success">Đã tạo danh mục thành công</string>
+</resources>

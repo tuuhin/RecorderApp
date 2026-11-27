@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">রিফ্রেশ</string>
+    <string name="widget_error_text">কিছু কারণে উইজেট লোড করা যায়নি</string>
+    <string name="widget_error_title">উইজেট লোড করা যায়নি</string>
+    <string name="recordings_not_found">দেখানোর জন্য কোনো রেকর্ডিং পাওয়া যায়নি</string>
+    <string name="widget_recordings_description">আপনার রেকর্ডিংয়ের এক নজরে দেখা</string>
+    <string name="widget_recordings_no_recordings">কোনো রেকর্ডিং নেই</string>
+    <string name="recordings_load_failed">রেকর্ডিং লোড করা যায়নি</string>
+    <string name="widget_recorder_description">একটি বোতাম টিপে রেকর্ডিং শুরু করুন</string>
+    <string name="recorder_state_recording">রেকর্ডিং হচ্ছে</string>
+    <string name="recorder_state_paused">থেমেছে</string>
+    <string name="widget_recorder_widget">রেকর্ডার উইজেট</string>
+    <string name="widget_recordings_title">রেকর্ডিং</string>
+    <string name="widget_no_recordings">রেকর্ডিং নেই</string>
+</resources>

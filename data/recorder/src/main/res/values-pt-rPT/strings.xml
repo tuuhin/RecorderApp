@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recorder_notification_text_running">O gravador está em execução</string>
+    <string name="recorder_notification_text_paused">Gravação em pausa</string>
+    <string name="recorder_recording_completed">Gravação concluída</string>
+    <string name="recorder_recording_completed_text">Guardada no armazenamento externo</string>
+    <string name="recorder_recording_completed_text_2">Toque para reproduzir</string>
+    <string name="toast_recording_bluetooth">A utilizar o microfone Bluetooth</string>
+    <string name="toast_incoming_call">Chamada recebida</string>
+    <string name="bookmarks_saved">Marcadores adicionados</string>
+    <string name="bookmarks_too_fast_warning">Os marcadores têm de estar separados por 1 segundo</string>
+    <string name="recorder_action_pause">Pausa</string>
+    <string name="recorder_action_resume">Retomar</string>
+    <string name="recorder_action_stop">Parar</string>
+    <string name="recorder_action_cancel">Cancelar</string>
+</resources>

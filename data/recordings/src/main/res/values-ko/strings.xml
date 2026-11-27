@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="categories_create_success">카테고리가 생성되었습니다</string>
+    <string name="categories_updated">녹음이 %s 카테고리로 이동되었습니다.</string>
+    <string name="categories_deleted">카테고리 삭제됨</string>
+    <string name="recordings_add_to_favourite_success">즐겨찾기에 추가됨</string>
+    <string name="recordings_remove_favourite_failed">즐겨찾기에서 제거됨</string>
+    <string name="recording_delete_request_success">녹음이 삭제되었습니다</string>
+    <string name="recording_delete_request_failed">삭제 요청이 실패했습니다</string>
+    <string name="rename_recording_success">녹음 이름이 변경되었습니다</string>
+    <string name="restore_recordings_success">선택한 녹음이 복원되었습니다</string>
+    <string name="recording_restore_request_failed">복원 실패</string>
+    <string name="recording_trash_request_success">녹음이 휴지통으로 이동되었습니다</string>
+    <string name="recording_trash_request_failed">녹음을 휴지통으로 이동할 수 없습니다</string>
+    <string name="metadata_modify_permission_denied">파일 메타데이터를 수정할 권한이 없습니다</string>
+</resources>

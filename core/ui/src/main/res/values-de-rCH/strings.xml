@@ -1,0 +1,10 @@
+<resources>
+    <string name="cancel_selection">Aktion schliessen</string>
+    <string name="audio_metadata_file_size_title">Grösse</string>
+    <string name="recording_settings_encoder_text">Wähle einen Audio-Encoder. Eine Änderung der Kodierung verändert Qualität und Grösse der Aufnahme</string>
+    <string name="recording_settings_encoder_wav_text">Unkomprimiertes PCM-Audio mit maximaler Klangtreue auf Kosten grosser Dateigrössen</string>
+    <string name="recording_settings_encoder_flac_text">Verlustfreie Komprimierung, die die ursprüngliche Audioqualität bei deutlich geringerer Dateigrösse bewahrt</string>
+    <string name="recording_settings_encoder_amr_wb_text">Geeignet für längere Aufnahmen mit einem grösseren Frequenzbereich</string>
+    <string name="recording_settings_encoder_mpeg_text">Gute Qualität bei gleicher Bitrate, aber mit grösseren Dateien</string>
+    <string name="sort_option_size">Dateigrösse</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>Enregistrez un audio de haute qualité d’un seul geste</item>
+        <item>Lisez vos enregistrements facilement grâce aux commandes</item>
+        <item>Rognez et coupez vos enregistrements avec précision</item>
+        <item>Gardez votre audio organisé et accessible</item>
+    </string-array>
+</resources>

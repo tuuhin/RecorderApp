@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">正在分享錄製的音訊檔案</string>
+    <string name="share_intent_choose_title">選擇要分享檔案的應用程式</string>
+    <string name="sharing_bookmarks">正在分享書籤</string>
+    <string name="app_shortcuts_recordings">錄音</string>
+    <string name="app_shortcuts_recordings_text">顯示應用程式中的所有錄音</string>
+    <string name="app_shortcuts_open_last_played">上次播放的項目</string>
+    <string name="app_shortcuts_open_last_played_text">開啟上次播放的音訊檔案</string>
+</resources>

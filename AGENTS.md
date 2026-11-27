@@ -36,13 +36,13 @@ RecorderApp (`com.eva.recorderapp`) is an Android audio recorder with:
 
 Five layer groups, defined in `settings.gradle.kts`:
 
-| Group              | Modules                                                                                                                                                                        | Package convention            |
-|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
-| `:app`             | The application module                                                                                                                                                         | `com.eva.recorderapp`         |
-| `:core:*`          | `core/ui` (shared composables, theme, nav utils), `core/utils` (Kotlin JVM helpers)                                                                                            | `com.eva.ui`, `com.eva.utils` |
-| `:data:*`          | `recordings`, `recorder`, `player`, `editor`, `bookmarks`, `categories`, `database`, `datastore`, `location`, `transcribe`, `interactions`, `use_case`, `visualizer`, `worker` | `com.eva.<module>`            |
-| `:feature:*`       | `recorder`, `recordings`, `player`, `player-shared`, `editor`, `categories`, `settings`, `widget`, `onboarding`                                                                | `com.eva.feature_<name>`      |
-| `:testing:runtime` | `HiltTestRunner` used as the instrumentation runner by all `androidTest` setups                                                                                                | `com.eva.testing.runtime`     |
+| Group              | Modules                                                                                                                                                                                                                                 | Package convention            |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
+| `:app`             | The application module                                                                                                                                                                                                                  | `com.eva.recorderapp`         |
+| `:core:*`          | `core/ui` (shared composables, theme, nav utils), `core/utils` (Kotlin JVM helpers)                                                                                                                                                     | `com.eva.ui`, `com.eva.utils` |
+| `:data:*`          | `recordings`, `recorder`, `recorder-native`, `player`, `editor`, `bookmarks`, `categories`, `database`, `datastore`, `location`, `transcribe`, `interactions`, `use_case`, `visualizer`, `worker`, `compression`, `speech-enhancements` | `com.eva.<module>`            |
+| `:feature:*`       | `recorder`, `recordings`, `player`, `player-shared`, `editor`, `categories`, `settings`, `widget`, `onboarding`                                                                                                                         | `com.eva.feature_<name>`      |
+| `:testing:runtime` | `HiltTestRunner` used as the instrumentation runner by all `androidTest` setups                                                                                                                                                         | `com.eva.testing.runtime`     |
 
 Rules:
 
@@ -81,9 +81,11 @@ Rules:
   files.
 - Follow the existing `domain/`-interface + `data/`-implementation + `di/`-binding pattern when
   adding repositories or providers.
-- New user-facing strings go in `src/main/res/values/`; localized copies exist in `values-bn`
-  (Bengali) and `values-hi` (Hindi) — the app ships only `en`, `bn`, `hi`
-  (`androidResources.localeFilters` in `app/build.gradle.kts`).
+- New user-facing strings go in `src/main/res/values/`; localized copies exist for `bn`, `de`, `es`,
+  `ar`, `fr`, `hi`, `id`, `ja`, `ko`, `pt-rBR`, `pt-rPT`, `ru`, `tr`, `uk`, `vi`, `zh-rCN`, `zh-rTW`,
+  plus regional overrides `es-rES`, `bn-rIN`, `fr-rCA`, `de-rCH`, `ar-rSA`, `ar-rEG`
+  (`androidResources.localeFilters` in `app/build.gradle.kts`). English is the source language.
+  See `TRANSLATIONS.md` for which languages are verified and which are AI-generated.
 - Compose compiler stability: domain models are listed in the root `stability_config.conf`. When you
   add a new domain model that Compose reads, add its package there.
 - New module? Apply the convention plugins from `build-logic` (e.g.

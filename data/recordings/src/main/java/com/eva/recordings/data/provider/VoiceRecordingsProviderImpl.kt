@@ -278,7 +278,7 @@ internal class VoiceRecordingsProviderImpl(
 
 			} catch (e: SecurityException) {
 				Log.e(LOGGER_TAG, "DON'T HAVE OWNER ACCESS", e)
-				emit(Resource.Error(e, message = "Don't have access to modify the file metadata"))
+                emit(Resource.Error(e, message = context.getString(R.string.metadata_modify_permission_denied)))
 			} catch (e: SQLException) {
 				emit(Resource.Error(e, "SQL EXCEPTION"))
 			} catch (e: Exception) {

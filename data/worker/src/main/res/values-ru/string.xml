@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">Подготовка автономных голосовых функций</string>
+    <string name="stt_model_download_requested_text">Запрос на загрузку</string>
+    <string name="stt_model_downloading_text">Загрузка</string>
+    <string name="stt_model_unzip_text">Распаковка</string>
+    <string name="stt_model_ready_text">Готово к сохранению</string>
+    <string name="stt_model_saved_text">Сохранено</string>
+    <string name="stt_model_cleanup_text">Очистка</string>
+    <string name="trash_cleanup_notification_title">Очистка корзины</string>
+    <string name="trash_cleanup_notification_text">Удаление просроченных записей</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="categories_create_success">類別建立成功</string>
+    <string name="categories_deleted">已刪除的類別</string>
+    <string name="recordings_add_to_favourite_success">已標記為最愛</string>
+    <string name="recordings_remove_favourite_failed">已移除最愛項目</string>
+    <string name="recording_delete_request_success">錄音已成功刪除</string>
+    <string name="recording_delete_request_failed">刪除要求失敗</string>
+    <string name="rename_recording_success">錄音已成功重新命名</string>
+    <string name="restore_recordings_success">已還原所選錄音</string>
+    <string name="recording_restore_request_failed">還原失敗</string>
+    <string name="recording_trash_request_success">錄音已移至垃圾桶</string>
+    <string name="recording_trash_request_failed">無法將錄音移至垃圾桶</string>
+    <string name="categories_updated">錄音已移至「%s」分類。</string>
+    <string name="metadata_modify_permission_denied">無權修改檔案中繼資料</string>
+</resources>

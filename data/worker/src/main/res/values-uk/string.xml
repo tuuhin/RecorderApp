@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">Підготовка автономних голосових функцій</string>
+    <string name="stt_model_download_requested_text">Запит на завантаження</string>
+    <string name="stt_model_downloading_text">Завантаження</string>
+    <string name="stt_model_unzip_text">Розпакування</string>
+    <string name="stt_model_ready_text">Готово до збереження</string>
+    <string name="stt_model_saved_text">Збережено</string>
+    <string name="stt_model_cleanup_text">Очищення</string>
+    <string name="trash_cleanup_notification_title">Очищення кошика</string>
+    <string name="trash_cleanup_notification_text">Видалення прострочених записів</string>
+</resources>

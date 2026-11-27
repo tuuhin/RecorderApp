@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">Preparando funciones de voz sin conexión</string>
+    <string name="stt_model_download_requested_text">Descarga solicitada</string>
+    <string name="stt_model_downloading_text">Descargando</string>
+    <string name="stt_model_unzip_text">Descomprimiendo</string>
+    <string name="stt_model_ready_text">Listo para guardar</string>
+    <string name="stt_model_saved_text">Guardado</string>
+    <string name="stt_model_cleanup_text">Limpiando</string>
+    <string name="trash_cleanup_notification_title">Vaciando la papelera</string>
+    <string name="trash_cleanup_notification_text">Eliminando grabaciones caducadas</string>
+</resources>

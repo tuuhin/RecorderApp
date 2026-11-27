@@ -1,0 +1,5 @@
+<resources>
+    <string name="recording_permanent_delete_dialog_text">Записи будут удалены навсегда. Вы уверена, что хотите удалить их? Восстановить их позже будет невозможно</string>
+    <string name="cancel_recording_dialog_text">Вы уверена, что хотите отменить эту запись? После отмены её нельзя будет восстановить</string>
+    <string name="save_recording_dialog_text">Вы уверена, что закончили запись?</string>
+</resources>

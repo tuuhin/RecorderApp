@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">Оновити</string>
+    <string name="widget_error_text">Не вдалося завантажити віджет через помилку</string>
+    <string name="widget_error_title">Не вдалося завантажити віджет</string>
+    <string name="recordings_not_found">Немає записів для відображення</string>
+    <string name="widget_recordings_description">Погляд на ваші записи</string>
+    <string name="widget_recordings_no_recordings">Немає записів</string>
+    <string name="recordings_load_failed">Не вдалося завантажити записи</string>
+    <string name="widget_recorder_description">Натисніть кнопку, щоб почати запис</string>
+    <string name="recorder_state_recording">Триває запис</string>
+    <string name="recorder_state_paused">Пауза</string>
+    <string name="widget_recorder_widget">Віджет рекордера</string>
+    <string name="widget_recordings_title">Записи</string>
+    <string name="widget_no_recordings">Немає записів</string>
+</resources>

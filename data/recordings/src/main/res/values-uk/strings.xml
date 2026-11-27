@@ -1,0 +1,15 @@
+<resources>
+    <string name="categories_create_success">Категорію успішно створено</string>
+    <string name="categories_deleted">Видалені категорії</string>
+    <string name="recordings_add_to_favourite_success">Додано до вибраного</string>
+    <string name="recordings_remove_favourite_failed">Вибране видалено</string>
+    <string name="recording_delete_request_success">Записи успішно видалено</string>
+    <string name="recording_delete_request_failed">Не вдалося виконати запит на видалення</string>
+    <string name="rename_recording_success">Запис успішно перейменовано</string>
+    <string name="restore_recordings_success">Вибрані записи відновлено</string>
+    <string name="recording_restore_request_failed">Не вдалося відновити</string>
+    <string name="recording_trash_request_success">Записи переміщено до кошика</string>
+    <string name="recording_trash_request_failed">Не вдалося перемістити записи до кошика</string>
+    <string name="categories_updated">Записи переміщено до категорії «%s».</string>
+    <string name="metadata_modify_permission_denied">Немає прав на зміну метаданих файлу</string>
+</resources>

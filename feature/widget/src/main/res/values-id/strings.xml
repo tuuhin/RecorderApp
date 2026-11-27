@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_refresh">Muat Ulang</string>
+    <string name="widget_error_text">Tidak dapat memuat widget karena suatu hal</string>
+    <string name="widget_error_title">Gagal memuat widget</string>
+    <string name="recordings_not_found">Tidak dapat menemukan rekaman untuk ditampilkan</string>
+    <string name="widget_recordings_description">Lihat sekilas rekaman Anda</string>
+    <string name="widget_recordings_no_recordings">Tidak ada rekaman</string>
+    <string name="recordings_load_failed">Tidak dapat memuat rekaman</string>
+    <string name="widget_recorder_description">Mulai merekam dengan satu ketukan</string>
+    <string name="recorder_state_recording">Merekam</string>
+    <string name="recorder_state_paused">Dijeda</string>
+    <string name="widget_recorder_widget">Widget Perekam</string>
+    <string name="widget_recordings_title">Rekaman</string>
+    <string name="widget_no_recordings">Tidak Ada Rekaman</string>
+</resources>

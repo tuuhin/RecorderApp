@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="categories_create_success">カテゴリを作成しました</string>
+    <string name="categories_updated">録音を%sカテゴリに移動しました。</string>
+    <string name="categories_deleted">カテゴリを削除しました</string>
+    <string name="select_category_screen">カテゴリを選択</string>
+</resources>

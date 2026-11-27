@@ -11,4 +11,6 @@
   <string name="recording_restore_request_failed">Geri yükleme başarısız oldu</string>
   <string name="recording_trash_request_success">Kayıtlar Çöp Kutusuna Taşındı</string>
   <string name="recording_trash_request_failed">Kayıtlar çöp kutusuna taşınamadı</string>
+    <string name="categories_updated">Kayıtlar %s kategorisine taşındı.</string>
+    <string name="metadata_modify_permission_denied">Dosya meta verilerini değiştirme izni yok</string>
 </resources>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="widget_refresh">Làm mới</string>
+    <string name="widget_error_text">Không thể tải tiện ích do một sự cố</string>
+    <string name="widget_error_title">Tải tiện ích thất bại</string>
+    <string name="recordings_not_found">Không tìm thấy bản ghi nào để hiển thị</string>
+    <string name="widget_recordings_description">Xem nhanh các bản ghi của bạn</string>
+    <string name="widget_recordings_no_recordings">Không có bản ghi</string>
+    <string name="recordings_load_failed">Không thể tải bản ghi</string>
+    <string name="widget_recorder_description">Bắt đầu ghi âm bằng một lần chạm</string>
+    <string name="recorder_state_recording">Đang ghi âm</string>
+    <string name="recorder_state_paused">Đã tạm dừng</string>
+    <string name="widget_recorder_widget">Tiện ích máy ghi âm</string>
+    <string name="widget_recordings_title">Bản ghi âm</string>
+    <string name="widget_no_recordings">Không có bản ghi</string>
+</resources>

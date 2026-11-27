@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">オフライン音声機能を準備中</string>
+    <string name="stt_model_download_requested_text">ダウンロードをリクエストしました</string>
+    <string name="stt_model_downloading_text">ダウンロード中</string>
+    <string name="stt_model_unzip_text">解凍中</string>
+    <string name="stt_model_ready_text">保存の準備ができました</string>
+    <string name="stt_model_saved_text">保存しました</string>
+    <string name="stt_model_cleanup_text">片付け中</string>
+    <string name="trash_cleanup_notification_title">ゴミ箱を空にする</string>
+    <string name="trash_cleanup_notification_text">期限切れの録音を削除中</string>
+</resources>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="categories_create_success">تم إنشاء الفئة بنجاح</string>
+    <string name="categories_updated">تم نقل التسجيلات إلى الفئة %s.</string>
+    <string name="categories_deleted">تم حذف الفئات</string>
+    <string name="recordings_add_to_favourite_success">تمت الإضافة إلى المفضلة</string>
+    <string name="recordings_remove_favourite_failed">تمت الإزالة من المفضلة</string>
+    <string name="recording_delete_request_success">تم حذف التسجيلات بنجاح</string>
+    <string name="recording_delete_request_failed">فشل طلب الحذف</string>
+    <string name="rename_recording_success">تمت إعادة تسمية التسجيل بنجاح</string>
+    <string name="restore_recordings_success">تمت استعادة التسجيلات المحددة</string>
+    <string name="recording_restore_request_failed">فشلت الاستعادة</string>
+    <string name="recording_trash_request_success">تم نقل التسجيلات إلى المهملات</string>
+    <string name="recording_trash_request_failed">تعذّر نقل التسجيلات إلى المهملات</string>
+    <string name="metadata_modify_permission_denied">لا تملك صلاحية تعديل بيانات الملف الوصفية</string>
+</resources>

@@ -1,0 +1,9 @@
+<resources>
+    <string name="share_audio_extra_subject">Chia sẻ các tệp âm thanh đã ghi</string>
+    <string name="share_intent_choose_title">Chọn một ứng dụng để chia sẻ tệp</string>
+    <string name="sharing_bookmarks">Đang chia sẻ dấu mốc</string>
+    <string name="app_shortcuts_recordings">Bản ghi âm</string>
+    <string name="app_shortcuts_recordings_text">Hiện tất cả bản ghi của ứng dụng</string>
+    <string name="app_shortcuts_open_last_played">Mục phát gần nhất</string>
+    <string name="app_shortcuts_open_last_played_text">Mở tệp âm thanh được phát gần nhất</string>
+</resources>

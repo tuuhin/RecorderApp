@@ -1,0 +1,15 @@
+<resources>
+    <string name="widget_refresh">تحديث</string>
+    <string name="widget_error_text">تعذّر تحميل الوidget بسبب مشكلة ما</string>
+    <string name="widget_error_title">فشل تحميل الوidget</string>
+    <string name="recordings_not_found">لم يتم العثور على تسجيلات لعرضها</string>
+    <string name="widget_recordings_description">نظرة سريعة على تسجيلاتك</string>
+    <string name="widget_recordings_no_recordings">لا توجد تسجيلات</string>
+    <string name="recordings_load_failed">تعذّر تحميل التسجيلات</string>
+    <string name="widget_recorder_description">ابدأ التسجيل بضغطة زر</string>
+    <string name="recorder_state_recording">جارٍ التسجيل</string>
+    <string name="recorder_state_paused">متوقف مؤقتاً</string>
+    <string name="widget_recorder_widget">ويدجت المسجّل</string>
+    <string name="widget_recordings_title">التسجيلات</string>
+    <string name="widget_no_recordings">لا توجد تسجيلات</string>
+</resources>

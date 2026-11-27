@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_audio_extra_subject">रिकॉर्ड की गई ऑडियो फ़ाइलें साझा की जा रही हैं</string>
+    <string name="share_intent_choose_title">फ़ाइलें साझा करने के लिए ऐप चुनें</string>
+    <string name="sharing_bookmarks">बुकमार्क साझा किए जा रहे हैं</string>
+    <string name="app_shortcuts_recordings">रिकॉर्डिंग</string>
+    <string name="app_shortcuts_recordings_text">ऐप की सभी रिकॉर्डिंग दिखाता है</string>
+    <string name="app_shortcuts_open_last_played">अंतिम बजाया गया आइटम</string>
+    <string name="app_shortcuts_open_last_played_text">अंतिम बजाई गई ऑडियो फ़ाइल खोलता है</string>
+</resources>

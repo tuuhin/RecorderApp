@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="onboarding_page_features">
+        <item>한 번의 탭으로 고품질 오디오를 녹음하세요</item>
+        <item>손쉬운 조작으로 녹음을 재생하세요</item>
+        <item>정확하게 녹음을 트리밍하고 자르세요</item>
+        <item>오디오를 체계적이고 쉽게 접근할 수 있게 관리하세요</item>
+    </string-array>
+</resources>

@@ -33,7 +33,17 @@ android {
     }
 
     androidResources {
-        localeFilters.addAll(setOf("bn", "hi", "tr", "es", "de"))
+        localeFilters.addAll(
+            setOf(
+                "bn", "hi", "tr", "es", "de",
+                "ru", "fr", "uk",
+                "pt-rBR", "pt-rPT",
+                "zh-rCN", "zh-rTW",
+                "ko", "ja", "id",
+                "vi", "es-rES", "bn-rBD", "bn-rIN", "fr-rCA", "de-rCH",
+                "ar", "ar-rSA", "ar-rEG",
+            ),
+        )
     }
 
     signingConfigs {

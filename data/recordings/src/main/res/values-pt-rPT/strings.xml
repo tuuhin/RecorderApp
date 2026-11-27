@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="categories_create_success">Categoria criada com êxito</string>
+    <string name="categories_deleted">Categorias eliminadas</string>
+    <string name="recordings_add_to_favourite_success">Favoritos marcados</string>
+    <string name="recordings_remove_favourite_failed">Favoritos removidos</string>
+    <string name="recording_delete_request_success">Gravações eliminadas com êxito</string>
+    <string name="recording_delete_request_failed">Falha no pedido de eliminação</string>
+    <string name="rename_recording_success">Gravação renomeada com êxito</string>
+    <string name="restore_recordings_success">Gravações selecionadas restauradas</string>
+    <string name="recording_restore_request_failed">Falha ao restaurar</string>
+    <string name="recording_trash_request_success">Gravações movidas para o lixo</string>
+    <string name="recording_trash_request_failed">Não foi possível mover as gravações para o lixo</string>
+    <string name="categories_updated">Gravações movidas para a categoria %s.</string>
+    <string name="metadata_modify_permission_denied">Sem permissão para modificar os metadados do ficheiro</string>
+</resources>

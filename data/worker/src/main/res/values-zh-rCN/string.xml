@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stt_model_download_notification_text">正在准备离线语音功能</string>
+    <string name="stt_model_download_requested_text">已请求下载</string>
+    <string name="stt_model_downloading_text">正在下载</string>
+    <string name="stt_model_unzip_text">正在解压</string>
+    <string name="stt_model_ready_text">准备保存</string>
+    <string name="stt_model_saved_text">已保存</string>
+    <string name="stt_model_cleanup_text">正在清理</string>
+    <string name="trash_cleanup_notification_title">正在清空回收站</string>
+    <string name="trash_cleanup_notification_text">正在删除过期的录音</string>
+</resources>

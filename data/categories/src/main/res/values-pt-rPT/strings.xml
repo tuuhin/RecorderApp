@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="select_category_screen">Selecionar categoria</string>
+    <string name="categories_create_success">Categoria criada com sucesso</string>
+    <string name="categories_deleted">Categoria eliminada</string>
+    <string name="categories_updated">Gravações movidas para a categoria %s.</string>
+</resources>

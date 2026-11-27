@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recorder_action_pause">Jeda</string>
+    <string name="recorder_action_resume">Lanjutkan</string>
+    <string name="recorder_action_stop">Hentikan</string>
+    <string name="recorder_action_cancel">Batal</string>
+    <string name="recorder_notification_text_running">Perekam sedang berjalan</string>
+    <string name="recorder_notification_text_paused">Perekam Dijeda</string>
+    <string name="recorder_recording_completed">Rekaman Selesai</string>
+    <string name="recorder_recording_completed_text">Disimpan ke penyimpanan eksternal</string>
+    <string name="recorder_recording_completed_text_2">Ketuk untuk memutar</string>
+    <string name="toast_recording_bluetooth">Menggunakan mikrofon bluetooth</string>
+    <string name="toast_incoming_call">Panggilan masuk</string>
+    <string name="bookmarks_saved">Bookmark Ditambahkan</string>
+    <string name="bookmarks_too_fast_warning">Bookmark harus berjarak 1 detik</string>
+</resources>

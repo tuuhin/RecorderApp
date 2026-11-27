@@ -269,4 +269,12 @@
     <string name="editor_redo_description">Rehacer acción</string>
     <string name="editor_transformation_description">Transformación</string>
     <string name="editor_success_description">Correcto</string>
+    <string name="categories_updated">Grabaciones movidas a la categoría %s.</string>
+    <string name="category_icon_category">Icono de categoría para %s</string>
+    <string name="voice_recognizer">Entrada de micrófono</string>
+    <string name="voice_search_prompt">Di tu consulta de búsqueda</string>
+    <string name="action_cut">Cortar</string>
+    <string name="action_crop">Recortar</string>
+    <string name="app_settings_extra_option_about">Acerca de</string>
+    <string name="action_open_settings">Abrir ajustes</string>
 </resources>
