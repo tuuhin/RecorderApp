@@ -1,3 +1,6 @@
 /build
 src/main/generated/*
+# The generated baseline profile must be committed so it ships in the APK.
+!src/main/generated/baselineProfiles/
+!src/main/generated/baselineProfiles/**
 src/main/assets/*.properties

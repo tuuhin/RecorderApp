@@ -34,9 +34,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ClearSpeechEnhancerTests {
 
-    lateinit var context: Context
-    lateinit var modelPathProvider: ModelPathProvider
-    lateinit var instance: IClearSpeechEnhancer
+    private lateinit var context: Context
+    private lateinit var modelPathProvider: ModelPathProvider
+    private lateinit var instance: IClearSpeechEnhancer
 
     @get:Rule
     val tempDirRule = TemporaryFolder()
@@ -58,9 +58,10 @@ class ClearSpeechEnhancerTests {
     }
 
     @Test
-    fun creation_reports_the_algorithmic_latency_of_the_bundled_config() {
+    fun creation_reports_the_algorithmic_latency_of_the_bundled_config() = runTest {
         instance = ClearSpeechEnhancer(modelDir())
 
+        advanceUntilIdle()
         assertThat(instance.latencySamples).isEqualTo(KNOWN_LATENCY_SAMPLES)
     }
 
@@ -79,9 +80,9 @@ class ClearSpeechEnhancerTests {
     }
 
     @Test
-    fun creation_rejects_a_model_directory_without_the_config_file() {
+    fun creation_rejects_a_model_directory_without_the_config_file() = runTest {
         val folder = modelDir()
-
+        advanceUntilIdle()
         assertThat(File(folder, CONFIG_FILE_NAME.substringAfterLast('/')).delete()).isEqualTo(true)
 
         assertFailsWith<IllegalArgumentException> {
@@ -261,6 +262,7 @@ class ClearSpeechEnhancerTests {
         instance.close()
         instance.close() // second release is a no-op and must not throw
 
+        advanceUntilIdle()
         assertFailsWith<SpeechEnhancementHandleException> { instance.latencySamples }
         assertFailsWith<SpeechEnhancementHandleException> { instance.process(FloatArray(HOP_SIZE)) }
     }
@@ -291,8 +293,8 @@ class ClearSpeechEnhancerTests {
     private suspend fun prepared(): IClearSpeechEnhancer =
         ClearSpeechEnhancer(modelDir()).also { it.prepare() }
 
-    private fun modelDir(): File = tempDirRule.newFolder()
-        .also { dir -> kotlinx.coroutines.runBlocking { modelPathProvider.copyAssetsToModelDir(dir) } }
+    private suspend fun modelDir(): File = tempDirRule.newFolder()
+        .also { dir -> modelPathProvider.copyAssetsToModelDir(dir) }
 
     /**
      * A 48 kHz mono signal shaped roughly like speech: a few voiced formant tones with

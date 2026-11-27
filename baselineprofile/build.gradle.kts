@@ -1,45 +1,49 @@
 import com.android.build.api.dsl.ManagedVirtualDevice.PageAlignment.FORCE_16KB_PAGES
 
 plugins {
-	alias(libs.plugins.android.test)
-	alias(libs.plugins.androidx.baselineprofile)
+    alias(libs.plugins.android.test)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 android {
-	namespace = "com.eva.recorderapp.baselineprofile"
+    namespace = "com.eva.recorderapp.baselineprofile"
     compileSdk {
         version = release(libs.versions.android.compileSdk.major.get().toInt()) {
             minorApiLevel = libs.versions.android.compileSdk.revision.get().toInt()
         }
     }
 
-	defaultConfig {
-		minSdk = libs.versions.android.minSdk.get().toInt()
-		targetProjectPath = ":app"
+    defaultConfig {
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetProjectPath = ":app"
         testInstrumentationRunner = "androidx.benchmark.junit4.AndroidBenchmarkRunner"
-	}
+    }
 
-	testOptions {
-		managedDevices {
-			localDevices {
-				create("pixel6Api37") {
-					device = "Pixel 6"
-					apiLevel = 37
-					systemImageSource = "google_apis_playstore"
-					pageAlignment = FORCE_16KB_PAGES
-				}
-			}
-		}
-	}
+    testOptions {
+        managedDevices {
+            localDevices {
+                create("pixel7Api37") {
+                    device = "Pixel 6"
+                    apiLevel = 37
+                    systemImageSource = "google_apis"
+                    pageAlignment = FORCE_16KB_PAGES
+                }
+            }
+        }
+    }
 }
 
 dependencies {
-	implementation(libs.androidx.benchmark.macro.junit4)
-	implementation(libs.androidx.uiautomator)
-	implementation(libs.androidx.junit)
+    implementation(libs.androidx.benchmark.macro.junit4)
+    // Provides androidx.benchmark.junit4.AndroidBenchmarkRunner, which is set as
+    // testInstrumentationRunner below. Without it the producer test APK crashes
+    // with ClassNotFoundException and no baseline profile is generated.
+    implementation(libs.androidx.benchmark.junit4)
+    implementation(libs.androidx.uiautomator)
+    implementation(libs.androidx.junit)
 }
 
 baselineProfile {
-	useConnectedDevices = false
-	managedDevices += "pixel6Api37"
+    useConnectedDevices = false
+    managedDevices += "pixel7Api37"
 }
