@@ -12,6 +12,12 @@ set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
+# Thin link-time optimization, enabled per-target in configure_project_target.
+# The explicit link option avoids CMake 3.22's IPO default injecting -fuse-ld=gold,
+# which the NDK dropped in r22.
+set(CMAKE_C_LINK_OPTIONS_IPO "-flto=thin")
+set(CMAKE_CXX_LINK_OPTIONS_IPO "-flto=thin")
+
 include(cmake/Config.cmake)
 
 # Tests are built from this same project: every module owns a `test/` directory and

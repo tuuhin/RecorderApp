@@ -60,10 +60,12 @@ internal class SpeechEnhancementProcessor(
         val remaining = inputBuffer.remaining()
         if (remaining <= 0) return
 
-        val pcm = ByteArray(remaining)
-        inputBuffer.get(pcm)
+        // Decode straight from the processor buffer: this avoids an intermediate bytearray for
+        // every clip of incoming buffer
+        val mono = inputBuffer.decodeToMono(inputAudioFormat.encoding, inputAudioFormat.channelCount)
+        // The processor owns the input buffer; mark it fully consumed.
+        inputBuffer.position(inputBuffer.limit())
 
-        val mono = pcm.decodeToMono(inputAudioFormat.encoding, inputAudioFormat.channelCount)
         if (mono.isEmpty()) return
 
         val enhancedResults = try {
@@ -118,21 +120,38 @@ internal class SpeechEnhancementProcessor(
     private fun writeOutput(samples: FloatArray) {
         if (samples.isEmpty()) return
 
-        // encode the data
-        val pcm = samples.encodeFromMono(inputAudioFormat.encoding, inputAudioFormat.channelCount)
-        if (pcm.isEmpty()) return
+        val channels = inputAudioFormat.channelCount
+        val bytesPerSample = when (inputAudioFormat.encoding) {
+            C.ENCODING_PCM_16BIT -> 2
+            C.ENCODING_PCM_FLOAT -> 4
+            else -> return
+        }
+        if (channels <= 0) return
 
-        // update the buffer which is being used by media3
-        val outputBuffer = replaceOutputBuffer(pcm.size)
-        outputBuffer.put(pcm)
+        // replace the audio buffer with the new size
+        val outputBuffer = replaceOutputBuffer(samples.size * channels * bytesPerSample)
+            .order(ByteOrder.nativeOrder())
+
+        // update the output buffer based on the pcm encoding
+        when (inputAudioFormat.encoding) {
+            C.ENCODING_PCM_16BIT -> samples.forEach { sample ->
+                val pcm = (sample.coerceIn(-1f, 1f) * 32767f).toInt().toShort()
+                repeat(channels) { outputBuffer.putShort(pcm) }
+            }
+
+            C.ENCODING_PCM_FLOAT -> samples.forEach { sample ->
+                repeat(channels) { outputBuffer.putFloat(sample) }
+            }
+
+            else -> Log.w(TAG, "INVALID AUDIO ENCODING TO WORK WITH")
+        }
         outputBuffer.flip()
     }
 
-    private fun ByteArray.decodeToMono(encoding: Int, channels: Int): FloatArray {
+    private fun ByteBuffer.decodeToMono(encoding: Int, channels: Int): FloatArray {
         if (channels <= 0) return FloatArray(0)
 
-        val buffer = ByteBuffer.wrap(this)
-            .order(ByteOrder.nativeOrder())
+        val buffer = duplicate().order(ByteOrder.nativeOrder())
 
         return when (encoding) {
             C.ENCODING_PCM_16BIT -> {
@@ -161,33 +180,6 @@ internal class SpeechEnhancementProcessor(
 
             else -> FloatArray(0)
         }
-    }
-
-    private fun FloatArray.encodeFromMono(encoding: Int, channels: Int): ByteArray {
-
-        if (isEmpty() || channels <= 0) return ByteArray(0)
-
-        val bytesPerSample = when (encoding) {
-            C.ENCODING_PCM_16BIT -> 2
-            C.ENCODING_PCM_FLOAT -> 4
-            else -> return ByteArray(0)
-        }
-
-        val buffer = ByteBuffer
-            .allocate(size * channels * bytesPerSample)
-            .order(ByteOrder.nativeOrder())
-
-        when (encoding) {
-            C.ENCODING_PCM_16BIT -> forEach { sample ->
-                val pcm = (sample.coerceIn(-1f, 1f) * 32767f).toInt().toShort()
-                repeat(channels) { buffer.putShort(pcm) }
-            }
-
-            C.ENCODING_PCM_FLOAT -> forEach { sample ->
-                repeat(channels) { buffer.putFloat(sample) }
-            }
-        }
-        return buffer.array()
     }
 
     private companion object {

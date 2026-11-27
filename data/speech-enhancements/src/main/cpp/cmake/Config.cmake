@@ -16,6 +16,14 @@ function(configure_project_target target_name)
         target_link_options(${target_name} PRIVATE -Wl,--gc-sections -Wl,--exclude-libs,ALL)
     endif ()
 
+    # Thin LTO for this target only; the global CMAKE_INTERPROCEDURAL_OPTIMIZATION
+    # variables are left alone so FetchContent'd third-party projects (pffft,
+    # onnxruntime) keep their own build behavior.
+    set_target_properties(${target_name} PROPERTIES
+            INTERPROCEDURAL_OPTIMIZATION_RELEASE ON
+            INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON
+    )
+
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         target_compile_options(${target_name} PRIVATE -Wall -Wextra -Wpedantic)
     endif ()

@@ -11,6 +11,7 @@
 #include <memory>
 #include <ranges>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -170,6 +171,95 @@ void describe_session(Ort::Session& session, std::vector<std::string>& names,
     }
 }
 
+// Precomputed classification of a session's inputs/outputs so the per-frame run
+// loops avoid string comparisons and repeated re-sorting of the state names.
+enum class io_role : std::uint8_t {
+    none,
+    feat_erb,
+    feat_spec,
+    emb,
+    e0,
+    e1,
+    e2,
+    e3,
+    c0,
+    lsnr,
+    mask,
+    coefs,
+    state,
+};
+
+struct io_binding {
+    io_role role = io_role::none;
+    std::size_t state_index = 0;
+};
+
+[[nodiscard]] constexpr io_role classify_input(std::string_view name) noexcept {
+    if (name == "feat_erb") return io_role::feat_erb;
+    if (name == "feat_spec") return io_role::feat_spec;
+    if (name == "emb") return io_role::emb;
+    if (name == "e0") return io_role::e0;
+    if (name == "e1") return io_role::e1;
+    if (name == "e2") return io_role::e2;
+    if (name == "e3") return io_role::e3;
+    if (name == "c0") return io_role::c0;
+    if (name.starts_with(kStateInPrefix)) return io_role::state;
+    return io_role::none;
+}
+
+[[nodiscard]] constexpr io_role classify_output(std::string_view name) noexcept {
+    if (name == "e0") return io_role::e0;
+    if (name == "e1") return io_role::e1;
+    if (name == "e2") return io_role::e2;
+    if (name == "e3") return io_role::e3;
+    if (name == "emb") return io_role::emb;
+    if (name == "c0") return io_role::c0;
+    if (name == "lsnr") return io_role::lsnr;
+    if (name == "m") return io_role::mask;
+    if (name == "coefs") return io_role::coefs;
+    if (name.starts_with(kStateOutPrefix)) return io_role::state;
+    return io_role::none;
+}
+
+// Maps each declared input/output of a session to a role. Recurrent edges are
+// resolved against `state_names` (the sorted state_in_* names), mirroring the
+// mapping the run loops used to compute inline on every frame.
+[[nodiscard]] std::vector<io_binding> build_bindings(const std::vector<std::string>& names,
+                                                     const std::vector<std::string>& state_names,
+                                                     bool inputs) {
+    std::vector<io_binding> bindings;
+    bindings.reserve(names.size());
+
+    for (const std::string& name : names) {
+        io_binding binding;
+        binding.role = inputs ? classify_input(name) : classify_output(name);
+
+        if (binding.role == io_role::state) {
+            std::size_t index = state_names.size();
+            if (inputs) {
+                const auto it = std::ranges::find(state_names, name);
+                index = it == state_names.end()
+                            ? state_names.size()
+                            : static_cast<std::size_t>(std::distance(state_names.begin(), it));
+            } else {
+                for (const std::weakly_incrementable auto s :
+                     std::views::iota(std::size_t{0}, state_names.size())) {
+                    if (state_output_name(state_names[s]) == name) {
+                        index = s;
+                        break;
+                    }
+                }
+            }
+            if (index == state_names.size())
+                binding.role = io_role::none;
+            else
+                binding.state_index = index;
+        }
+        bindings.push_back(binding);
+    }
+    return bindings;
+}
+
 }  // namespace
 
 struct onnx_backend_runner::Impl {
@@ -193,6 +283,13 @@ struct onnx_backend_runner::Impl {
     std::vector<float> erb_emb, erb_e0, erb_e1, erb_e2, erb_e3;
     std::vector<float> df_emb, df_c0;
     std::vector<float> out_mask, out_coefs;
+
+    // Precomputed once in init() and reused for every frame.
+    std::vector<std::string> enc_state_names, erb_state_names, df_state_names;
+    std::vector<io_binding> enc_in_bindings, enc_out_bindings;
+    std::vector<io_binding> erb_in_bindings, erb_out_bindings;
+    std::vector<io_binding> df_in_bindings, df_out_bindings;
+    std::vector<Ort::Value> enc_inputs_buf, erb_inputs_buf, df_inputs_buf;
 };
 
 onnx_backend_runner::onnx_backend_runner() : impl_(std::make_unique<Impl>()) {}
@@ -442,6 +539,19 @@ bool onnx_backend_runner::init(const model_config& config, std::string* error) {
     assign_ptrs(impl.df_in_names, impl.df_in_ptrs);
     assign_ptrs(impl.df_out_names, impl.df_out_ptrs);
 
+    // Resolve the recurrent state names and edge roles once, so the per-frame
+    // run loops neither re-sort names nor compare strings on the hot path.
+    impl.enc_state_names = state_names(impl.enc_inputs);
+    impl.erb_state_names = state_names(impl.erb_inputs);
+    impl.df_state_names = state_names(impl.df_inputs);
+
+    impl.enc_in_bindings = build_bindings(impl.enc_in_names, impl.enc_state_names, true);
+    impl.enc_out_bindings = build_bindings(impl.enc_out_names, impl.enc_state_names, false);
+    impl.erb_in_bindings = build_bindings(impl.erb_in_names, impl.erb_state_names, true);
+    impl.erb_out_bindings = build_bindings(impl.erb_out_names, impl.erb_state_names, false);
+    impl.df_in_bindings = build_bindings(impl.df_in_names, impl.df_state_names, true);
+    impl.df_out_bindings = build_bindings(impl.df_out_names, impl.df_state_names, false);
+
     impl.enc_erb.assign(static_cast<std::size_t>(window * nb_erb), 0.0f);
     impl.enc_spec.assign(static_cast<std::size_t>(2 * window * nb_df), 0.0f);
     impl.erb_emb.assign(static_cast<std::size_t>(hidden), 0.0f);
@@ -492,24 +602,29 @@ encoder_result onnx_backend_runner::run_encoder(std::span<const float> feat_erb,
         state.encoder = make_zero_state(impl.enc_inputs);
     }
 
-    const std::vector<std::string> state_inputs = state_names(impl.enc_inputs);
     const std::array<std::int64_t, 4> erb_shape{1, 1, window_frames, cfg.nb_erb};
     const std::array<std::int64_t, 4> spec_shape{1, 2, window_frames, cfg.nb_df};
 
-    std::vector<Ort::Value> inputs;
+    std::vector<Ort::Value>& inputs = impl.enc_inputs_buf;
+    inputs.clear();
     inputs.reserve(impl.enc_in_names.size());
-    for (const std::string& name : impl.enc_in_names) {
-        if (name == "feat_erb") {
-            inputs.push_back(make_tensor(impl.enc_erb, erb_shape));
-        } else if (name == "feat_spec") {
-            inputs.push_back(make_tensor(impl.enc_spec, spec_shape));
-        } else {
-            const auto it = std::ranges::find(state_inputs, name);
-            const auto index = static_cast<std::size_t>(std::distance(state_inputs.begin(), it));
-            const std::vector<float>& value = state.encoder[index];
-            const std::array<std::int64_t, 3> state_shape{
-                1, 1, static_cast<std::int64_t>(value.size())};
-            inputs.push_back(make_tensor(value, state_shape));
+    for (const io_binding& binding : impl.enc_in_bindings) {
+        switch (binding.role) {
+            case io_role::feat_erb:
+                inputs.push_back(make_tensor(impl.enc_erb, erb_shape));
+                break;
+            case io_role::feat_spec:
+                inputs.push_back(make_tensor(impl.enc_spec, spec_shape));
+                break;
+            case io_role::state: {
+                const std::vector<float>& value = state.encoder[binding.state_index];
+                const std::array<std::int64_t, 3> state_shape{
+                    1, 1, static_cast<std::int64_t>(value.size())};
+                inputs.push_back(make_tensor(value, state_shape));
+                break;
+            }
+            default:
+                throw std::runtime_error("unexpected encoder input edge");
         }
     }
 
@@ -523,30 +638,35 @@ encoder_result onnx_backend_runner::run_encoder(std::span<const float> feat_erb,
     encoder_result result;
     for (const std::weakly_incrementable auto i :
          std::views::iota(std::size_t{0}, impl.enc_out_names.size())) {
-        const std::string_view name = impl.enc_out_names[i];
-
-        if (name == "e0")
-            copy_output(outputs[i], result.e0);
-        else if (name == "e1")
-            copy_output(outputs[i], result.e1);
-        else if (name == "e2")
-            copy_output(outputs[i], result.e2);
-        else if (name == "e3")
-            copy_output(outputs[i], result.e3);
-        else if (name == "emb")
-            copy_output(outputs[i], result.emb);
-        else if (name == "c0")
-            copy_output(outputs[i], result.c0);
-        else if (name == "lsnr") {
-            const auto info = outputs[i].GetTensorTypeAndShapeInfo();
-            result.lsnr = outputs[i].GetTensorData<float>()[info.GetElementCount() - 1];
-        } else if (name.starts_with(kStateOutPrefix)) {
-            for (const std::weakly_incrementable auto s :
-                 std::views::iota(std::size_t{0}, state_inputs.size())) {
-                if (name == state_output_name(state_inputs[s])) {
-                    copy_output(outputs[i], state.encoder[s]);
-                }
+        switch (impl.enc_out_bindings[i].role) {
+            case io_role::e0:
+                copy_output(outputs[i], result.e0);
+                break;
+            case io_role::e1:
+                copy_output(outputs[i], result.e1);
+                break;
+            case io_role::e2:
+                copy_output(outputs[i], result.e2);
+                break;
+            case io_role::e3:
+                copy_output(outputs[i], result.e3);
+                break;
+            case io_role::emb:
+                copy_output(outputs[i], result.emb);
+                break;
+            case io_role::c0:
+                copy_output(outputs[i], result.c0);
+                break;
+            case io_role::lsnr: {
+                const auto info = outputs[i].GetTensorTypeAndShapeInfo();
+                result.lsnr = outputs[i].GetTensorData<float>()[info.GetElementCount() - 1];
+                break;
             }
+            case io_role::state:
+                copy_output(outputs[i], state.encoder[impl.enc_out_bindings[i].state_index]);
+                break;
+            default:
+                break;
         }
     }
     return result;
@@ -574,30 +694,37 @@ const std::vector<float>& onnx_backend_runner::run_erb_decoder(const encoder_res
     const std::array<std::int64_t, 4> e2_shape{1, ch, 1, cfg.nb_erb / 4};
     const std::array<std::int64_t, 4> e3_shape{1, ch, 1, cfg.nb_erb / 4};
 
-    const std::vector<std::string> state_inputs = state_names(impl.erb_inputs);
-    std::vector<Ort::Value> inputs;
+    std::vector<Ort::Value>& inputs = impl.erb_inputs_buf;
+    inputs.clear();
     inputs.reserve(impl.erb_in_names.size());
-    for (const std::string& name : impl.erb_in_names) {
-        if (name == "emb") {
-            inputs.push_back(make_tensor(impl.erb_emb, emb_shape));
-        } else if (name == "e0") {
-            inputs.push_back(make_tensor(impl.erb_e0, e0_shape));
-        } else if (name == "e1") {
-            inputs.push_back(make_tensor(impl.erb_e1, e1_shape));
-        } else if (name == "e2") {
-            inputs.push_back(make_tensor(impl.erb_e2, e2_shape));
-        } else if (name == "e3") {
-            inputs.push_back(make_tensor(impl.erb_e3, e3_shape));
-        } else {
-            const auto it = std::ranges::find(state_inputs, name);
-            const auto index = static_cast<std::size_t>(std::distance(state_inputs.begin(), it));
-            const std::vector<float>& value = state.erb_decoder[index];
-            const std::array<std::int64_t, 3> state_shape{
-                1, 1, static_cast<std::int64_t>(value.size())};
-            inputs.push_back(make_tensor(value, state_shape));
+    for (const io_binding& binding : impl.erb_in_bindings) {
+        switch (binding.role) {
+            case io_role::emb:
+                inputs.push_back(make_tensor(impl.erb_emb, emb_shape));
+                break;
+            case io_role::e0:
+                inputs.push_back(make_tensor(impl.erb_e0, e0_shape));
+                break;
+            case io_role::e1:
+                inputs.push_back(make_tensor(impl.erb_e1, e1_shape));
+                break;
+            case io_role::e2:
+                inputs.push_back(make_tensor(impl.erb_e2, e2_shape));
+                break;
+            case io_role::e3:
+                inputs.push_back(make_tensor(impl.erb_e3, e3_shape));
+                break;
+            case io_role::state: {
+                const std::vector<float>& value = state.erb_decoder[binding.state_index];
+                const std::array<std::int64_t, 3> state_shape{
+                    1, 1, static_cast<std::int64_t>(value.size())};
+                inputs.push_back(make_tensor(value, state_shape));
+                break;
+            }
+            default:
+                throw std::runtime_error("unexpected erb decoder input edge");
         }
     }
-
     auto outputs = impl.erb_decoder->Run(Ort::RunOptions{nullptr},
                                          impl.erb_in_ptrs.data(),
                                          inputs.data(),
@@ -607,16 +734,15 @@ const std::vector<float>& onnx_backend_runner::run_erb_decoder(const encoder_res
 
     for (const std::weakly_incrementable auto i :
          std::views::iota(std::size_t{0}, impl.erb_out_names.size())) {
-        const std::string_view name = impl.erb_out_names[i];
-        if (name == "m") {
-            copy_output(outputs[i], impl.out_mask);
-        } else if (name.starts_with(kStateOutPrefix)) {
-            for (const std::weakly_incrementable auto s :
-                 std::views::iota(std::size_t{0}, state_inputs.size())) {
-                if (name == state_output_name(state_inputs[s])) {
-                    copy_output(outputs[i], state.erb_decoder[s]);
-                }
-            }
+        switch (impl.erb_out_bindings[i].role) {
+            case io_role::mask:
+                copy_output(outputs[i], impl.out_mask);
+                break;
+            case io_role::state:
+                copy_output(outputs[i], state.erb_decoder[impl.erb_out_bindings[i].state_index]);
+                break;
+            default:
+                break;
         }
     }
     return impl.out_mask;
@@ -653,22 +779,27 @@ const std::vector<float>& onnx_backend_runner::run_df_decoder(std::span<const fl
 
     const std::array<std::int64_t, 3> emb_shape{1, window, static_cast<std::int64_t>(emb_hidden)};
     const std::array<std::int64_t, 4> c0_shape{1, cfg.conv_ch, window, cfg.nb_df};
-    const std::vector<std::string> state_inputs = state_names(impl.df_inputs);
 
-    std::vector<Ort::Value> inputs;
+    std::vector<Ort::Value>& inputs = impl.df_inputs_buf;
+    inputs.clear();
     inputs.reserve(impl.df_in_names.size());
-    for (const std::string& name : impl.df_in_names) {
-        if (name == "emb") {
-            inputs.push_back(make_tensor(impl.df_emb, emb_shape));
-        } else if (name == "c0") {
-            inputs.push_back(make_tensor(impl.df_c0, c0_shape));
-        } else {
-            const auto it = std::ranges::find(state_inputs, name);
-            const auto index = static_cast<std::size_t>(std::distance(state_inputs.begin(), it));
-            const std::vector<float>& value = state.df_decoder[index];
-            const std::array<std::int64_t, 3> state_shape{
-                1, 1, static_cast<std::int64_t>(value.size())};
-            inputs.push_back(make_tensor(value, state_shape));
+    for (const io_binding& binding : impl.df_in_bindings) {
+        switch (binding.role) {
+            case io_role::emb:
+                inputs.push_back(make_tensor(impl.df_emb, emb_shape));
+                break;
+            case io_role::c0:
+                inputs.push_back(make_tensor(impl.df_c0, c0_shape));
+                break;
+            case io_role::state: {
+                const std::vector<float>& value = state.df_decoder[binding.state_index];
+                const std::array<std::int64_t, 3> state_shape{
+                    1, 1, static_cast<std::int64_t>(value.size())};
+                inputs.push_back(make_tensor(value, state_shape));
+                break;
+            }
+            default:
+                throw std::runtime_error("unexpected df decoder input edge");
         }
     }
 
@@ -679,20 +810,18 @@ const std::vector<float>& onnx_backend_runner::run_df_decoder(std::span<const fl
                                         impl.df_out_ptrs.data(),
                                         impl.df_out_ptrs.size());
 
-    const std::vector<std::string> state_inputs_out = state_names(impl.df_inputs);
     std::vector<float> raw;
     for (const std::weakly_incrementable auto i :
          std::views::iota(std::size_t{0}, impl.df_out_names.size())) {
-        const std::string_view name = impl.df_out_names[i];
-        if (name == "coefs") {
-            copy_output(outputs[i], raw);
-        } else if (name.starts_with(kStateOutPrefix)) {
-            for (const std::weakly_incrementable auto s :
-                 std::views::iota(std::size_t{0}, state_inputs_out.size())) {
-                if (name == state_output_name(state_inputs_out[s])) {
-                    copy_output(outputs[i], state.df_decoder[s]);
-                }
-            }
+        switch (impl.df_out_bindings[i].role) {
+            case io_role::coefs:
+                copy_output(outputs[i], raw);
+                break;
+            case io_role::state:
+                copy_output(outputs[i], state.df_decoder[impl.df_out_bindings[i].state_index]);
+                break;
+            default:
+                break;
         }
     }
 

@@ -20,11 +20,9 @@ set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
-# using thin-link-time-optimization
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
-
-# while using thinlto we need to set ththe lto as thin
+# Thin link-time optimization, enabled per-target in configure_native_target. The
+# explicit link option avoids CMake 3.22's IPO default injecting -fuse-ld=gold,
+# which the NDK dropped in r22.
 set(CMAKE_C_LINK_OPTIONS_IPO "-flto=thin")
 set(CMAKE_CXX_LINK_OPTIONS_IPO "-flto=thin")
 

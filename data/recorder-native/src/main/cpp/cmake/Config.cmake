@@ -10,6 +10,14 @@ function(configure_native_target target_name)
     # --exclude-libs,ALL: Hides internal library code so only JNI functions are exposed
     target_link_options(${target_name} PRIVATE -Wl,--gc-sections -Wl,--exclude-libs,ALL)
 
+    # Thin LTO for this target only; the global CMAKE_INTERPROCEDURAL_OPTIMIZATION
+    # variables are left alone so FetchContent'd third-party projects (oboe, FLAC)
+    # keep their own build behavior.
+    set_target_properties(${target_name} PROPERTIES
+            INTERPROCEDURAL_OPTIMIZATION_RELEASE ON
+            INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON
+    )
+
     # Turn on standard compiler warnings to catch bugs early
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         target_compile_options(${target_name} PRIVATE -Wall -Wextra -Wpedantic)
