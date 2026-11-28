@@ -10,10 +10,15 @@ function(configure_project_target target_name)
     target_compile_features(${target_name} PRIVATE cxx_std_20)
     set_target_properties(${target_name} PROPERTIES CXX_EXTENSIONS OFF)
 
-    # Section garbage collection is only meaningful for the Android/ELF toolchain; the host
-    # linker (ld64) rejects these flags.
+    # Section garbage collection and identical code folding are only meaningful for the
+    # Android/ELF toolchain; the host linker (ld64) rejects these flags. `--icf=safe` only
+    # folds functions whose address is never taken, so it cannot change observable behavior.
     if (ANDROID)
-        target_link_options(${target_name} PRIVATE -Wl,--gc-sections -Wl,--exclude-libs,ALL)
+        target_link_options(${target_name} PRIVATE
+                -Wl,--gc-sections
+                -Wl,--exclude-libs,ALL
+                -Wl,--icf=safe
+        )
     endif ()
 
     # Thin LTO for this target only; the global CMAKE_INTERPROCEDURAL_OPTIMIZATION

@@ -33,6 +33,9 @@ if (NOT TARGET oboe)
             GIT_REPOSITORY https://github.com/google/oboe.git
             GIT_TAG 1.11.0
             GIT_SHALLOW TRUE
+            PATCH_COMMAND
+            ${CMAKE_COMMAND} -DOB0E_SOURCE_DIR=<SOURCE_DIR> -P
+            "${CMAKE_CURRENT_LIST_DIR}/patches/remove_playback_parameters_stream_format.cmake"
     )
     FetchContent_MakeAvailable(oboe)
 endif ()

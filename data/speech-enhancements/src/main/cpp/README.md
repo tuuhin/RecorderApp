@@ -140,6 +140,12 @@ probe; nothing is forced). ONNX Runtime 1.32.0 is fetched
 as the official `onnxruntime-android` AAR from Maven Central, checksum-verified, and
 imported per ABI; the AAR ships `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64`.
 
+Android JNI linking enables `--gc-sections`, `--exclude-libs,ALL`, ThinLTO, hidden visibility
+and `--icf=safe`. The latter folds identical functions only when their addresses are not
+observable; it is enabled only for Android/ELF, not host builds. Do not copy speed-oriented
+flags such as `-O3` or loop unrolling without measuring the packaged release libraries: the
+ONNX Runtime `.so` is prebuilt and cannot be reduced by these target-local options.
+
 ## Status
 
 Implemented: DSP foundation, feature extraction, deep filtering, resampling, model
@@ -185,4 +191,3 @@ speech-reference estimate releases.
 There is no setting that removes all background and also leaves the speech untouched: the
 suppression character is a property of the model. Aggressive settings (attenuation limit off,
 `strength = 1.0`) clean hard but gate/pump; gentle settings keep more noise.
-

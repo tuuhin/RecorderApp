@@ -139,7 +139,10 @@ oboe callback thread          worker thread
 **WAV (`custom_wav`)** writes a canonical 44-byte RIFF header when the file is opened, appends raw
 16-bit PCM as the worker drains, and on finalize seeks back to patch the RIFF size (offset 4) and
 the data-chunk size (offset 40). The result is a standard PCM WAV that any player and media3's
-`WavExtractor` parse directly.
+`WavExtractor` parse directly. The writer uses C stdio (`FILE*`, `fwrite`, and `fseek`) rather
+than `std::fstream`: it only needs sequential writes and two header seeks, while iostreams pull
+in substantial libc++ stream/locale code. This changes the I/O mechanism, not the WAV bytes or
+recording pipeline.
 
 **FLAC (`custom_flac`)** drives libFLAC's stream encoder: configured from the same `recorder_config`
 (channels, 16-bit depth, sample rate, compression level 5), fed
@@ -154,6 +157,15 @@ container.
   source: **oboe 1.11.0** (audio) and **libFLAC 1.5.0**
   (FLAC, built static with programs, examples, testing, docs, OGG and C++ bindings disabled). No
   `.a`/`.so` is ever checked in.
+- `cmake/patches/remove_playback_parameters_stream_format.cmake` applies a guarded patch to
+  Oboe's `AudioStreamAAudio::setPlaybackParameters` diagnostic. On invalid parameters Oboe logs
+  the error without formatting the values through `std::stringstream`; that diagnostic-only
+  formatting kept iostream/locale code reachable in each recorder library. CMake fails if the
+  expected upstream call changes, so review the patch when upgrading Oboe.
+- Recorder libraries keep the default NDK `c++_static` runtime and speed-oriented compile flags.
+  A whole-app `c++_shared` experiment increased the APK size, so do not enable it for this module
+  alone. The WAV stdio change and Oboe diagnostic patch reduce linked support code without applying
+  size-oriented optimization to the capture/encoding path.
 - ABIs: `arm64-v8a`, `armeabi-v7a`, `x86_64` (x86 is intentionally dropped).
 - The root `CMakeLists.txt` restores `CMAKE_SYSTEM_VERSION` after `project()`:
   NDK r30's legacy toolchain resets it to 1 with the pinned CMake 3.22.1, which made libFLAC's
