@@ -6,11 +6,6 @@ plugins {
 
 android {
 	namespace = "com.eva.transcribe"
-    compileSdk {
-        version = release(libs.versions.android.compileSdk.major.get().toInt()) {
-            minorApiLevel = libs.versions.android.compileSdk.revision.get().toInt()
-        }
-    }
 	ndkVersion = libs.versions.android.ndk.get()
 
 	defaultConfig {

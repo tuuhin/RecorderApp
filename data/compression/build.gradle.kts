@@ -8,6 +8,9 @@ android {
     ndkVersion = libs.versions.android.ndk.get()
 
     defaultConfig {
+        ndk {
+            abiFilters.addAll(setOf("armeabi-v7a", "arm64-v8a"))
+        }
         consumerProguardFiles("consumer-rules.keep")
 
         externalNativeBuild {

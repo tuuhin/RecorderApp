@@ -166,7 +166,8 @@ container.
   A whole-app `c++_shared` experiment increased the APK size, so do not enable it for this module
   alone. The WAV stdio change and Oboe diagnostic patch reduce linked support code without applying
   size-oriented optimization to the capture/encoding path.
-- ABIs: `arm64-v8a`, `armeabi-v7a`, `x86_64` (x86 is intentionally dropped).
+- ABIs: `arm64-v8a`, `armeabi-v7a`. Note if one want to test these on emulators running on `x86`, and `x86_64` add those
+  targets too.
 - The root `CMakeLists.txt` restores `CMAKE_SYSTEM_VERSION` after `project()`:
   NDK r30's legacy toolchain resets it to 1 with the pinned CMake 3.22.1, which made libFLAC's
   `fseeko` probe fail on `armeabi-v7a`.
