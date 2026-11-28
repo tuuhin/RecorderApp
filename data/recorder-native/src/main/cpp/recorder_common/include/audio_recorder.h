@@ -143,7 +143,9 @@ void audio_recorder<Writer>::setOutputFile(const std::filesystem::path& outputPa
 
     if (outputPath.empty()) throw std::invalid_argument("Output file path must not be empty");
 
-    _output_path = outputPath;
+    std::error_code ec;
+    const auto canonical = std::filesystem::weakly_canonical(outputPath, ec);
+    _output_path = ec ? outputPath : canonical;
 }
 
 template <audio_file_writer Writer>
@@ -453,15 +455,15 @@ template <audio_file_writer Writer>
 oboe::DataCallbackResult audio_recorder<Writer>::onAudioReady(oboe::AudioStream* /*stream*/,
                                                               void* audioData,
                                                               std::int32_t numFrames) {
-    if (_has_worker_failed.load(std::memory_order_acquire)) {
+    if (_has_worker_failed.load(std::memory_order_acquire)) [[unlikely]] {
         ARD_LOG("FAILED TO SET UP THE WORKER");
         return oboe::DataCallbackResult::Stop;
     }
 
-    if (!_is_accepting_audio.load(std::memory_order_acquire))
+    if (!_is_accepting_audio.load(std::memory_order_acquire)) [[unlikely]]
         return oboe::DataCallbackResult::Continue;
 
-    if (audioData == nullptr || numFrames <= 0 || !_ring_buffer)
+    if (audioData == nullptr || numFrames <= 0 || !_ring_buffer) [[unlikely]]
         return oboe::DataCallbackResult::Continue;
 
     const auto channels = static_cast<std::size_t>(_config.channelCount);
@@ -493,7 +495,7 @@ oboe::DataCallbackResult audio_recorder<Writer>::onAudioReady(oboe::AudioStream*
 
     std::size_t writtenSamples = 0;
 
-    if (alignedSamples > 0)
+    if (alignedSamples > 0) [[likely]]
         writtenSamples =
             _ring_buffer->write(std::span<const std::int16_t>(samples, alignedSamples));
 
@@ -501,7 +503,8 @@ oboe::DataCallbackResult audio_recorder<Writer>::onAudioReady(oboe::AudioStream*
     const auto acceptedFrames = writtenSamples / channels;
     const auto lostFrames = frameCount - acceptedFrames;
 
-    if (lostFrames > 0) _dropped_frames.fetch_add(lostFrames, std::memory_order_relaxed);
+    if (lostFrames > 0) [[unlikely]]
+        _dropped_frames.fetch_add(lostFrames, std::memory_order_relaxed);
     return oboe::DataCallbackResult::Continue;
 }
 
@@ -559,7 +562,6 @@ void audio_recorder<Writer>::start_worker_th() {
 
 template <audio_file_writer Writer>
 void audio_recorder<Writer>::open_input_stream() {
-    oboe::Result oboeResults = oboe::Result::OK;
 
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Input);
@@ -581,8 +583,9 @@ void audio_recorder<Writer>::open_input_stream() {
 
     if (result != oboe::Result::OK) {
         auto error_code = oboe::convertToText(result);
-        ARD_LOG("Default Oboe backend failed (%s); with OpenSL ES backend", error_code);
+        ARD_LOG("Failed to open Oboe input stream with the OpenSL ES backend (%s)", error_code);
         _oboe_stream.reset();
+        throw std::runtime_error("Failed to open Oboe input stream: " + std::string(error_code));
     }
 
     _is_closing_stream.store(false, std::memory_order_release);
@@ -651,7 +654,7 @@ void audio_recorder<Writer>::worker_loop() noexcept {
             const auto count = _ring_buffer->read(std::span<std::int16_t>(
                 _worker_buffer.data(), std::min(alignedAvailable, _worker_buffer.size())));
 
-            if (count > 0)
+            if (count > 0) [[likely]]
                 _writer->write(std::span<const std::int16_t>(_worker_buffer.data(), count));
         }
     } catch (...) {

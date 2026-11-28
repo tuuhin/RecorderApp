@@ -1,3 +1,4 @@
+#pragma once
 
 #include <android/log.h>
 #include <lz4frame.h>

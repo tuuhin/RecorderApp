@@ -2,8 +2,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
-#include <fstream>
 #include <span>
 #include "recorder_config.h"
 
@@ -32,7 +32,8 @@ class wave_file_writer final {
     void write_header();
     void update_header();
 
-    std::fstream _file;
+    // Using plain stdio file reduces the net library size some some amount
+    std::FILE* _file = nullptr;
     std::filesystem::path _output_path;
     recorder_config config_{};
     std::uint64_t _blockSize = 0;

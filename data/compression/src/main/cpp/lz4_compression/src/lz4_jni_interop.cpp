@@ -1,6 +1,5 @@
 #include <jni.h>
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -97,9 +96,10 @@ extern "C" JNIEXPORT jint JNICALL Java_com_eva_compression_LZ4NativeCompression_
     return jni_commons::withExceptions(env, kCompressionFailure, [inputWindow, outputWindow]() -> jint {
         const std::span<const std::uint8_t> source(inputWindow.address, inputWindow.remaining);
 
-        const std::vector<std::uint8_t> decompressed = lz4_compressor::decompress_frame(source);
+            const std::vector<std::uint8_t> decompressed =
+                lz4_compressor::decompress_frame(source, outputWindow.remaining);
 
-        if (decompressed.size() > outputWindow.remaining) return kInsufficientCapacity;
+            if (decompressed.size() > outputWindow.remaining) return kInsufficientCapacity;
 
         if (!decompressed.empty()) std::memcpy(outputWindow.address, decompressed.data(), decompressed.size());
 

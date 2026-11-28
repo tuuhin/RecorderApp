@@ -13,7 +13,7 @@
 namespace jni_commons {
 
 inline void throwJavaException(JNIEnv* env, const char* className, const char* message) noexcept {
-    if (env->ExceptionCheck()) return;
+    if (env == nullptr || env->ExceptionCheck()) return;
 
     jclass exceptionClass = env->FindClass(className);
 

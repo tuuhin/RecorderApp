@@ -19,3 +19,4 @@ app/keystore.properties
 .junie
 .idea/*
 .scratch/*
+enhanced/*

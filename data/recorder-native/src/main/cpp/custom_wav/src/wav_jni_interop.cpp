@@ -22,17 +22,8 @@ using wav_recorder = audio_recorder<wave_file_writer>;
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_eva_recorder_1native_WavAudioRecorder_createRecorder(JNIEnv* env, jobject) {
     try {
-        auto recorder = std::make_unique<wav_recorder>();
-
-        const auto address = reinterpret_cast<std::uintptr_t>(recorder.release());
-
-        const auto printableAddress = static_cast<unsigned long long>(address);
-
-        WAV_LOG_D("createRecorder: allocated wav_recorder, pointer=0x%llx, top-byte tag=0x%02llx",
-                  printableAddress,
-                  (printableAddress >> 56U) & 0xFFULL);
-
-        return static_cast<jlong>(address);
+        auto recorder = std::make_shared<wav_recorder>();
+        return recorder_jni::make_recorder_handle<wav_recorder>(recorder);
     } catch (...) {
         WAV_LOG_D("createRecorder: allocation failed, returning 0");
         recorder_jni::translateCurrentException(env);
@@ -52,8 +43,7 @@ Java_com_eva_recorder_1native_WavAudioRecorder_releaseNative(JNIEnv* env, jobjec
               static_cast<unsigned long long>(handle));
 
     try {
-        std::unique_ptr<wav_recorder> recorder(recorder_jni::get_recorder<wav_recorder>(handle));
-        recorder->release();
+        recorder_jni::destroy_recorder<wav_recorder>(handle);
     } catch (...) {
         recorder_jni::translateCurrentException(env);
     }
@@ -67,10 +57,9 @@ extern "C" JNIEXPORT void JNICALL Java_com_eva_recorder_1native_WavAudioRecorder
         if (sample_rate <= 0 || channels <= 0)
             throw std::invalid_argument("Sample rate and channel count must be positive");
 
-        recorder_config config{};
-        config.sampleRate = static_cast<std::uint32_t>(sample_rate);
-        config.channelCount = static_cast<std::uint16_t>(channels);
-        config.bitsPerSample = 16;
+        recorder_config config{.sampleRate = static_cast<std::uint32_t>(sample_rate),
+                               .channelCount = static_cast<std::uint16_t>(channels),
+                               .bitsPerSample = 16};
 
         if (channels > UINT16_MAX)
             throw std::invalid_argument("Channel count exceeds supported range");
@@ -181,6 +170,7 @@ Java_com_eva_recorder_1native_WavAudioRecorder_getRecorderConfig(JNIEnv* env, jo
         const jint values[] = {static_cast<jint>(config->sampleRate),
                                static_cast<jint>(config->channelCount)};
         env->SetIntArrayRegion(result, 0, 2, values);
+        if (env->ExceptionCheck()) result = nullptr;
     });
     return result;
 }

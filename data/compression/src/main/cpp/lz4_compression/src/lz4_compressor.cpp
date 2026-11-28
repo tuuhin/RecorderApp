@@ -16,7 +16,7 @@
 #define LOG_TAG "LZ4_JNI_INTEROP"
 #define LOG_D(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
-std::vector<std::uint8_t> lz4_compressor::compress_frame(const std::span<const std::uint8_t> source) {
+std::vector<std::uint8_t> lz4_compressor::compress_frame(std::span<const std::uint8_t> source) {
     const std::size_t capacity = LZ4F_compressFrameBound(source.size(), nullptr);
 
     std::vector<std::uint8_t> destination(capacity);
@@ -32,9 +32,14 @@ std::vector<std::uint8_t> lz4_compressor::compress_frame(const std::span<const s
     return destination;
 }
 
-std::vector<std::uint8_t> lz4_compressor::decompress_frame(const std::span<const std::uint8_t> source) {
-
+std::vector<std::uint8_t> lz4_compressor::decompress_frame(std::span<const std::uint8_t> source,
+                                                           std::size_t maxOutputBytes) {
     if (source.empty()) throw std::runtime_error("Cannot decompress an empty LZ4 frame");
+
+    // Never decode past what the caller declared it can consume
+    const std::size_t limit = std::min(maxOutputBytes, lz4::kMaxGrownOutputBytes);
+    if (limit == 0)
+        throw std::runtime_error("Decompressed output exceeds the caller-provided capacity");
 
     de_compression_context context;
 
@@ -52,11 +57,11 @@ std::vector<std::uint8_t> lz4_compressor::decompress_frame(const std::span<const
     std::size_t capacity = frameInfo.contentSize;
 
     // outgrows the limit
-    if (capacity > lz4::kMaxGrownOutputBytes)
+    if (capacity > limit)
         throw std::runtime_error("Decompressed output exceeds the supported size");
 
     if (capacity == 0) {
-        capacity = std::min(std::max<std::size_t>(source.size() * 2, 64), lz4::kMaxGrownOutputBytes);
+        capacity = std::min(std::max<std::size_t>(source.size() * 2, 64), limit);
     }
 
     std::vector<std::uint8_t> destination(capacity);
@@ -66,10 +71,10 @@ std::vector<std::uint8_t> lz4_compressor::decompress_frame(const std::span<const
 
     for (;;) {
         if (outputOffset == destination.size()) {
-            if (destination.size() >= lz4::kMaxGrownOutputBytes)
+            if (destination.size() >= limit)
                 throw std::runtime_error("Decompressed output exceeds the supported size");
 
-            const std::size_t newCapacity = std::min(destination.size() * 2, lz4::kMaxGrownOutputBytes);
+            const std::size_t newCapacity = std::min(destination.size() * 2, limit);
 
             destination.resize(newCapacity);
         }

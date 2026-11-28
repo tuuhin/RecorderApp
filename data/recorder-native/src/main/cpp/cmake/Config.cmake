@@ -10,6 +10,14 @@ function(configure_native_target target_name)
     # --exclude-libs,ALL: Hides internal library code so only JNI functions are exposed
     target_link_options(${target_name} PRIVATE -Wl,--gc-sections -Wl,--exclude-libs,ALL)
 
+    # Thin LTO for this target only; the global CMAKE_INTERPROCEDURAL_OPTIMIZATION
+    # variables are left alone so FetchContent'd third-party projects (oboe, FLAC)
+    # keep their own build behavior.
+    set_target_properties(${target_name} PROPERTIES
+            INTERPROCEDURAL_OPTIMIZATION_RELEASE ON
+            INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON
+    )
+
     # Turn on standard compiler warnings to catch bugs early
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         target_compile_options(${target_name} PRIVATE -Wall -Wextra -Wpedantic)
@@ -25,6 +33,9 @@ if (NOT TARGET oboe)
             GIT_REPOSITORY https://github.com/google/oboe.git
             GIT_TAG 1.11.0
             GIT_SHALLOW TRUE
+            PATCH_COMMAND
+            ${CMAKE_COMMAND} -DOB0E_SOURCE_DIR=<SOURCE_DIR> -P
+            "${CMAKE_CURRENT_LIST_DIR}/patches/remove_playback_parameters_stream_format.cmake"
     )
     FetchContent_MakeAvailable(oboe)
 endif ()

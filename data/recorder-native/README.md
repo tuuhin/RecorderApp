@@ -18,6 +18,7 @@ src/main/cpp/
 │       ├── audio_recorder.h  # audio_recorder<Writer> template: the whole lifecycle
 │       ├── spsc_ring_buffer.h# single-producer / single-consumer ring buffer
 │       ├── jni_utils.h       # handle lookup, exception translation, UtfChars
+│       ├── handle_registry_manager.h # opaque sequential-id handle registry (thread-safe)
 │       └── recorder_config.h # validated capture config (rate, channels, 16-bit PCM)
 ├── custom_wav/
 │   ├── include/wav_file_writer.h
@@ -60,9 +61,36 @@ Lifecycle misuse surfaces as the standard Kotlin exceptions (`IllegalStateExcept
 `std::logic_error` are translated to those at the JNI boundary in
 `recorder_common/include/jni_utils.h`.
 
-JNI handles are raw native pointers passed as `Long`. Zero is the only sentinel used on both sides;
-on arm64 Android 11+ the heap allocator tags the top byte of heap pointers, so a tagged handle can
-read negative in Kotlin. Never validate a handle with `<= 0`; only `0` means "no recorder".
+JNI handles are opaque sequential ids minted by the header-only
+`recorder_common/include/handle_registry_manager.h` and passed as `Long`. Zero is the only sentinel used on both
+sides; it always means "no recorder". A handle is only trusted if the registry still holds it: a stale, reused, or
+forged id resolves to `nullptr` and surfaces as `IllegalArgumentException` at the boundary, so it can never be
+reinterpreted as a pointer (type confusion / use-after-free). Never validate a handle with `<= 0`; only `0` means
+"no recorder".
+
+### Why the lifecycle methods are not `@FastNative`
+
+`@FastNative` (like the older `!bang` JNI) skips the thread-state transition checks around a native call. That
+transition is exactly what keeps the VM responsive while a call runs, so ART documents two hard requirements for a
+`@FastNative` method: it must **never call back into managed code**, and it must **never block**. Violating either
+can hang the entire VM transition, deadlock GC, or leave other threads stuck waiting for the calling thread to
+re-enter managed code.
+
+Reviewing the recorder's native entry points against those rules:
+
+- `isRecordRunning` reads one atomic flag and returns. No callbacks, no I/O, no locks worth mentioning. This is the
+  one legitimate use, and it keeps `@FastNative` for the latency-sensitive polling paths.
+- `stopRecorder` drains the ring buffer through the worker thread and finalizes the output file — disk I/O that can
+  block for the duration of a flush.
+- `cancelRecorder` deletes the output file; `resetRecorder` finalizes any open recording. Both are file operations.
+- `pauseRecorder` / `resumeRecorder` close and reopen the Oboe input stream, which joins the audio callback thread
+  and can block on driver work.
+
+Annotating any of those with `@FastNative` would block the VM transition while holding none of the usual safeties,
+for no measurable gain: these calls run a handful of times per recording, not per audio callback. The annotations
+were therefore removed from every blocking lifecycle method and kept only on `isRecordRunning`. The same review
+removed `@FastNative` from the compression module's LZ4 entry points, which call back into Java to read the
+buffers' `position`/`limit`.
 
 ## How capture works (NDK + oboe)
 
@@ -111,7 +139,10 @@ oboe callback thread          worker thread
 **WAV (`custom_wav`)** writes a canonical 44-byte RIFF header when the file is opened, appends raw
 16-bit PCM as the worker drains, and on finalize seeks back to patch the RIFF size (offset 4) and
 the data-chunk size (offset 40). The result is a standard PCM WAV that any player and media3's
-`WavExtractor` parse directly.
+`WavExtractor` parse directly. The writer uses C stdio (`FILE*`, `fwrite`, and `fseek`) rather
+than `std::fstream`: it only needs sequential writes and two header seeks, while iostreams pull
+in substantial libc++ stream/locale code. This changes the I/O mechanism, not the WAV bytes or
+recording pipeline.
 
 **FLAC (`custom_flac`)** drives libFLAC's stream encoder: configured from the same `recorder_config`
 (channels, 16-bit depth, sample rate, compression level 5), fed
@@ -126,7 +157,17 @@ container.
   source: **oboe 1.11.0** (audio) and **libFLAC 1.5.0**
   (FLAC, built static with programs, examples, testing, docs, OGG and C++ bindings disabled). No
   `.a`/`.so` is ever checked in.
-- ABIs: `arm64-v8a`, `armeabi-v7a`, `x86_64` (x86 is intentionally dropped).
+- `cmake/patches/remove_playback_parameters_stream_format.cmake` applies a guarded patch to
+  Oboe's `AudioStreamAAudio::setPlaybackParameters` diagnostic. On invalid parameters Oboe logs
+  the error without formatting the values through `std::stringstream`; that diagnostic-only
+  formatting kept iostream/locale code reachable in each recorder library. CMake fails if the
+  expected upstream call changes, so review the patch when upgrading Oboe.
+- Recorder libraries keep the default NDK `c++_static` runtime and speed-oriented compile flags.
+  A whole-app `c++_shared` experiment increased the APK size, so do not enable it for this module
+  alone. The WAV stdio change and Oboe diagnostic patch reduce linked support code without applying
+  size-oriented optimization to the capture/encoding path.
+- ABIs: `arm64-v8a`, `armeabi-v7a`. Note if one want to test these on emulators running on `x86`, and `x86_64` add those
+  targets too.
 - The root `CMakeLists.txt` restores `CMAKE_SYSTEM_VERSION` after `project()`:
   NDK r30's legacy toolchain resets it to 1 with the pinned CMake 3.22.1, which made libFLAC's
   `fseeko` probe fail on `armeabi-v7a`.

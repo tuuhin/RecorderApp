@@ -23,10 +23,8 @@ using flac_recorder = audio_recorder<flac_file_writer>;
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_eva_recorder_1native_FlacAudioRecorder_createRecorder(JNIEnv* env, jobject) {
     try {
-        auto recorder = std::make_unique<flac_recorder>();
-
-        const auto address = reinterpret_cast<std::uintptr_t>(recorder.release());
-        return static_cast<jlong>(address);
+        auto recorder = std::make_shared<flac_recorder>();
+        return recorder_jni::make_recorder_handle<flac_recorder>(recorder);
     } catch (...) {
         FLAC_LOG_D("createRecorder: allocation failed, returning 0");
         recorder_jni::translateCurrentException(env);
@@ -42,8 +40,7 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_releaseNative(JNIEnv* env, jobje
     }
 
     try {
-        std::unique_ptr<flac_recorder> recorder(recorder_jni::get_recorder<flac_recorder>(handle));
-        recorder->release();
+        recorder_jni::destroy_recorder<flac_recorder>(handle);
     } catch (...) {
         recorder_jni::translateCurrentException(env);
     }
@@ -57,10 +54,9 @@ extern "C" JNIEXPORT void JNICALL Java_com_eva_recorder_1native_FlacAudioRecorde
         if (sample_rate <= 0 || channels <= 0)
             throw std::invalid_argument("Sample rate and channel count must be positive");
 
-        recorder_config config{};
-        config.sampleRate = static_cast<std::uint32_t>(sample_rate);
-        config.channelCount = static_cast<std::uint16_t>(channels);
-        config.bitsPerSample = 16;
+        recorder_config config{.sampleRate = static_cast<std::uint32_t>(sample_rate),
+                               .channelCount = static_cast<std::uint16_t>(channels),
+                               .bitsPerSample = 16};
 
         if (channels > UINT16_MAX)
             throw std::invalid_argument("Channel count exceeds supported range");
@@ -173,6 +169,7 @@ Java_com_eva_recorder_1native_FlacAudioRecorder_getRecorderConfig(JNIEnv* env, j
         const jint values[] = {static_cast<jint>(config->sampleRate),
                                static_cast<jint>(config->channelCount)};
         env->SetIntArrayRegion(result, 0, 2, values);
+        if (env->ExceptionCheck()) result = nullptr;
     });
     return result;
 }

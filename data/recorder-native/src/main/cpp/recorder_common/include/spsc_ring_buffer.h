@@ -133,7 +133,7 @@ class spsc_ring_buffer final {
     static std::unique_ptr<T[]> allocate_store(std::size_t capacity) {
         if (capacity == 0)
             throw std::invalid_argument("spsc_ring_buffer capacity must be greater than zero");
-        return std::make_unique<T[]>(capacity);
+        return std::make_unique_for_overwrite<T[]>(capacity);
     }
 
     // offset < _capacity and count <= _capacity.

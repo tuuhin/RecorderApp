@@ -4,8 +4,11 @@
 #include <jni.h>
 #include <cstdint>
 #include <exception>
+#include <memory>
 #include <stdexcept>
 #include <utility>
+
+#include "handle_registry_manager.h"
 
 #define LOG_TAG_I "RECORDER_JNI_COMMON"
 #define LOG_DEBUG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG_I, __VA_ARGS__)
@@ -13,7 +16,7 @@
 namespace recorder_jni {
 
 inline void throwJavaException(JNIEnv* env, const char* className, const char* message) noexcept {
-    if (env->ExceptionCheck()) return;
+    if (env == nullptr || env->ExceptionCheck()) return;
 
     jclass exceptionClass = env->FindClass(className);
 
@@ -42,15 +45,37 @@ inline void translateCurrentException(JNIEnv* env) noexcept {
 }
 
 template <typename Recorder>
-Recorder* get_recorder(jlong handle) {
+[[nodiscard]] jlong make_recorder_handle(std::shared_ptr<Recorder> recorder) {
+    const auto handle =
+        handle_registry_manager<Recorder>::instance().register_handle(std::move(recorder));
+
+    if (handle == handle_registry_manager<Recorder>::kInvalidHandle)
+        throw std::runtime_error("Failed to register the native recorder");
+    return static_cast<jlong>(handle);
+}
+
+// Owning copy so the recorder stays alive for the whole call even if the handle
+// is destroyed concurrently.
+template <typename Recorder>
+[[nodiscard]] std::shared_ptr<Recorder> get_recorder(jlong handle) {
     if (handle == 0) throw std::invalid_argument("Native recorder handle is null");
-    return reinterpret_cast<Recorder*>(static_cast<std::uintptr_t>(handle));
+
+    auto recorder = handle_registry_manager<Recorder>::instance().from_handle(handle);
+    if (!recorder) throw std::invalid_argument("Native recorder handle is not valid");
+
+    return recorder;
+}
+
+template <typename Recorder>
+void destroy_recorder(jlong handle) noexcept {
+    if (handle == 0) return;
+    handle_registry_manager<Recorder>::instance().destroy_handle(handle);
 }
 
 template <typename Recorder, typename Fn>
 void withRecorder(JNIEnv* env, jlong handle, Fn&& function) noexcept {
     try {
-        auto* recorder = get_recorder<Recorder>(handle);
+        auto recorder = get_recorder<Recorder>(handle);
         std::forward<Fn>(function)(*recorder);
     } catch (...) {
         translateCurrentException(env);
@@ -62,6 +87,7 @@ void withRecorder(JNIEnv* env, jlong handle, Fn&& function) noexcept {
 class UtfChars final {
    public:
     UtfChars(JNIEnv* env, jstring value) : _jEnv(env), _jValue(value) {
+        if (_jEnv == nullptr) throw std::invalid_argument("JNIEnv must not be null");
         if (_jValue == nullptr) throw std::invalid_argument("File path must not be null");
         _cChars = _jEnv->GetStringUTFChars(_jValue, nullptr);
         if (_cChars == nullptr) throw std::runtime_error("Failed to access Java string");

@@ -15,5 +15,6 @@ public:
     static std::vector<std::uint8_t> compress_frame(std::span<const std::uint8_t> source);
 
     [[nodiscard]]
-    static std::vector<std::uint8_t> decompress_frame(std::span<const std::uint8_t> source);
+    static std::vector<std::uint8_t> decompress_frame(std::span<const std::uint8_t> source,
+                                                      std::size_t maxOutputBytes);
 };

@@ -1,4 +1,4 @@
-name: Android Instrumented Tests
+name: Android Instrumented Tests (non-native)
 
 on:
     push:
@@ -98,7 +98,14 @@ jobs:
                     disable-animations: true
                     script: |
                         adb devices
-                        ./gradlew connectedAndroidTest --continue --stacktrace
+                        # Native modules (recorder-native, speech-enhancements, compression) own their
+                        # shared libraries and are exercised by the dedicated workflows instead:
+                        #   - native_ctest.yml                    -> host C++ GoogleTest suites
+                        #   - instrumented_tests_with_native.yml  -> native module instrumented tests
+                        ./gradlew connectedAndroidTest --continue --stacktrace \
+                            -x :data:speech-enhancements:connectedAndroidTest \
+                            -x :data:recorder-native:connectedAndroidTest \
+                            -x :data:compression:connectedAndroidTest
 
             -   name: Module-wise test summary
                 if: always()
@@ -132,7 +139,7 @@ jobs:
                             else:
                                 s["passed"] += 1
 
-                    lines = ["## Instrumented tests by module (API ${{ matrix.api-level }})", ""]
+                    lines = ["## Instrumented tests by module (non-native, API ${{ matrix.api-level }})", ""]
                     if not stats:
                         lines.append("_No test result files found._")
                     else:
@@ -165,7 +172,7 @@ jobs:
                 if: always()
                 uses: actions/upload-artifact@v4
                 with:
-                    name: androidTest-reports-api${{ matrix.api-level }}
+                    name: androidTest-reports-non-native-api${{ matrix.api-level }}
                     path: |
                         **/build/reports/androidTests/
                         **/build/outputs/androidTest-results/
@@ -178,4 +185,4 @@ jobs:
                     files: |
                         **/build/test-results/**/*.xml
                         **/build/outputs/androidTest-results/**/*.xml
-                    check_name: Instrumented Test Results (API ${{ matrix.api-level }})
+                    check_name: Instrumented Test Results (non-native, API ${{ matrix.api-level }})

@@ -1,11 +1,13 @@
+@file:androidx.media3.common.util.UnstableApi
+
 package com.eva.player.di
 
 import android.content.Context
 import android.os.Bundle
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.RenderersFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaConstants
@@ -25,7 +27,6 @@ import javax.inject.Named
 import kotlinx.coroutines.runBlocking
 
 @Module
-@UnstableApi
 @InstallIn(ServiceComponent::class)
 object PlayerServiceModule {
 
@@ -37,11 +38,12 @@ object PlayerServiceModule {
         settings: RecorderAudioSettingsRepo,
         mediaSource: MediaSource.Factory,
         attributes: AudioAttributes,
+        rendersFactory: RenderersFactory,
     ): Player {
 
         val audioSettings = runBlocking { settings.audioSettings() }
 
-        return ExoPlayer.Builder(context)
+        return ExoPlayer.Builder(context, rendersFactory)
             .setMediaSourceFactory(mediaSource)
             .setSkipSilenceEnabled(audioSettings.skipSilences)
             .setAudioAttributes(attributes, true)
@@ -52,7 +54,6 @@ object PlayerServiceModule {
 
     @Provides
     @ServiceScoped
-    @UnstableApi
     fun providesPlayerNotification(
         @ApplicationContext context: Context,
     ): MediaNotification.Provider {

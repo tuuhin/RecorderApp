@@ -26,9 +26,12 @@ dependencyResolutionManagement {
 
 rootProject.name = "RecorderApp"
 include(":app")
-include(":data:interactions")
-include(":data:location")
+
+include(":core:ui")
 include(":core:utils")
+
+include(":data:location")
+include(":data:interactions")
 include(":data:datastore")
 include(":data:database")
 include(":data:player")
@@ -40,9 +43,9 @@ include(":data:bookmarks")
 include(":data:categories")
 include(":data:use_case")
 include(":data:compression")
+include(":data:speech-enhancements")
 
 include(":feature:recorder")
-include(":core:ui")
 include(":feature:settings")
 include(":feature:categories")
 include(":feature:recordings")

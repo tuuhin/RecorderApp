@@ -73,7 +73,9 @@ class FlacAudioRecorder : CustomRecorder {
         }
     }
 
-    override fun setOutputFile(file: File) = withNativeHandle { setOutputFileConfig(it, file.absolutePath) }
+    override fun setOutputFile(file: File) = withNativeHandle {
+        setOutputFileConfig(it, file.canonicalFile.absolutePath)
+    }
 
     override fun setRecorderConfig(config: RecorderConfig) =
         withNativeHandle { setConfig(it, config.sampleRate, config.channel) }
@@ -127,19 +129,14 @@ class FlacAudioRecorder : CustomRecorder {
     private external fun prepareRecorder(handle: Long)
     private external fun startRecorder(handle: Long)
 
-    @FastNative
     private external fun stopRecorder(handle: Long)
 
-    @FastNative
     private external fun cancelRecorder(handle: Long)
 
-    @FastNative
     private external fun pauseRecorder(handle: Long)
 
-    @FastNative
     private external fun resumeRecorder(handle: Long)
 
-    @FastNative
     private external fun resetRecorder(handle: Long)
 
     // helpers

@@ -53,8 +53,11 @@ android {
         }
 
         create("benchmark") {
-            applicationIdSuffix = ".benckmark"
+            // initiate with the release build
             initWith(buildTypes.getByName("release"))
+            applicationIdSuffix = ".benchmark"
+            // signed with debug key
+            signingConfig = signingConfigs.findByName("debug")
             matchingFallbacks += listOf("release")
             isDebuggable = false
             isProfileable = true

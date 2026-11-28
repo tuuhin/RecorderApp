@@ -1,0 +1,125 @@
+name: Native C++ Tests (ctest)
+
+on:
+    pull_request:
+        branches: [ main ]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    checks: write
+    pull-requests: write
+
+concurrency:
+    group: native-ctest-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    native-ctest:
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+
+        env:
+            BUILD_ROOT: ${{ github.workspace }}/native-build
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v4
+
+            # CMake and a C++20 toolchain (gcc) are preinstalled on ubuntu-latest.
+            -   name: Show toolchain versions
+                run: |
+                    cmake --version
+                    g++ --version
+
+            # GoogleTest and PFFFT are pulled in with FetchContent, so the first
+            # configure needs network access.
+            -   name: Configure speech-enhancements tests
+                run: |
+                    cmake -S data/speech-enhancements/src/main/cpp \
+                          -B "$BUILD_ROOT/speech-enhancements" \
+                          -DDFN_BUILD_TESTS=ON \
+                          -DCMAKE_BUILD_TYPE=Release
+
+            -   name: Build speech-enhancements tests
+                run: cmake --build "$BUILD_ROOT/speech-enhancements" --parallel
+
+            -   name: Run speech-enhancements tests
+                run: |
+                    ctest --test-dir "$BUILD_ROOT/speech-enhancements" \
+                          --output-on-failure \
+                          --output-junit "$BUILD_ROOT/speech-enhancements/ctest-results.xml"
+
+            # To add another native module: append its own configure/build/test steps
+            # above. recorder-native and compression do not register any GoogleTest
+            # targets yet, so they are intentionally absent here.
+
+            -   name: Test summary
+                if: always()
+                shell: python
+                run: |
+                    import glob, os, collections
+                    import xml.etree.ElementTree as ET
+
+                    stats = collections.defaultdict(lambda: {"passed": 0, "failed": 0, "skipped": 0, "time": 0.0})
+                    failures = []
+
+                    for path in sorted(glob.glob("native-build/**/ctest-results.xml", recursive=True)):
+                        suite = "ctest"
+                        try:
+                            root = ET.parse(path).getroot()
+                        except ET.ParseError:
+                            continue
+                        for tc in root.iter("testcase"):
+                            s = stats[suite]
+                            s["time"] += float(tc.get("time") or 0)
+                            bad = tc.find("failure")
+                            if bad is None:
+                                bad = tc.find("error")
+                            if bad is not None:
+                                s["failed"] += 1
+                                msg = (bad.get("message") or bad.text or "").strip().splitlines()
+                                failures.append((suite, tc.get("name"), msg[0][:200] if msg else ""))
+                            elif tc.find("skipped") is not None:
+                                s["skipped"] += 1
+                            else:
+                                s["passed"] += 1
+
+                    lines = ["## Native C++ tests (ctest)", ""]
+                    if not stats:
+                        lines.append("_No ctest result files found._")
+                    else:
+                        lines += ["| Suite | Status | Total | Passed | Failed | Skipped | Time |",
+                                  "|---|:-:|--:|--:|--:|--:|--:|"]
+                        for suite in sorted(stats):
+                            s = stats[suite]
+                            total = s["passed"] + s["failed"] + s["skipped"]
+                            icon = "❌" if s["failed"] else "✅"
+                            lines.append(f'| `{suite}` | {icon} | {total} | {s["passed"]} | {s["failed"]} | {s["skipped"]} | {s["time"]:.1f}s |')
+
+                    if failures:
+                        lines += ["", "<details><summary>Failed tests</summary>", "",
+                                  "| Suite | Test | Message |", "|---|---|---|"]
+                        for suite, name, msg in failures:
+                            lines.append(f'| `{suite}` | `{name}` | {msg.replace("|", "\\|")} |')
+                        lines += ["", "</details>"]
+
+                    with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+                        f.write("\n".join(lines) + "\n")
+
+            -   name: Upload test reports
+                if: always()
+                uses: actions/upload-artifact@v4
+                with:
+                    name: native-ctest-reports
+                    path: |
+                        native-build/**/Testing/
+                        native-build/**/ctest-results.xml
+                    if-no-files-found: ignore
+
+            -   name: Publish test results
+                if: always()
+                uses: EnricoMi/publish-unit-test-result-action@v2
+                with:
+                    files: 'native-build/**/ctest-results.xml'
+                    check_name: Native C++ Test Results (ctest)
